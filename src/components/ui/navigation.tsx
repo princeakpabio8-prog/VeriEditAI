@@ -1,0 +1,172 @@
+import { Button } from "@/components/ui/button";
+import { Shield, Menu, X, LogOut, User, Settings } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+
+interface NavigationProps {
+  isAuthenticated?: boolean;
+  user?: {
+    name: string;
+    email: string;
+  };
+  onSignOut?: () => void;
+}
+
+export const Navigation = ({ isAuthenticated = false, user, onSignOut }: NavigationProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+            <Shield className="h-8 w-8 text-primary" />
+            <span className="text-xl font-bold bg-gradient-trust bg-clip-text text-transparent">
+              VeriEdit AI
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/verify" className="text-muted-foreground hover:text-foreground transition-colors">
+              Verify Content
+            </Link>
+            <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+              Dashboard
+            </Link>
+            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+              Pricing
+            </Link>
+            
+            {isAuthenticated ? (
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2"
+                >
+                  <User className="h-4 w-4" />
+                  <span>{user?.name || "Profile"}</span>
+                </Button>
+                
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2">
+                    <Link
+                      to="/settings"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        onSignOut?.();
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-border py-4 space-y-2">
+            <Link
+              to="/verify"
+              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Verify Content
+            </Link>
+            <Link
+              to="/dashboard"
+              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/pricing"
+              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Pricing
+            </Link>
+            
+            {isAuthenticated ? (
+              <div className="border-t border-border pt-4 mt-4">
+                <div className="px-4 py-2 text-sm text-muted-foreground">
+                  {user?.email}
+                </div>
+                <Link
+                  to="/settings"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Settings
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onSignOut?.();
+                  }}
+                  className="block w-full text-left px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-border pt-4 mt-4 space-y-2">
+                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="ghost" size="sm" className="w-full justify-start">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button size="sm" className="w-full">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};

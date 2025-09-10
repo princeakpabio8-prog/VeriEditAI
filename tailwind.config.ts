@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        trust: {
+          high: "hsl(var(--trust-high))",
+          medium: "hsl(var(--trust-medium))",
+          low: "hsl(var(--trust-low))",
+          unknown: "hsl(var(--trust-unknown))",
+        },
+        lighthouse: {
+          beam: "hsl(var(--lighthouse-beam))",
+          glow: "hsl(var(--lighthouse-glow))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -84,6 +94,15 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "trust-pulse": "trust-pulse 2s ease-in-out infinite",
+        "lighthouse-beam": "lighthouse-beam 4s ease-in-out infinite",
+        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
+        "trust-score-reveal": "trust-score-reveal 1.2s ease-out forwards",
+      },
+      backgroundImage: {
+        "gradient-hero": "var(--gradient-hero)",
+        "gradient-trust": "var(--gradient-trust)",
+        "gradient-card": "var(--gradient-card)",
       },
     },
   },

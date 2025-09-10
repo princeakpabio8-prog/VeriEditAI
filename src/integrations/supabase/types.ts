@@ -14,7 +14,151 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          company: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sources: {
+        Row: {
+          content_snippet: string | null
+          created_at: string
+          id: string
+          reliability_score: number | null
+          title: string | null
+          url: string
+          verification_id: string
+        }
+        Insert: {
+          content_snippet?: string | null
+          created_at?: string
+          id?: string
+          reliability_score?: number | null
+          title?: string | null
+          url: string
+          verification_id: string
+        }
+        Update: {
+          content_snippet?: string | null
+          created_at?: string
+          id?: string
+          reliability_score?: number | null
+          title?: string | null
+          url?: string
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sources_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          status: string
+          step: string
+          verification_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          status: string
+          step: string
+          verification_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          status?: string
+          step?: string
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_logs_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verifications: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string
+          file_name: string | null
+          file_size: number | null
+          id: string
+          processing_time_ms: number | null
+          result_summary: string | null
+          status: string
+          trust_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          content_type: string
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          processing_time_ms?: number | null
+          result_summary?: string | null
+          status?: string
+          trust_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          processing_time_ms?: number | null
+          result_summary?: string | null
+          status?: string
+          trust_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -15,10 +15,37 @@ async function performRealVerification(content: string, contentType: string, ver
   }
 
   try {
-    // Create comprehensive verification prompt based on content type
+    // Create comprehensive verification prompt based on content type with medical focus
     let prompt = '';
+    const isMedicalContent = /(?:health|medical|disease|treatment|vaccine|drug|medication|study|research|clinical|trial|symptoms|diagnosis|therapy|cancer|covid|virus|bacteria|infection|medicine|doctor|patient|hospital|WHO|CDC|FDA|pubmed|journal)/i.test(content);
+    
     if (contentType === 'url') {
-      prompt = `Perform comprehensive fact-checking analysis of this URL: ${content}
+      if (isMedicalContent) {
+        prompt = `Perform MEDICAL FACT-CHECKING analysis of this health/medical URL: ${content}
+
+MEDICAL VERIFICATION REQUIREMENTS:
+1. CROSS-REFERENCE MEDICAL DATABASES: Verify claims against PubMed, Cochrane Library, WHO updates, CDC guidelines, and peer-reviewed medical journals
+2. VALIDATE STUDY CLAIMS: Check if studies are correctly cited, not cherry-picked, and conclusions match the actual research findings
+3. DETECT MEDICAL MISINFORMATION: Flag exaggerations, misinterpretations of studies, correlation vs causation errors, and cherry-picked statistics
+4. VERIFY MEDICAL AUTHORITY: Confirm if sources have medical credentials and institutional backing
+5. CHECK FOR MEDICAL CONSENSUS: Determine if claims align with current medical consensus and established treatment guidelines
+
+MEDICAL-SPECIFIC ANALYSIS:
+- Study Validity: Are referenced studies peer-reviewed, sample sizes adequate, and methodologies sound?
+- Exaggeration Detection: Are benefits overstated or risks understated compared to actual research?
+- Context Integrity: Are study results presented within proper statistical context and limitations?
+- Authority Verification: Do quoted experts have relevant medical credentials and institutional affiliations?
+
+RESPONSE FORMAT:
+- Trust Score: [0-100] (stricter scoring for medical claims)
+- Medical Source Verification: [PubMed, WHO, CDC, medical journal cross-checks]
+- Study Accuracy: [Verification of cited research and proper interpretation]
+- Misinformation Flags: [Exaggerations, misinterpretations, or dangerous medical advice]
+- Medical Authority Check: [Credentials and qualifications of cited experts]
+- Supporting Evidence: [Specific medical databases and authoritative sources]
+- Medical Authenticity Certificate: [Overall medical reliability assessment]`;
+      } else {
+        prompt = `Perform comprehensive fact-checking analysis of this URL: ${content}
 
 ANALYSIS REQUIREMENTS:
 1. CROSS-CHECK SOURCE: Verify the domain legitimacy, publication credibility, and author credentials
@@ -33,8 +60,34 @@ RESPONSE FORMAT:
 - Manipulation Detection: [Any signs of misleading content, edited media, or misquotes]
 - Supporting Sources: [List specific URLs that corroborate or contradict the claims]
 - Final Assessment: [Overall reliability and specific concerns]`;
+      }
     } else {
-      prompt = `Perform comprehensive fact-checking analysis of this statement: "${content}"
+      if (isMedicalContent) {
+        prompt = `Perform MEDICAL FACT-CHECKING analysis of this health/medical statement: "${content}"
+
+MEDICAL VERIFICATION REQUIREMENTS:
+1. MEDICAL DATABASE CROSS-REFERENCE: Verify against PubMed database, medical journals (NEJM, The Lancet, JAMA), WHO health updates, CDC guidelines, and FDA approvals
+2. STUDY INTERPRETATION ACCURACY: Check if medical studies are correctly interpreted, not exaggerated, and conclusions align with actual research findings
+3. MEDICAL MISINFORMATION DETECTION: Flag dangerous health advice, unproven treatments, vaccine misinformation, and medical conspiracy theories
+4. EXPERT AUTHORITY VALIDATION: Verify medical credentials, institutional affiliations, and peer recognition of cited experts
+5. MEDICAL CONSENSUS ALIGNMENT: Determine if claims align with current medical consensus and evidence-based medicine
+
+MEDICAL-SPECIFIC CHECKS:
+- Clinical Evidence: Are claims backed by peer-reviewed clinical trials with adequate sample sizes?
+- Risk-Benefit Analysis: Are potential risks and benefits accurately represented?
+- Regulatory Status: Are treatments/medications properly FDA-approved or experimentally labeled?
+- Medical Ethics: Does the advice meet medical ethics standards and patient safety guidelines?
+
+RESPONSE FORMAT:
+- Trust Score: [0-100] (enhanced medical scoring with stricter criteria)
+- Medical Database Verification: [PubMed, Cochrane, WHO, CDC cross-validation results]
+- Study Interpretation Accuracy: [Analysis of how medical research is presented vs actual findings]
+- Medical Authority Validation: [Verification of expert credentials and institutional backing]
+- Misinformation Risk Assessment: [Potential harm from medical misinformation]
+- Supporting Medical Evidence: [Authoritative medical sources that support or contradict the claim]
+- Medical Authenticity Certificate: [Verifiable medical reliability score with institutional backing]`;
+      } else {
+        prompt = `Perform comprehensive fact-checking analysis of this statement: "${content}"
 
 ANALYSIS REQUIREMENTS:
 1. CLAIM VALIDATION: Cross-reference against authoritative sources, official data, peer-reviewed research
@@ -50,6 +103,7 @@ RESPONSE FORMAT:
 - Supporting Evidence: [List specific sources that support or contradict the statement]
 - Red Flags: [Any signs of misinformation or manipulation]
 - Final Assessment: [Overall reliability and specific concerns]`;
+      }
     }
 
     console.log('Sending request to Perplexity API...');

@@ -24,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/demo" element={<Navigate to="/dashboard" replace />} />
             <Route 
               path="/dashboard" 
               element={

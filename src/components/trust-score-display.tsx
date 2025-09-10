@@ -1,5 +1,7 @@
+import React, { useState, useEffect } from "react";
 import { Shield, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface TrustScoreDisplayProps {
   score: number;
@@ -57,11 +59,15 @@ export const TrustScoreDisplay = ({
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)}>
+    <motion.div 
+      className={cn("relative inline-flex items-center justify-center", className)}
+      initial={showAnimation ? { scale: 0.8, opacity: 0 } : {}}
+      animate={showAnimation ? { scale: 1, opacity: 1 } : {}}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
       <div className={cn(
         "relative flex items-center justify-center rounded-full border-2 border-muted bg-card",
-        getSizeClasses(size),
-        showAnimation && "trust-score-reveal"
+        getSizeClasses(size)
       )}>
         {/* Circular Progress */}
         <svg 
@@ -77,7 +83,7 @@ export const TrustScoreDisplay = ({
             fill="none"
             className="text-muted opacity-20"
           />
-          <circle
+          <motion.circle
             cx="50"
             cy="50"
             r="40"
@@ -85,44 +91,88 @@ export const TrustScoreDisplay = ({
             strokeWidth="4"
             fill="none"
             strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            className={cn(
-              getTrustColor(level),
-              showAnimation && "transition-all duration-1000 ease-out"
-            )}
+            className={cn(getTrustColor(level))}
             strokeLinecap="round"
-            style={{
-              strokeDashoffset: showAnimation ? strokeDashoffset : circumference,
-            }}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: showAnimation ? strokeDashoffset : circumference }}
+            transition={{ duration: 1.5, ease: "easeOut", delay: 0.3 }}
           />
         </svg>
 
         {/* Content */}
-        <div className="relative z-10 text-center">
-          <Icon className={cn("mx-auto mb-1", getTrustColor(level), 
-            size === "sm" ? "h-4 w-4" : size === "lg" ? "h-8 w-8" : size === "xl" ? "h-12 w-12" : "h-6 w-6"
-          )} />
-          <div className={cn(
-            "font-bold tabular-nums",
-            getTrustColor(level),
-            size === "sm" ? "text-xs" : size === "lg" ? "text-lg" : size === "xl" ? "text-3xl" : "text-sm"
-          )}>
-            {score}%
-          </div>
-        </div>
+        <motion.div 
+          className="relative z-10 text-center"
+          initial={showAnimation ? { opacity: 0, y: 10 } : {}}
+          animate={showAnimation ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, delay: 0.5 }}
+        >
+          <motion.div
+            initial={showAnimation ? { scale: 0 } : {}}
+            animate={showAnimation ? { scale: 1 } : {}}
+            transition={{ type: "spring", stiffness: 200, delay: 0.7 }}
+          >
+            <Icon className={cn("mx-auto mb-1", getTrustColor(level), 
+              size === "sm" ? "h-4 w-4" : size === "lg" ? "h-8 w-8" : size === "xl" ? "h-12 w-12" : "h-6 w-6"
+            )} />
+          </motion.div>
+          <motion.div 
+            className={cn(
+              "font-bold tabular-nums",
+              getTrustColor(level),
+              size === "sm" ? "text-xs" : size === "lg" ? "text-lg" : size === "xl" ? "text-3xl" : "text-sm"
+            )}
+            initial={showAnimation ? { scale: 0.5, opacity: 0 } : {}}
+            animate={showAnimation ? { scale: 1, opacity: 1 } : {}}
+            transition={{ duration: 0.4, delay: 0.8 }}
+          >
+            {showAnimation ? (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 2, delay: 0.9 }}
+              >
+                <Counter target={score} />
+              </motion.span>
+            ) : (
+              `${score}%`
+            )}
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Trust Level Label */}
       {showLabel && (
-        <div className={cn(
-          "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center",
-          size === "sm" ? "text-xs" : "text-sm"
-        )}>
+        <motion.div 
+          className={cn(
+            "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center",
+            size === "sm" ? "text-xs" : "text-sm"
+          )}
+          initial={showAnimation ? { opacity: 0, y: 10 } : {}}
+          animate={showAnimation ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 1.2 }}
+        >
           <div className={cn("font-medium capitalize", getTrustColor(level))}>
             {level === "unknown" ? "Uncertain" : `${level} Trust`}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
+};
+
+// Counter component for animated score counting
+const Counter = ({ target }: { target: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (count < target) {
+        setCount(prev => Math.min(prev + Math.ceil((target - prev) / 10), target));
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [count, target]);
+
+  return <>{count}%</>;
 };

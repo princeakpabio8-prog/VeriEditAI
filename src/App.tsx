@@ -10,6 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Billing from "./pages/Billing";
+import License from "./pages/License";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Billing />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/license" 
+              element={
+                <ProtectedRoute>
+                  <License />
                 </ProtectedRoute>
               } 
             />

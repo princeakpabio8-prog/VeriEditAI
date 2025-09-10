@@ -11,6 +11,9 @@ import { TrustScoreDisplay } from '@/components/trust-score-display';
 import { Plus, Clock, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { LicenseStatus } from '@/components/license-status';
+import { FeatureGuard } from '@/components/feature-guard';
+import { useLicense } from '@/contexts/LicenseContext';
 
 interface Verification {
   id: string;
@@ -25,6 +28,7 @@ interface Verification {
 const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { incrementUsage, checkFeatureAccess } = useLicense();
   const [verifications, setVerifications] = useState<Verification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
@@ -79,6 +83,27 @@ const Dashboard = () => {
     setProcessingVerification(true);
     
     try {
+      // Check license usage before processing
+      const usageResult = await incrementUsage(1);
+      if (!usageResult.success) {
+        toast({
+          title: "Usage Limit Reached",
+          description: usageResult.error || "You've reached your verification limit.",
+          variant: "destructive",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.location.href = '/billing'}
+            >
+              Upgrade
+            </Button>
+          ),
+        });
+        setProcessingVerification(false);
+        return;
+      }
+
       toast({
         title: "Verification Started",
         description: "Your content is being processed...",
@@ -190,6 +215,11 @@ const Dashboard = () => {
           </p>
         </div>
 
+        {/* License Status */}
+        <div className="mb-8">
+          <LicenseStatus variant="card" />
+        </div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-gradient-card border-border/50">
@@ -237,26 +267,43 @@ const Dashboard = () => {
 
         {/* New Verification Button */}
         <div className="mb-8">
-          <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="gap-2">
-                <Plus className="h-5 w-5" />
-                Submit Content for Verification
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>New Verification</DialogTitle>
-                <DialogDescription>
-                  Submit content for AI-powered fact-checking and trust analysis
-                </DialogDescription>
-              </DialogHeader>
-              <VerificationUpload 
-                onVerificationStart={handleVerificationStart}
-                isLoading={processingVerification}
-              />
-            </DialogContent>
-          </Dialog>
+          <FeatureGuard 
+            feature="verification"
+            fallback={
+              <Card className="border-amber-500/50 bg-amber-500/5 p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold mb-2">Verification Unavailable</h3>
+                  <p className="text-muted-foreground mb-4">
+                    A valid license is required to use verification features.
+                  </p>
+                  <Button onClick={() => window.location.href = '/billing'}>
+                    Get License
+                  </Button>
+                </div>
+              </Card>
+            }
+          >
+            <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="gap-2">
+                  <Plus className="h-5 w-5" />
+                  Submit Content for Verification
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>New Verification</DialogTitle>
+                  <DialogDescription>
+                    Submit content for AI-powered fact-checking and trust analysis
+                  </DialogDescription>
+                </DialogHeader>
+                <VerificationUpload 
+                  onVerificationStart={handleVerificationStart}
+                  isLoading={processingVerification}
+                />
+              </DialogContent>
+            </Dialog>
+          </FeatureGuard>
         </div>
 
         {/* Recent Verifications */}

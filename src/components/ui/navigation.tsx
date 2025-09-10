@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3 } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +45,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Billing
                 </Link>
+                <Link to="/license" className="text-muted-foreground hover:text-foreground transition-colors">
+                  License
+                </Link>
                 <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
                   Profile
                 </Link>
@@ -89,6 +92,14 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Billing & Plans
+                    </Link>
+                    <Link
+                      to="/license"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Lock className="h-4 w-4 mr-2" />
+                      License Management
                     </Link>
                     <Link
                       to="/profile"
@@ -150,6 +161,13 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/license"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  License
                 </Link>
                 <Link
                   to="/profile"

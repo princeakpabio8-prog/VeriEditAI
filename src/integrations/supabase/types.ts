@@ -60,60 +60,43 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "licenses_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       payments: {
         Row: {
-          amount: number
+          amount: number | null
           created_at: string
           currency: string
-          expires_at: string | null
-          flw_ref: string | null
+          flw_id: string | null
           id: string
           metadata: Json | null
-          payment_method: string | null
-          plan_type: string
-          status: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          status: Database["public"]["Enums"]["payment_status"]
           tx_ref: string
-          updated_at: string
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: number | null
           created_at?: string
           currency?: string
-          expires_at?: string | null
-          flw_ref?: string | null
+          flw_id?: string | null
           id?: string
           metadata?: Json | null
-          payment_method?: string | null
-          plan_type: string
-          status?: string
+          plan: Database["public"]["Enums"]["plan_type"]
+          status?: Database["public"]["Enums"]["payment_status"]
           tx_ref: string
-          updated_at?: string
           user_id: string
         }
         Update: {
-          amount?: number
+          amount?: number | null
           created_at?: string
           currency?: string
-          expires_at?: string | null
-          flw_ref?: string | null
+          flw_id?: string | null
           id?: string
           metadata?: Json | null
-          payment_method?: string | null
-          plan_type?: string
-          status?: string
+          plan?: Database["public"]["Enums"]["plan_type"]
+          status?: Database["public"]["Enums"]["payment_status"]
           tx_ref?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -237,6 +220,53 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          active: boolean
+          auto_renew: boolean
+          created_at: string
+          end_date: string | null
+          id: string
+          last_payment_id: string | null
+          plan: Database["public"]["Enums"]["plan_type"]
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          auto_renew?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          last_payment_id?: string | null
+          plan?: Database["public"]["Enums"]["plan_type"]
+          start_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          auto_renew?: boolean
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          last_payment_id?: string | null
+          plan?: Database["public"]["Enums"]["plan_type"]
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_last_payment_id_fkey"
+            columns: ["last_payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -351,6 +381,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_subscription: {
+        Args: { user_uuid: string }
+        Returns: {
+          active: boolean
+          auto_renew: boolean
+          days_remaining: number
+          end_date: string
+          plan: Database["public"]["Enums"]["plan_type"]
+        }[]
+      }
+      handle_failed_payment: {
+        Args: { failure_reason?: string; payment_id: string; user_uuid: string }
+        Returns: boolean
+      }
+      handle_successful_payment: {
+        Args: {
+          payment_amount: number
+          payment_id: string
+          plan_name: Database["public"]["Enums"]["plan_type"]
+          user_uuid: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -380,6 +433,8 @@ export type Database = {
       app_role: "admin" | "user"
       license_status: "active" | "expired" | "suspended" | "revoked"
       license_type: "trial" | "basic" | "professional" | "enterprise"
+      payment_status: "pending" | "successful" | "failed"
+      plan_type: "free" | "pro" | "enterprise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -510,6 +565,8 @@ export const Constants = {
       app_role: ["admin", "user"],
       license_status: ["active", "expired", "suspended", "revoked"],
       license_type: ["trial", "basic", "professional", "enterprise"],
+      payment_status: ["pending", "successful", "failed"],
+      plan_type: ["free", "pro", "enterprise"],
     },
   },
 } as const

@@ -15,11 +15,41 @@ async function performRealVerification(content: string, contentType: string, ver
   }
 
   try {
-    // Create comprehensive verification prompt based on content type with medical focus
+    // Create comprehensive verification prompt based on content type with enhanced capabilities
     let prompt = '';
     const isMedicalContent = /(?:health|medical|disease|treatment|vaccine|drug|medication|study|research|clinical|trial|symptoms|diagnosis|therapy|cancer|covid|virus|bacteria|infection|medicine|doctor|patient|hospital|WHO|CDC|FDA|pubmed|journal)/i.test(content);
+    const isImageContent = contentType === 'image' || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(content);
     
-    if (contentType === 'url') {
+    if (contentType === 'image' || isImageContent) {
+      prompt = `Perform COMPREHENSIVE IMAGE VERIFICATION analysis of this image: ${content}
+
+IMAGE VERIFICATION REQUIREMENTS:
+1. REVERSE IMAGE SEARCH: Search for earliest instances of this image across news databases, social media archives, and official sources
+2. METADATA ANALYSIS: Examine EXIF data, creation timestamps, camera information, and GPS coordinates for authenticity markers
+3. MANIPULATION DETECTION: Identify digital edits, AI-generated alterations, deepfakes, pixel inconsistencies, and compression artifacts
+4. SOURCE CROSS-VERIFICATION: Compare with official weather reports, news archives, government databases, and verified news sources
+5. CONTEXTUAL VALIDATION: Verify if claimed location, time, and circumstances match available official records
+
+IMAGE-SPECIFIC ANALYSIS:
+- Reverse Image Search: Find original source and earliest publication dates
+- Technical Analysis: EXIF data inconsistencies, shadow analysis, lighting patterns, and pixel-level examination
+- AI Detection: Signs of AI generation, unnatural textures, impossible physics, or synthetic artifacts
+- Weather Verification: Cross-check weather conditions with meteorological records for claimed date/location
+- News Archive Comparison: Verify against official news databases and verified media sources
+
+OUTCOME CLASSIFICATION:
+- If DOCTORED/MANIPULATED: Flag ❌ with detailed explanation of manipulation techniques detected
+- If REAL/AUTHENTIC: Verify ✅ with source references and supporting evidence
+
+RESPONSE FORMAT:
+- Trust Score: [0-100] (strict scoring for image authenticity)
+- Reverse Search Results: [Earliest instances and original sources found]
+- Metadata Analysis: [EXIF data verification and timestamp accuracy]
+- Manipulation Detection: [Specific edits, AI alterations, or inconsistencies found]
+- Source Cross-Verification: [Weather reports, news archives, official records comparison]
+- Authenticity Status: [FLAGGED ❌ with manipulation explanation OR VERIFIED ✅ with source references]
+- Supporting Evidence: [Official sources, archives, and technical analysis results]`;
+    } else if (contentType === 'url') {
       if (isMedicalContent) {
         prompt = `Perform MEDICAL FACT-CHECKING analysis of this health/medical URL: ${content}
 
@@ -442,10 +472,10 @@ serve(async (req) => {
       );
     }
 
-    if (!['text', 'url'].includes(contentType)) {
+    if (!['text', 'url', 'image'].includes(contentType)) {
       return new Response(
         JSON.stringify({ 
-          error: "Content type must be 'text' or 'url'",
+          error: "Content type must be 'text', 'url', or 'image'",
           validation_error: true
         }),
         {

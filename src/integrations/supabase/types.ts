@@ -62,6 +62,39 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string | null
+          id: string
+          payload: Json
+          signature: string | null
+          status: string
+          tx_ref: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload: Json
+          signature?: string | null
+          status: string
+          tx_ref?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string | null
+          id?: string
+          payload?: Json
+          signature?: string | null
+          status?: string
+          tx_ref?: string | null
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number | null

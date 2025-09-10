@@ -79,7 +79,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
       .insert({
         user_id: user!.id,
         tx_ref: txRef,
-        plan_type: plan.id,
+        plan: plan.id,
         amount: plan.price,
         currency: plan.currency,
         status: 'pending'

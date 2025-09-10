@@ -17,7 +17,7 @@ interface SubscriptionData {
 
 interface Payment {
   id: string;
-  plan_type: string;
+  plan: string;
   amount: number;
   currency: string;
   status: string;
@@ -51,7 +51,7 @@ export const SubscriptionManager = () => {
       // Fetch payment history
       const { data: paymentHistory, error: paymentsError } = await supabase
         .from('payments')
-        .select('id, plan_type, amount, currency, status, created_at, payment_method')
+        .select('id, plan, amount, currency, status, created_at, metadata')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -59,7 +59,11 @@ export const SubscriptionManager = () => {
       if (paymentsError) {
         console.error('Payments fetch error:', paymentsError);
       } else {
-        setPayments(paymentHistory || []);
+        const formattedPayments = paymentHistory?.map(payment => ({
+          ...payment,
+          payment_method: (payment.metadata as any)?.payment_type || 'flutterwave'
+        })) || [];
+        setPayments(formattedPayments);
       }
     } catch (error) {
       console.error('Subscription data fetch error:', error);
@@ -214,7 +218,7 @@ export const SubscriptionManager = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">
-                          {payment.plan_type.toUpperCase()}
+                          {payment.plan.toUpperCase()}
                         </Badge>
                         <Badge 
                           variant={payment.status === 'successful' ? 'default' : 'destructive'}

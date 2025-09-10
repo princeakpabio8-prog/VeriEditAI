@@ -38,7 +38,11 @@ interface BulkItem {
   fileName?: string;
 }
 
-export const BulkVerification: React.FC = () => {
+interface BulkVerificationProps {
+  onBulkStart?: (items: any[]) => void;
+}
+
+export const BulkVerification: React.FC<BulkVerificationProps> = ({ onBulkStart }) => {
   const { user } = useAuth();
   const { incrementUsage, checkFeatureAccess } = useLicense();
   const { toast } = useToast();

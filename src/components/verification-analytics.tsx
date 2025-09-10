@@ -22,6 +22,11 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
+interface VerificationAnalyticsProps {
+  verifications: any[];
+  className?: string;
+}
+
 interface AnalyticsData {
   totalVerifications: number;
   successRate: number;
@@ -33,7 +38,7 @@ interface AnalyticsData {
   performanceMetrics: Array<{ date: string; responseTime: number; successRate: number }>;
 }
 
-export const VerificationAnalytics: React.FC = () => {
+export const VerificationAnalytics: React.FC<VerificationAnalyticsProps> = ({ verifications, className }) => {
   const { user } = useAuth();
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);

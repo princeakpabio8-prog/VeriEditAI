@@ -8,12 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { TrustScoreDisplay } from '@/components/trust-score-display';
-import { Plus, Clock, CheckCircle, AlertTriangle, FileText } from 'lucide-react';
+import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseStatus } from '@/components/license-status';
 import { FeatureGuard } from '@/components/feature-guard';
 import { useLicense } from '@/contexts/LicenseContext';
+import { VerificationAnalytics } from '@/components/verification-analytics';
+import { BulkVerification } from '@/components/bulk-verification';
+import { VerificationExport } from '@/components/verification-export';
+import { useVerificationQueue } from '@/hooks/use-verification-queue';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Verification {
   id: string;
@@ -32,7 +37,9 @@ const Dashboard = () => {
   const [verifications, setVerifications] = useState<Verification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
   const [processingVerification, setProcessingVerification] = useState(false);
+  const { addToQueue, queue, startQueue, getStats } = useVerificationQueue();
 
   useEffect(() => {
     if (user) {
@@ -83,73 +90,25 @@ const Dashboard = () => {
     setProcessingVerification(true);
     
     try {
-      // Check license usage before processing
-      const usageResult = await incrementUsage(1);
-      if (!usageResult.success) {
+      // Add to queue instead of processing immediately
+      const queueItems = addToQueue([{
+        content: data.content,
+        type: data.type || 'text',
+        priority: 'normal'
+      }]);
+
+      if (queueItems.length > 0) {
         toast({
-          title: "Usage Limit Reached",
-          description: usageResult.error || "You've reached your verification limit.",
-          variant: "destructive",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.href = '/billing'}
-            >
-              Upgrade
-            </Button>
-          ),
+          title: "Added to Queue",
+          description: "Your verification has been queued for processing.",
         });
-        setProcessingVerification(false);
-        return;
+        
+        // Start queue processing if not already running
+        await startQueue();
       }
 
-      toast({
-        title: "Verification Started",
-        description: "Your content is being processed...",
-      });
-
-      // Call the Supabase Edge Function
-      const { data: result, error } = await supabase.functions.invoke('verify', {
-        body: {
-          content: data.content,
-          contentType: data.type,
-        },
-      });
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(error.message || 'Verification failed');
-      }
-
-      // Check if it's a usage limit error
-      if (result?.limit_reached) {
-        toast({
-          title: "Verification Limit Reached",
-          description: result.error || "You've reached your monthly limit. Upgrade to Pro for unlimited verifications.",
-          variant: "destructive",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.href = '/billing'}
-            >
-              Upgrade
-            </Button>
-          ),
-        });
-        setProcessingVerification(false);
-        return;
-      }
-
-      await fetchVerifications();
       setShowVerificationModal(false);
       setProcessingVerification(false);
-
-      toast({
-        title: "Verification Complete",
-        description: `Analysis complete with ${result.trust_score}% confidence.`,
-      });
 
     } catch (error) {
       console.error('Error starting verification:', error);
@@ -159,6 +118,31 @@ const Dashboard = () => {
         variant: "destructive",
       });
       setProcessingVerification(false);
+    }
+  };
+
+  const handleBulkVerification = async (items: any[]) => {
+    try {
+      const queueItems = addToQueue(items.map(item => ({
+        content: item.content,
+        type: item.type,
+        priority: item.priority || 'normal'
+      })));
+
+      toast({
+        title: "Bulk Verification Started",
+        description: `${queueItems.length} items added to processing queue.`,
+      });
+
+      await startQueue();
+      setShowBulkModal(false);
+    } catch (error) {
+      console.error('Error starting bulk verification:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start bulk verification",
+        variant: "destructive",
+      });
     }
   };
 
@@ -220,91 +204,125 @@ const Dashboard = () => {
           <LicenseStatus variant="card" />
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Total Verifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {verifications.length}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Dashboard Tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
+            <TabsTrigger value="export">Export Data</TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg">This Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-trust-high">
-                {verifications.filter(v => 
-                  new Date(v.created_at).getMonth() === new Date().getMonth()
-                ).length}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-card border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg">Average Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-trust-medium">
-                {verifications.length > 0 
-                  ? Math.round(
-                      verifications
-                        .filter(v => v.trust_score !== null)
-                        .reduce((acc, v) => acc + (v.trust_score || 0), 0) / 
-                      verifications.filter(v => v.trust_score !== null).length
-                    )
-                  : 0}%
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* New Verification Button */}
-        <div className="mb-8">
-          <FeatureGuard 
-            feature="verification"
-            fallback={
-              <Card className="border-amber-500/50 bg-amber-500/5 p-6">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">Verification Unavailable</h3>
-                  <p className="text-muted-foreground mb-4">
-                    A valid license is required to use verification features.
-                  </p>
-                  <Button onClick={() => window.location.href = '/billing'}>
-                    Get License
-                  </Button>
-                </div>
+          <TabsContent value="overview" className="space-y-6">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">Total Verifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-primary">
+                    {verifications.length}
+                  </div>
+                </CardContent>
               </Card>
-            }
-          >
-            <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="gap-2">
-                  <Plus className="h-5 w-5" />
-                  Submit Content for Verification
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>New Verification</DialogTitle>
-                  <DialogDescription>
-                    Submit content for AI-powered fact-checking and trust analysis
-                  </DialogDescription>
-                </DialogHeader>
-                <VerificationUpload 
-                  onVerificationStart={handleVerificationStart}
-                  isLoading={processingVerification}
-                />
-              </DialogContent>
-            </Dialog>
-          </FeatureGuard>
-        </div>
+
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">Queue Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-trust-high">
+                    {getStats().pending + getStats().processing}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Items in queue</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">Success Rate</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-trust-medium">
+                    {Math.round(getStats().successRate)}%
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 flex-wrap">
+              <FeatureGuard 
+                feature="verification"
+                fallback={
+                  <Card className="border-amber-500/50 bg-amber-500/5 p-6">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold mb-2">Verification Unavailable</h3>
+                      <p className="text-muted-foreground mb-4">
+                        A valid license is required to use verification features.
+                      </p>
+                      <Button onClick={() => window.location.href = '/billing'}>
+                        Get License
+                      </Button>
+                    </div>
+                  </Card>
+                }
+              >
+                <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
+                  <DialogTrigger asChild>
+                    <Button size="lg" className="gap-2">
+                      <Plus className="h-5 w-5" />
+                      New Verification
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>New Verification</DialogTitle>
+                      <DialogDescription>
+                        Submit content for AI-powered fact-checking and trust analysis
+                      </DialogDescription>
+                    </DialogHeader>
+                    <VerificationUpload 
+                      onVerificationStart={handleVerificationStart}
+                      isLoading={processingVerification}
+                    />
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={showBulkModal} onOpenChange={setShowBulkModal}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="lg" className="gap-2">
+                      <Package className="h-5 w-5" />
+                      Bulk Verification
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Bulk Verification</DialogTitle>
+                      <DialogDescription>
+                        Upload multiple items for batch processing
+                      </DialogDescription>
+                    </DialogHeader>
+                    <BulkVerification onBulkStart={handleBulkVerification} />
+                  </DialogContent>
+                </Dialog>
+              </FeatureGuard>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <VerificationAnalytics verifications={verifications} />
+          </TabsContent>
+
+          <TabsContent value="bulk">
+            <BulkVerification onBulkStart={handleBulkVerification} />
+          </TabsContent>
+
+          <TabsContent value="export">
+            <VerificationExport verifications={verifications} />
+          </TabsContent>
+        </Tabs>
 
         {/* Recent Verifications */}
         <Card className="bg-gradient-card border-border/50">

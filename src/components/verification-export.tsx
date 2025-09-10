@@ -34,11 +34,13 @@ interface VerificationData {
 }
 
 interface VerificationExportProps {
-  verification: VerificationData;
+  verifications: any[];
+  verification?: VerificationData;
   onShare?: () => void;
 }
 
 export const VerificationExport: React.FC<VerificationExportProps> = ({
+  verifications,
   verification,
   onShare
 }) => {

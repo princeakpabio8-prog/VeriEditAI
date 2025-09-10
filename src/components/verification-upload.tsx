@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { TrustScoreExplanation } from "./trust-score-explanation";
 import { validateAndSanitize, verificationRateLimiter } from '@/lib/validation';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 interface VerificationUploadProps {
   onVerificationStart?: (data: VerificationData) => void;
@@ -194,18 +195,23 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-gradient-card border-border/50">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center text-foreground">
-          Verify Content Authenticity
-        </CardTitle>
-        <p className="text-center text-muted-foreground">
-          Upload text, URLs, or files to get an AI-powered trust score
-        </p>
-        <div className="flex justify-center mt-3">
-          <TrustScoreExplanation type="dialog" />
-        </div>
-      </CardHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full max-w-2xl mx-auto bg-gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center text-foreground">
+            Verify Content Authenticity
+          </CardTitle>
+          <p className="text-center text-muted-foreground">
+            Upload text, URLs, or files to get an AI-powered trust score
+          </p>
+          <div className="flex justify-center mt-3">
+            <TrustScoreExplanation type="dialog" />
+          </div>
+        </CardHeader>
       <CardContent>
         {/* Validation Errors */}
         {validationErrors.length > 0 && (
@@ -368,5 +374,6 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
         </Tabs>
       </CardContent>
     </Card>
+    </motion.div>
   );
 };

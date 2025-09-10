@@ -62,61 +62,38 @@ const Dashboard = () => {
     setProcessingVerification(true);
     
     try {
-      // Insert verification record
-      const { data: verification, error } = await supabase
-        .from('verifications')
-        .insert({
-          user_id: user?.id,
-          content: data.content,
-          content_type: data.type,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
       toast({
         title: "Verification Started",
         description: "Your content is being processed...",
       });
 
-      // Simulate AI processing (in production, this would call an edge function)
-      setTimeout(async () => {
-        const mockTrustScore = Math.floor(Math.random() * 100);
-        const mockSummary = `Analysis complete. Trust score: ${mockTrustScore}%. ${
-          mockTrustScore > 70 
-            ? 'High confidence in content accuracy.' 
-            : mockTrustScore > 40 
-            ? 'Moderate confidence. Additional verification recommended.' 
-            : 'Low confidence. Multiple conflicting sources found.'
-        }`;
+      // Call the Supabase Edge Function
+      const { data: result, error } = await supabase.functions.invoke('verify', {
+        body: {
+          content: data.content,
+          contentType: data.type,
+        },
+      });
 
-        // Update verification with results
-        await supabase
-          .from('verifications')
-          .update({
-            status: 'completed',
-            trust_score: mockTrustScore,
-            result_summary: mockSummary,
-          })
-          .eq('id', verification.id);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Verification failed');
+      }
 
-        await fetchVerifications();
-        setShowVerificationModal(false);
-        setProcessingVerification(false);
+      await fetchVerifications();
+      setShowVerificationModal(false);
+      setProcessingVerification(false);
 
-        toast({
-          title: "Verification Complete",
-          description: "Your content has been analyzed successfully.",
-        });
-      }, 3000);
+      toast({
+        title: "Verification Complete",
+        description: `Analysis complete with ${result.trust_score}% confidence.`,
+      });
 
     } catch (error) {
       console.error('Error starting verification:', error);
       toast({
         title: "Error",
-        description: "Failed to start verification",
+        description: error.message || "Failed to start verification",
         variant: "destructive",
       });
       setProcessingVerification(false);
@@ -296,7 +273,8 @@ const Dashboard = () => {
                         {verification.trust_score !== null ? (
                           <TrustScoreDisplay 
                             score={verification.trust_score} 
-                            size="sm" 
+                            size="sm"
+                            showLabel={false}
                           />
                         ) : (
                           <span className="text-muted-foreground">-</span>

@@ -3,16 +3,18 @@ import { cn } from "@/lib/utils";
 
 interface TrustScoreDisplayProps {
   score: number;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   showAnimation?: boolean;
   className?: string;
+  showLabel?: boolean;
 }
 
 export const TrustScoreDisplay = ({ 
   score, 
   size = "md", 
   showAnimation = false,
-  className 
+  className,
+  showLabel = true
 }: TrustScoreDisplayProps) => {
   const getTrustLevel = (score: number) => {
     if (score >= 80) return "high";
@@ -43,6 +45,7 @@ export const TrustScoreDisplay = ({
     switch (size) {
       case "sm": return "w-16 h-16 text-xl";
       case "lg": return "w-32 h-32 text-4xl";
+      case "xl": return "w-48 h-48 text-5xl";
       default: return "w-24 h-24 text-2xl";
     }
   };
@@ -97,12 +100,12 @@ export const TrustScoreDisplay = ({
         {/* Content */}
         <div className="relative z-10 text-center">
           <Icon className={cn("mx-auto mb-1", getTrustColor(level), 
-            size === "sm" ? "h-4 w-4" : size === "lg" ? "h-8 w-8" : "h-6 w-6"
+            size === "sm" ? "h-4 w-4" : size === "lg" ? "h-8 w-8" : size === "xl" ? "h-12 w-12" : "h-6 w-6"
           )} />
           <div className={cn(
             "font-bold tabular-nums",
             getTrustColor(level),
-            size === "sm" ? "text-xs" : size === "lg" ? "text-lg" : "text-sm"
+            size === "sm" ? "text-xs" : size === "lg" ? "text-lg" : size === "xl" ? "text-3xl" : "text-sm"
           )}>
             {score}%
           </div>
@@ -110,14 +113,16 @@ export const TrustScoreDisplay = ({
       </div>
 
       {/* Trust Level Label */}
-      <div className={cn(
-        "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center",
-        size === "sm" ? "text-xs" : "text-sm"
-      )}>
-        <div className={cn("font-medium capitalize", getTrustColor(level))}>
-          {level === "unknown" ? "Uncertain" : `${level} Trust`}
+      {showLabel && (
+        <div className={cn(
+          "absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center",
+          size === "sm" ? "text-xs" : "text-sm"
+        )}>
+          <div className={cn("font-medium capitalize", getTrustColor(level))}>
+            {level === "unknown" ? "Uncertain" : `${level} Trust`}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

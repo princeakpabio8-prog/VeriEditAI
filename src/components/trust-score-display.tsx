@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Shield, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { TrustScoreExplanation } from "./trust-score-explanation";
 
 interface TrustScoreDisplayProps {
   score: number;
@@ -9,6 +10,7 @@ interface TrustScoreDisplayProps {
   showAnimation?: boolean;
   className?: string;
   showLabel?: boolean;
+  showExplanation?: boolean;
 }
 
 export const TrustScoreDisplay = ({ 
@@ -16,7 +18,8 @@ export const TrustScoreDisplay = ({
   size = "md", 
   showAnimation = false,
   className,
-  showLabel = true
+  showLabel = true,
+  showExplanation = false
 }: TrustScoreDisplayProps) => {
   const getTrustLevel = (score: number) => {
     if (score >= 80) return "high";
@@ -59,12 +62,13 @@ export const TrustScoreDisplay = ({
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
   return (
-    <motion.div 
-      className={cn("relative inline-flex items-center justify-center", className)}
-      initial={showAnimation ? { scale: 0.8, opacity: 0 } : {}}
-      animate={showAnimation ? { scale: 1, opacity: 1 } : {}}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
+    <div className={cn("relative inline-flex flex-col items-center", className)}>
+      <motion.div 
+        className="relative inline-flex items-center justify-center"
+        initial={showAnimation ? { scale: 0.8, opacity: 0 } : {}}
+        animate={showAnimation ? { scale: 1, opacity: 1 } : {}}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      >
       <div className={cn(
         "relative flex items-center justify-center rounded-full border-2 border-muted bg-card",
         getSizeClasses(size)
@@ -156,7 +160,20 @@ export const TrustScoreDisplay = ({
           </div>
         </motion.div>
       )}
-    </motion.div>
+      </motion.div>
+
+      {/* Trust Score Explanation */}
+      {showExplanation && (
+        <motion.div 
+          className="mt-4"
+          initial={showAnimation ? { opacity: 0, y: 10 } : {}}
+          animate={showAnimation ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.4, delay: 1.4 }}
+        >
+          <TrustScoreExplanation type="dialog" />
+        </motion.div>
+      )}
+    </div>
   );
 };
 

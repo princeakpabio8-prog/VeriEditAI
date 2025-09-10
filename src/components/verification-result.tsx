@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrustScoreDisplay } from './trust-score-display';
+import { TrustScoreExplanation } from './trust-score-explanation';
 import { ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -87,6 +88,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                 score={trustScore} 
                 size="xl" 
                 showAnimation={true}
+                showExplanation={true}
               />
             </motion.div>
           </CardHeader>

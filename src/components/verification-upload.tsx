@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Link2, FileText, Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TrustScoreExplanation } from "./trust-score-explanation";
 
 interface VerificationUploadProps {
   onVerificationStart?: (data: VerificationData) => void;
@@ -164,6 +165,9 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
         <p className="text-center text-muted-foreground">
           Upload text, URLs, or files to get an AI-powered trust score
         </p>
+        <div className="flex justify-center mt-3">
+          <TrustScoreExplanation type="dialog" />
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="text" className="w-full">

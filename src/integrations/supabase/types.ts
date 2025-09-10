@@ -20,6 +20,8 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          monthly_usage: number | null
+          subscription_tier: string | null
           updated_at: string
           user_id: string
         }
@@ -28,6 +30,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          monthly_usage?: number | null
+          subscription_tier?: string | null
           updated_at?: string
           user_id: string
         }
@@ -36,6 +40,8 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          monthly_usage?: number | null
+          subscription_tier?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -78,6 +84,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          monthly_usage: number | null
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          monthly_usage?: number | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          monthly_usage?: number | null
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       verification_logs: {
         Row: {

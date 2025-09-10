@@ -80,6 +80,26 @@ const Dashboard = () => {
         throw new Error(error.message || 'Verification failed');
       }
 
+      // Check if it's a usage limit error
+      if (result?.limit_reached) {
+        toast({
+          title: "Verification Limit Reached",
+          description: result.error || "You've reached your monthly limit. Upgrade to Pro for unlimited verifications.",
+          variant: "destructive",
+          action: (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.location.href = '/billing'}
+            >
+              Upgrade
+            </Button>
+          ),
+        });
+        setProcessingVerification(false);
+        return;
+      }
+
       await fetchVerifications();
       setShowVerificationModal(false);
       setProcessingVerification(false);

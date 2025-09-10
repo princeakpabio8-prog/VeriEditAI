@@ -28,6 +28,30 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
+    // Check subscription and usage limits
+    const { data: profileData } = await supabaseClient
+      .from('profiles')
+      .select('subscription_tier, monthly_usage')
+      .eq('user_id', user.id)
+      .single();
+
+    const subscriptionTier = profileData?.subscription_tier || 'free';
+    const monthlyUsage = profileData?.monthly_usage || 0;
+
+    // Enforce usage limits for free tier
+    if (subscriptionTier === 'free' && monthlyUsage >= 5) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Monthly verification limit reached. Upgrade to Pro for unlimited verifications.",
+          limit_reached: true
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+        }
+      );
+    }
+
     const { content, contentType = 'text' } = await req.json();
 
     if (!content) {
@@ -130,6 +154,24 @@ serve(async (req) => {
           sources_found: mockSources.length,
         },
       });
+
+    // Update monthly usage count
+    await supabaseClient
+      .from('profiles')
+      .update({ 
+        monthly_usage: monthlyUsage + 1 
+      })
+      .eq('user_id', user.id);
+
+    // Also update subscribers table if it exists
+    await supabaseClient
+      .from('subscribers')
+      .upsert({
+        user_id: user.id,
+        email: user.email,
+        monthly_usage: monthlyUsage + 1,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'email' });
 
     console.log(`Verification ${verification.id} completed with score ${trustScore}`);
 

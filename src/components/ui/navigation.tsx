@@ -42,6 +42,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
+                <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Billing
+                </Link>
                 <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
                   Profile
                 </Link>
@@ -78,6 +81,14 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                     >
                       <BarChart3 className="h-4 w-4 mr-2" />
                       Dashboard
+                    </Link>
+                    <Link
+                      to="/billing"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Billing & Plans
                     </Link>
                     <Link
                       to="/profile"

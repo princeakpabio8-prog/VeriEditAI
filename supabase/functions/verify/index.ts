@@ -476,21 +476,46 @@ serve(async (req) => {
       );
     }
 
+    // Check if user is admin (admins get unlimited verifications)
+    const { data: userRole, error: roleError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    const isAdmin = userRole?.role === 'admin';
+    console.log(`User ${user.email} is admin: ${isAdmin}`);
+
     const subscriptionTier = profileData?.subscription_tier || 'free';
     const monthlyUsage = profileData?.monthly_usage || 0;
 
-    // Enforce usage limits for free tier
-    if (subscriptionTier === 'free' && monthlyUsage >= 5) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Monthly verification limit reached. Upgrade to Pro for unlimited verifications.",
-          limit_reached: true
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 429,
-        }
-      );
+    // Enforce usage limits only for non-admin users
+    if (!isAdmin) {
+      let maxUsage = 5; // Free tier default
+      
+      if (subscriptionTier === 'pro') {
+        maxUsage = 500;
+      } else if (subscriptionTier === 'enterprise') {
+        maxUsage = 2000;
+      }
+
+      if (monthlyUsage >= maxUsage) {
+        return new Response(
+          JSON.stringify({ 
+            error: `Monthly verification limit of ${maxUsage} reached. Upgrade to Pro for unlimited verifications.`,
+            limit_reached: true,
+            current_usage: monthlyUsage,
+            max_usage: maxUsage
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 429,
+          }
+        );
+      }
+    } else {
+      console.log('Admin user detected - bypassing usage limits');
     }
 
     const { content, contentType = 'text' } = await req.json();

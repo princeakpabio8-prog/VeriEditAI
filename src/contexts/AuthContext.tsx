@@ -55,16 +55,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const createUserProfile = async (user: User) => {
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        user_id: user.id,
-        full_name: user.user_metadata?.full_name || '',
-        company: user.user_metadata?.company || '',
-      });
-    
-    if (error) {
-      console.error('Error creating profile:', error);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || '',
+          company: user.user_metadata?.company || '',
+        }, {
+          onConflict: 'user_id',
+          ignoreDuplicates: true
+        });
+      
+      if (error && error.code !== '23505') { // Ignore duplicate key errors
+        console.error('Error creating profile:', error);
+      }
+    } catch (error) {
+      console.error('Profile creation failed:', error);
     }
   };
 

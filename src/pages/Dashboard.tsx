@@ -33,6 +33,23 @@ const Dashboard = () => {
   useEffect(() => {
     if (user) {
       fetchVerifications();
+      
+      // Check for pending verification after login
+      const pendingVerification = sessionStorage.getItem('pendingVerification');
+      if (pendingVerification) {
+        try {
+          const data = JSON.parse(pendingVerification);
+          sessionStorage.removeItem('pendingVerification');
+          
+          // Auto-start verification
+          setTimeout(() => {
+            handleVerificationStart(data);
+          }, 500); // Small delay to ensure UI is ready
+        } catch (error) {
+          console.error('Error parsing pending verification:', error);
+          sessionStorage.removeItem('pendingVerification');
+        }
+      }
     }
   }, [user]);
 

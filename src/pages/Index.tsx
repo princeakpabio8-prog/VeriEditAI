@@ -14,9 +14,13 @@ const Index = () => {
 
   const handleVerificationStart = (data: any) => {
     if (!user) {
+      // Store verification data in sessionStorage for after login
+      sessionStorage.setItem('pendingVerification', JSON.stringify(data));
       navigate('/auth');
       return;
     }
+    // User is logged in, redirect to dashboard to process verification
+    sessionStorage.setItem('pendingVerification', JSON.stringify(data));
     navigate('/dashboard');
   };
 

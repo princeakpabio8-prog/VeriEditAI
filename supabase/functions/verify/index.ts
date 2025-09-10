@@ -35,34 +35,25 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    // Check subscription and usage limits, create profile if it doesn't exist
-    let { data: profileData } = await supabaseClient
+    // Get user profile (must exist - created by AuthContext)
+    const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('subscription_tier, monthly_usage')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .single();
 
-    // Create profile if it doesn't exist
-    if (!profileData) {
-      const { data: newProfile, error: createError } = await supabaseClient
-        .from('profiles')
-        .insert({
-          user_id: user.id,
-          full_name: user.user_metadata?.full_name || '',
-          company: user.user_metadata?.company || '',
-          subscription_tier: 'free',
-          monthly_usage: 0
-        })
-        .select('subscription_tier, monthly_usage')
-        .single();
-      
-      if (createError) {
-        console.error('Error creating profile:', createError);
-        // If profile creation fails, use default values
-        profileData = { subscription_tier: 'free', monthly_usage: 0 };
-      } else {
-        profileData = newProfile;
-      }
+    if (profileError || !profileData) {
+      console.error('Profile not found for user:', user.id, profileError);
+      return new Response(
+        JSON.stringify({ 
+          error: "User profile not found. Please refresh the page and try again.",
+          profile_missing: true
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
     }
 
     const subscriptionTier = profileData?.subscription_tier || 'free';
@@ -84,8 +75,30 @@ serve(async (req) => {
 
     const { content, contentType = 'text' } = await req.json();
 
-    if (!content) {
-      throw new Error('Content is required');
+    if (!content || typeof content !== 'string') {
+      return new Response(
+        JSON.stringify({ 
+          error: "Content is required and must be a string",
+          validation_error: true
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    if (!['text', 'url'].includes(contentType)) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Content type must be 'text' or 'url'",
+          validation_error: true
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
     }
 
     console.log(`Processing verification for user ${user.id}`);
@@ -119,15 +132,15 @@ serve(async (req) => {
     const trustScore = Math.floor(Math.random() * 100);
     const processingTime = Date.now() - processingStartTime;
     
-    let status = 'verified';
+    let status = 'completed';
     let summary = '';
     
     if (trustScore >= 80) {
-      status = 'verified';
+      status = 'completed';
       summary = `High confidence verification complete. Content appears to be accurate based on multiple reliable sources. Trust score: ${trustScore}%.`;
-    } else if (trustScore >= 66) {
-      status = 'flagged';
-      summary = `Moderate confidence. Some claims require additional verification. Several sources found but with conflicting information. Trust score: ${trustScore}%.`;
+    } else if (trustScore >= 50) {
+      status = 'completed';
+      summary = `Moderate confidence verification complete. Some claims require additional verification. Several sources found but with conflicting information. Trust score: ${trustScore}%.`;
     } else {
       status = 'failed';
       summary = `Low confidence. Content contains potentially misleading information or lacks sufficient supporting evidence. Trust score: ${trustScore}%.`;

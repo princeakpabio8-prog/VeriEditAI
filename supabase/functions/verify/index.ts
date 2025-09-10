@@ -28,12 +28,35 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    // Check subscription and usage limits
-    const { data: profileData } = await supabaseClient
+    // Check subscription and usage limits, create profile if it doesn't exist
+    let { data: profileData } = await supabaseClient
       .from('profiles')
       .select('subscription_tier, monthly_usage')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
+
+    // Create profile if it doesn't exist
+    if (!profileData) {
+      const { data: newProfile, error: createError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || '',
+          company: user.user_metadata?.company || '',
+          subscription_tier: 'free',
+          monthly_usage: 0
+        })
+        .select('subscription_tier, monthly_usage')
+        .single();
+      
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        // If profile creation fails, use default values
+        profileData = { subscription_tier: 'free', monthly_usage: 0 };
+      } else {
+        profileData = newProfile;
+      }
+    }
 
     const subscriptionTier = profileData?.subscription_tier || 'free';
     const monthlyUsage = profileData?.monthly_usage || 0;

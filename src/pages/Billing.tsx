@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Navigation } from '@/components/ui/navigation';
-import { Check, Crown, Zap, Shield, Users, Star } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FlutterwaveCheckout } from '@/components/flutterwave-checkout';
+import { SubscriptionManager } from '@/components/subscription-manager';
+import { Users, Crown, Zap, Shield, Star, CreditCard, BarChart3 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 const Billing = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [monthlyUsage, setMonthlyUsage] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
 
   useEffect(() => {
     if (user) {
       fetchUsageStats();
+      fetchSubscriptionStatus();
     }
   }, [user]);
 
@@ -38,85 +42,66 @@ const Billing = () => {
     }
   };
 
-  const handleUpgrade = async (plan: string) => {
-    setLoading(true);
-    
+  const fetchSubscriptionStatus = async () => {
     try {
-      // In a real app, this would integrate with Stripe
-      toast({
-        title: "Coming Soon",
-        description: "Stripe integration will be available soon!",
-      });
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profile) {
+        setSubscriptionStatus(profile.subscription_status || 'free');
+      }
     } catch (error) {
-      console.error('Error upgrading plan:', error);
-      toast({
-        title: "Error",
-        description: "Failed to process upgrade",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error('Error fetching subscription status:', error);
     }
   };
 
-  const plans = [
-    {
-      id: 'free',
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      description: 'Perfect for getting started',
-      features: [
-        '5 verifications per month',
-        'Basic trust scoring',
-        'Email support',
-        'Standard response time'
-      ],
-      icon: Shield,
-      current: true,
-      buttonText: 'Current Plan',
-      buttonVariant: 'outline' as const,
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      price: '$19',
-      period: 'per month',
-      description: 'For professionals and small teams',
-      features: [
-        'Unlimited verifications',
-        'Advanced AI analysis',
-        'Priority support',
-        'API access',
-        'Custom integrations',
-        'Advanced analytics'
-      ],
-      icon: Zap,
-      popular: true,
-      current: false,
-      buttonText: 'Upgrade to Pro',
-      buttonVariant: 'default' as const,
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      price: 'Custom',
-      period: 'pricing',
-      description: 'For large organizations',
-      features: [
-        'Everything in Pro',
-        'Custom deployment',
-        'Dedicated support',
-        'SLA guarantees',
-        'Custom training',
-        'White-label options'
-      ],
-      icon: Crown,
-      current: false,
-      buttonText: 'Contact Sales',
-      buttonVariant: 'outline' as const,
-    },
-  ];
+  const handleUpgradeSuccess = () => {
+    fetchUsageStats();
+    fetchSubscriptionStatus();
+    toast({
+      title: "Upgrade Successful!",
+      description: "Your subscription has been upgraded successfully. Welcome to VeriEdit AI Pro!",
+    });
+  };
+
+  const getUsageLimit = () => {
+    switch (subscriptionStatus) {
+      case 'pro':
+      case 'enterprise':
+        return 'Unlimited';
+      default:
+        return '5';
+    }
+  };
+
+  const getUsageDisplay = () => {
+    const limit = getUsageLimit();
+    if (limit === 'Unlimited') {
+      return `${monthlyUsage} / Unlimited`;
+    }
+    return `${monthlyUsage} / ${limit}`;
+  };
+
+  const getStatusBadge = () => {
+    const statusConfig = {
+      free: { label: 'Free', color: 'bg-gray-100 text-gray-800', icon: Shield },
+      pro: { label: 'Pro', color: 'bg-blue-100 text-blue-800', icon: Zap },
+      enterprise: { label: 'Enterprise', color: 'bg-purple-100 text-purple-800', icon: Crown }
+    };
+
+    const config = statusConfig[subscriptionStatus as keyof typeof statusConfig] || statusConfig.free;
+    const Icon = config.icon;
+
+    return (
+      <Badge className={`${config.color} flex items-center gap-1`}>
+        <Icon className="w-3 h-3" />
+        {config.label}
+      </Badge>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,178 +115,238 @@ const Billing = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Choose Your Plan
+              VeriEdit AI Billing & Subscriptions
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Scale your content verification with plans designed for every need
+              Manage your subscription, view usage, and upgrade your plan with secure Flutterwave payments
             </p>
           </div>
 
-          {/* Current Usage */}
+          {/* Current Status Overview */}
           {user && (
             <Card className="bg-gradient-card border-border/50 mb-8">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
-                  Your Current Usage
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Account Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-2xl font-bold text-foreground">
-                      {monthlyUsage} / 5
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      {getUsageDisplay()}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Verifications this month
                     </p>
                   </div>
-                  <div className="w-32">
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min((monthlyUsage / 5) * 100, 100)}%` }}
-                      />
+                  <div className="text-center">
+                    {getStatusBadge()}
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Current plan
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <CreditCard className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-600">
+                        Flutterwave Secure
+                      </span>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      Payment processing
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Pricing Plans */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map((plan) => {
-              const Icon = plan.icon;
-              
-              return (
-                <Card 
-                  key={plan.id}
-                  className={`relative bg-gradient-card border-border/50 ${
-                    plan.popular ? 'border-primary ring-2 ring-primary/20' : ''
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground">
-                        <Star className="h-3 w-3 mr-1" />
-                        Most Popular
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  <CardHeader className="text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="p-3 rounded-full bg-primary/10">
-                        <Icon className="h-8 w-8 text-primary" />
-                      </div>
-                    </div>
-                    
-                    <CardTitle className="text-2xl font-bold">
-                      {plan.name}
-                    </CardTitle>
-                    
-                    <CardDescription className="text-sm">
-                      {plan.description}
-                    </CardDescription>
-                    
-                    <div className="mt-4">
-                      <div className="text-4xl font-bold text-foreground">
-                        {plan.price}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {plan.period}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-6">
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-3">
-                          <Check className="h-4 w-4 text-trust-high flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">
-                            {feature}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    <Button
-                      variant={plan.buttonVariant}
-                      className="w-full"
-                      disabled={plan.current || loading}
-                      onClick={() => handleUpgrade(plan.id)}
-                    >
-                      {loading ? "Processing..." : plan.buttonText}
+          {/* Main Content Tabs */}
+          <Tabs defaultValue="plans" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="plans">Subscription Plans</TabsTrigger>
+              <TabsTrigger value="manage">Manage Subscription</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="plans" className="space-y-6">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-foreground mb-4">
+                  Choose Your Plan
+                </h2>
+                <p className="text-muted-foreground">
+                  Secure payments powered by Flutterwave - supporting cards, bank transfers, and crypto
+                </p>
+              </div>
+
+              {user ? (
+                <FlutterwaveCheckout onSuccess={handleUpgradeSuccess} />
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <Shield className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Please sign in to view and manage your subscription plans
+                    </p>
+                    <Button onClick={() => window.location.href = '/auth'}>
+                      Sign In
                     </Button>
-                    
-                    {plan.current && (
-                      <p className="text-xs text-center text-muted-foreground">
-                        Your current plan
-                      </p>
-                    )}
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+              )}
+
+              {/* Feature Comparison */}
+              <div className="mt-12">
+                <h3 className="text-xl font-bold text-center mb-6">Feature Comparison</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader className="text-center">
+                      <Shield className="w-8 h-8 mx-auto mb-2 text-gray-500" />
+                      <CardTitle>Free</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Monthly verifications</span>
+                        <span className="font-medium">5</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>PDF Export</span>
+                        <span className="text-red-500">✗</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>API Access</span>
+                        <span className="text-red-500">✗</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Priority Support</span>
+                        <span className="text-red-500">✗</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-primary">
+                    <CardHeader className="text-center">
+                      <Zap className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                      <CardTitle>Pro - $10/month</CardTitle>
+                      <Badge className="bg-blue-100 text-blue-800">Most Popular</Badge>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Monthly verifications</span>
+                        <span className="font-medium text-green-600">Unlimited</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>PDF Export</span>
+                        <span className="text-green-500">✓</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>API Access</span>
+                        <span className="text-red-500">✗</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Priority Support</span>
+                        <span className="text-green-500">✓</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="text-center">
+                      <Crown className="w-8 h-8 mx-auto mb-2 text-purple-500" />
+                      <CardTitle>Enterprise - $99/month</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Monthly verifications</span>
+                        <span className="font-medium text-green-600">Unlimited</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>PDF Export</span>
+                        <span className="text-green-500">✓</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>API Access</span>
+                        <span className="text-green-500">✓</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Priority Support</span>
+                        <span className="text-green-500">✓</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="manage" className="space-y-6">
+              {user ? (
+                <SubscriptionManager />
+              ) : (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Please sign in to manage your subscription
+                    </p>
+                    <Button onClick={() => window.location.href = '/auth'}>
+                      Sign In
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
 
           {/* FAQ Section */}
-          <div className="mt-16 text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-8">
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-center mb-8">
               Frequently Asked Questions
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <Card className="bg-gradient-card border-border/50 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    What happens if I exceed my limit?
-                  </CardTitle>
+                  <CardTitle className="text-lg">Payment Methods Supported</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Free users are limited to 5 verifications per month. Pro users have unlimited access.
+                    We support credit/debit cards, bank transfers, mobile money, and USDT cryptocurrency through Flutterwave's secure platform.
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-card border-border/50 text-left">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    Can I cancel anytime?
-                  </CardTitle>
+                  <CardTitle className="text-lg">Is my payment information secure?</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Yes, you can cancel your subscription at any time. You'll retain access until the end of your billing period.
+                    Yes! We use Flutterwave's PCI DSS compliant platform. Your payment data is encrypted and never stored on our servers.
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-card border-border/50 text-left">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    Is my data secure?
-                  </CardTitle>
+                  <CardTitle className="text-lg">Can I cancel anytime?</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    We use enterprise-grade security and never store your content permanently. All data is encrypted in transit and at rest.
+                    Absolutely! You can cancel your subscription at any time. You'll retain access until the end of your billing period.
                   </p>
                 </CardContent>
               </Card>
               
-              <Card className="bg-gradient-card border-border/50 text-left">
+              <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">
-                    Do you offer refunds?
-                  </CardTitle>
+                  <CardTitle className="text-lg">Multi-currency support?</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    We offer a 30-day money-back guarantee for all paid plans. Contact support for assistance.
+                    Yes, we support USD, NGN, GBP, and other major currencies through Flutterwave's global payment network.
                   </p>
                 </CardContent>
               </Card>

@@ -263,7 +263,7 @@ const Dashboard = () => {
                         A valid license is required to use verification features.
                       </p>
                       <Button onClick={() => window.location.href = '/billing'}>
-                        Get License
+                        Upgrade to Pro with Flutterwave
                       </Button>
                     </div>
                   </Card>

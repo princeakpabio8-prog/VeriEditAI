@@ -1,13 +1,7 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { Button } from '@/components/ui/button';
-
-// Extend window interface for Flutterwave
-declare global {
-  interface Window {
-    FlutterwaveCheckout: (config: any) => void;
-  }
-}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Crown, Zap, Star } from 'lucide-react';
@@ -24,13 +18,14 @@ interface Plan {
   features: string[];
   icon: React.ComponentType<{ className?: string }>;
   popular?: boolean;
+  billing?: 'monthly' | 'yearly';
 }
 
 const plans: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 10,
+    price: 20,
     currency: 'USD',
     description: 'Perfect for professionals and small teams',
     icon: Zap,
@@ -40,25 +35,26 @@ const plans: Plan[] = [
       'PDF export functionality',
       'Advanced analytics',
       'Bulk operations',
-      'Email support',
-      'Priority processing'
+      'Priority email support',
+      'API rate limiting: 1000/day'
     ]
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 99,
+    price: 200,
     currency: 'USD',
     description: 'Advanced features for organizations',
     icon: Crown,
+    billing: 'yearly',
     features: [
       'Everything in Pro',
-      'API access',
-      'Priority support',
+      'Unlimited API access',
+      'Priority support & SLA',
       'Custom integrations',
       'Advanced reporting',
       'Dedicated account manager',
-      'SLA guarantee'
+      'White-label options'
     ]
   }
 ];
@@ -70,8 +66,6 @@ interface FlutterwaveCheckoutProps {
 export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
-
-  const generateTxRef = () => `veri_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const createPaymentRecord = async (plan: Plan, txRef: string) => {
     const { error } = await supabase
@@ -105,33 +99,69 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     }
   };
 
-  const useFlutterwaveConfig = (plan: Plan) => {
-    const txRef = generateTxRef();
-    
-    return useFlutterwave({
-      public_key: "FLWPUBK_TEST-SANDBOXDEMOKEY-X", // This will be replaced with actual key
-      tx_ref: txRef,
-      amount: plan.price,
-      currency: plan.currency,
-      payment_options: "card,banktransfer,ussd,qr,crypto",
-      customer: {
-        email: user?.email || '',
-        phone_number: '',
-        name: user?.email || ''
-      },
-      customizations: {
-        title: `VeriEdit AI - ${plan.name} Plan`,
-        description: `Upgrade to ${plan.name} plan`,
-        logo: "https://assets.flutterwave.com/flutterwave-circle-blue.png"
-      },
-      meta: {
-        plan_id: plan.id,
-        user_id: user?.id
-      },
-    });
-  };
+  const config = (plan: Plan, txRef: string) => ({
+    public_key: process.env.FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
+    tx_ref: txRef,
+    amount: plan.price,
+    currency: plan.currency,
+    payment_options: "card,ussd,banktransfer,crypto",
+    customer: {
+      email: user?.email || '',
+      phone_number: '',
+      name: user?.email?.split('@')[0] || 'VeriEdit User'
+    },
+    customizations: {
+      title: `VeriEdit AI - ${plan.name} Plan`,
+      description: `Subscribe to ${plan.name} plan - ${plan.billing === 'yearly' ? 'Annual' : 'Monthly'} billing`,
+      logo: "https://verieditai.com/logo.png"
+    },
+    redirect_url: `${window.location.origin}/payment-callback`,
+    meta: {
+      plan_id: plan.id,
+      user_id: user?.id,
+      billing_cycle: plan.billing || 'monthly'
+    },
+    callback: async (response: any) => {
+      console.log('Payment response:', response);
+      closePaymentModal();
+      
+      if (response.status === "successful") {
+        try {
+          const verificationResult = await verifyPayment(txRef, response.flw_ref);
+          
+          if (verificationResult.success) {
+            toast({
+              title: "Payment Successful!",
+              description: `You've successfully upgraded to ${plan.name} plan`,
+            });
+            onSuccess?.();
+          } else {
+            throw new Error('Payment verification failed');
+          }
+        } catch (error) {
+          console.error('Payment processing error:', error);
+          toast({
+            title: "Payment Processing Error",
+            description: "There was an issue processing your payment. Please contact support.",
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: "Your payment was not successful. Please try again.",
+          variant: "destructive"
+        });
+      }
+      setLoading(null);
+    },
+    onClose: () => {
+      console.log('Payment modal closed');
+      setLoading(null);
+    }
+  });
 
-  const handleFlutterPayment = (plan: Plan) => {
+  const handleFlutterPayment = async (plan: Plan) => {
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -142,150 +172,161 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     }
 
     setLoading(plan.id);
-    const txRef = generateTxRef();
+    const txRef = `${user.id}_${Date.now()}`;
 
-    const config = {
-      public_key: "FLWPUBK_TEST-SANDBOXDEMOKEY-X", // This will be replaced with actual key
-      tx_ref: txRef,
-      amount: plan.price,
-      currency: plan.currency,
-      payment_options: "card,banktransfer,ussd,qr,crypto",
-      customer: {
-        email: user.email || '',
-        phone_number: '',
-        name: user.email || ''
-      },
-      customizations: {
-        title: `VeriEdit AI - ${plan.name} Plan`,
-        description: `Upgrade to ${plan.name} plan`,
-        logo: "https://assets.flutterwave.com/flutterwave-circle-blue.png"
-      },
-      meta: {
-        plan_id: plan.id,
-        user_id: user.id
-      },
-      callback: async (response: any) => {
-        console.log('Payment response:', response);
-        closePaymentModal();
-        
-        if (response.status === "successful") {
-          try {
-            // Create payment record first
-            await createPaymentRecord(plan, txRef);
-            
-            // Verify payment
-            const verificationResult = await verifyPayment(txRef, response.flw_ref);
-            
-            if (verificationResult.success) {
-              toast({
-                title: "Payment Successful!",
-                description: `You've successfully upgraded to ${plan.name} plan`,
-              });
-              onSuccess?.();
-            } else {
-              throw new Error('Payment verification failed');
-            }
-          } catch (error) {
-            console.error('Payment processing error:', error);
-            toast({
-              title: "Payment Processing Error",
-              description: "There was an issue processing your payment. Please contact support.",
-              variant: "destructive"
-            });
-          }
-        } else {
-          toast({
-            title: "Payment Failed",
-            description: "Your payment was not successful. Please try again.",
-            variant: "destructive"
-          });
-        }
-        setLoading(null);
-      },
-      onClose: () => {
-        console.log('Payment modal closed');
-        setLoading(null);
-      }
-    };
-
-    // Create payment record before opening modal
-    createPaymentRecord(plan, txRef)
-      .then(() => {
-        // Use direct FlutterwaveButton integration instead
-        if (window.FlutterwaveCheckout) {
-          window.FlutterwaveCheckout(config);
-        } else {
-          // Fallback to script loading
-          const script = document.createElement('script');
-          script.src = 'https://checkout.flutterwave.com/v3.js';
-          script.onload = () => {
-            if (window.FlutterwaveCheckout) {
-              window.FlutterwaveCheckout(config);
-            }
-          };
-          document.head.appendChild(script);
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to create payment record:', error);
-        toast({
-          title: "Error",
-          description: "Failed to initialize payment. Please try again.",
-          variant: "destructive"
-        });
-        setLoading(null);
+    try {
+      // Create payment record first
+      await createPaymentRecord(plan, txRef);
+      
+      // Initialize payment with config
+      const flutterwaveConfig = config(plan, txRef);
+      
+      // Use the hook correctly - it returns a function that opens the modal
+      const handlePayment = useFlutterwave(flutterwaveConfig);
+      handlePayment({
+        callback: flutterwaveConfig.callback,
+        onClose: flutterwaveConfig.onClose
       });
+      
+    } catch (error) {
+      console.error('Failed to create payment record:', error);
+      toast({
+        title: "Error",
+        description: "Failed to initialize payment. Please try again.",
+        variant: "destructive"
+      });
+      setLoading(null);
+    }
   };
 
   return (
-    <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+    <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
       {plans.map((plan) => {
         const Icon = plan.icon;
         return (
-          <Card key={plan.id} className={`relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}>
-            {plan.popular && (
-              <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-primary">
-                Most Popular
-              </Badge>
-            )}
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Icon className="w-6 h-6 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
-              <div className="mt-4">
-                <span className="text-3xl font-bold">${plan.price}</span>
-                <span className="text-muted-foreground">/month</span>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-2">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-sm">
-                    <Check className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                className="w-full" 
-                size="lg"
-                onClick={() => handleFlutterPayment(plan)}
-                disabled={loading === plan.id}
-                variant={plan.popular ? "default" : "outline"}
-              >
-                {loading === plan.id ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  `Upgrade to ${plan.name}`
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+          <motion.div
+            key={plan.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: plan.id === 'pro' ? 0.1 : 0.2 }}
+            whileHover={{ y: -5 }}
+            className="group"
+          >
+            <Card className={`relative overflow-hidden transition-all duration-300 ${
+              plan.popular 
+                ? 'border-2 border-gradient-to-r from-blue-500 to-teal-500 shadow-xl shadow-blue-500/25' 
+                : 'border border-border/50 hover:border-primary/50'
+            } bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm hover:shadow-lg`}>
+              
+              {plan.popular && (
+                <motion.div 
+                  className="absolute -top-2 left-1/2 transform -translate-x-1/2"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                >
+                  <Badge className="bg-gradient-to-r from-blue-500 to-teal-500 text-white border-0 shadow-lg">
+                    <Star className="w-3 h-3 mr-1" />
+                    Most Popular
+                  </Badge>
+                </motion.div>
+              )}
+
+              <CardHeader className="text-center pb-6">
+                <motion.div 
+                  className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                  whileHover={{ rotate: 5 }}
+                >
+                  <Icon className="w-8 h-8 text-primary" />
+                </motion.div>
+                
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                  {plan.name}
+                </CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  {plan.description}
+                </CardDescription>
+                
+                <div className="mt-6">
+                  <motion.div 
+                    className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    ${plan.price}
+                  </motion.div>
+                  <div className="text-sm text-muted-foreground">
+                    /{plan.billing || 'month'}
+                  </div>
+                  {plan.billing === 'yearly' && (
+                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Save 50% with annual billing
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <motion.li 
+                      key={index} 
+                      className="flex items-center text-sm"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                    >
+                      <Check className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
+                      <span>{feature}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+                
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button 
+                    className={`w-full relative overflow-hidden transition-all duration-300 ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white shadow-lg shadow-blue-500/25'
+                        : 'bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/80'
+                    }`}
+                    size="lg"
+                    onClick={() => handleFlutterPayment(plan)}
+                    disabled={loading === plan.id}
+                  >
+                    {loading === plan.id ? (
+                      <motion.div 
+                        className="flex items-center"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                        Processing...
+                      </motion.div>
+                    ) : (
+                      <>
+                        <motion.span
+                          className="relative z-10"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          Subscribe to {plan.name}
+                        </motion.span>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          initial={{ x: '-100%' }}
+                          whileHover={{ x: '100%' }}
+                          transition={{ duration: 0.6 }}
+                        />
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
         );
       })}
     </div>

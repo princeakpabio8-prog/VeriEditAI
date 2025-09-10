@@ -13,15 +13,22 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    // Create client for user authentication
+    const supabaseAuth = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get the authenticated user
+    // Create service role client for database operations
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get the authenticated user using auth client
     const authHeader = req.headers.get('Authorization')!;
     const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
+    const { data } = await supabaseAuth.auth.getUser(token);
     const user = data.user;
 
     if (!user) {

@@ -5,9 +5,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Link2, FileText, Loader2, AlertCircle } from "lucide-react";
+import { Upload, Link2, FileText, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TrustScoreExplanation } from "./trust-score-explanation";
+import { validateAndSanitize, verificationRateLimiter } from '@/lib/validation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VerificationUploadProps {
   onVerificationStart?: (data: VerificationData) => void;
@@ -15,17 +17,20 @@ interface VerificationUploadProps {
 }
 
 interface VerificationData {
-  type: "text" | "url" | "file";
+  type?: "text" | "url" | "file";
+  contentType?: "text" | "url" | "file";
   content: string;
   fileName?: string;
   fileSize?: number;
 }
 
 export const VerificationUpload = ({ onVerificationStart, isLoading = false }: VerificationUploadProps) => {
+  const { user } = useAuth();
   const [textContent, setTextContent] = useState("");
   const [urlContent, setUrlContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const { toast } = useToast();
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -95,47 +100,79 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
   };
 
   const handleVerifyText = () => {
-    if (!textContent.trim()) {
+    setValidationErrors([]);
+    
+    // Rate limiting check
+    const userId = user?.id || 'anonymous';
+    if (!verificationRateLimiter.isAllowed(userId)) {
+      const resetTime = verificationRateLimiter.getResetTime(userId);
+      const resetDate = resetTime ? new Date(resetTime) : null;
+      
       toast({
-        title: "No content",
-        description: "Please enter some text to verify.",
-        variant: "destructive"
+        title: "Rate Limit Exceeded",
+        description: `Too many verification attempts. Try again ${resetDate ? resetDate.toLocaleTimeString() : 'later'}.`,
+        variant: "destructive",
       });
       return;
     }
 
-    onVerificationStart?.({
-      type: "text",
-      content: textContent.trim()
-    });
+    try {
+      const validatedData = validateAndSanitize({
+        content: textContent,
+        contentType: 'text'
+      });
+
+      onVerificationStart?.({
+        ...validatedData,
+        type: validatedData.contentType
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Validation failed';
+      setValidationErrors([errorMessage]);
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVerifyUrl = () => {
-    if (!urlContent.trim()) {
+    setValidationErrors([]);
+    
+    // Rate limiting check
+    const userId = user?.id || 'anonymous';
+    if (!verificationRateLimiter.isAllowed(userId)) {
+      const resetTime = verificationRateLimiter.getResetTime(userId);
+      const resetDate = resetTime ? new Date(resetTime) : null;
+      
       toast({
-        title: "No URL",
-        description: "Please enter a URL to verify.",
-        variant: "destructive"
+        title: "Rate Limit Exceeded",
+        description: `Too many verification attempts. Try again ${resetDate ? resetDate.toLocaleTimeString() : 'later'}.`,
+        variant: "destructive",
       });
       return;
     }
 
-    // Basic URL validation
     try {
-      new URL(urlContent);
-    } catch {
-      toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL.",
-        variant: "destructive"
+      const validatedData = validateAndSanitize({
+        content: urlContent,
+        contentType: 'url'
       });
-      return;
-    }
 
-    onVerificationStart?.({
-      type: "url",
-      content: urlContent.trim()
-    });
+      onVerificationStart?.({
+        ...validatedData,
+        type: validatedData.contentType
+      });
+    } catch (error: any) {
+      const errorMessage = error.message || 'Validation failed';
+      setValidationErrors([errorMessage]);
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVerifyFile = () => {
@@ -170,6 +207,24 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
         </div>
       </CardHeader>
       <CardContent>
+        {/* Validation Errors */}
+        {validationErrors.length > 0 && (
+          <Card className="border-destructive/50 bg-destructive/5 mb-6">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive mt-0.5" />
+                <div className="space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <p key={index} className="text-sm text-destructive">
+                      {error}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
         <Tabs defaultValue="text" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="text" className="flex items-center gap-2">
@@ -193,12 +248,17 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 id="text-content"
                 placeholder="Paste the text content you want to verify..."
                 value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                className="min-h-[200px] resize-y"
+                onChange={(e) => {
+                  setTextContent(e.target.value);
+                  setValidationErrors([]);
+                }}
+                className={`min-h-[200px] resize-y ${validationErrors.length > 0 ? 'border-destructive' : ''}`}
+                maxLength={50000}
               />
-              <p className="text-xs text-muted-foreground">
-                {textContent.length} characters
-              </p>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Min 10 characters required</span>
+                <span>{textContent.length}/50,000</span>
+              </div>
             </div>
             <Button 
               onClick={handleVerifyText} 
@@ -224,11 +284,15 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 type="url"
                 placeholder="https://example.com/article"
                 value={urlContent}
-                onChange={(e) => setUrlContent(e.target.value)}
+                onChange={(e) => {
+                  setUrlContent(e.target.value);
+                  setValidationErrors([]);
+                }}
+                className={validationErrors.length > 0 ? 'border-destructive' : ''}
               />
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                We'll extract and verify the main content from this page
+                Only HTTP and HTTPS URLs are supported
               </p>
             </div>
             <Button 

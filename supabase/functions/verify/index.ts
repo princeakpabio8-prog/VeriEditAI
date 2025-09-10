@@ -492,7 +492,7 @@ serve(async (req) => {
 
     // Enforce usage limits only for non-admin users
     if (!isAdmin) {
-      let maxUsage = 5; // Free tier default
+      let maxUsage = 20; // Free tier default (increased for testing)
       
       if (subscriptionTier === 'pro') {
         maxUsage = 500;

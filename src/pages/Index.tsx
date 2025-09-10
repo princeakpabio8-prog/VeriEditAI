@@ -1,3 +1,4 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/ui/navigation";
 import { HeroSection } from "@/components/hero-section";
 import { VerificationUpload } from "@/components/verification-upload";
@@ -5,16 +6,26 @@ import { TrustScoreDisplay } from "@/components/trust-score-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const handleVerificationStart = (data: any) => {
-    console.log("Verification started:", data);
-    // This will later integrate with Supabase Edge Functions
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    navigate('/dashboard');
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <Navigation 
+        isAuthenticated={!!user} 
+        user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} 
+      />
       
       <main>
         <HeroSection />

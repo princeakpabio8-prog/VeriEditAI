@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavigationProps {
   isAuthenticated?: boolean;
@@ -9,12 +10,18 @@ interface NavigationProps {
     name: string;
     email: string;
   };
-  onSignOut?: () => void;
 }
 
-export const Navigation = ({ isAuthenticated = false, user, onSignOut }: NavigationProps) => {
+export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -30,15 +37,25 @@ export const Navigation = ({ isAuthenticated = false, user, onSignOut }: Navigat
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/verify" className="text-muted-foreground hover:text-foreground transition-colors">
-              Verify Content
-            </Link>
-            <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
-            </Link>
-            <Link to="/pricing" className="text-muted-foreground hover:text-foreground transition-colors">
-              Pricing
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Dashboard
+                </Link>
+                <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Features
+                </a>
+                <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Pricing
+                </a>
+              </>
+            )}
             
             {isAuthenticated ? (
               <div className="relative">
@@ -55,17 +72,25 @@ export const Navigation = ({ isAuthenticated = false, user, onSignOut }: Navigat
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2">
                     <Link
-                      to="/settings"
+                      to="/dashboard"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/profile"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       <Settings className="h-4 w-4 mr-2" />
-                      Settings
+                      Profile & Settings
                     </Link>
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);
-                        onSignOut?.();
+                        handleSignOut();
                       }}
                       className="flex items-center w-full px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                     >
@@ -77,12 +102,12 @@ export const Navigation = ({ isAuthenticated = false, user, onSignOut }: Navigat
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link to="/login">
+                <Link to="/auth">
                   <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/auth">
                   <Button size="sm">
                     Get Started
                   </Button>
@@ -106,44 +131,51 @@ export const Navigation = ({ isAuthenticated = false, user, onSignOut }: Navigat
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-2">
-            <Link
-              to="/verify"
-              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Verify Content
-            </Link>
-            <Link
-              to="/dashboard"
-              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/pricing"
-              className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Pricing
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/profile"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <a
+                  href="#features"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Features
+                </a>
+                <a
+                  href="#pricing"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Pricing
+                </a>
+              </>
+            )}
             
             {isAuthenticated ? (
               <div className="border-t border-border pt-4 mt-4">
                 <div className="px-4 py-2 text-sm text-muted-foreground">
                   {user?.email}
                 </div>
-                <Link
-                  to="/settings"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Settings
-                </Link>
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
-                    onSignOut?.();
+                    handleSignOut();
                   }}
                   className="block w-full text-left px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -152,12 +184,12 @@ export const Navigation = ({ isAuthenticated = false, user, onSignOut }: Navigat
               </div>
             ) : (
               <div className="border-t border-border pt-4 mt-4 space-y-2">
-                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                   <Button variant="ghost" size="sm" className="w-full justify-start">
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
                   <Button size="sm" className="w-full">
                     Get Started
                   </Button>

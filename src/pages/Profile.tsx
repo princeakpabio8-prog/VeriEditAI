@@ -1,0 +1,312 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navigation } from '@/components/ui/navigation';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { User, Settings, CreditCard, BarChart3 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+interface Profile {
+  full_name: string;
+  company: string;
+}
+
+const Profile = () => {
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
+  const [profile, setProfile] = useState<Profile>({ full_name: '', company: '' });
+  const [loading, setLoading] = useState(false);
+  const [verificationCount, setVerificationCount] = useState(0);
+  const [monthlyUsage, setMonthlyUsage] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchUsageStats();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        setProfile({
+          full_name: data.full_name || '',
+          company: data.company || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchUsageStats = async () => {
+    try {
+      // Get total verifications
+      const { count: totalCount } = await supabase
+        .from('verifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user?.id);
+
+      // Get this month's verifications
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const { count: monthlyCount } = await supabase
+        .from('verifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user?.id)
+        .gte('created_at', startOfMonth.toISOString());
+
+      setVerificationCount(totalCount || 0);
+      setMonthlyUsage(monthlyCount || 0);
+    } catch (error) {
+      console.error('Error fetching usage stats:', error);
+    }
+  };
+
+  const updateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user?.id,
+          full_name: profile.full_name,
+          company: profile.company,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+      
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2">Profile & Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your account settings and view usage statistics
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Profile Information */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  <CardTitle>Profile Information</CardTitle>
+                </div>
+                <CardDescription>
+                  Update your personal information and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={updateProfile} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email || ''}
+                      disabled
+                      className="bg-muted"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Email cannot be changed from this page
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="full_name">Full Name</Label>
+                    <Input
+                      id="full_name"
+                      type="text"
+                      placeholder="Enter your full name"
+                      value={profile.full_name}
+                      onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      type="text"
+                      placeholder="Enter your company name"
+                      value={profile.company}
+                      onChange={(e) => setProfile(prev => ({ ...prev, company: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <Button type="submit" disabled={loading}>
+                    {loading ? "Updating..." : "Update Profile"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Account Settings */}
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Settings className="h-5 w-5 text-primary" />
+                  <CardTitle>Account Settings</CardTitle>
+                </div>
+                <CardDescription>
+                  Manage your account security and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Password</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Change your account password
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Change Password
+                  </Button>
+                </div>
+                
+                <Separator />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Sign Out</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Sign out of your VeriEdit AI account
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleSignOut}>
+                    Sign Out
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Usage Statistics & Billing */}
+          <div className="space-y-6">
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <CardTitle>Usage Statistics</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">This Month</span>
+                    <Badge variant="secondary">
+                      {monthlyUsage} / 5 Free
+                    </Badge>
+                  </div>
+                  
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((monthlyUsage / 5) * 100, 100)}%` }}
+                    />
+                  </div>
+                  
+                  {monthlyUsage >= 5 && (
+                    <p className="text-xs text-trust-medium">
+                      You've reached your free limit
+                    </p>
+                  )}
+                </div>
+                
+                <Separator />
+                
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-foreground">{verificationCount}</div>
+                  <p className="text-sm text-muted-foreground">Total Verifications</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-card border-border/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <CardTitle>Subscription</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center">
+                  <Badge variant="outline" className="mb-4">
+                    Free Plan
+                  </Badge>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    5 verifications per month
+                  </p>
+                  
+                  <Button className="w-full" size="sm">
+                    Upgrade to Pro
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground mt-2">
+                    $19/month • Unlimited verifications
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Profile;

@@ -19,8 +19,44 @@ async function performRealVerification(content: string, contentType: string, ver
     let prompt = '';
     const isMedicalContent = /(?:health|medical|disease|treatment|vaccine|drug|medication|study|research|clinical|trial|symptoms|diagnosis|therapy|cancer|covid|virus|bacteria|infection|medicine|doctor|patient|hospital|WHO|CDC|FDA|pubmed|journal)/i.test(content);
     const isImageContent = contentType === 'image' || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(content);
+    const isVideoContent = contentType === 'video' || /\.(mp4|avi|mov|wmv|flv|webm|mkv|m4v)$/i.test(content);
     
-    if (contentType === 'image' || isImageContent) {
+    if (contentType === 'video' || isVideoContent) {
+      prompt = `Perform COMPREHENSIVE VIDEO VERIFICATION analysis of this video: ${content}
+
+VIDEO VERIFICATION REQUIREMENTS:
+1. DEEPFAKE DETECTION: Analyze for face swap technology, voice synthesis, lip-sync inconsistencies, and AI-generated content markers
+2. TRANSCRIPT VERIFICATION: Extract and verify speech content against official press releases, government archives, and verified news coverage
+3. AUTHENTICITY CONFIRMATION: Cross-reference with timestamped official sources to confirm if the speech/event actually occurred
+4. TECHNICAL ANALYSIS: Examine compression artifacts, frame inconsistencies, temporal anomalies, and digital manipulation markers
+5. SOURCE VALIDATION: Verify original publication source, metadata integrity, and chain of custody
+
+DEEPFAKE-SPECIFIC ANALYSIS:
+- Facial Analysis: Unnatural facial movements, pixel-level inconsistencies, impossible lighting, and synthetic skin textures
+- Voice Analysis: Audio-visual synchronization, voice cloning markers, and spectral analysis for synthetic speech
+- Temporal Consistency: Frame-by-frame analysis for sudden quality changes or impossible transitions
+- Biometric Verification: Facial landmark consistency, eye movement patterns, and micro-expression authenticity
+
+TRANSCRIPT CROSS-VERIFICATION:
+- Official Source Matching: Compare speech content with verified press releases, government transcripts, and official statements
+- News Archive Verification: Cross-check against multiple reputable news sources and timestamped coverage
+- Context Validation: Verify if quoted statements match historical records and official communications
+- Timeline Verification: Confirm if the claimed date/time matches when the speech actually occurred
+
+OUTCOME CLASSIFICATION:
+- If DEEPFAKE DETECTED: Flag ❌ with detailed proof of manipulation techniques and inconsistencies
+- If REAL/AUTHENTIC: Verify ✅ with timestamped official sources and supporting evidence
+
+RESPONSE FORMAT:
+- Trust Score: [0-100] (strict scoring for video authenticity with deepfake detection)
+- Deepfake Analysis: [Technical markers of face swaps, voice manipulation, or AI generation detected]
+- Transcript Verification: [Speech content validation against official sources and press releases]
+- Source Authentication: [Original publication verification and metadata analysis]
+- Timeline Confirmation: [Verification that the speech/event actually occurred when claimed]
+- Technical Evidence: [Frame analysis, compression artifacts, and digital manipulation proof]
+- Authenticity Status: [DEEPFAKE DETECTED ❌ with manipulation proof OR VERIFIED ✅ with timestamped sources]
+- Supporting Documentation: [Official press releases, news archives, and government records that support verification]`;
+    } else if (contentType === 'image' || isImageContent) {
       prompt = `Perform COMPREHENSIVE IMAGE VERIFICATION analysis of this image: ${content}
 
 IMAGE VERIFICATION REQUIREMENTS:
@@ -472,10 +508,10 @@ serve(async (req) => {
       );
     }
 
-    if (!['text', 'url', 'image'].includes(contentType)) {
+    if (!['text', 'url', 'image', 'video'].includes(contentType)) {
       return new Response(
         JSON.stringify({ 
-          error: "Content type must be 'text', 'url', or 'image'",
+          error: "Content type must be 'text', 'url', 'image', or 'video'",
           validation_error: true
         }),
         {

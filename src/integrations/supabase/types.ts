@@ -25,6 +25,7 @@ export type Database = {
           license_type: Database["public"]["Enums"]["license_type"]
           max_usage: number | null
           metadata: Json | null
+          payment_id: string | null
           status: Database["public"]["Enums"]["license_status"]
           updated_at: string
           user_id: string
@@ -39,6 +40,7 @@ export type Database = {
           license_type?: Database["public"]["Enums"]["license_type"]
           max_usage?: number | null
           metadata?: Json | null
+          payment_id?: string | null
           status?: Database["public"]["Enums"]["license_status"]
           updated_at?: string
           user_id: string
@@ -53,7 +55,64 @@ export type Database = {
           license_type?: Database["public"]["Enums"]["license_type"]
           max_usage?: number | null
           metadata?: Json | null
+          payment_id?: string | null
           status?: Database["public"]["Enums"]["license_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licenses_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string | null
+          flw_ref: string | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          plan_type: string
+          status: string
+          tx_ref: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          flw_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          plan_type: string
+          status?: string
+          tx_ref: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          flw_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          plan_type?: string
+          status?: string
+          tx_ref?: string
           updated_at?: string
           user_id?: string
         }
@@ -66,6 +125,9 @@ export type Database = {
           full_name: string | null
           id: string
           monthly_usage: number | null
+          payment_method: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
           subscription_tier: string | null
           updated_at: string
           user_id: string
@@ -76,6 +138,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           monthly_usage?: number | null
+          payment_method?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           subscription_tier?: string | null
           updated_at?: string
           user_id: string
@@ -86,6 +151,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           monthly_usage?: number | null
+          payment_method?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string
@@ -293,6 +361,15 @@ export type Database = {
       increment_license_usage: {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
+      }
+      upgrade_user_subscription: {
+        Args: {
+          expires_date?: string
+          payment_uuid: string
+          plan: string
+          user_uuid: string
+        }
+        Returns: boolean
       }
       validate_license: {
         Args: { user_uuid: string }

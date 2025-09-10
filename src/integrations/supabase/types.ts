@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      licenses: {
+        Row: {
+          created_at: string
+          current_usage: number
+          expires_at: string | null
+          features: Json
+          id: string
+          license_key: string
+          license_type: Database["public"]["Enums"]["license_type"]
+          max_usage: number | null
+          metadata: Json | null
+          status: Database["public"]["Enums"]["license_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_usage?: number
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          license_key: string
+          license_type?: Database["public"]["Enums"]["license_type"]
+          max_usage?: number | null
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["license_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_usage?: number
+          expires_at?: string | null
+          features?: Json
+          id?: string
+          license_key?: string
+          license_type?: Database["public"]["Enums"]["license_type"]
+          max_usage?: number | null
+          metadata?: Json | null
+          status?: Database["public"]["Enums"]["license_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
@@ -230,6 +275,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_feature_access: {
+        Args: { feature_name: string; user_uuid: string }
+        Returns: boolean
+      }
+      generate_license_key: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -237,9 +290,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_license_usage: {
+        Args: { amount?: number; user_uuid: string }
+        Returns: Json
+      }
+      validate_license: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      license_status: "active" | "expired" | "suspended" | "revoked"
+      license_type: "trial" | "basic" | "professional" | "enterprise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -368,6 +431,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      license_status: ["active", "expired", "suspended", "revoked"],
+      license_type: ["trial", "basic", "professional", "enterprise"],
     },
   },
 } as const

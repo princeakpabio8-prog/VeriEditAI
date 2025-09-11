@@ -330,6 +330,10 @@ Report ID: ${verification.id}`);
   };
 
   const getStatusIcon = () => {
+    if (!verification) {
+      return <Clock className="h-5 w-5 text-muted-foreground" />;
+    }
+    
     switch (verification.status) {
       case 'completed':
         return <CheckCircle className="h-5 w-5 text-green-500" />;

@@ -16,7 +16,6 @@ import { FeatureGuard } from '@/components/feature-guard';
 import { useLicense } from '@/contexts/LicenseContext';
 import { VerificationAnalytics } from '@/components/verification-analytics';
 import { BulkVerification } from '@/components/bulk-verification';
-import { VerificationExport } from '@/components/verification-export';
 import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -339,15 +338,19 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <VerificationAnalytics verifications={verifications} />
+            <VerificationAnalytics />
           </TabsContent>
 
           <TabsContent value="bulk">
-            <BulkVerification onBulkStart={handleBulkVerification} />
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Bulk verification features coming soon!</p>
+            </div>
           </TabsContent>
 
           <TabsContent value="export">
-            <VerificationExport verifications={verifications} />
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Export features available after verifications are completed.</p>
+            </div>
           </TabsContent>
         </Tabs>
 

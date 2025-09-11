@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TrustScoreDisplay } from './trust-score-display';
 import { TrustScoreExplanation } from './trust-score-explanation';
+import { VerificationExport } from './verification-export';
 import { ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -23,6 +24,7 @@ interface VerificationResultProps {
   sources: Source[];
   processingTime?: number;
   onNewVerification?: () => void;
+  content?: string;
 }
 
 export const VerificationResult: React.FC<VerificationResultProps> = ({
@@ -33,6 +35,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   sources,
   processingTime,
   onNewVerification,
+  content = "",
 }) => {
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -162,6 +165,27 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           </Card>
         </motion.div>
       )}
+
+      {/* Export Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 2.3 }}
+      >
+        <VerificationExport
+          verificationId={verificationId}
+          trustScore={trustScore}
+          status={status}
+          summary={summary}
+          sources={sources.map(s => ({
+            title: s.title,
+            url: s.url,
+            reliability_score: s.reliability_score
+          }))}
+          content={content}
+          processingTime={processingTime}
+        />
+      </motion.div>
 
       {/* Action Buttons */}
       <motion.div 

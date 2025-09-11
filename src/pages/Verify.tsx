@@ -211,6 +211,7 @@ const Verify = () => {
               sources={verificationState.result.sources || []}
               processingTime={verificationState.result.processing_time || 3000}
               onNewVerification={handleNewVerification}
+              content={verificationState.content}
             />
           )}
         </div>

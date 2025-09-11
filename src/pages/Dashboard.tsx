@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { TrustScoreDisplay } from '@/components/trust-score-display';
-import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package } from 'lucide-react';
+import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseStatus } from '@/components/license-status';
@@ -141,6 +141,33 @@ const Dashboard = () => {
       toast({
         title: "Error",
         description: "Failed to start bulk verification",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('clear_user_verifications', {
+        user_uuid: user.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Cleared ${(data as any)?.deleted_count || 0} verification records`,
+      });
+
+      // Refresh the verifications list
+      fetchVerifications();
+    } catch (error) {
+      console.error('Error clearing history:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear verification history",
         variant: "destructive",
       });
     }
@@ -326,11 +353,24 @@ const Dashboard = () => {
 
         {/* Recent Verifications */}
         <Card className="bg-gradient-card border-border/50">
-          <CardHeader>
-            <CardTitle>Recent Verifications</CardTitle>
-            <CardDescription>
-              Your latest content analysis results
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Recent Verifications</CardTitle>
+              <CardDescription>
+                Your latest content analysis results
+              </CardDescription>
+            </div>
+            {verifications.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleClearHistory}
+                className="gap-2 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear History
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {verifications.length === 0 ? (

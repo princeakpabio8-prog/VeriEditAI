@@ -410,6 +410,10 @@ export type Database = {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
       }
+      clear_user_verifications: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       create_trial_license: {
         Args: { user_uuid: string }
         Returns: Json

@@ -1,118 +1,132 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+// Supabase Edge Function: /verify
+// Chained Verification Engine (Perplexity + GPT + Supabase)
 
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+// CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Main verification function combining Perplexity and OpenAI
-async function performVerification(content: string, contentType: string) {
-  const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  
-  if (!perplexityApiKey || !openaiApiKey) {
-    throw new Error('API keys not configured properly');
+// Env Vars
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const perplexityApiKey = Deno.env.get("PERPLEXITY_API_KEY")!;
+const openaiApiKey = Deno.env.get("OPENAI_API_KEY")!;
+
+// Init Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+serve(async (req: Request) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
-  let perplexityResult = '';
-  let sources: any[] = [];
-
   try {
-    console.log('Step 1: Calling Perplexity API for fact-checking...');
-    
-    // Call Perplexity API first for research and sources
-    const perplexityPrompt = `Search and analyze the following content for factual accuracy: "${content}"
+    const { content, user_id } = await req.json();
 
-Provide comprehensive fact-checking with:
-1. Factual accuracy assessment
-2. Source verification
-3. Supporting evidence
-4. Contradicting evidence if any
-5. Credible sources and citations
+    if (!content || !user_id) {
+      return new Response(JSON.stringify({ error: "Missing fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
-Focus on finding reliable sources and evidence to verify or debunk the claims.`;
+    console.log(`Processing verification for user: ${user_id}`);
 
-    const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
+    // Step 1: Call Perplexity API
+    console.log('Step 1: Calling Perplexity API...');
+    const perplexityRes = await fetch("https://api.perplexity.ai/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${perplexityApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
+        model: "llama-3.1-sonar-large-128k-online",
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert fact-checker. Provide detailed analysis with credible sources and citations.'
+            role: "system",
+            content: "You are a fact-checking expert. Analyze the given content and provide evidence-based verification with credible sources."
           },
           {
-            role: 'user',
-            content: perplexityPrompt
+            role: "user", 
+            content: `Fact-check this content and provide sources: ${content}`
           }
         ],
         temperature: 0.1,
-        max_tokens: 2000,
+        max_tokens: 1500,
         return_images: false,
         return_related_questions: false,
         search_recency_filter: 'month'
       }),
     });
 
-    if (perplexityResponse.ok) {
-      const perplexityData = await perplexityResponse.json();
-      perplexityResult = perplexityData.choices[0]?.message?.content || '';
-      sources = extractSourcesFromResponse(perplexityResult);
-      console.log('Perplexity analysis completed successfully');
+    let perplexityData: any = null;
+    let sources: any[] = [];
+    
+    if (perplexityRes.ok) {
+      perplexityData = await perplexityRes.json();
+      console.log('Perplexity API call successful');
+      
+      // Extract sources from Perplexity response text
+      const perplexityText = perplexityData?.choices?.[0]?.message?.content || '';
+      const urlRegex = /https?:\/\/[^\s\)]+/g;
+      const urls = perplexityText.match(urlRegex) || [];
+      
+      sources = [...new Set(urls)].slice(0, 5).map((url: string, index: number) => {
+        try {
+          const hostname = new URL(url).hostname.replace('www.', '');
+          return {
+            title: `${hostname.charAt(0).toUpperCase() + hostname.slice(1)} - Source ${index + 1}`,
+            url: url.replace(/[.,;)]*$/, '') // Clean trailing punctuation
+          };
+        } catch {
+          return {
+            title: `Source ${index + 1}`,
+            url: url
+          };
+        }
+      });
     } else {
       console.warn('Perplexity API failed, continuing with OpenAI only');
-      perplexityResult = 'Initial research data unavailable - proceeding with direct analysis.';
+      perplexityData = { error: 'Perplexity API unavailable' };
     }
-  } catch (error) {
-    console.error('Perplexity API error:', error);
-    perplexityResult = 'Research sources unavailable - using fallback analysis.';
-  }
 
-  try {
-    console.log('Step 2: Calling OpenAI API for summary and confidence scoring...');
-    
-    // Call OpenAI API with Perplexity results for human-friendly summary
-    const openaiPrompt = `Based on the following research evidence, provide a clear, human-friendly verification summary:
+    // Step 2: Call GPT API with Perplexity evidence
+    console.log('Step 2: Calling OpenAI API...');
+    const gptPrompt = `
+You are VeriEdit AI. Verify this content and provide:
+- Confidence Score (0-100) - be precise with percentage
+- Verification Status (Verified / Flagged / Low Confidence)
+- Clear, human-friendly summary
+- Use these sources for context: ${JSON.stringify(sources)}
 
-ORIGINAL CONTENT TO VERIFY: "${content}"
+Content to verify: """${content}"""
+Research Evidence: """${JSON.stringify(perplexityData)}"""
 
-RESEARCH EVIDENCE FROM FACT-CHECKING:
-${perplexityResult}
+Format your response clearly with the confidence percentage visible.
+`;
 
-Please provide:
-1. A confidence score from 0-100 (where 100 is completely verified, 0 is completely false)
-2. A verification status: "Verified", "Flagged", or "Low Confidence"
-3. A clear, easy-to-understand summary explaining your findings
-4. Key supporting evidence
-
-Format your response as JSON:
-{
-  "confidence": [number 0-100],
-  "status": "[Verified|Flagged|Low Confidence]",
-  "summary": "[human-friendly explanation]"
-}`;
-
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert at synthesizing fact-checking research into clear, actionable summaries. Always respond with valid JSON only.'
+            role: "system",
+            content: "You are VeriEdit AI, an expert content verification assistant. Provide clear, accurate assessments."
           },
           {
-            role: 'user',
-            content: openaiPrompt
+            role: "user", 
+            content: gptPrompt
           }
         ],
         temperature: 0.2,
@@ -120,130 +134,40 @@ Format your response as JSON:
       }),
     });
 
-    if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
-    }
-
-    const openaiData = await openaiResponse.json();
-    const openaiContent = openaiData.choices[0]?.message?.content || '';
+    const gptData = await gptRes.json();
+    const gptText = gptData.choices?.[0]?.message?.content || "No summary available";
     
-    console.log('OpenAI summary completed successfully');
-    
-    // Parse OpenAI JSON response
-    let parsedResult;
-    try {
-      parsedResult = JSON.parse(openaiContent);
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI JSON, extracting manually');
-      // Fallback parsing
-      const confidenceMatch = openaiContent.match(/confidence["\s:]*(\d+)/i);
-      const statusMatch = openaiContent.match(/status["\s:]*["']([^"']+)["']/i);
-      const summaryMatch = openaiContent.match(/summary["\s:]*["']([^"']+)["']/i);
-      
-      parsedResult = {
-        confidence: confidenceMatch ? parseInt(confidenceMatch[1]) : 50,
-        status: statusMatch ? statusMatch[1] : 'Low Confidence',
-        summary: summaryMatch ? summaryMatch[1] : 'Analysis completed with limited data.'
-      };
-    }
+    console.log('OpenAI API call successful');
 
-    return {
-      confidence: Math.min(100, Math.max(0, parsedResult.confidence || 50)),
-      status: parsedResult.status || 'Low Confidence',
-      summary: parsedResult.summary || 'Verification analysis completed.',
-      sources: sources.slice(0, 5) // Limit to 5 sources max
+    // Simple parsing: look for confidence number
+    const confidenceMatch = gptText.match(/(\d{1,3})%/) || gptText.match(/confidence[:\s]*(\d{1,3})/i);
+    const confidence = confidenceMatch
+      ? Math.min(100, parseInt(confidenceMatch[1]))
+      : 70;
+
+    let status = "flagged";
+    if (confidence >= 80) status = "verified";
+    else if (confidence < 65) status = "low_confidence";
+
+    const result = {
+      confidence,
+      status,
+      summary: gptText,
+      sources,
+      created_at: new Date().toISOString(),
     };
 
-  } catch (error) {
-    console.error('OpenAI API error:', error);
-    // Fallback response if OpenAI fails
-    return {
-      confidence: 30,
-      status: 'Low Confidence',
-      summary: 'Unable to complete full verification due to technical limitations. Manual review recommended.',
-      sources: sources.slice(0, 5)
-    };
-  }
-}
-
-// Extract sources from Perplexity response
-function extractSourcesFromResponse(text: string) {
-  const sources = [];
-  
-  // Extract URLs from the response
-  const urlRegex = /https?:\/\/[^\s\)]+/g;
-  const urls = text.match(urlRegex) || [];
-  
-  // Clean and deduplicate URLs
-  const uniqueUrls = [...new Set(urls.map(url => url.replace(/[.,;)]*$/, '')))].slice(0, 5);
-  
-  uniqueUrls.forEach((url, index) => {
-    try {
-      const hostname = new URL(url).hostname.replace('www.', '');
-      sources.push({
-        title: `${hostname.charAt(0).toUpperCase() + hostname.slice(1)} - Source ${index + 1}`,
-        url: url
-      });
-    } catch (error) {
-      console.error('Error parsing URL:', url);
-    }
-  });
-
-  // If no sources found, add a default
-  if (sources.length === 0) {
-    sources.push({
-      title: 'AI Analysis',
-      url: '#'
-    });
-  }
-
-  return sources;
-}
-
-// Main server function
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    console.log('Verification request received');
-    
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Get request data
-    const { content, user_id, content_type = 'text' } = await req.json();
-
-    if (!content || !user_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: content and user_id' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
-    console.log(`Processing verification for user: ${user_id}, content type: ${content_type}`);
-
-    // Perform the verification
-    const result = await performVerification(content, content_type);
-    
-    // Save to Supabase verifications table
+    // Step 3: Save to Supabase
+    console.log('Step 3: Saving to Supabase...');
     const { data: verification, error: dbError } = await supabase
-      .from('verifications')
+      .from("verifications")
       .insert({
         user_id,
         content,
-        content_type,
-        trust_score: result.confidence,
-        status: result.status.toLowerCase(),
-        result_summary: result.summary,
+        content_type: 'text',
+        trust_score: confidence,
+        status: status,
+        result_summary: gptText,
         created_at: new Date().toISOString()
       })
       .select()
@@ -255,12 +179,12 @@ serve(async (req) => {
     }
 
     // Save sources if verification was created successfully
-    if (verification && result.sources.length > 0) {
-      const sourcesToInsert = result.sources.map(source => ({
+    if (verification && sources.length > 0) {
+      const sourcesToInsert = sources.map(source => ({
         verification_id: verification.id,
         url: source.url,
         title: source.title,
-        reliability_score: 85 // Default reliability score
+        reliability_score: 85
       }));
 
       const { error: sourcesError } = await supabase
@@ -274,39 +198,24 @@ serve(async (req) => {
 
     console.log('Verification completed successfully');
 
-    // Return the result in the requested format
-    const response = {
-      confidence: result.confidence,
-      status: result.status,
-      summary: result.summary,
-      sources: result.sources,
-      created_at: new Date().toISOString()
-    };
-
-    return new Response(
-      JSON.stringify(response),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
-
-  } catch (error) {
-    console.error('Verification error:', error);
+    // Step 4: Return to frontend
+    return new Response(JSON.stringify(result), { 
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
     
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Verification failed',
-        confidence: 0,
-        status: 'Error',
-        summary: 'Unable to complete verification due to technical error.',
-        sources: [],
-        created_at: new Date().toISOString()
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+  } catch (err) {
+    console.error("Error in /verify:", err);
+    return new Response(JSON.stringify({ 
+      error: err.message,
+      confidence: 0,
+      status: 'error',
+      summary: 'Verification failed due to technical error.',
+      sources: [],
+      created_at: new Date().toISOString()
+    }), { 
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });

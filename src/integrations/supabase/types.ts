@@ -432,10 +432,6 @@ export type Database = {
       }
     }
     Functions: {
-      can_access_payment_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean

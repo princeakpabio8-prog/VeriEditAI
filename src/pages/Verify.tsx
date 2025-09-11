@@ -9,7 +9,6 @@ import { CacheStatus } from '@/components/cache-status';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FeatureGuard } from '@/components/feature-guard';
-import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Clock, AlertTriangle, Zap, Shield, Search } from 'lucide-react';
@@ -25,7 +24,6 @@ interface VerificationState {
 const Verify = () => {
   const { user } = useAuth();
   const { incrementUsage } = useLicense();
-  const { addToQueue, startQueue } = useVerificationQueue();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [verificationState, setVerificationState] = useState<VerificationState>({

@@ -403,9 +403,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      payment_logs_safe: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          event_type: string | null
+          id: string | null
+          payload_summary: Json | null
+          status: string | null
+          tx_ref: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: never
+          event_type?: string | null
+          id?: string | null
+          payload_summary?: never
+          status?: string | null
+          tx_ref?: never
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: never
+          event_type?: string | null
+          id?: string | null
+          payload_summary?: never
+          status?: string | null
+          tx_ref?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_access_payment_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean

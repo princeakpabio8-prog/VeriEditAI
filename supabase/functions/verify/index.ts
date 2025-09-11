@@ -741,10 +741,6 @@ async function performMultiSourceVerification(content: string, category: string)
       if (result.name.includes('News')) weight = 1.1; // News coverage
       if (result.name.includes('Wikipedia')) weight = 1.0; // Encyclopedia baseline
     }
-      if (result.name === 'AI Analysis') weight = 1.2; // AI analysis gets good weight
-      if (result.name === 'News Verification') weight = 1.1; // News coverage
-      if (result.name === 'Wikipedia Check') weight = 1.0; // Wikipedia baseline
-    }
     
     totalWeightedConfidence += result.confidence * weight;
     totalWeight += weight;

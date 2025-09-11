@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useVerify } from './useVerify';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -40,6 +40,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
   const [progressIntervals, setProgressIntervals] = useState<NodeJS.Timeout[]>([]);
+  const verificationDoneRef = useRef(false);
 
   const totalProgress = steps.reduce((acc, step) => acc + step.progress, 0) / steps.length;
 
@@ -58,6 +59,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
     // Clear all intervals
     progressIntervals.forEach(clearInterval);
     setProgressIntervals([]);
+    verificationDoneRef.current = false;
   }, [progressIntervals]);
 
   const processStep = useCallback((stepIndex: number): Promise<void> => {
@@ -67,8 +69,8 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
         return;
       }
 
-      const stepDurations = [800, 3000, 2500, 1200, 600]; // milliseconds
-      const duration = stepDurations[stepIndex] || 1000;
+      const stepDurations = [300, 1200, 900, 400, 250]; // milliseconds (faster)
+      const duration = stepDurations[stepIndex] || 500;
       let progress = 0;
       const increment = 100 / (duration / 50); // Update every 50ms
 
@@ -78,7 +80,12 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
       ));
 
       const interval = setInterval(() => {
-        progress += increment;
+        // If verification already finished, fast-forward this step
+        if (verificationDoneRef.current && progress < 100) {
+          progress = 100;
+        } else {
+          progress += increment;
+        }
         
         setSteps(prev => prev.map((step, idx) => 
           idx === stepIndex ? { ...step, progress: Math.min(100, progress) } : step
@@ -87,7 +94,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
         // Update time remaining during AI analysis step
         if (stepIndex === 1 && startTime) {
           const elapsed = Date.now() - startTime.getTime();
-          const totalEstimated = 8000; // 8 seconds total
+          const totalEstimated = 3000; // ~3 seconds total
           const remaining = Math.max(0, totalEstimated - elapsed);
           setEstimatedTimeRemaining(remaining);
         }
@@ -118,8 +125,9 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
       setCurrentStep(i);
       await processStep(i);
       
-      // Small delay between steps for smooth transition
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Small delay between steps for smooth transition (skip if verification already finished)
+      const delay = verificationDoneRef.current ? 0 : 200;
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }, [steps.length, processStep]);
 
@@ -135,7 +143,11 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
       const progressPromise = processAllSteps();
       
       // Start actual verification (with fresh cache bypass)
-      const verificationPromise = verify(content, user.id, true);
+      const verificationPromise = (async () => {
+        await verify(content, user.id, true);
+        verificationDoneRef.current = true;
+        setEstimatedTimeRemaining(0);
+      })();
       
       // Wait for both to complete
       await Promise.all([progressPromise, verificationPromise]);

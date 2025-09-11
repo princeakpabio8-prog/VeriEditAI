@@ -313,13 +313,46 @@ export function VerificationAnalytics() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={analytics.verificationTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Bar yAxisId="left" dataKey="count" fill="var(--primary)" opacity={0.8} />
-                  <Line yAxisId="right" type="monotone" dataKey="avgScore" stroke="hsl(var(--secondary))" strokeWidth={2} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    yAxisId="left" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    stroke="hsl(var(--muted-foreground))"
+                    fontSize={12}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Bar 
+                    yAxisId="left" 
+                    dataKey="count" 
+                    fill="hsl(var(--primary))" 
+                    opacity={0.8}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Line 
+                    yAxisId="right" 
+                    type="monotone" 
+                    dataKey="avgScore" 
+                    stroke="hsl(var(--trust-high))" 
+                    strokeWidth={3}
+                    dot={{ fill: 'hsl(var(--trust-high))', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, fill: 'hsl(var(--trust-high))' }}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>

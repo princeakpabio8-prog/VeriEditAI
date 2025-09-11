@@ -151,6 +151,14 @@ Make your analysis thorough, evidence-based, and cite specific sources when maki
       }),
     });
 
+    console.log('GPT Response Status:', gptRes.status);
+    
+    if (!gptRes.ok) {
+      const errorText = await gptRes.text();
+      console.error('GPT API Error:', errorText);
+      throw new Error(`OpenAI API failed: ${gptRes.status} - ${errorText}`);
+    }
+
     const gptData = await gptRes.json();
     console.log('GPT Response:', JSON.stringify(gptData, null, 2));
     

@@ -1,28 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, AlertTriangle, Loader2, Pause, Play, X } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useVerify } from '@/hooks/useVerify';
-import { useAuth } from '@/contexts/AuthContext';
-
-interface VerificationStep {
-  id: string;
-  name: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  duration?: number;
-  error?: string;
-}
+import { useVerificationProgress } from '@/hooks/useVerificationProgress';
 
 interface VerificationProgressProps {
   verificationId: string;
   content: string;
   onComplete?: (result: any) => void;
   onCancel?: () => void;
-  autoStart?: boolean;
 }
 
 export const VerificationProgress: React.FC<VerificationProgressProps> = ({
@@ -30,140 +19,37 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
   content,
   onComplete,
   onCancel,
-  autoStart = true
 }) => {
-  const { user } = useAuth();
-  const { verify, loading, error, result } = useVerify();
-  const [steps, setSteps] = useState<VerificationStep[]>([
-    { id: 'validate', name: 'Validating Content', status: 'pending', progress: 0 },
-    { id: 'analyze', name: 'AI Analysis', status: 'pending', progress: 0 },
-    { id: 'sources', name: 'Source Verification', status: 'pending', progress: 0 },
-    { id: 'scoring', name: 'Trust Score Calculation', status: 'pending', progress: 0 },
-    { id: 'finalize', name: 'Finalizing Results', status: 'pending', progress: 0 }
-  ]);
+  const {
+    steps,
+    currentStep,
+    totalProgress,
+    isProcessing,
+    estimatedTimeRemaining,
+    startVerification,
+    cancelVerification,
+    result,
+    error
+  } = useVerificationProgress();
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
+  // Start verification automatically when component mounts
+  React.useEffect(() => {
+    startVerification(content);
+  }, [content, startVerification]);
 
-  const totalProgress = steps.reduce((acc, step) => acc + step.progress, 0) / steps.length;
-
-  useEffect(() => {
-    if (autoStart && !startTime) {
-      startVerification();
+  // Handle completion
+  React.useEffect(() => {
+    if (result && !isProcessing) {
+      onComplete?.(result);
     }
-  }, [autoStart, startTime]);
-
-  // Monitor API result and complete when available
-  useEffect(() => {
-    if (result && !loading) {
-      setSteps(prev => prev.map(step => ({
-        ...step,
-        status: 'completed' as const,
-        progress: 100
-      })));
-      
-      setTimeout(() => {
-        onComplete?.(result);
-      }, 500);
-    }
-  }, [result, loading, onComplete]);
-
-  const startVerification = () => {
-    setStartTime(new Date());
-    processSteps();
-  };
-
-  const processSteps = async () => {
-    // Start the actual verification API call
-    if (user && content) {
-      try {
-        // Start all steps processing but don't await the simulation
-        for (let i = 0; i < steps.length; i++) {
-          if (isPaused) return;
-          setCurrentStep(i);
-          processStep(i); // Don't await - let it run in background
-        }
-        
-        // Now await the actual API call - completion handled in useEffect
-        await verify(content, user.id, true);
-        
-      } catch (error) {
-        console.error('Verification API error:', error);
-        setSteps(prev => prev.map(step => ({
-          ...step,
-          status: 'failed' as const
-        })));
-      }
-    }
-  };
-
-  const processStep = async (stepIndex: number) => {
-    return new Promise<void>((resolve) => {
-      // Update step to processing
-      setSteps(prev => prev.map((step, idx) => 
-        idx === stepIndex ? { ...step, status: 'processing' } : step
-      ));
-
-      // Simulate step processing with realistic timing
-      const stepDurations = [800, 3000, 2500, 1200, 600]; // milliseconds
-      const duration = stepDurations[stepIndex];
-      let progress = 0;
-      const interval = 50;
-      const increment = 100 / (duration / interval);
-
-      const progressInterval = setInterval(() => {
-        progress += increment;
-        
-        setSteps(prev => prev.map((step, idx) => 
-          idx === stepIndex ? { ...step, progress: Math.min(100, progress) } : step
-        ));
-
-        // Calculate estimated time remaining
-        if (stepIndex === 1) { // During AI analysis
-          const elapsed = new Date().getTime() - (startTime?.getTime() || 0);
-          const totalEstimated = 8000; // 8 seconds total estimated
-          const remaining = Math.max(0, totalEstimated - elapsed);
-          setEstimatedTimeRemaining(remaining);
-        }
-
-        if (progress >= 100) {
-          clearInterval(progressInterval);
-          
-          // Mark step as completed
-          setSteps(prev => prev.map((step, idx) => 
-            idx === stepIndex ? { 
-              ...step, 
-              status: 'completed', 
-              progress: 100,
-              duration: duration
-            } : step
-          ));
-
-          // Check if this is the last step and we have results
-          if (stepIndex === steps.length - 1 && result) {
-            // Call onComplete with the actual verification result
-            setTimeout(() => {
-              onComplete?.(result);
-            }, 500);
-          }
-
-          resolve();
-        }
-      }, interval);
-    });
-  };
-
-  const handlePause = () => {
-    setIsPaused(!isPaused);
-  };
+  }, [result, isProcessing, onComplete]);
 
   const handleCancel = () => {
+    cancelVerification();
     onCancel?.();
   };
 
-  const getStepIcon = (step: VerificationStep) => {
+  const getStepIcon = (step: any) => {
     switch (step.status) {
       case 'completed':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -200,15 +86,6 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handlePause}
-                className="gap-2"
-              >
-                {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                {isPaused ? 'Resume' : 'Pause'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
                 onClick={handleCancel}
                 className="gap-2 text-destructive"
               >
@@ -226,7 +103,7 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
               <span>{Math.round(totalProgress)}%</span>
             </div>
             <Progress value={totalProgress} className="h-3" />
-            {estimatedTimeRemaining && (
+            {estimatedTimeRemaining && estimatedTimeRemaining > 0 && (
               <p className="text-xs text-muted-foreground text-center">
                 {formatTimeRemaining(estimatedTimeRemaining)}
               </p>
@@ -290,7 +167,7 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
 
           {/* Live Status Updates */}
           <AnimatePresence>
-            {currentStep < steps.length && !error && (
+            {currentStep < steps.length && !error && isProcessing && (
               <motion.div
                 className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
                 initial={{ opacity: 0, y: 10 }}
@@ -301,10 +178,10 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
                   Current: {steps[currentStep]?.name}
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  {currentStep === 0 && "Preparing content for analysis..."}
                   {currentStep === 1 && "Analyzing content with advanced AI models..."}
                   {currentStep === 2 && "Cross-referencing with trusted sources..."}
                   {currentStep === 3 && "Calculating reliability metrics..."}
-                  {currentStep === 0 && "Preparing content for analysis..."}
                   {currentStep === 4 && "Generating final report..."}
                 </p>
               </motion.div>
@@ -324,16 +201,16 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
             <span className="font-mono">{verificationId}</span>
           </div>
           <div className="flex justify-between">
-            <span>Started:</span>
-            <span>{startTime?.toLocaleTimeString()}</span>
-          </div>
-          <div className="flex justify-between">
             <span>AI Model:</span>
             <span>Llama-3.1-Sonar-Large-128k</span>
           </div>
           <div className="flex justify-between">
             <span>Analysis Type:</span>
-            <span>Comprehensive Fact-Check</span>
+            <span>Multi-Source Fact-Check</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Progress:</span>
+            <span>{Math.round(totalProgress)}% Complete</span>
           </div>
         </CardContent>
       </Card>

@@ -430,20 +430,22 @@ function categorizeContent(content: string): string {
   return 'general';
 }
 
-// Multi-source verification with consensus algorithm
+// Multi-source verification with consensus algorithm and performance optimization
 async function performMultiSourceVerification(content: string, category: string): Promise<VerificationResult> {
-  console.log('Starting multi-source verification...');
+  console.log('Starting optimized multi-source verification...');
   
   // For business/personal stories, focus on AI analysis and news verification
   // Skip fact-checking APIs that won't have personal anecdote data
-  let sourcesToRun;
+  let sourcesToRun: Promise<{confidence: number, analysis: string, sources: VerificationSource[]}>[];
   
   if (category === 'business') {
+    // Parallel execution for business content
     sourcesToRun = [
       performPerplexityVerification(content, category),
       performNewsVerification(content, category)
     ];
   } else {
+    // Parallel execution for all other content
     sourcesToRun = [
       performPerplexityVerification(content, category),
       performGoogleFactCheck(content),
@@ -452,6 +454,7 @@ async function performMultiSourceVerification(content: string, category: string)
     ];
   }
   
+  // Execute all verifications in parallel for maximum speed
   const results = await Promise.allSettled(sourcesToRun);
 
   // Collect results from successful verifications
@@ -640,28 +643,36 @@ serve(async (req) => {
       };
     }
 
-    // Save sources to database (optional, don't fail if this fails)
+    // Save sources to database in background (optional, don't fail if this fails)
     if (verification.id && verificationResult.sources.length > 0) {
-      try {
-        const sourcesToInsert = verificationResult.sources.map(source => ({
-          verification_id: verification.id,
-          title: source.title,
-          url: source.url,
-          content_snippet: source.snippet,
-          reliability_score: source.reliability_score,
-          source_type: source.source_type
-        }));
+      // Use background task for non-critical database operations
+      const saveSourcesTask = async () => {
+        try {
+          const sourcesToInsert = verificationResult.sources.map(source => ({
+            verification_id: verification.id,
+            title: source.title,
+            url: source.url,
+            content_snippet: source.snippet,
+            reliability_score: source.reliability_score,
+            source_type: source.source_type
+          }));
 
-        const { error: sourcesError } = await supabase
-          .from('sources')
-          .insert(sourcesToInsert);
+          const { error: sourcesError } = await supabase
+            .from('sources')
+            .insert(sourcesToInsert);
 
-        if (sourcesError) {
-          console.error('Error saving sources (non-fatal):', sourcesError);
+          if (sourcesError) {
+            console.error('Error saving sources (background):', sourcesError);
+          } else {
+            console.log('Sources saved successfully in background');
+          }
+        } catch (sourceSaveError) {
+          console.error('Source saving failed (background):', sourceSaveError);
         }
-      } catch (sourceSaveError) {
-        console.error('Source saving failed (non-fatal):', sourceSaveError);
-      }
+      };
+
+      // Start background task - don't wait for it to complete
+      EdgeRuntime?.waitUntil?.(saveSourcesTask()) || saveSourcesTask();
     }
 
     console.log('Multi-source verification completed successfully');

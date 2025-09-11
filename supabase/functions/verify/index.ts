@@ -177,12 +177,11 @@ async function performWikipediaVerification(content: string): Promise<{confidenc
     // Extract key terms for Wikipedia search
     const keywords = content.substring(0, 200).replace(/[^\w\s]/g, ' ').split(' ').filter(word => word.length > 3).slice(0, 3).join(' ');
     const searchQuery = encodeURIComponent(keywords);
-    const searchUrl = `https://en.wikipedia.org/api/rest_v1/page/opensearch/${searchQuery}`;
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${searchQuery}&limit=5&namespace=0&format=json&origin=*`;
     
     console.log('Calling Wikipedia API...');
     const response = await fetch(searchUrl, {
       headers: {
-        'User-Agent': 'VerificationApp/1.0 (Contact: verification@example.com)',
         'Accept': 'application/json',
       }
     });
@@ -293,12 +292,11 @@ async function performPerplexityVerification(content: string, category: string):
     const data = await response.json();
     console.log('Perplexity response received');
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid Perplexity API response structure');
-    }
-    
-    const analysis = data.choices[0].message.content;
-    
+    const message = data?.choices?.[0]?.message || data?.choices?.[0] || {};
+    const analysis = (message?.content && typeof message.content === 'string')
+      ? message.content
+      : (typeof data.output_text === 'string' ? data.output_text : '');
+
     // Extract confidence score
     let confidence = 75;
     const confidencePatterns = [
@@ -308,34 +306,49 @@ async function performPerplexityVerification(content: string, category: string):
       /(\d+)%\s*certain/i
     ];
     
-    for (const pattern of confidencePatterns) {
-      const match = analysis.match(pattern);
-      if (match) {
-        confidence = parseInt(match[1]);
-        break;
+    if (analysis) {
+      for (const pattern of confidencePatterns) {
+        const match = analysis.match(pattern);
+        if (match) {
+          confidence = parseInt(match[1]);
+          break;
+        }
       }
     }
     
-    // Extract sources from response
+    // Extract sources from response across possible shapes
     let sources: VerificationSource[] = [];
-    
-    if (data.citations && Array.isArray(data.citations) && data.citations.length > 0) {
-      sources = data.citations.slice(0, 4).map((citation: any) => ({
-        title: citation.title || citation.name || 'AI Research Source',
-        url: citation.url || citation.link || citation.href || '#',
-        snippet: citation.text || citation.snippet || citation.excerpt || 'Referenced in AI analysis',
-        reliability_score: 80,
-        source_type: 'perplexity' as const
-      }));
-    } else {
+
+    const possibleCitations: any[] = [
+      data?.citations,
+      data?.choices?.[0]?.citations,
+      data?.choices?.[0]?.message?.citations,
+      data?.choices?.[0]?.message?.metadata?.citations,
+      data?.choices?.[0]?.metadata?.citations
+    ].filter((c: any) => Array.isArray(c) && c.length > 0);
+
+    for (const arr of possibleCitations) {
+      for (const citation of arr) {
+        const url = citation?.url || citation?.link || citation?.href;
+        if (!url) continue;
+        sources.push({
+          title: citation?.title || citation?.name || 'AI Research Source',
+          url,
+          snippet: citation?.text || citation?.snippet || citation?.excerpt || 'Referenced in AI analysis',
+          reliability_score: 80,
+          source_type: 'perplexity' as const
+        });
+      }
+    }
+
+    if (sources.length === 0 && analysis) {
       // Extract URLs from analysis text
-      const urlRegex = /https?:\/\/[^\s\)\]\>\,\;]+/g;
+      const urlRegex = /https?:\/\/[^\s)\]>\,;]+/g;
       const foundUrls = analysis.match(urlRegex) || [];
-      
-      sources = foundUrls.slice(0, 3).map((url: string) => {
+      sources = foundUrls.map((url: string) => {
         const cleanUrl = url.replace(/[.,;)\]}>]+$/, '');
-        const domain = cleanUrl.match(/https?:\/\/(?:www\.)?([^\/]+)/);
-        const title = domain ? domain[1].charAt(0).toUpperCase() + domain[1].slice(1) : 'Web Source';
+        const domainMatch = cleanUrl.match(/https?:\/\/(?:www\.)?([^\/]+)/);
+        const title = domainMatch ? domainMatch[1] : 'Web Source';
         return {
           title: `AI Research: ${title}`,
           url: cleanUrl,
@@ -345,11 +358,18 @@ async function performPerplexityVerification(content: string, category: string):
         };
       });
     }
+
+    // Clean and dedupe
+    const seen = new Set<string>();
+    sources = sources
+      .filter(s => typeof s.url === 'string' && /^https?:\/\//.test(s.url))
+      .filter(s => !seen.has(s.url) && (seen.add(s.url), true))
+      .slice(0, 4);
     
     return {
       confidence: Math.min(Math.max(confidence, 0), 100),
-      analysis,
-      sources: sources.slice(0, 4)
+      analysis: analysis || 'AI analysis returned no text',
+      sources
     };
   } catch (error) {
     console.error('Perplexity verification error:', error);
@@ -524,6 +544,15 @@ async function performMultiSourceVerification(content: string, category: string)
     source_consensus: Math.round(sourceConsensus),
     verification_method: methods
   };
+}
+
+function generateVerificationSummary(result: VerificationResult, category: string): string {
+  const status = result.confidence >= 70 ? '✅ VERIFIED' : result.confidence >= 40 ? '⚠️ INCONCLUSIVE' : '❌ DISPUTED';
+  const methods = result.verification_method && result.verification_method.length
+    ? result.verification_method.join('\n• ')
+    : 'Real-time AI Analysis';
+
+  return `**🔍 MULTI-SOURCE VERIFICATION RESULTS**\n\n**FINAL CONFIDENCE SCORE: ${result.confidence}%**\n**SOURCE CONSENSUS: ${result.source_consensus}%**\n\n**VERIFICATION STATUS: ${status}**\n\n**CATEGORY: ${category.toUpperCase()}**\n\n**VERIFICATION METHODS USED:**\n• ${methods}\n\n**MULTI-SOURCE ANALYSIS:**\n${result.analysis}\n\n**KEY FINDINGS:**\n• Sources Consulted: ${result.sources.length} authoritative sources\n• Verification Methods: ${result.verification_method?.length || 1}\n• Source Agreement: ${result.source_consensus}% consensus\n• Real-time Check: Completed ${new Date().toLocaleString()}`;
 }
 
 // Main Supabase Edge Function

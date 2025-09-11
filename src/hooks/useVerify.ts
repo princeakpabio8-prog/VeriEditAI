@@ -59,6 +59,10 @@ export function useVerify() {
       inFlightKeys.current.add(key);
       console.log('Calling verify edge function...');
 
+      // Primary attempt: fast "verify" function
+      let finalData: any = null;
+      let primaryError: any = null;
+
       const { data, error: fnError } = await supabase.functions.invoke('verify', {
         body: {
           content,
@@ -66,16 +70,49 @@ export function useVerify() {
         }
       });
 
-      if (fnError) {
-        throw new Error(fnError.message || 'Verification failed');
+      if (fnError || !data) {
+        console.warn('Primary verify failed, retrying once...', fnError);
+        primaryError = fnError;
+        // One quick retry to handle transient cold-start/network hiccups
+        const { data: retryData, error: retryError } = await supabase.functions.invoke('verify', {
+          body: {
+            content,
+            user_id: userId
+          }
+        });
+        if (!retryError && retryData) {
+          finalData = retryData;
+        } else {
+          primaryError = retryError || primaryError;
+        }
+      } else {
+        finalData = data;
       }
 
-      setResult(data);
+      // Fallback: enhanced-verify (auth required, may use paid AI)
+      if (!finalData) {
+        console.warn('Falling back to enhanced-verify due to primary failure...');
+        const { data: enhancedData, error: enhancedError } = await supabase.functions.invoke('enhanced-verify', {
+          body: {
+            content,
+            category: 'general'
+          }
+        });
+        if (enhancedError || !enhancedData) {
+          console.error('Enhanced verify also failed:', enhancedError || primaryError);
+          throw new Error((enhancedError?.message) || (primaryError?.message) || 'Verification failed');
+        }
+        finalData = enhancedData;
+      }
+
+      setResult(finalData);
 
       // Cache the result (only if not bypassed)
       if (!bypassCache) {
-        verificationCache.set(content, userId, data);
+        verificationCache.set(content, userId, finalData);
       }
+
+      showVerificationSuccess(finalData?.confidence ?? 0, finalData?.processing_time);
 
     } catch (err) {
       console.error('Verification error:', err);

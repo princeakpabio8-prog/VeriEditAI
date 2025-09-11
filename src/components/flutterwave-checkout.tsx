@@ -100,7 +100,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
   };
 
   const config = (plan: Plan, txRef: string) => ({
-    public_key: process.env.FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
+    public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
     tx_ref: txRef,
     amount: plan.price,
     currency: plan.currency,

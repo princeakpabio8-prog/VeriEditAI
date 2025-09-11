@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { verificationCache } from '@/lib/verification-cache';
+import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
 import { useEnhancedToast } from '@/components/enhanced-toast';
 
 interface VerifyResult {

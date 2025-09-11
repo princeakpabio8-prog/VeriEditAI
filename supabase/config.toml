@@ -57,6 +57,9 @@ enable_confirmations = false
 [functions.verify]
 verify_jwt = true
 
+[functions.enhanced-verify]
+verify_jwt = true
+
 [functions.create-checkout]
 verify_jwt = true
 

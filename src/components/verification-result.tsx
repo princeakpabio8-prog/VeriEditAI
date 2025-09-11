@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { TrustScoreDisplay } from './trust-score-display';
 import { TrustScoreExplanation } from './trust-score-explanation';
 import { VerificationExport } from './verification-export';
+import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -14,6 +15,7 @@ interface Source {
   title: string;
   content_snippet: string;
   reliability_score: number;
+  source_type?: 'perplexity' | 'fact_check' | 'news' | 'encyclopedia' | 'academic' | 'government';
 }
 
 interface VerificationResultProps {
@@ -234,6 +236,23 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           }))}
           content={content}
           processingTime={processingTime}
+        />
+      </motion.div>
+
+      {/* Enhanced Source Credibility Analysis */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 2.2 }}
+      >
+        <SourceCredibilityAnalysis
+          sources={sources.map(source => ({
+            ...source,
+            source_type: source.source_type || 'perplexity',
+            id: source.id || crypto.randomUUID()
+          }))}
+          verification_method={methods || ['AI Analysis']}
+          confidence={trustScore}
         />
       </motion.div>
 

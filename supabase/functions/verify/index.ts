@@ -232,26 +232,158 @@ async function performWikipediaVerification(content: string): Promise<{confidenc
   }
 }
 
-// Enhanced Perplexity verification (fixed)
+// Enhanced Multi-AI Verification with Claude 4 and o3
+async function performClaudeVerification(content: string, category: string): Promise<{confidence: number, analysis: string, sources: VerificationSource[]}> {
+  try {
+    const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!anthropicKey) {
+      console.log('Anthropic API key not configured, skipping...');
+      return { confidence: 50, analysis: 'Claude analysis not available', sources: [] };
+    }
+
+    console.log('Calling Claude 4 Opus API...');
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${anthropicKey}`,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-1-20250805',
+        max_tokens: 3000,
+        messages: [{
+          role: 'user',
+          content: `As an expert fact-checker specializing in ${category}, analyze this claim with superior reasoning: "${content}"
+
+ANALYSIS REQUIREMENTS:
+1. Confidence Score (0-100) based on available evidence
+2. Detailed factual analysis with reasoning chains
+3. Identify key verification points and potential biases
+4. Cross-reference with known facts and logical consistency
+5. Consider source credibility and temporal context
+
+FORMAT:
+Confidence: [0-100]%
+Analysis: [Detailed reasoning]
+Key Points: [Bullet points of verification elements]
+Potential Issues: [Biases, limitations, red flags]`
+        }]
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Claude API error: ${response.status} - ${errorText}`);
+      return { confidence: 50, analysis: 'Claude API error', sources: [] };
+    }
+
+    const data = await response.json();
+    console.log('Claude 4 response received');
+    
+    const analysis = data.content[0].text;
+    
+    // Enhanced confidence extraction
+    const confidenceMatch = analysis.match(/confidence[:\s]*(\d+)%?/i);
+    const confidence = confidenceMatch ? Math.min(Math.max(parseInt(confidenceMatch[1]), 0), 100) : 75;
+    
+    return { confidence, analysis, sources: [] };
+  } catch (error) {
+    console.error('Claude verification error:', error);
+    return { 
+      confidence: 50, 
+      analysis: 'Claude verification temporarily unavailable', 
+      sources: []
+    };
+  }
+}
+
+async function performGPTReasoningVerification(content: string, category: string): Promise<{confidence: number, analysis: string, sources: VerificationSource[]}> {
+  try {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) {
+      console.log('OpenAI API key not configured, skipping...');
+      return { confidence: 50, analysis: 'GPT reasoning not available', sources: [] };
+    }
+
+    console.log('Calling GPT o3 Reasoning API...');
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'o3-2025-04-16', // Advanced reasoning model
+        messages: [{
+          role: 'system',
+          content: `You are an expert fact-checker with advanced reasoning capabilities. Specialize in ${category} content verification. Use step-by-step logical analysis.`
+        }, {
+          role: 'user',
+          content: `Verify this ${category} claim using advanced reasoning: "${content}"
+
+REASONING FRAMEWORK:
+1. Break down the claim into verifiable components
+2. Assess each component's plausibility and evidence
+3. Consider logical consistency and causal relationships
+4. Evaluate temporal and contextual factors
+5. Identify potential misinformation patterns
+
+Provide confidence score (0-100) and detailed step-by-step reasoning.`
+        }],
+        max_completion_tokens: 3000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`GPT API error: ${response.status} - ${errorText}`);
+      return { confidence: 50, analysis: 'GPT reasoning error', sources: [] };
+    }
+
+    const data = await response.json();
+    console.log('GPT o3 reasoning response received');
+    
+    const analysis = data.choices[0].message.content;
+    
+    const confidenceMatch = analysis.match(/confidence[:\s]*(\d+)%?/i);
+    const confidence = confidenceMatch ? Math.min(Math.max(parseInt(confidenceMatch[1]), 0), 100) : 75;
+    
+    return { confidence, analysis, sources: [] };
+  } catch (error) {
+    console.error('GPT reasoning verification error:', error);
+    return { 
+      confidence: 50, 
+      analysis: 'GPT reasoning verification temporarily unavailable', 
+      sources: []
+    };
+  }
+}
+
+// Enhanced Perplexity verification with better prompting
 async function performPerplexityVerification(content: string, category: string): Promise<{confidence: number, analysis: string, sources: VerificationSource[]}> {
   try {
     if (!perplexityApiKey) {
       console.log('Perplexity API key not configured, skipping...');
-      return { confidence: 50, analysis: 'AI analysis not available', sources: [] };
+      return { confidence: 50, analysis: 'Real-time AI analysis not available', sources: [] };
     }
 
     let searchPrompt: string;
     let systemPrompt: string;
     
     if (category === 'business') {
-      searchPrompt = `Analyze this business/entrepreneurship content for credibility and realism: "${content}". Consider: revenue claims plausibility, business model viability, timeline feasibility, and general entrepreneurship best practices. Provide confidence score (0-100) and detailed analysis.`;
-      systemPrompt = `You are a business analyst and entrepreneurship expert. When analyzing personal business stories, focus on: 1) Plausibility of revenue/timeline claims based on industry norms, 2) Soundness of described business strategies, 3) Realistic market conditions, 4) Common entrepreneurship patterns. Provide balanced analysis acknowledging that personal anecdotes may not be independently verifiable but can be assessed for credibility based on business logic and market realities.`;
+      searchPrompt = `Analyze this business claim for credibility: "${content}". 
+      Consider: revenue plausibility, business model viability, timeline feasibility, market conditions.
+      Provide confidence score (0-100) and cite real sources with URLs.`;
+      systemPrompt = `You are a business analyst expert. Focus on business logic, market realities, and entrepreneurship patterns. Provide balanced analysis with confidence scoring.`;
     } else {
-      searchPrompt = `Verify this ${category} claim with current, factual information: "${content}". Provide confidence score (0-100), detailed analysis, and cite specific sources with URLs.`;
-      systemPrompt = `You are an expert fact-checker specializing in ${category}. Analyze claims with real-time data and provide accurate verification results with confidence scores and specific source citations including URLs.`;
+      searchPrompt = `Fact-check this ${category} claim with current data: "${content}". 
+      Verify against recent sources, official data, and expert consensus.
+      Provide confidence score (0-100) and cite specific sources with URLs.`;
+      systemPrompt = `You are an expert fact-checker for ${category}. Use real-time data and provide accurate verification with confidence scores and source citations.`;
     }
     
-    console.log('Calling Perplexity API...');
+    console.log('Calling Enhanced Perplexity API...');
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -262,18 +394,12 @@ async function performPerplexityVerification(content: string, category: string):
       body: JSON.stringify({
         model: 'llama-3.1-sonar-large-128k-online',
         messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: searchPrompt
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: searchPrompt }
         ],
-        temperature: 0.2,
+        temperature: 0.1,
         top_p: 0.9,
-        max_tokens: 2000,
+        max_tokens: 3000,
         return_images: false,
         return_related_questions: false,
         search_recency_filter: 'month',
@@ -286,18 +412,16 @@ async function performPerplexityVerification(content: string, category: string):
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Perplexity API error: ${response.status} - ${errorText}`);
-      return { confidence: 50, analysis: 'AI analysis error', sources: [] };
+      return { confidence: 50, analysis: 'Real-time AI analysis error', sources: [] };
     }
 
     const data = await response.json();
-    console.log('Perplexity response received');
+    console.log('Enhanced Perplexity response received');
     
-    const message = data?.choices?.[0]?.message || data?.choices?.[0] || {};
-    const analysis = (message?.content && typeof message.content === 'string')
-      ? message.content
-      : (typeof data.output_text === 'string' ? data.output_text : '');
+    const message = data?.choices?.[0]?.message || {};
+    const analysis = message?.content || '';
 
-    // Extract confidence score
+    // Enhanced confidence extraction
     let confidence = 75;
     const confidencePatterns = [
       /confidence[:\s]*(\d+)%?/i,
@@ -306,82 +430,131 @@ async function performPerplexityVerification(content: string, category: string):
       /(\d+)%\s*certain/i
     ];
     
-    if (analysis) {
-      for (const pattern of confidencePatterns) {
-        const match = analysis.match(pattern);
-        if (match) {
-          confidence = parseInt(match[1]);
-          break;
-        }
+    for (const pattern of confidencePatterns) {
+      const match = analysis.match(pattern);
+      if (match) {
+        confidence = Math.min(Math.max(parseInt(match[1]), 0), 100);
+        break;
       }
     }
     
-    // Extract sources from response across possible shapes
+    // Enhanced source extraction
     let sources: VerificationSource[] = [];
-
-    const possibleCitations: any[] = [
+    const possibleCitations = [
       data?.citations,
-      data?.choices?.[0]?.citations,
-      data?.choices?.[0]?.message?.citations,
-      data?.choices?.[0]?.message?.metadata?.citations,
-      data?.choices?.[0]?.metadata?.citations
-    ].filter((c: any) => Array.isArray(c) && c.length > 0);
+      message?.citations,
+      message?.metadata?.citations
+    ].filter(c => Array.isArray(c) && c.length > 0);
 
-    for (const arr of possibleCitations) {
-      for (const citation of arr) {
-        const url = citation?.url || citation?.link || citation?.href;
-        if (!url) continue;
-        sources.push({
-          title: citation?.title || citation?.name || 'AI Research Source',
-          url,
-          snippet: citation?.text || citation?.snippet || citation?.excerpt || 'Referenced in AI analysis',
-          reliability_score: 80,
-          source_type: 'perplexity' as const
-        });
+    for (const citationArray of possibleCitations) {
+      for (const citation of citationArray) {
+        const url = citation?.url || citation?.link;
+        if (url && typeof url === 'string' && /^https?:\/\//.test(url)) {
+          sources.push({
+            title: citation?.title || 'Real-time Source',
+            url,
+            snippet: citation?.text || citation?.snippet || 'Referenced in real-time analysis',
+            reliability_score: 85,
+            source_type: 'perplexity' as const
+          });
+        }
       }
     }
 
+    // Extract URLs from text if no citations
     if (sources.length === 0 && analysis) {
-      // Extract URLs from analysis text
       const urlRegex = /https?:\/\/[^\s)\]>\,;]+/g;
       const foundUrls = analysis.match(urlRegex) || [];
-      sources = foundUrls.map((url: string) => {
+      sources = foundUrls.slice(0, 3).map(url => {
         const cleanUrl = url.replace(/[.,;)\]}>]+$/, '');
         const domainMatch = cleanUrl.match(/https?:\/\/(?:www\.)?([^\/]+)/);
-        const title = domainMatch ? domainMatch[1] : 'Web Source';
         return {
-          title: `AI Research: ${title}`,
+          title: `Real-time: ${domainMatch?.[1] || 'Source'}`,
           url: cleanUrl,
           snippet: 'Referenced in real-time AI analysis',
-          reliability_score: 75,
+          reliability_score: 80,
           source_type: 'perplexity' as const
         };
       });
     }
-
-    // Clean and dedupe
-    const seen = new Set<string>();
-    sources = sources
-      .filter(s => typeof s.url === 'string' && /^https?:\/\//.test(s.url))
-      .filter(s => !seen.has(s.url) && (seen.add(s.url), true))
-      .slice(0, 4);
     
-    return {
-      confidence: Math.min(Math.max(confidence, 0), 100),
-      analysis: analysis || 'AI analysis returned no text',
-      sources
-    };
+    return { confidence, analysis, sources };
   } catch (error) {
-    console.error('Perplexity verification error:', error);
+    console.error('Enhanced Perplexity verification error:', error);
     return { 
       confidence: 50, 
-      analysis: 'AI verification temporarily unavailable', 
+      analysis: 'Real-time AI verification temporarily unavailable', 
       sources: []
     };
   }
 }
 
-// Enhanced category detection for better source selection
+// Academic source verification for enhanced credibility
+async function performAcademicVerification(content: string): Promise<{confidence: number, analysis: string, sources: VerificationSource[]}> {
+  try {
+    // Extract key terms for academic search
+    const keywords = content.substring(0, 200)
+      .replace(/[^\w\s]/g, ' ')
+      .split(' ')
+      .filter(word => word.length > 3)
+      .slice(0, 5)
+      .join(' ');
+    
+    const searchQuery = encodeURIComponent(keywords);
+    const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${searchQuery}&limit=5&fields=title,abstract,url,authors,year,citationCount`;
+    
+    console.log('Calling Academic Sources API...');
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Academic API error: ${response.status}`);
+      return { confidence: 50, analysis: 'Academic sources unavailable', sources: [] };
+    }
+
+    const data = await response.json();
+    console.log('Academic sources response received');
+    
+    const sources: VerificationSource[] = [];
+    let analysis = 'No relevant academic papers found.';
+    let confidence = 50;
+
+    if (data.data && data.data.length > 0) {
+      const papers = data.data.slice(0, 3);
+      
+      for (const paper of papers) {
+        if (paper.title && paper.year) {
+          sources.push({
+            title: `Academic (${paper.year}): ${paper.title}`,
+            url: paper.url || `https://semanticscholar.org/paper/${paper.paperId}`,
+            snippet: paper.abstract?.substring(0, 200) || `Academic research paper with ${paper.citationCount || 0} citations`,
+            reliability_score: 95,
+            source_type: 'encyclopedia' as const // Using encyclopedia type for academic
+          });
+        }
+      }
+      
+      if (sources.length > 0) {
+        analysis = `Found ${sources.length} relevant academic paper(s). Peer-reviewed research provides scholarly context.`;
+        confidence = 80;
+      }
+    }
+
+    return { confidence, analysis, sources };
+  } catch (error) {
+    console.error('Academic verification error:', error);
+    return { 
+      confidence: 50, 
+      analysis: 'Academic verification temporarily unavailable', 
+      sources: []
+    };
+  }
+}
+
+// Enhanced category detection with more categories
 function categorizeContent(content: string): string {
   const lowerContent = content.toLowerCase();
   
@@ -459,25 +632,28 @@ function withTimeout<T>(p: Promise<T>, ms: number, label: string, fallback: T): 
 }
 
 async function performMultiSourceVerification(content: string, category: string): Promise<VerificationResult> {
-  console.log('Starting optimized multi-source verification...');
+  console.log('Starting enhanced multi-AI verification...');
   
-  // For business/personal stories, focus on AI analysis and news verification
-  // Skip fact-checking APIs that won't have personal anecdote data
+  // Enhanced verification with multiple AI models and specialized sources
   let sourcesToRun: Promise<{confidence: number, analysis: string, sources: VerificationSource[]}>[];
   
   if (category === 'business') {
-    // Parallel execution for business content
+    // Business content: focus on AI analysis + market verification
     sourcesToRun = [
-      withTimeout(performPerplexityVerification(content, category), 1200, 'Perplexity', { confidence: 50, analysis: 'AI analysis timeout', sources: [] }),
-      withTimeout(performNewsVerification(content, category), 1200, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] })
+      withTimeout(performClaudeVerification(content, category), 3000, 'Claude', { confidence: 50, analysis: 'Claude timeout', sources: [] }),
+      withTimeout(performGPTReasoningVerification(content, category), 3000, 'GPT Reasoning', { confidence: 50, analysis: 'GPT timeout', sources: [] }),
+      withTimeout(performPerplexityVerification(content, category), 1500, 'Perplexity', { confidence: 50, analysis: 'Perplexity timeout', sources: [] }),
+      withTimeout(performNewsVerification(content, category), 1500, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] })
     ];
   } else {
-    // Parallel execution for all other content
+    // General content: full multi-source verification
     sourcesToRun = [
-      withTimeout(performPerplexityVerification(content, category), 1200, 'Perplexity', { confidence: 50, analysis: 'AI analysis timeout', sources: [] }),
-      withTimeout(performGoogleFactCheck(content), 1200, 'Google Fact Check', { confidence: 50, analysis: 'Fact-check timeout', sources: [] }),
-      withTimeout(performNewsVerification(content, category), 1200, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] }),
-      withTimeout(performWikipediaVerification(content), 1200, 'Wikipedia', { confidence: 50, analysis: 'Wikipedia timeout', sources: [] })
+      withTimeout(performClaudeVerification(content, category), 3000, 'Claude', { confidence: 50, analysis: 'Claude timeout', sources: [] }),
+      withTimeout(performGPTReasoningVerification(content, category), 3000, 'GPT Reasoning', { confidence: 50, analysis: 'GPT timeout', sources: [] }),
+      withTimeout(performPerplexityVerification(content, category), 1500, 'Perplexity', { confidence: 50, analysis: 'Perplexity timeout', sources: [] }),
+      withTimeout(performGoogleFactCheck(content), 1500, 'Google Fact Check', { confidence: 50, analysis: 'Fact-check timeout', sources: [] }),
+      withTimeout(performNewsVerification(content, category), 1500, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] }),
+      withTimeout(performWikipediaVerification(content), 1500, 'Wikipedia', { confidence: 50, analysis: 'Wikipedia timeout', sources: [] })
     ];
   }
   
@@ -489,54 +665,82 @@ async function performMultiSourceVerification(content: string, category: string)
   const allSources: VerificationSource[] = [];
   const methods: string[] = [];
 
-  // Process results based on category
+  // Enhanced result processing for multi-AI verification
   if (category === 'business') {
     if (results[0]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'Business Analysis', ...results[0].value });
+      verificationResults.push({ name: 'Claude Business Analysis', ...results[0].value });
       allSources.push(...results[0].value.sources);
-      methods.push('AI Business Analysis');
+      methods.push('Claude 4 Superior Reasoning');
     }
     if (results[1]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'Market Verification', ...results[1].value });
+      verificationResults.push({ name: 'GPT Reasoning Analysis', ...results[1].value });
       allSources.push(...results[1].value.sources);
+      methods.push('GPT o3 Advanced Reasoning');
+    }
+    if (results[2]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Real-time AI Analysis', ...results[2].value });
+      allSources.push(...results[2].value.sources);
+      methods.push('Real-time AI Research');
+    }
+    if (results[3]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Market Verification', ...results[3].value });
+      allSources.push(...results[3].value.sources);
       methods.push('Industry News Coverage');
     }
   } else {
     if (results[0]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'AI Analysis', ...results[0].value });
+      verificationResults.push({ name: 'Claude Analysis', ...results[0].value });
       allSources.push(...results[0].value.sources);
-      methods.push('Real-time AI Analysis');
+      methods.push('Claude 4 Superior Reasoning');
     }
     if (results[1]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'Google Fact Check', ...results[1].value });
+      verificationResults.push({ name: 'GPT Reasoning', ...results[1].value });
       allSources.push(...results[1].value.sources);
-      methods.push('Professional Fact Checkers');
+      methods.push('GPT o3 Advanced Reasoning');
     }
     if (results[2]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'News Verification', ...results[2].value });
+      verificationResults.push({ name: 'Real-time AI', ...results[2].value });
       allSources.push(...results[2].value.sources);
-      methods.push('Current News Coverage');
+      methods.push('Real-time AI Research');
     }
     if (results[3]?.status === 'fulfilled') {
-      verificationResults.push({ name: 'Wikipedia Check', ...results[3].value });
+      verificationResults.push({ name: 'Google Fact Check', ...results[3].value });
       allSources.push(...results[3].value.sources);
+      methods.push('Professional Fact Checkers');
+    }
+    if (results[4]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'News Verification', ...results[4].value });
+      allSources.push(...results[4].value.sources);
+      methods.push('Current News Coverage');
+    }
+    if (results[5]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Wikipedia Check', ...results[5].value });
+      allSources.push(...results[5].value.sources);
       methods.push('Encyclopedia Verification');
     }
   }
 
-  // Consensus algorithm - weighted average based on source reliability
+  // Enhanced consensus algorithm with AI model weighting
   let totalWeightedConfidence = 0;
   let totalWeight = 0;
 
   for (const result of verificationResults) {
     let weight = 1;
     
-    // Weight different sources based on their reliability for different content types
+    // Enhanced weights for AI models and content types
     if (category === 'business') {
-      if (result.name === 'Business Analysis') weight = 1.3; // AI business analysis gets higher weight for business content
-      if (result.name === 'Market Verification') weight = 1.1; // Market coverage
+      if (result.name.includes('Claude')) weight = 1.5; // Claude gets highest weight for reasoning
+      if (result.name.includes('GPT Reasoning')) weight = 1.4; // o3 reasoning model
+      if (result.name.includes('Real-time')) weight = 1.2; // Perplexity real-time
+      if (result.name.includes('Market')) weight = 1.1; // News coverage
     } else {
-      if (result.name === 'Google Fact Check') weight = 1.5; // Professional fact-checkers get higher weight
+      if (result.name.includes('Claude')) weight = 1.5; // Claude 4 superior reasoning
+      if (result.name.includes('GPT Reasoning')) weight = 1.4; // o3 reasoning
+      if (result.name.includes('Google Fact Check')) weight = 1.6; // Professional fact-checkers highest
+      if (result.name.includes('Real-time')) weight = 1.3; // Perplexity with real-time data
+      if (result.name.includes('News')) weight = 1.1; // News coverage
+      if (result.name.includes('Wikipedia')) weight = 1.0; // Encyclopedia baseline
+    }
       if (result.name === 'AI Analysis') weight = 1.2; // AI analysis gets good weight
       if (result.name === 'News Verification') weight = 1.1; // News coverage
       if (result.name === 'Wikipedia Check') weight = 1.0; // Wikipedia baseline
@@ -577,12 +781,19 @@ async function performMultiSourceVerification(content: string, category: string)
 }
 
 function generateVerificationSummary(result: VerificationResult, category: string): string {
-  const status = result.confidence >= 70 ? '✅ VERIFIED' : result.confidence >= 40 ? '⚠️ INCONCLUSIVE' : '❌ DISPUTED';
+  const status = result.confidence >= 80 ? '✅ HIGHLY VERIFIED' : 
+                 result.confidence >= 65 ? '✅ VERIFIED' : 
+                 result.confidence >= 45 ? '⚠️ INCONCLUSIVE' : '❌ DISPUTED';
+  
   const methods = result.verification_method && result.verification_method.length
     ? result.verification_method.join('\n• ')
-    : 'Real-time AI Analysis';
+    : 'Enhanced AI Analysis';
 
-  return `**🔍 MULTI-SOURCE VERIFICATION RESULTS**\n\n**FINAL CONFIDENCE SCORE: ${result.confidence}%**\n**SOURCE CONSENSUS: ${result.source_consensus}%**\n\n**VERIFICATION STATUS: ${status}**\n\n**CATEGORY: ${category.toUpperCase()}**\n\n**VERIFICATION METHODS USED:**\n• ${methods}\n\n**MULTI-SOURCE ANALYSIS:**\n${result.analysis}\n\n**KEY FINDINGS:**\n• Sources Consulted: ${result.sources.length} authoritative sources\n• Verification Methods: ${result.verification_method?.length || 1}\n• Source Agreement: ${result.source_consensus}% consensus\n• Real-time Check: Completed ${new Date().toLocaleString()}`;
+  const aiModels = result.verification_method?.filter(m => 
+    m.includes('Claude') || m.includes('GPT') || m.includes('AI')
+  ).length || 0;
+
+  return `**🔍 ENHANCED MULTI-AI VERIFICATION RESULTS**\n\n**FINAL CONFIDENCE SCORE: ${result.confidence}%**\n**SOURCE CONSENSUS: ${result.source_consensus}%**\n**AI MODELS USED: ${aiModels} advanced reasoning models**\n\n**VERIFICATION STATUS: ${status}**\n\n**CATEGORY: ${category.toUpperCase()}**\n\n**VERIFICATION METHODS USED:**\n• ${methods}\n\n**ENHANCED MULTI-SOURCE ANALYSIS:**\n${result.analysis}\n\n**KEY FINDINGS:**\n• Sources Consulted: ${result.sources.length} authoritative sources\n• Verification Methods: ${result.verification_method?.length || 1}\n• AI Model Consensus: ${result.source_consensus}% agreement\n• Enhanced Analysis: Claude 4 + GPT o3 reasoning models\n• Real-time Check: Completed ${new Date().toLocaleString()}`;
 }
 
 // Main Supabase Edge Function

@@ -9,12 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
+import { passwordSchema } from '@/lib/validation';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState<'signin' | 'signup' | 'reset' | ''>('');
   const [resetMode, setResetMode] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
   
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -22,17 +26,38 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    if (isLocked) {
+      toast({
+        title: "Account Locked",
+        description: "Too many failed attempts. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading('signin');
 
     const { error } = await signIn(email, password);
     
     if (error) {
+      const newFailedAttempts = failedAttempts + 1;
+      setFailedAttempts(newFailedAttempts);
+      
+      if (newFailedAttempts >= 5) {
+        setIsLocked(true);
+        setTimeout(() => {
+          setIsLocked(false);
+          setFailedAttempts(0);
+        }, 15 * 60 * 1000); // 15 minutes lockout
+      }
+      
       toast({
         title: "Sign in failed",
         description: error.message,
         variant: "destructive",
       });
     } else {
+      setFailedAttempts(0);
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
@@ -40,12 +65,34 @@ const Auth = () => {
       navigate('/dashboard');
     }
     
-    setLoading(false);
+    setLoading('');
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading('signup');
+    
+    // Validate password strength
+    try {
+      passwordSchema.parse(password);
+      if (password !== confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Passwords do not match",
+          variant: "destructive",
+        });
+        setLoading('');
+        return;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Password Error",
+        description: error.errors?.[0]?.message || "Password does not meet requirements",
+        variant: "destructive",
+      });
+      setLoading('');
+      return;
+    }
 
     const { error } = await signUp(email, password);
     
@@ -62,12 +109,12 @@ const Auth = () => {
       });
     }
     
-    setLoading(false);
+    setLoading('');
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading('reset');
 
     const { error } = await resetPassword(email);
     
@@ -85,7 +132,7 @@ const Auth = () => {
       setResetMode(false);
     }
     
-    setLoading(false);
+    setLoading('');
   };
 
   if (resetMode) {
@@ -115,8 +162,8 @@ const Auth = () => {
                 />
               </div>
               
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send Reset Email"}
+              <Button type="submit" className="w-full" disabled={loading === 'reset'}>
+                {loading === 'reset' ? "Sending..." : "Send Reset Email"}
               </Button>
               
               <Button 
@@ -188,8 +235,8 @@ const Auth = () => {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Signing in..." : "Sign In"}
+                  <Button type="submit" className="w-full" disabled={loading === 'signin' || isLocked}>
+                    {loading === 'signin' ? "Signing in..." : isLocked ? "Account Locked" : "Sign In"}
                   </Button>
                   
                   <Button 
@@ -222,7 +269,7 @@ const Auth = () => {
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder="8+ chars, A-Z, a-z, 0-9, special"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -230,8 +277,20 @@ const Auth = () => {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Creating account..." : "Create Account"}
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <Button type="submit" className="w-full" disabled={loading === 'signup'}>
+                    {loading === 'signup' ? "Creating account..." : "Create Account"}
                   </Button>
                   
                   <p className="text-xs text-muted-foreground text-center">

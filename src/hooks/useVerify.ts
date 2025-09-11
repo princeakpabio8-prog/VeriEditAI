@@ -20,20 +20,24 @@ export function useVerify() {
   const [result, setResult] = useState<VerifyResult | null>(null);
   const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
 
-  const verify = async (content: string, userId: string) => {
+  const verify = async (content: string, userId: string, bypassCache = false) => {
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      // Check cache first
-      const cachedResult = verificationCache.get(content, userId);
-      if (cachedResult) {
-        console.log('Using cached verification result');
-        setResult(cachedResult);
-        showCacheHit('content');
-        setLoading(false);
-        return;
+      // Check cache first (unless bypassed)
+      if (!bypassCache) {
+        const cachedResult = verificationCache.get(content, userId);
+        if (cachedResult) {
+          console.log('Using cached verification result');
+          setResult(cachedResult);
+          showCacheHit('content');
+          setLoading(false);
+          return;
+        }
+      } else {
+        console.log('Bypassing cache for fresh verification');
       }
 
       console.log('Calling verify edge function...');
@@ -51,8 +55,10 @@ export function useVerify() {
 
       setResult(data);
       
-      // Cache the result
-      verificationCache.set(content, userId, data);
+      // Cache the result (only if not bypassed)
+      if (!bypassCache) {
+        verificationCache.set(content, userId, data);
+      }
       
     } catch (err) {
       console.error('Verification error:', err);

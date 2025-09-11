@@ -152,7 +152,10 @@ Make your analysis thorough, evidence-based, and cite specific sources when maki
     });
 
     const gptData = await gptRes.json();
+    console.log('GPT Response:', JSON.stringify(gptData, null, 2));
+    
     const gptText = gptData.choices?.[0]?.message?.content || "No summary available";
+    console.log('GPT Text:', gptText);
     
     console.log('OpenAI API call successful');
 

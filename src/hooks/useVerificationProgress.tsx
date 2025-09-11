@@ -69,7 +69,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
         return;
       }
 
-      const stepDurations = [300, 1200, 900, 400, 250]; // milliseconds (faster)
+      const stepDurations = [150, 500, 350, 200, 120]; // milliseconds (faster)
       const duration = stepDurations[stepIndex] || 500;
       let progress = 0;
       const increment = 100 / (duration / 50); // Update every 50ms

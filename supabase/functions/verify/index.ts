@@ -431,6 +431,33 @@ function categorizeContent(content: string): string {
 }
 
 // Multi-source verification with consensus algorithm and performance optimization
+// Timeout helper to cap per-source latency
+function withTimeout<T>(p: Promise<T>, ms: number, label: string, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        console.warn(`${label} timed out after ${ms}ms`);
+        settled = true;
+        resolve(fallback);
+      }
+    }, ms);
+    p.then((v) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(v);
+      }
+    }).catch((_e) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(fallback);
+      }
+    });
+  });
+}
+
 async function performMultiSourceVerification(content: string, category: string): Promise<VerificationResult> {
   console.log('Starting optimized multi-source verification...');
   
@@ -441,16 +468,16 @@ async function performMultiSourceVerification(content: string, category: string)
   if (category === 'business') {
     // Parallel execution for business content
     sourcesToRun = [
-      performPerplexityVerification(content, category),
-      performNewsVerification(content, category)
+      withTimeout(performPerplexityVerification(content, category), 1200, 'Perplexity', { confidence: 50, analysis: 'AI analysis timeout', sources: [] }),
+      withTimeout(performNewsVerification(content, category), 1200, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] })
     ];
   } else {
     // Parallel execution for all other content
     sourcesToRun = [
-      performPerplexityVerification(content, category),
-      performGoogleFactCheck(content),
-      performNewsVerification(content, category),
-      performWikipediaVerification(content)
+      withTimeout(performPerplexityVerification(content, category), 1200, 'Perplexity', { confidence: 50, analysis: 'AI analysis timeout', sources: [] }),
+      withTimeout(performGoogleFactCheck(content), 1200, 'Google Fact Check', { confidence: 50, analysis: 'Fact-check timeout', sources: [] }),
+      withTimeout(performNewsVerification(content, category), 1200, 'NewsAPI', { confidence: 50, analysis: 'News timeout', sources: [] }),
+      withTimeout(performWikipediaVerification(content), 1200, 'Wikipedia', { confidence: 50, analysis: 'Wikipedia timeout', sources: [] })
     ];
   }
   

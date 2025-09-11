@@ -15,6 +15,7 @@ import License from "./pages/License";
 import Verify from "./pages/Verify";
 import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
+import VerificationDashboard from "./components/VerificationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,14 @@ const App = () => (
               } 
             />
             <Route path="/verify" element={<Verify />} />
+            <Route 
+              path="/verification-dashboard" 
+              element={
+                <ProtectedRoute>
+                  <VerificationDashboard />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

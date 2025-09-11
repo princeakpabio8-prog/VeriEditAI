@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      feedback: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          rating: number | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          rating?: number | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          rating?: number | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       licenses: {
         Row: {
           created_at: string

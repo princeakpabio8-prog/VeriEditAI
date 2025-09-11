@@ -64,26 +64,26 @@ export function UserFeedback() {
 
     setSubmitting(true);
     try {
-      // Since we don't have a feedback table, we'll use console logging for now
-      // In production, you'd want to create a feedback table or use external service
       const feedbackData = {
-        userId: user.id,
-        userEmail: user.email,
+        user_id: user.id,
         type: feedbackType,
         rating: feedbackType === 'rating' ? rating[0] : undefined,
         message: message.trim(),
         category: category || undefined,
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        url: window.location.href
+        metadata: {
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          userEmail: user.email
+        }
       };
 
-      console.log('Feedback submitted:', feedbackData);
-      
-      // Store in localStorage as backup
-      const existingFeedback = JSON.parse(localStorage.getItem('userFeedback') || '[]');
-      existingFeedback.push(feedbackData);
-      localStorage.setItem('userFeedback', JSON.stringify(existingFeedback));
+      const { error } = await supabase
+        .from('feedback')
+        .insert([feedbackData]);
+
+      if (error) {
+        throw error;
+      }
 
       toast({
         title: "Feedback Sent! 🙏",

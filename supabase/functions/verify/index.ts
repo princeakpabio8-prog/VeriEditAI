@@ -6,174 +6,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Comprehensive AI verification using Perplexity API
-async function performRealVerification(content: string, contentType: string, verificationId: string) {
+// Main verification function combining Perplexity and OpenAI
+async function performVerification(content: string, contentType: string) {
   const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
   
-  if (!perplexityApiKey) {
-    throw new Error('Perplexity API key not configured');
+  if (!perplexityApiKey || !openaiApiKey) {
+    throw new Error('API keys not configured properly');
   }
 
+  let perplexityResult = '';
+  let sources: any[] = [];
+
   try {
-    // Create comprehensive verification prompt based on content type with enhanced capabilities
-    let prompt = '';
-    const isMedicalContent = /(?:health|medical|disease|treatment|vaccine|drug|medication|study|research|clinical|trial|symptoms|diagnosis|therapy|cancer|covid|virus|bacteria|infection|medicine|doctor|patient|hospital|WHO|CDC|FDA|pubmed|journal)/i.test(content);
-    const isImageContent = contentType === 'image' || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(content);
-    const isVideoContent = contentType === 'video' || /\.(mp4|avi|mov|wmv|flv|webm|mkv|m4v)$/i.test(content);
+    console.log('Step 1: Calling Perplexity API for fact-checking...');
     
-    if (contentType === 'video' || isVideoContent) {
-      prompt = `Perform COMPREHENSIVE VIDEO VERIFICATION analysis of this video: ${content}
+    // Call Perplexity API first for research and sources
+    const perplexityPrompt = `Search and analyze the following content for factual accuracy: "${content}"
 
-VIDEO VERIFICATION REQUIREMENTS:
-1. DEEPFAKE DETECTION: Analyze for face swap technology, voice synthesis, lip-sync inconsistencies, and AI-generated content markers
-2. TRANSCRIPT VERIFICATION: Extract and verify speech content against official press releases, government archives, and verified news coverage
-3. AUTHENTICITY CONFIRMATION: Cross-reference with timestamped official sources to confirm if the speech/event actually occurred
-4. TECHNICAL ANALYSIS: Examine compression artifacts, frame inconsistencies, temporal anomalies, and digital manipulation markers
-5. SOURCE VALIDATION: Verify original publication source, metadata integrity, and chain of custody
+Provide comprehensive fact-checking with:
+1. Factual accuracy assessment
+2. Source verification
+3. Supporting evidence
+4. Contradicting evidence if any
+5. Credible sources and citations
 
-DEEPFAKE-SPECIFIC ANALYSIS:
-- Facial Analysis: Unnatural facial movements, pixel-level inconsistencies, impossible lighting, and synthetic skin textures
-- Voice Analysis: Audio-visual synchronization, voice cloning markers, and spectral analysis for synthetic speech
-- Temporal Consistency: Frame-by-frame analysis for sudden quality changes or impossible transitions
-- Biometric Verification: Facial landmark consistency, eye movement patterns, and micro-expression authenticity
+Focus on finding reliable sources and evidence to verify or debunk the claims.`;
 
-TRANSCRIPT CROSS-VERIFICATION:
-- Official Source Matching: Compare speech content with verified press releases, government transcripts, and official statements
-- News Archive Verification: Cross-check against multiple reputable news sources and timestamped coverage
-- Context Validation: Verify if quoted statements match historical records and official communications
-- Timeline Verification: Confirm if the claimed date/time matches when the speech actually occurred
-
-OUTCOME CLASSIFICATION:
-- If DEEPFAKE DETECTED: Flag ❌ with detailed proof of manipulation techniques and inconsistencies
-- If REAL/AUTHENTIC: Verify ✅ with timestamped official sources and supporting evidence
-
-RESPONSE FORMAT:
-- Trust Score: [0-100] (strict scoring for video authenticity with deepfake detection)
-- Deepfake Analysis: [Technical markers of face swaps, voice manipulation, or AI generation detected]
-- Transcript Verification: [Speech content validation against official sources and press releases]
-- Source Authentication: [Original publication verification and metadata analysis]
-- Timeline Confirmation: [Verification that the speech/event actually occurred when claimed]
-- Technical Evidence: [Frame analysis, compression artifacts, and digital manipulation proof]
-- Authenticity Status: [DEEPFAKE DETECTED ❌ with manipulation proof OR VERIFIED ✅ with timestamped sources]
-- Supporting Documentation: [Official press releases, news archives, and government records that support verification]`;
-    } else if (contentType === 'image' || isImageContent) {
-      prompt = `Perform COMPREHENSIVE IMAGE VERIFICATION analysis of this image: ${content}
-
-IMAGE VERIFICATION REQUIREMENTS:
-1. REVERSE IMAGE SEARCH: Search for earliest instances of this image across news databases, social media archives, and official sources
-2. METADATA ANALYSIS: Examine EXIF data, creation timestamps, camera information, and GPS coordinates for authenticity markers
-3. MANIPULATION DETECTION: Identify digital edits, AI-generated alterations, deepfakes, pixel inconsistencies, and compression artifacts
-4. SOURCE CROSS-VERIFICATION: Compare with official weather reports, news archives, government databases, and verified news sources
-5. CONTEXTUAL VALIDATION: Verify if claimed location, time, and circumstances match available official records
-
-IMAGE-SPECIFIC ANALYSIS:
-- Reverse Image Search: Find original source and earliest publication dates
-- Technical Analysis: EXIF data inconsistencies, shadow analysis, lighting patterns, and pixel-level examination
-- AI Detection: Signs of AI generation, unnatural textures, impossible physics, or synthetic artifacts
-- Weather Verification: Cross-check weather conditions with meteorological records for claimed date/location
-- News Archive Comparison: Verify against official news databases and verified media sources
-
-OUTCOME CLASSIFICATION:
-- If DOCTORED/MANIPULATED: Flag ❌ with detailed explanation of manipulation techniques detected
-- If REAL/AUTHENTIC: Verify ✅ with source references and supporting evidence
-
-RESPONSE FORMAT:
-- Trust Score: [0-100] (strict scoring for image authenticity)
-- Reverse Search Results: [Earliest instances and original sources found]
-- Metadata Analysis: [EXIF data verification and timestamp accuracy]
-- Manipulation Detection: [Specific edits, AI alterations, or inconsistencies found]
-- Source Cross-Verification: [Weather reports, news archives, official records comparison]
-- Authenticity Status: [FLAGGED ❌ with manipulation explanation OR VERIFIED ✅ with source references]
-- Supporting Evidence: [Official sources, archives, and technical analysis results]`;
-    } else if (contentType === 'url') {
-      if (isMedicalContent) {
-        prompt = `Perform MEDICAL FACT-CHECKING analysis of this health/medical URL: ${content}
-
-MEDICAL VERIFICATION REQUIREMENTS:
-1. CROSS-REFERENCE MEDICAL DATABASES: Verify claims against PubMed, Cochrane Library, WHO updates, CDC guidelines, and peer-reviewed medical journals
-2. VALIDATE STUDY CLAIMS: Check if studies are correctly cited, not cherry-picked, and conclusions match the actual research findings
-3. DETECT MEDICAL MISINFORMATION: Flag exaggerations, misinterpretations of studies, correlation vs causation errors, and cherry-picked statistics
-4. VERIFY MEDICAL AUTHORITY: Confirm if sources have medical credentials and institutional backing
-5. CHECK FOR MEDICAL CONSENSUS: Determine if claims align with current medical consensus and established treatment guidelines
-
-MEDICAL-SPECIFIC ANALYSIS:
-- Study Validity: Are referenced studies peer-reviewed, sample sizes adequate, and methodologies sound?
-- Exaggeration Detection: Are benefits overstated or risks understated compared to actual research?
-- Context Integrity: Are study results presented within proper statistical context and limitations?
-- Authority Verification: Do quoted experts have relevant medical credentials and institutional affiliations?
-
-RESPONSE FORMAT:
-- Trust Score: [0-100] (stricter scoring for medical claims)
-- Medical Source Verification: [PubMed, WHO, CDC, medical journal cross-checks]
-- Study Accuracy: [Verification of cited research and proper interpretation]
-- Misinformation Flags: [Exaggerations, misinterpretations, or dangerous medical advice]
-- Medical Authority Check: [Credentials and qualifications of cited experts]
-- Supporting Evidence: [Specific medical databases and authoritative sources]
-- Medical Authenticity Certificate: [Overall medical reliability assessment]`;
-      } else {
-        prompt = `Perform comprehensive fact-checking analysis of this URL: ${content}
-
-ANALYSIS REQUIREMENTS:
-1. CROSS-CHECK SOURCE: Verify the domain legitimacy, publication credibility, and author credentials
-2. VALIDATE CLAIMS: Cross-reference all factual statements against multiple trusted news sources, official data, and academic sources
-3. DETECT MANIPULATION: Check for misleading headlines, taken-out-of-context quotes, edited images, or subtle misrepresentations
-4. VERIFY TIMESTAMPS: Ensure events are accurately dated and not misattributed to different time periods
-
-RESPONSE FORMAT:
-- Trust Score: [0-100]
-- Source Legitimacy: [Analysis of domain and publication credibility]
-- Claim Verification: [Detailed fact-check of each major claim with supporting sources]
-- Manipulation Detection: [Any signs of misleading content, edited media, or misquotes]
-- Supporting Sources: [List specific URLs that corroborate or contradict the claims]
-- Final Assessment: [Overall reliability and specific concerns]`;
-      }
-    } else {
-      if (isMedicalContent) {
-        prompt = `Perform MEDICAL FACT-CHECKING analysis of this health/medical statement: "${content}"
-
-MEDICAL VERIFICATION REQUIREMENTS:
-1. MEDICAL DATABASE CROSS-REFERENCE: Verify against PubMed database, medical journals (NEJM, The Lancet, JAMA), WHO health updates, CDC guidelines, and FDA approvals
-2. STUDY INTERPRETATION ACCURACY: Check if medical studies are correctly interpreted, not exaggerated, and conclusions align with actual research findings
-3. MEDICAL MISINFORMATION DETECTION: Flag dangerous health advice, unproven treatments, vaccine misinformation, and medical conspiracy theories
-4. EXPERT AUTHORITY VALIDATION: Verify medical credentials, institutional affiliations, and peer recognition of cited experts
-5. MEDICAL CONSENSUS ALIGNMENT: Determine if claims align with current medical consensus and evidence-based medicine
-
-MEDICAL-SPECIFIC CHECKS:
-- Clinical Evidence: Are claims backed by peer-reviewed clinical trials with adequate sample sizes?
-- Risk-Benefit Analysis: Are potential risks and benefits accurately represented?
-- Regulatory Status: Are treatments/medications properly FDA-approved or experimentally labeled?
-- Medical Ethics: Does the advice meet medical ethics standards and patient safety guidelines?
-
-RESPONSE FORMAT:
-- Trust Score: [0-100] (enhanced medical scoring with stricter criteria)
-- Medical Database Verification: [PubMed, Cochrane, WHO, CDC cross-validation results]
-- Study Interpretation Accuracy: [Analysis of how medical research is presented vs actual findings]
-- Medical Authority Validation: [Verification of expert credentials and institutional backing]
-- Misinformation Risk Assessment: [Potential harm from medical misinformation]
-- Supporting Medical Evidence: [Authoritative medical sources that support or contradict the claim]
-- Medical Authenticity Certificate: [Verifiable medical reliability score with institutional backing]`;
-      } else {
-        prompt = `Perform comprehensive fact-checking analysis of this statement: "${content}"
-
-ANALYSIS REQUIREMENTS:
-1. CLAIM VALIDATION: Cross-reference against authoritative sources, official data, peer-reviewed research
-2. SOURCE VERIFICATION: Identify and validate the original sources of this information
-3. CONTEXT CHECK: Ensure claims aren't taken out of context or misrepresented
-4. DETECT MISINFORMATION: Flag any misleading statistics, false correlations, or fabricated details
-
-RESPONSE FORMAT:
-- Trust Score: [0-100]
-- Claim Accuracy: [Detailed verification of each factual element]
-- Source Analysis: [Quality and credibility of underlying sources]
-- Context Verification: [Whether claims are properly contextualized]
-- Supporting Evidence: [List specific sources that support or contradict the statement]
-- Red Flags: [Any signs of misinformation or manipulation]
-- Final Assessment: [Overall reliability and specific concerns]`;
-      }
-    }
-
-    console.log('Sending request to Perplexity API...');
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${perplexityApiKey}`,
@@ -184,248 +44,163 @@ RESPONSE FORMAT:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert fact-checker and misinformation analyst. Provide thorough, evidence-based analysis with specific source citations. Be critical and precise in your assessment.'
+            content: 'You are an expert fact-checker. Provide detailed analysis with credible sources and citations.'
           },
           {
             role: 'user',
-            content: prompt
+            content: perplexityPrompt
           }
         ],
         temperature: 0.1,
-        top_p: 0.9,
         max_tokens: 2000,
         return_images: false,
         return_related_questions: false,
-        search_recency_filter: 'month',
-        frequency_penalty: 1,
-        presence_penalty: 0
+        search_recency_filter: 'month'
       }),
     });
 
-    console.log('Perplexity API response status:', response.status);
+    if (perplexityResponse.ok) {
+      const perplexityData = await perplexityResponse.json();
+      perplexityResult = perplexityData.choices[0]?.message?.content || '';
+      sources = extractSourcesFromResponse(perplexityResult);
+      console.log('Perplexity analysis completed successfully');
+    } else {
+      console.warn('Perplexity API failed, continuing with OpenAI only');
+      perplexityResult = 'Initial research data unavailable - proceeding with direct analysis.';
+    }
+  } catch (error) {
+    console.error('Perplexity API error:', error);
+    perplexityResult = 'Research sources unavailable - using fallback analysis.';
+  }
+
+  try {
+    console.log('Step 2: Calling OpenAI API for summary and confidence scoring...');
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Perplexity API error details:', errorText);
-      throw new Error(`Perplexity API error: ${response.status} - ${errorText}`);
+    // Call OpenAI API with Perplexity results for human-friendly summary
+    const openaiPrompt = `Based on the following research evidence, provide a clear, human-friendly verification summary:
+
+ORIGINAL CONTENT TO VERIFY: "${content}"
+
+RESEARCH EVIDENCE FROM FACT-CHECKING:
+${perplexityResult}
+
+Please provide:
+1. A confidence score from 0-100 (where 100 is completely verified, 0 is completely false)
+2. A verification status: "Verified", "Flagged", or "Low Confidence"
+3. A clear, easy-to-understand summary explaining your findings
+4. Key supporting evidence
+
+Format your response as JSON:
+{
+  "confidence": [number 0-100],
+  "status": "[Verified|Flagged|Low Confidence]",
+  "summary": "[human-friendly explanation]"
+}`;
+
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert at synthesizing fact-checking research into clear, actionable summaries. Always respond with valid JSON only.'
+          },
+          {
+            role: 'user',
+            content: openaiPrompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 1000
+      }),
+    });
+
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.status}`);
     }
 
-    const aiResult = await response.json();
-    console.log('AI analysis completed successfully');
+    const openaiData = await openaiResponse.json();
+    const openaiContent = openaiData.choices[0]?.message?.content || '';
     
-    const analysisText = aiResult.choices[0]?.message?.content || '';
+    console.log('OpenAI summary completed successfully');
     
-    // Extract trust score with improved pattern matching
-    const scoreMatch = analysisText.match(/trust\s*score\s*:?\s*(\d+)(?:\/100|%)?/i) ||
-                     analysisText.match(/score\s*:?\s*(\d+)(?:\/100|%)?/i) ||
-                     analysisText.match(/(\d+)(?:\/100|%)\s*trust/i) ||
-                     analysisText.match(/reliability\s*:?\s*(\d+)(?:\/100|%)?/i);
-    
-    let trustScore = scoreMatch ? Math.min(100, Math.max(0, parseInt(scoreMatch[1]))) : 50;
-    
-    // Additional trust score validation based on key phrases
-    const lowCredibilityIndicators = [
-      'unverified', 'misleading', 'false', 'fabricated', 'manipulated', 
-      'no evidence', 'contradicted', 'unreliable', 'suspicious', 'questionable'
-    ];
-    const highCredibilityIndicators = [
-      'verified', 'corroborated', 'confirmed', 'authentic', 'reliable',
-      'credible', 'supported', 'documented', 'legitimate', 'accurate'
-    ];
-    
-    const lowerText = analysisText.toLowerCase();
-    const lowCount = lowCredibilityIndicators.filter(indicator => lowerText.includes(indicator)).length;
-    const highCount = highCredibilityIndicators.filter(indicator => lowerText.includes(indicator)).length;
-    
-    // Adjust score based on indicator analysis
-    if (lowCount > highCount && trustScore > 40) {
-      trustScore = Math.max(20, trustScore - 20);
-    } else if (highCount > lowCount && trustScore < 70) {
-      trustScore = Math.min(90, trustScore + 15);
-    }
-    
-    // Generate status based on trust score
-    let status = 'completed';
-    if (trustScore < 30) {
-      status = 'failed';
-    } else if (trustScore < 60) {
-      status = 'flagged';
+    // Parse OpenAI JSON response
+    let parsedResult;
+    try {
+      parsedResult = JSON.parse(openaiContent);
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI JSON, extracting manually');
+      // Fallback parsing
+      const confidenceMatch = openaiContent.match(/confidence["\s:]*(\d+)/i);
+      const statusMatch = openaiContent.match(/status["\s:]*["']([^"']+)["']/i);
+      const summaryMatch = openaiContent.match(/summary["\s:]*["']([^"']+)["']/i);
+      
+      parsedResult = {
+        confidence: confidenceMatch ? parseInt(confidenceMatch[1]) : 50,
+        status: statusMatch ? statusMatch[1] : 'Low Confidence',
+        summary: summaryMatch ? summaryMatch[1] : 'Analysis completed with limited data.'
+      };
     }
 
     return {
-      trustScore,
-      status,
-      summary: analysisText,
-      sources: extractSourcesFromResponse(analysisText)
+      confidence: Math.min(100, Math.max(0, parsedResult.confidence || 50)),
+      status: parsedResult.status || 'Low Confidence',
+      summary: parsedResult.summary || 'Verification analysis completed.',
+      sources: sources.slice(0, 5) // Limit to 5 sources max
     };
 
   } catch (error) {
-    console.error('AI verification error:', error);
-    throw error; // Don't use fallback, let the error bubble up so we can see what's wrong
+    console.error('OpenAI API error:', error);
+    // Fallback response if OpenAI fails
+    return {
+      confidence: 30,
+      status: 'Low Confidence',
+      summary: 'Unable to complete full verification due to technical limitations. Manual review recommended.',
+      sources: sources.slice(0, 5)
+    };
   }
 }
 
-// Extract sources from AI response with enhanced parsing
+// Extract sources from Perplexity response
 function extractSourcesFromResponse(text: string) {
   const sources = [];
   
-  // Enhanced URL extraction that handles markdown links and citations
-  const urlRegex = /(?:https?:\/\/[^\s\)]+)|(?:\[.*?\]\((https?:\/\/[^\)]+)\))/g;
-  const matches = text.matchAll(urlRegex);
-  const urls = [];
+  // Extract URLs from the response
+  const urlRegex = /https?:\/\/[^\s\)]+/g;
+  const urls = text.match(urlRegex) || [];
   
-  for (const match of matches) {
-    const url = match[1] || match[0]; // Get URL from markdown link or direct URL
-    if (url && url.startsWith('http')) {
-      urls.push(url.replace(/[.,;)]*$/, '')); // Clean trailing punctuation
-    }
-  }
-  
-  // Take first 5 unique URLs as sources
-  const uniqueUrls = [...new Set(urls)].slice(0, 5);
+  // Clean and deduplicate URLs
+  const uniqueUrls = [...new Set(urls.map(url => url.replace(/[.,;)]*$/, '')))].slice(0, 5);
   
   uniqueUrls.forEach((url, index) => {
     try {
-      const hostname = new URL(url).hostname;
-      const domain = hostname.replace('www.', '');
-      
-      // Extract context around the URL for better source description
-      const urlIndex = text.indexOf(url);
-      let context = '';
-      if (urlIndex !== -1) {
-        const start = Math.max(0, urlIndex - 100);
-        const end = Math.min(text.length, urlIndex + url.length + 100);
-        context = text.substring(start, end).replace(url, '').trim();
-      }
-      
-      // Determine reliability score based on domain reputation
-      let reliabilityScore = 75;
-      const trustedDomains = [
-        'reuters.com', 'ap.org', 'bbc.com', 'npr.org', 'pbs.org',
-        'nature.com', 'science.org', 'nejm.org', 'who.int', 'cdc.gov',
-        'gov.uk', 'europa.eu', 'un.org', 'fact-check.org'
-      ];
-      const highQualityDomains = [
-        'nytimes.com', 'wsj.com', 'theguardian.com', 'economist.com',
-        'ft.com', 'washingtonpost.com', 'politico.com'
-      ];
-      
-      if (trustedDomains.some(trusted => domain.includes(trusted))) {
-        reliabilityScore = Math.floor(Math.random() * 10) + 90;
-      } else if (highQualityDomains.some(quality => domain.includes(quality))) {
-        reliabilityScore = Math.floor(Math.random() * 15) + 80;
-      } else {
-        reliabilityScore = Math.floor(Math.random() * 25) + 65;
-      }
-      
+      const hostname = new URL(url).hostname.replace('www.', '');
       sources.push({
-        url: url,
-        title: `${domain.charAt(0).toUpperCase() + domain.slice(1)} - Verification Source`,
-        content_snippet: context || `Evidence source from ${domain}`,
-        reliability_score: reliabilityScore
+        title: `${hostname.charAt(0).toUpperCase() + hostname.slice(1)} - Source ${index + 1}`,
+        url: url
       });
     } catch (error) {
-      console.error('Error parsing URL:', url, error);
+      console.error('Error parsing URL:', url);
     }
   });
 
-  // If fewer than 2 sources found, add explanation about limited sources
+  // If no sources found, add a default
   if (sources.length === 0) {
     sources.push({
-      url: '#',
       title: 'AI Analysis',
-      content_snippet: 'Comprehensive analysis performed using multiple online sources and databases',
-      reliability_score: 80
+      url: '#'
     });
   }
 
   return sources;
 }
 
-// Background processing function
-async function processVerificationInBackground(
-  supabaseClient: any,
-  verification: any,
-  content: string,
-  contentType: string
-) {
-  console.log(`Starting background processing for verification ${verification.id}`);
-  
-  try {
-    const processingStartTime = Date.now();
-    
-    // Perform real AI verification
-    const result = await performRealVerification(content, contentType, verification.id);
-    const processingTime = Date.now() - processingStartTime;
-
-    // Update verification with results
-    const { error: updateError } = await supabaseClient
-      .from('verifications')
-      .update({
-        status: result.status,
-        trust_score: result.trustScore,
-        result_summary: result.summary,
-        processing_time_ms: processingTime,
-      })
-      .eq('id', verification.id);
-
-    if (updateError) {
-      console.error('Error updating verification:', updateError);
-      throw updateError;
-    }
-
-    // Insert sources
-    if (result.sources.length > 0) {
-      const sourcesToInsert = result.sources.map(source => ({
-        verification_id: verification.id,
-        ...source
-      }));
-
-      await supabaseClient
-        .from('sources')
-        .insert(sourcesToInsert);
-    }
-
-    // Log completion
-    await supabaseClient
-      .from('verification_logs')
-      .insert({
-        verification_id: verification.id,
-        step: 'verification_complete',
-        status: 'success',
-        details: {
-          trust_score: result.trustScore,
-          processing_time_ms: processingTime,
-          sources_found: result.sources.length,
-        },
-      });
-
-    console.log(`Verification ${verification.id} completed with score ${result.trustScore}`);
-
-  } catch (error) {
-    console.error('Background processing error:', error);
-    
-    // Update verification with error status
-    await supabaseClient
-      .from('verifications')
-      .update({
-        status: 'failed',
-        result_summary: 'Verification failed due to processing error. Please try again.',
-      })
-      .eq('id', verification.id);
-
-    // Log error
-    await supabaseClient
-      .from('verification_logs')
-      .insert({
-        verification_id: verification.id,
-        step: 'verification_error',
-        status: 'error',
-        details: { error: error.message },
-      });
-  }
-}
-
+// Main server function
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -433,196 +208,104 @@ serve(async (req) => {
   }
 
   try {
-    // Create client for user authentication
-    const supabaseAuth = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    console.log('Verification request received');
+    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Create service role client for database operations
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    // Get request data
+    const { content, user_id, content_type = 'text' } = await req.json();
 
-    // Get the authenticated user
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseAuth.auth.getUser(token);
-    const user = data.user;
-
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-
-    // Get user profile
-    const { data: profileData, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('subscription_tier, monthly_usage')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      console.error('Profile not found for user:', user.id, profileError);
+    if (!content || !user_id) {
       return new Response(
-        JSON.stringify({ 
-          error: "User profile not found. Please refresh the page and try again.",
-          profile_missing: true
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
+        JSON.stringify({ error: 'Missing required fields: content and user_id' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
 
-    // Check if user is admin (admins get unlimited verifications)
-    const { data: userRole, error: roleError } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
+    console.log(`Processing verification for user: ${user_id}, content type: ${content_type}`);
 
-    const isAdmin = userRole?.role === 'admin';
-    console.log(`User ${user.email} is admin: ${isAdmin}`);
-
-    const subscriptionTier = profileData?.subscription_tier || 'free';
-    const monthlyUsage = profileData?.monthly_usage || 0;
-
-    // Enforce usage limits only for non-admin users
-    if (!isAdmin) {
-      let maxUsage = 20; // Free tier default (increased for testing)
-      
-      if (subscriptionTier === 'pro') {
-        maxUsage = 500;
-      } else if (subscriptionTier === 'enterprise') {
-        maxUsage = 2000;
-      }
-
-      if (monthlyUsage >= maxUsage) {
-        return new Response(
-          JSON.stringify({ 
-            error: `Monthly verification limit of ${maxUsage} reached. Upgrade to Pro for unlimited verifications.`,
-            limit_reached: true,
-            current_usage: monthlyUsage,
-            max_usage: maxUsage
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 429,
-          }
-        );
-      }
-    } else {
-      console.log('Admin user detected - bypassing usage limits');
-    }
-
-    const { content, contentType = 'text' } = await req.json();
-
-    if (!content || typeof content !== 'string') {
-      return new Response(
-        JSON.stringify({ 
-          error: "Content is required and must be a string",
-          validation_error: true
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
-      );
-    }
-
-    if (!['text', 'url', 'image', 'video'].includes(contentType)) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Content type must be 'text', 'url', 'image', or 'video'",
-          validation_error: true
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 400,
-        }
-      );
-    }
-
-    console.log(`Processing verification for user ${user.id}`);
-
-    // Insert verification record
-    const { data: verification, error: insertError } = await supabaseClient
+    // Perform the verification
+    const result = await performVerification(content, content_type);
+    
+    // Save to Supabase verifications table
+    const { data: verification, error: dbError } = await supabase
       .from('verifications')
       .insert({
-        user_id: user.id,
-        content: content,
-        content_type: contentType,
-        status: 'pending',
+        user_id,
+        content,
+        content_type,
+        trust_score: result.confidence,
+        status: result.status.toLowerCase(),
+        result_summary: result.summary,
+        created_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (insertError) {
-      console.error('Error inserting verification:', insertError);
-      throw insertError;
+    if (dbError) {
+      console.error('Database error:', dbError);
+      throw new Error('Failed to save verification result');
     }
 
-    console.log(`Created verification ${verification.id}`);
-
-    // Update monthly usage count immediately
-    await supabaseClient
-      .from('profiles')
-      .update({ 
-        monthly_usage: monthlyUsage + 1 
-      })
-      .eq('user_id', user.id);
-
-    // Also update subscribers table if it exists
-    await supabaseClient
-      .from('subscribers')
-      .upsert({
-        user_id: user.id,
-        email: user.email,
-        monthly_usage: monthlyUsage + 1,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'email' });
-
-    // Start background processing (don't await this)
-    const backgroundTask = processVerificationInBackground(
-      supabaseClient,
-      verification,
-      content,
-      contentType
-    );
-
-    // Use EdgeRuntime.waitUntil to ensure background task completes
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(backgroundTask);
-    } else {
-      // Fallback for environments without EdgeRuntime
-      backgroundTask.catch(error => console.error('Background task error:', error));
-    }
-
-    // Return immediate response
-    return new Response(
-      JSON.stringify({
+    // Save sources if verification was created successfully
+    if (verification && result.sources.length > 0) {
+      const sourcesToInsert = result.sources.map(source => ({
         verification_id: verification.id,
-        status: 'pending',
-        message: 'Verification started. Results will be available shortly.',
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        url: source.url,
+        title: source.title,
+        reliability_score: 85 // Default reliability score
+      }));
+
+      const { error: sourcesError } = await supabase
+        .from('sources')
+        .insert(sourcesToInsert);
+
+      if (sourcesError) {
+        console.error('Sources save error:', sourcesError);
+      }
+    }
+
+    console.log('Verification completed successfully');
+
+    // Return the result in the requested format
+    const response = {
+      confidence: result.confidence,
+      status: result.status,
+      summary: result.summary,
+      sources: result.sources,
+      created_at: new Date().toISOString()
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      { 
         status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
   } catch (error) {
     console.error('Verification error:', error);
+    
     return new Response(
-      JSON.stringify({
-        error: error.message || 'An unexpected error occurred',
+      JSON.stringify({ 
+        error: error.message || 'Verification failed',
+        confidence: 0,
+        status: 'Error',
+        summary: 'Unable to complete verification due to technical error.',
+        sources: [],
+        created_at: new Date().toISOString()
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
         status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }

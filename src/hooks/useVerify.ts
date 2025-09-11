@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { verificationCache } from '@/lib/verification-cache';
+import { useToast } from '@/hooks/use-toast';
 
 interface VerifyResult {
   confidence: number;
@@ -16,6 +18,7 @@ export function useVerify() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
+  const { toast } = useToast();
 
   const verify = async (content: string, userId: string) => {
     setLoading(true);
@@ -23,6 +26,19 @@ export function useVerify() {
     setResult(null);
 
     try {
+      // Check cache first
+      const cachedResult = verificationCache.get(content, userId);
+      if (cachedResult) {
+        console.log('Using cached verification result');
+        setResult(cachedResult);
+        toast({
+          title: "Verification Retrieved",
+          description: "Found previous verification from cache",
+        });
+        setLoading(false);
+        return;
+      }
+
       console.log('Calling verify edge function...');
       
       const { data, error: fnError } = await supabase.functions.invoke('verify', {
@@ -38,6 +54,10 @@ export function useVerify() {
 
       console.log('Verification result:', data);
       setResult(data);
+      
+      // Cache the result
+      verificationCache.set(content, userId, data);
+      
     } catch (err) {
       console.error('Verification error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred during verification');

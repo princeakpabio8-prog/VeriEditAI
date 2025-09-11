@@ -5,6 +5,7 @@ import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { VerificationProgress } from '@/components/verification-progress';
 import { VerificationResult } from '@/components/verification-result';
+import { CacheStatus } from '@/components/cache-status';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FeatureGuard } from '@/components/feature-guard';
@@ -96,6 +97,7 @@ const Verify = () => {
     setVerificationState({ stage: 'upload' });
   };
 
+  // Desktop UI
   return (
     <div className="min-h-screen bg-background">
       <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
@@ -213,6 +215,9 @@ const Verify = () => {
           )}
         </div>
       </main>
+
+      {/* Cache Status Indicator */}
+      <CacheStatus />
     </div>
   );
 };

@@ -910,7 +910,7 @@ serve(async (req) => {
       };
 
       // Start background task - don't wait for it to complete
-      EdgeRuntime?.waitUntil?.(saveSourcesTask()) || saveSourcesTask();
+      saveSourcesTask().catch(err => console.error('Background task failed:', err));
     }
 
     console.log('Multi-source verification completed successfully');
@@ -919,8 +919,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         confidence: verificationResult.confidence,
-        status: verificationResult.confidence >= 70 ? 'verified' : 
-                verificationResult.confidence >= 40 ? 'inconclusive' : 'disputed',
+        status: verificationResult.confidence >= 80 ? 'highly_verified' : 
+                verificationResult.confidence >= 65 ? 'verified' : 
+                verificationResult.confidence >= 45 ? 'inconclusive' : 'disputed',
         summary: summary,
         analysis: verificationResult.analysis,
         sources: verificationResult.sources,

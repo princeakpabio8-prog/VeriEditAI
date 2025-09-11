@@ -143,7 +143,7 @@ Standard fact-checking protocols recommend consulting:
         content,
         content_type: 'text',
         trust_score: confidence,
-        status: status,
+        status: "completed",
         result_summary: analysisText,
         created_at: new Date().toISOString()
       })

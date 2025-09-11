@@ -406,27 +406,21 @@ export type Database = {
       payment_logs_summary: {
         Row: {
           created_at: string | null
-          error_status: string | null
           event_type: string | null
           id: string | null
           status: string | null
-          tx_ref_status: string | null
         }
         Insert: {
           created_at?: string | null
-          error_status?: never
           event_type?: string | null
           id?: string | null
           status?: string | null
-          tx_ref_status?: never
         }
         Update: {
           created_at?: string | null
-          error_status?: never
           event_type?: string | null
           id?: string | null
           status?: string | null
-          tx_ref_status?: never
         }
         Relationships: []
       }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,43 @@ interface FlutterwaveCheckoutProps {
 export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
+  const [flutterwaveReady, setFlutterwaveReady] = useState(false);
 
+  // Preload and warm up Flutterwave script to reduce perceived latency
+  useEffect(() => {
+    // Add preconnect hints
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = 'https://checkout.flutterwave.com';
+    document.head.appendChild(preconnect);
+
+    // Preload script
+    const preload = document.createElement('link');
+    preload.rel = 'preload';
+    preload.as = 'script';
+    preload.href = 'https://checkout.flutterwave.com/v3.js';
+    preload.crossOrigin = 'anonymous';
+    document.head.appendChild(preload);
+
+    // Load the script early so the modal opens instantly on click
+    const scriptId = 'flutterwave-v3-script';
+    if (!document.getElementById(scriptId)) {
+      const s = document.createElement('script');
+      s.id = scriptId;
+      s.src = 'https://checkout.flutterwave.com/v3.js';
+      s.async = true;
+      s.defer = true;
+      s.onload = () => setFlutterwaveReady(true);
+      s.onerror = () => setFlutterwaveReady(false);
+      document.head.appendChild(s);
+    } else {
+      setFlutterwaveReady(true);
+    }
+
+    return () => {
+      // Keep script cached; no cleanup to preserve speed between navigations
+    };
+  }, []);
   const createPaymentRecord = async (plan: Plan, txRef: string) => {
     const { error } = await supabase
       .from('payments')
@@ -295,7 +331,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     }`}
                     size="lg"
                     onClick={() => handleFlutterPayment(plan)}
-                    disabled={loading === plan.id}
+                    disabled={loading === plan.id || !flutterwaveReady}
                   >
                     {loading === plan.id ? (
                       <motion.div 
@@ -308,18 +344,31 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                       </motion.div>
                     ) : (
                       <>
-                        <motion.span
-                          className="relative z-10"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          Subscribe to {plan.name}
-                        </motion.span>
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                          initial={{ x: '-100%' }}
-                          whileHover={{ x: '100%' }}
-                          transition={{ duration: 0.6 }}
-                        />
+                        {!flutterwaveReady ? (
+                          <motion.div 
+                            className="flex items-center justify-center"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                          >
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                            Preparing checkout...
+                          </motion.div>
+                        ) : (
+                          <>
+                            <motion.span
+                              className="relative z-10"
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              Subscribe to {plan.name}
+                            </motion.span>
+                            <motion.div
+                              className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                              initial={{ x: '-100%' }}
+                              whileHover={{ x: '100%' }}
+                              transition={{ duration: 0.6 }}
+                            />
+                          </>
+                        )}
                       </>
                     )}
                   </Button>

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 interface Source {
-  id: string;
+  id?: string;
   url: string;
   title: string;
   content_snippet: string;
@@ -21,7 +21,11 @@ interface VerificationResultProps {
   trustScore: number;
   status: string;
   summary: string;
+  analysis?: string;
   sources: Source[];
+  sourceConsensus?: number;
+  methods?: string[];
+  category?: string;
   processingTime?: number;
   onNewVerification?: () => void;
   content?: string;
@@ -32,7 +36,11 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   trustScore,
   status,
   summary,
+  analysis,
   sources,
+  sourceConsensus,
+  methods,
+  category,
   processingTime,
   onNewVerification,
   content = "",
@@ -95,14 +103,36 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
               />
             </motion.div>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
+            {/* Overview Metrics */}
+            <motion.div 
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 1.0 }}
+            >
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/30">
+                <div className="text-xs text-muted-foreground">Source Consensus</div>
+                <div className="text-lg font-semibold">{sourceConsensus != null ? `${sourceConsensus}%` : '—'}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/30">
+                <div className="text-xs text-muted-foreground">Category</div>
+                <div className="text-lg font-semibold">{category ? category.charAt(0).toUpperCase() + category.slice(1) : 'General'}</div>
+              </div>
+              <div className="p-3 rounded-lg bg-muted/50 border border-border/30">
+                <div className="text-xs text-muted-foreground">Methods Used</div>
+                <div className="text-lg font-semibold">{methods?.length ?? 1}</div>
+              </div>
+            </motion.div>
+
+            {/* Summary */}
             <motion.div 
               className="text-center"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 1.5 }}
             >
-              <p className="text-muted-foreground mb-4">{summary}</p>
+              <p className="text-muted-foreground mb-4 whitespace-pre-wrap">{summary}</p>
               {processingTime && (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
@@ -113,6 +143,26 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           </CardContent>
         </Card>
       </motion.div>
+
+      {analysis && analysis !== summary && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 2 }}
+        >
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle>Detailed Analysis</CardTitle>
+              <CardDescription>
+                AI-generated explanation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap">{analysis}</div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Sources Card */}
       {sources && sources.length > 0 && (

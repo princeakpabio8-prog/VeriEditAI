@@ -671,9 +671,13 @@ serve(async (req) => {
       JSON.stringify({
         confidence: verificationResult.confidence,
         status: verificationResult.confidence >= 70 ? 'verified' : 
-                verificationResult.confidence >= 40 ? 'uncertain' : 'disputed',
+                verificationResult.confidence >= 40 ? 'inconclusive' : 'disputed',
         summary: summary,
+        analysis: verificationResult.analysis,
         sources: verificationResult.sources,
+        source_consensus: verificationResult.source_consensus,
+        verification_method: verificationResult.verification_method,
+        category: category,
         created_at: verification.created_at
       }),
       { 
@@ -690,28 +694,12 @@ serve(async (req) => {
       JSON.stringify({
         confidence: 46,
         status: 'inconclusive',
-        summary: `**🔍 VERIFICATION UNAVAILABLE**
-
-**FINAL CONFIDENCE SCORE: 46%**
-**STATUS: ⚠️ INCONCLUSIVE**
-
-**VERIFICATION PROCESS:**
-The verification system encountered technical difficulties while processing your request. This could be due to:
-
-• Temporary API service issues
-• Network connectivity problems  
-• High system load
-
-**RECOMMENDATIONS:**
-• Try again in a few moments
-• For critical content, verify through official sources
-• Contact support if the issue persists
-
-**FALLBACK ANALYSIS:**
-While we couldn't perform our usual multi-source verification, we recommend approaching this content with appropriate caution and cross-referencing with trusted sources when possible.
-
-**Real-time Check**: Attempted ${new Date().toLocaleString()}`,
+        summary: `**🔍 VERIFICATION UNAVAILABLE**\n\n**FINAL CONFIDENCE SCORE: 46%**\n**STATUS: ⚠️ INCONCLUSIVE**\n\n**VERIFICATION PROCESS:**\nThe verification system encountered technical difficulties while processing your request. This could be due to:\n\n• Temporary API service issues\n• Network connectivity problems  \n• High system load\n\n**RECOMMENDATIONS:**\n• Try again in a few moments\n• For critical content, verify through official sources\n• Contact support if the issue persists\n\n**FALLBACK ANALYSIS:**\nWhile we couldn't perform our usual multi-source verification, we recommend approaching this content with appropriate caution and cross-referencing with trusted sources when possible.\n\n**Real-time Check**: Attempted ${new Date().toLocaleString()}`,
+        analysis: 'Verification services temporarily unavailable.',
         sources: [],
+        source_consensus: 0,
+        verification_method: ['Fallback Analysis'],
+        category: 'general',
         created_at: new Date().toISOString()
       }),
       { 

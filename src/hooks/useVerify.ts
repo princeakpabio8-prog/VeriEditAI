@@ -7,10 +7,16 @@ interface VerifyResult {
   confidence: number;
   status: string;
   summary: string;
+  analysis?: string;
   sources: Array<{
     title: string;
     url: string;
+    snippet?: string;
+    reliability_score?: number;
   }>;
+  source_consensus?: number;
+  verification_method?: string[];
+  category?: string;
   created_at: string;
 }
 

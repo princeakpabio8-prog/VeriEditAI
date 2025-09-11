@@ -208,7 +208,17 @@ const Verify = () => {
               trustScore={verificationState.result.confidence || 0}
               status={verificationState.result.status}
               summary={verificationState.result.summary}
-              sources={verificationState.result.sources || []}
+              analysis={verificationState.result.analysis}
+              sources={(verificationState.result.sources || []).map((s: any) => ({
+                id: s.id,
+                title: s.title,
+                url: s.url,
+                content_snippet: s.content_snippet || s.snippet || '',
+                reliability_score: s.reliability_score || undefined,
+              }))}
+              sourceConsensus={verificationState.result.source_consensus}
+              methods={verificationState.result.verification_method}
+              category={verificationState.result.category}
               processingTime={verificationState.result.processing_time || 3000}
               onNewVerification={handleNewVerification}
               content={verificationState.content}

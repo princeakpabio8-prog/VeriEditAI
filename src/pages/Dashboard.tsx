@@ -18,6 +18,7 @@ import { VerificationAnalytics } from '@/components/verification-analytics';
 import { BulkVerification } from '@/components/bulk-verification';
 import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 
 interface Verification {
   id: string;
@@ -39,6 +40,7 @@ const Dashboard = () => {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [processingVerification, setProcessingVerification] = useState(false);
   const { addToQueue, queue, startQueue, getStats } = useVerificationQueue();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -89,31 +91,16 @@ const Dashboard = () => {
     setProcessingVerification(true);
     
     try {
-      // Add to queue instead of processing immediately
-      const queueItems = addToQueue([{
-        content: data.content,
-        type: data.type || 'text',
-        priority: 'normal'
-      }]);
-
-      if (queueItems.length > 0) {
-        toast({
-          title: "Added to Queue",
-          description: "Your verification has been queued for processing.",
-        });
-        
-        // Start queue processing if not already running
-        await startQueue();
-      }
-
+      // Redirect to Verify page to process immediately with progress UI
+      sessionStorage.setItem('pendingVerification', JSON.stringify(data));
       setShowVerificationModal(false);
       setProcessingVerification(false);
-
+      navigate('/verify');
     } catch (error) {
       console.error('Error starting verification:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to start verification",
+        description: (error as any).message || "Failed to start verification",
         variant: "destructive",
       });
       setProcessingVerification(false);

@@ -12,8 +12,24 @@ class VerificationCache {
   private readonly MAX_CACHE_SIZE = 100; // Maximum cached items
 
   private generateKey(content: string, userId: string): string {
-    // Create a simple hash of content + userId
-    return btoa(content + userId).slice(0, 20);
+    // Create a simple hash of content + userId that handles Unicode characters
+    try {
+      // Use TextEncoder to safely convert to bytes, then btoa
+      const encoder = new TextEncoder();
+      const data = encoder.encode(content + userId);
+      const binaryString = Array.from(data, byte => String.fromCharCode(byte)).join('');
+      return btoa(binaryString).slice(0, 20);
+    } catch (error) {
+      // Fallback: use a simple hash without btoa
+      let hash = 0;
+      const str = content + userId;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32-bit integer
+      }
+      return Math.abs(hash).toString(36).slice(0, 20);
+    }
   }
 
   set(content: string, userId: string, result: any): void {

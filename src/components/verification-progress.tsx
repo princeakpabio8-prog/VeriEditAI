@@ -55,6 +55,21 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
     }
   }, [autoStart, startTime]);
 
+  // Monitor API result and complete when available
+  useEffect(() => {
+    if (result && !loading) {
+      setSteps(prev => prev.map(step => ({
+        ...step,
+        status: 'completed' as const,
+        progress: 100
+      })));
+      
+      setTimeout(() => {
+        onComplete?.(result);
+      }, 500);
+    }
+  }, [result, loading, onComplete]);
+
   const startVerification = () => {
     setStartTime(new Date());
     processSteps();
@@ -64,17 +79,23 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
     // Start the actual verification API call
     if (user && content) {
       try {
+        // Start all steps processing but don't await the simulation
+        for (let i = 0; i < steps.length; i++) {
+          if (isPaused) return;
+          setCurrentStep(i);
+          processStep(i); // Don't await - let it run in background
+        }
+        
+        // Now await the actual API call - completion handled in useEffect
         await verify(content, user.id);
+        
       } catch (error) {
         console.error('Verification API error:', error);
+        setSteps(prev => prev.map(step => ({
+          ...step,
+          status: 'failed' as const
+        })));
       }
-    }
-
-    for (let i = 0; i < steps.length; i++) {
-      if (isPaused) return;
-
-      setCurrentStep(i);
-      await processStep(i);
     }
   };
 

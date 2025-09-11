@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Area, AreaChart, ComposedChart } from "recharts";
 import { TrendingUp, TrendingDown, Target, Clock, CheckCircle, AlertTriangle, Download, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
@@ -307,54 +307,121 @@ export function VerificationAnalytics() {
         <TabsContent value="trend">
           <Card>
             <CardHeader>
-              <CardTitle>Verification Trend</CardTitle>
-              <CardDescription>Daily verification count and average trust scores</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-trust-high" />
+                Verification Trend
+              </CardTitle>
+              <CardDescription>Daily verification count and average trust scores over time</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={analytics.verificationTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    yAxisId="left" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    yAxisId="right" 
-                    orientation="right" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar 
-                    yAxisId="left" 
-                    dataKey="count" 
-                    fill="hsl(var(--primary))" 
-                    opacity={0.8}
-                    radius={[4, 4, 0, 0]}
-                  />
-                  <Line 
-                    yAxisId="right" 
-                    type="monotone" 
-                    dataKey="avgScore" 
-                    stroke="hsl(var(--trust-high))" 
-                    strokeWidth={3}
-                    dot={{ fill: 'hsl(var(--trust-high))', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: 'hsl(var(--trust-high))' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={analytics.verificationTrend} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+                    <defs>
+                      <linearGradient id="countGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                      </linearGradient>
+                      <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--trust-high))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--trust-high))" stopOpacity={0.1}/>
+                      </linearGradient>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge> 
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    <CartesianGrid 
+                      strokeDasharray="3 3" 
+                      stroke="hsl(var(--border))" 
+                      opacity={0.3}
+                    />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis 
+                      yAxisId="left" 
+                      stroke="hsl(var(--primary))"
+                      fontSize={12}
+                      label={{ value: 'Verifications', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: 'hsl(var(--primary))' } }}
+                    />
+                    <YAxis 
+                      yAxisId="right" 
+                      orientation="right" 
+                      stroke="hsl(var(--trust-high))"
+                      fontSize={12}
+                      domain={[0, 100]}
+                      label={{ value: 'Trust Score %', angle: 90, position: 'insideRight', style: { textAnchor: 'middle', fill: 'hsl(var(--trust-high))' } }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 30px hsl(var(--shadow) / 0.12)',
+                        backdropFilter: 'blur(8px)'
+                      }}
+                      labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                      formatter={(value, name) => [
+                        name === 'count' ? `${value} verifications` : `${value}% trust score`,
+                        name === 'count' ? 'Daily Count' : 'Avg Trust Score'
+                      ]}
+                    />
+                    <Area
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="count"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={0}
+                      fill="url(#countGradient)"
+                      opacity={0.6}
+                    />
+                    <Bar 
+                      yAxisId="left" 
+                      dataKey="count" 
+                      fill="hsl(var(--primary))" 
+                      opacity={0.7}
+                      radius={[4, 4, 0, 0]}
+                      animationDuration={1000}
+                    />
+                    <Line 
+                      yAxisId="right" 
+                      type="monotone" 
+                      dataKey="avgScore" 
+                      stroke="hsl(var(--trust-high))" 
+                      strokeWidth={4}
+                      filter="url(#glow)"
+                      dot={{ 
+                        fill: 'hsl(var(--trust-high))', 
+                        strokeWidth: 3, 
+                        r: 6,
+                        stroke: 'hsl(var(--background))'
+                      }}
+                      activeDot={{ 
+                        r: 8, 
+                        fill: 'hsl(var(--trust-high))',
+                        stroke: 'hsl(var(--background))',
+                        strokeWidth: 3,
+                        filter: 'url(#glow)'
+                      }}
+                      animationDuration={1500}
+                      animationBegin={500}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

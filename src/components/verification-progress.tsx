@@ -87,7 +87,7 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
         }
         
         // Now await the actual API call - completion handled in useEffect
-        await verify(content, user.id);
+        await verify(content, user.id, true);
         
       } catch (error) {
         console.error('Verification API error:', error);

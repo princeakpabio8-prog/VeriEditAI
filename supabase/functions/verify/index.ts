@@ -57,43 +57,78 @@ async function performWebVerification(content: string, category: string): Promis
     const data = await response.json();
     console.log('Perplexity response:', JSON.stringify(data, null, 2));
     
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Invalid Perplexity API response structure');
+    }
+    
     const analysis = data.choices[0].message.content;
     
-    // Extract confidence score from analysis
-    const confidenceMatch = analysis.match(/confidence[:\s]*(\d+)/i);
-    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 75;
+    // Extract confidence score from analysis with more robust parsing
+    let confidence = 75; // default
+    const confidencePatterns = [
+      /confidence[:\s]*(\d+)%?/i,
+      /(\d+)%?\s*confidence/i,
+      /score[:\s]*(\d+)/i,
+      /(\d+)%\s*certain/i
+    ];
+    
+    for (const pattern of confidencePatterns) {
+      const match = analysis.match(pattern);
+      if (match) {
+        confidence = parseInt(match[1]);
+        break;
+      }
+    }
     
     // Extract real sources from Perplexity response
     let sources = [];
     
-    // Check if Perplexity returned citations
-    if (data.citations && data.citations.length > 0) {
+    // Check if Perplexity returned citations in response
+    if (data.citations && Array.isArray(data.citations) && data.citations.length > 0) {
+      console.log('Found citations in response:', data.citations.length);
       sources = data.citations.map((citation: any, index: number) => ({
-        title: citation.title || `Source ${index + 1}`,
-        url: citation.url || citation.link || '#',
-        snippet: citation.text || citation.snippet || ''
+        title: citation.title || citation.name || `Source ${index + 1}`,
+        url: citation.url || citation.link || citation.href || '#',
+        snippet: citation.text || citation.snippet || citation.excerpt || ''
       }));
-    } else {
-      // Fallback: extract URLs from the analysis text
-      const urlRegex = /https?:\/\/[^\s\)]+/g;
+    } 
+    // Check for citations in message metadata
+    else if (data.choices[0].citations && Array.isArray(data.choices[0].citations)) {
+      console.log('Found citations in message metadata:', data.choices[0].citations.length);
+      sources = data.choices[0].citations.map((citation: any, index: number) => ({
+        title: citation.title || citation.name || `Source ${index + 1}`,
+        url: citation.url || citation.link || citation.href || '#',
+        snippet: citation.text || citation.snippet || citation.excerpt || ''
+      }));
+    }
+    // Fallback: extract URLs from the analysis text
+    else {
+      console.log('No citations found, extracting URLs from text');
+      const urlRegex = /https?:\/\/[^\s\)\]\>\,\;]+/g;
       const foundUrls = analysis.match(urlRegex) || [];
       
       if (foundUrls.length > 0) {
         sources = foundUrls.slice(0, 4).map((url: string, index: number) => {
+          // Clean URL (remove trailing punctuation)
+          const cleanUrl = url.replace(/[.,;)\]}>]+$/, '');
           // Try to extract domain name for title
-          const domain = url.match(/https?:\/\/([^\/]+)/);
-          const title = domain ? domain[1].replace('www.', '') : `Source ${index + 1}`;
+          const domain = cleanUrl.match(/https?:\/\/(?:www\.)?([^\/]+)/);
+          const title = domain ? domain[1].charAt(0).toUpperCase() + domain[1].slice(1) : `Source ${index + 1}`;
           return {
-            title: title.charAt(0).toUpperCase() + title.slice(1),
-            url: url,
-            snippet: ''
+            title: title,
+            url: cleanUrl,
+            snippet: `Referenced in verification analysis`
           };
         });
       } else {
         // Category-specific authoritative sources as final fallback
+        console.log('No URLs found, using category-specific sources');
         sources = getCategorySpecificSources(category);
       }
     }
+    
+    console.log(`Extracted ${sources.length} sources`);
+    console.log(`Final confidence score: ${confidence}`);
     
     return {
       confidence: Math.min(Math.max(confidence, 0), 100),
@@ -102,9 +137,10 @@ async function performWebVerification(content: string, category: string): Promis
     };
   } catch (error) {
     console.error('Web verification error:', error);
+    console.error('Error details:', error.message);
     return { 
       confidence: 50, 
-      analysis: "Unable to perform real-time verification due to API error", 
+      analysis: `Unable to perform real-time verification due to API error: ${error.message}`, 
       sources: getCategorySpecificSources(category)
     };
   }
@@ -153,46 +189,64 @@ function getCategorySpecificSources(category: string): any[] {
   ];
 }
 
-// Categorize content based on keywords
+// Categorize content based on keywords with improved accuracy
 function categorizeContent(content: string): string {
   const contentLower = content.toLowerCase();
   
+  // Political keywords (more comprehensive)
   if (contentLower.includes("trump") || contentLower.includes("biden") || contentLower.includes("president") || 
-      contentLower.includes("election") || contentLower.includes("congress") || contentLower.includes("senate")) {
+      contentLower.includes("election") || contentLower.includes("congress") || contentLower.includes("senate") ||
+      contentLower.includes("democracy") || contentLower.includes("republican") || contentLower.includes("democrat") ||
+      contentLower.includes("political") || contentLower.includes("campaign") || contentLower.includes("vote")) {
     return "political";
   }
   
+  // Climate & Environment
   if (contentLower.includes("climate") || contentLower.includes("environment") || contentLower.includes("carbon") || 
-      contentLower.includes("global warming") || contentLower.includes("pollution") || contentLower.includes("renewable")) {
+      contentLower.includes("global warming") || contentLower.includes("pollution") || contentLower.includes("renewable") ||
+      contentLower.includes("greenhouse") || contentLower.includes("emissions") || contentLower.includes("sustainability")) {
     return "climate & environment";
   }
   
-  if (contentLower.includes("regulation") || contentLower.includes("policy") || contentLower.includes("law") || 
-      contentLower.includes("government") || contentLower.includes("legislation")) {
-    return "politics & regulation";
-  }
-  
-  if (contentLower.includes("viral") || contentLower.includes("trending") || contentLower.includes("social media") || 
-      contentLower.includes("tiktok") || contentLower.includes("twitter") || contentLower.includes("instagram")) {
-    return "social media virality";
-  }
-  
+  // Health & Science (expanded keywords)
   if (contentLower.includes("health") || contentLower.includes("medicine") || contentLower.includes("covid") || 
       contentLower.includes("vaccine") || contentLower.includes("cure") || contentLower.includes("cancer") || 
-      contentLower.includes("disease") || contentLower.includes("study") || contentLower.includes("research")) {
+      contentLower.includes("disease") || contentLower.includes("study") || contentLower.includes("research") ||
+      contentLower.includes("medical") || contentLower.includes("doctor") || contentLower.includes("hospital") ||
+      contentLower.includes("treatment") || contentLower.includes("drug") || contentLower.includes("pill")) {
     return "health & science";
   }
   
-  if (contentLower.includes("war") || contentLower.includes("military") || contentLower.includes("defense") || 
+  // Defence and War
+  if (contentLower.includes("war") || contentLower.includes("military") || contentLower.includes("defense") || contentLower.includes("defence") ||
       contentLower.includes("conflict") || contentLower.includes("ukraine") || contentLower.includes("russia") || 
-      contentLower.includes("nato") || contentLower.includes("army")) {
+      contentLower.includes("nato") || contentLower.includes("army") || contentLower.includes("soldier") ||
+      contentLower.includes("weapon") || contentLower.includes("battle") || contentLower.includes("invasion")) {
     return "defence and war";
   }
   
+  // Sports (expanded)
   if (contentLower.includes("football") || contentLower.includes("soccer") || contentLower.includes("basketball") || 
       contentLower.includes("baseball") || contentLower.includes("tennis") || contentLower.includes("olympics") || 
-      contentLower.includes("fifa") || contentLower.includes("championship") || contentLower.includes("premier league")) {
+      contentLower.includes("fifa") || contentLower.includes("championship") || contentLower.includes("premier league") ||
+      contentLower.includes("nfl") || contentLower.includes("nba") || contentLower.includes("game") ||
+      contentLower.includes("player") || contentLower.includes("team") || contentLower.includes("score")) {
     return "sports";
+  }
+  
+  // Social Media Virality
+  if (contentLower.includes("viral") || contentLower.includes("trending") || contentLower.includes("social media") || 
+      contentLower.includes("tiktok") || contentLower.includes("twitter") || contentLower.includes("instagram") ||
+      contentLower.includes("facebook") || contentLower.includes("youtube") || contentLower.includes("influencer") ||
+      contentLower.includes("meme") || contentLower.includes("hashtag")) {
+    return "social media virality";
+  }
+  
+  // Politics & Regulation
+  if (contentLower.includes("regulation") || contentLower.includes("policy") || contentLower.includes("law") || 
+      contentLower.includes("government") || contentLower.includes("legislation") || contentLower.includes("bill") ||
+      contentLower.includes("court") || contentLower.includes("legal") || contentLower.includes("supreme court")) {
+    return "politics & regulation";
   }
   
   return "news & current events";

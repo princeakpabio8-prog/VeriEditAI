@@ -99,16 +99,33 @@ serve(async (req: Request) => {
     // Step 2: Call GPT API with Perplexity evidence
     console.log('Step 2: Calling OpenAI API...');
     const gptPrompt = `
-You are VeriEdit AI. Verify this content and provide:
-- Confidence Score (0-100) - be precise with percentage
-- Verification Status (Verified / Flagged / Low Confidence)
-- Clear, human-friendly summary
-- Use these sources for context: ${JSON.stringify(sources)}
+You are VeriEdit AI, an expert content verification assistant. Analyze this content and provide a comprehensive fact-check report.
 
-Content to verify: """${content}"""
-Research Evidence: """${JSON.stringify(perplexityData)}"""
+Content to verify: "${content}"
 
-Format your response clearly with the confidence percentage visible.
+Research Evidence: ${JSON.stringify(perplexityData)}
+
+Available Sources: ${JSON.stringify(sources)}
+
+Provide your response in this EXACT format:
+
+**CONFIDENCE SCORE: [0-100]%**
+
+**VERIFICATION STATUS: [VERIFIED/FLAGGED/INCONCLUSIVE]**
+
+**EXECUTIVE SUMMARY:**
+[2-3 sentence summary of your findings]
+
+**DETAILED ANALYSIS:**
+[Thorough analysis of the content, explaining what you found, what sources support or contradict the claims, and your reasoning]
+
+**SOURCES & CITATIONS:**
+${sources.map((source, idx) => `${idx + 1}. ${source.title} - ${source.url}`).join('\n')}
+
+**RECOMMENDATIONS:**
+[What actions should be taken based on your findings]
+
+Make your analysis thorough, evidence-based, and cite specific sources when making claims.
 `;
 
     const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -118,19 +135,19 @@ Format your response clearly with the confidence percentage visible.
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4.1-2025-04-14",
         messages: [
           {
             role: "system",
-            content: "You are VeriEdit AI, an expert content verification assistant. Provide clear, accurate assessments."
+            content: "You are VeriEdit AI, an expert content verification assistant. Provide comprehensive, well-structured verification reports with proper citations and evidence-based analysis."
           },
           {
             role: "user", 
             content: gptPrompt
           }
         ],
-        temperature: 0.2,
-        max_tokens: 1000
+        temperature: 0.1,
+        max_completion_tokens: 2000
       }),
     });
 

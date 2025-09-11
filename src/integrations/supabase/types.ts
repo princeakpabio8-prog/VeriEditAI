@@ -410,6 +410,10 @@ export type Database = {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
       }
+      create_trial_license: {
+        Args: { user_uuid: string }
+        Returns: Json
+      }
       generate_license_key: {
         Args: Record<PropertyKey, never>
         Returns: string

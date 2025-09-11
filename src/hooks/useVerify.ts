@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { verificationCache } from '@/lib/verification-cache';
 import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
@@ -26,8 +26,17 @@ export function useVerify() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
   const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
+  const inFlightKeys = useRef<Set<string>>(new Set());
 
-  const verify = async (content: string, userId: string, bypassCache = false) => {
+  const verify = useCallback(async (content: string, userId: string, bypassCache = false) => {
+    const key = `${userId}::${content}`;
+
+    // Prevent duplicate in-flight requests for the same content/user
+    if (inFlightKeys.current.has(key)) {
+      console.log('Duplicate verify request ignored for key:', key);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -47,8 +56,9 @@ export function useVerify() {
         console.log('Bypassing cache for fresh verification');
       }
 
+      inFlightKeys.current.add(key);
       console.log('Calling verify edge function...');
-      
+
       const { data, error: fnError } = await supabase.functions.invoke('verify', {
         body: {
           content,
@@ -61,21 +71,22 @@ export function useVerify() {
       }
 
       setResult(data);
-      
+
       // Cache the result (only if not bypassed)
       if (!bypassCache) {
         verificationCache.set(content, userId, data);
       }
-      
+
     } catch (err) {
       console.error('Verification error:', err);
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during verification';
       setError(errorMessage);
       showVerificationError(errorMessage);
     } finally {
+      inFlightKeys.current.delete(key);
       setLoading(false);
     }
-  };
+  }, [showCacheHit, showVerificationError]);
 
   return {
     verify,

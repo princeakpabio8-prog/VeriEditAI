@@ -145,9 +145,9 @@ Format your response clearly with the confidence percentage visible.
       ? Math.min(100, parseInt(confidenceMatch[1]))
       : 70;
 
-    let status = "flagged";
-    if (confidence >= 80) status = "verified";
-    else if (confidence < 65) status = "low_confidence";
+    let status = "completed";
+    if (confidence >= 80) status = "completed";
+    else if (confidence < 65) status = "completed";
 
     const result = {
       confidence,

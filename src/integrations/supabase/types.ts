@@ -409,18 +409,21 @@ export type Database = {
           event_type: string | null
           id: string | null
           status: string | null
+          status_description: string | null
         }
         Insert: {
           created_at?: string | null
           event_type?: string | null
           id?: string | null
           status?: string | null
+          status_description?: never
         }
         Update: {
           created_at?: string | null
           event_type?: string | null
           id?: string | null
           status?: string | null
+          status_description?: never
         }
         Relationships: []
       }
@@ -441,6 +444,10 @@ export type Database = {
       generate_license_key: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_payment_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       get_user_subscription: {
         Args: { user_uuid: string }

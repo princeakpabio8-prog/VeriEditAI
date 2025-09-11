@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Clock, AlertTriangle, Loader2, Pause, Play, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useVerify } from '@/hooks/useVerify';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VerificationStep {
   id: string;
@@ -17,6 +19,7 @@ interface VerificationStep {
 
 interface VerificationProgressProps {
   verificationId: string;
+  content: string;
   onComplete?: (result: any) => void;
   onCancel?: () => void;
   autoStart?: boolean;
@@ -24,10 +27,13 @@ interface VerificationProgressProps {
 
 export const VerificationProgress: React.FC<VerificationProgressProps> = ({
   verificationId,
+  content,
   onComplete,
   onCancel,
   autoStart = true
 }) => {
+  const { user } = useAuth();
+  const { verify, loading, error, result } = useVerify();
   const [steps, setSteps] = useState<VerificationStep[]>([
     { id: 'validate', name: 'Validating Content', status: 'pending', progress: 0 },
     { id: 'analyze', name: 'AI Analysis', status: 'pending', progress: 0 },
@@ -55,6 +61,15 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
   };
 
   const processSteps = async () => {
+    // Start the actual verification API call
+    if (user && content) {
+      try {
+        await verify(content, user.id);
+      } catch (error) {
+        console.error('Verification API error:', error);
+      }
+    }
+
     for (let i = 0; i < steps.length; i++) {
       if (isPaused) return;
 
@@ -104,6 +119,14 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
               duration: duration
             } : step
           ));
+
+          // Check if this is the last step and we have results
+          if (stepIndex === steps.length - 1 && result) {
+            // Call onComplete with the actual verification result
+            setTimeout(() => {
+              onComplete?.(result);
+            }, 500);
+          }
 
           resolve();
         }
@@ -228,9 +251,25 @@ export const VerificationProgress: React.FC<VerificationProgressProps> = ({
             ))}
           </div>
 
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              className="bg-red-50 dark:bg-red-950 p-4 rounded-lg border border-red-200 dark:border-red-800"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Verification Error
+              </p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {error}
+              </p>
+            </motion.div>
+          )}
+
           {/* Live Status Updates */}
           <AnimatePresence>
-            {currentStep < steps.length && (
+            {currentStep < steps.length && !error && (
               <motion.div
                 className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800"
                 initial={{ opacity: 0, y: 10 }}

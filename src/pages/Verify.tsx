@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 interface VerificationState {
   stage: 'upload' | 'processing' | 'completed';
   verificationId?: string;
+  content?: string;
   result?: any;
 }
 
@@ -62,19 +63,11 @@ const Verify = () => {
       // Generate verification ID
       const verificationId = crypto.randomUUID();
 
-      // Add to queue and start processing
-      const queueItems = addToQueue([{
-        content: data.content,
-        type: data.type || 'text',
-        priority: 'high' // High priority for single verifications
-      }]);
-
       setVerificationState({
         stage: 'processing',
-        verificationId
+        verificationId,
+        content: data.content
       });
-
-      await startQueue();
 
       toast({
         title: "Verification Started",
@@ -198,9 +191,10 @@ const Verify = () => {
             </div>
           )}
 
-          {verificationState.stage === 'processing' && verificationState.verificationId && (
+          {verificationState.stage === 'processing' && verificationState.verificationId && verificationState.content && (
             <VerificationProgress
               verificationId={verificationState.verificationId}
+              content={verificationState.content}
               onComplete={handleVerificationComplete}
               onCancel={handleNewVerification}
             />
@@ -209,11 +203,11 @@ const Verify = () => {
           {verificationState.stage === 'completed' && verificationState.result && (
             <VerificationResult
               verificationId={verificationState.verificationId!}
-              trustScore={verificationState.result.trust_score}
+              trustScore={verificationState.result.confidence || 0}
               status={verificationState.result.status}
               summary={verificationState.result.summary}
               sources={verificationState.result.sources || []}
-              processingTime={verificationState.result.processing_time}
+              processingTime={verificationState.result.processing_time || 3000}
               onNewVerification={handleNewVerification}
             />
           )}

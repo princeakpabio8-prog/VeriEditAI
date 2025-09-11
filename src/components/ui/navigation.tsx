@@ -3,6 +3,8 @@ import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock } from "lucide
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserFeedback } from '@/components/user-feedback';
+import { motion } from 'framer-motion';
 
 interface NavigationProps {
   isAuthenticated?: boolean;
@@ -24,7 +26,12 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+    <motion.nav 
+      className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -65,6 +72,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 </a>
               </>
             )}
+            
+            {/* Feedback button for authenticated users */}
+            {isAuthenticated && <UserFeedback />}
             
             {isAuthenticated ? (
               <div className="relative">
@@ -231,6 +241,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
           </div>
         )}
       </div>
-    </nav>
+    </motion.nav>
   );
 };

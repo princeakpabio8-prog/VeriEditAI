@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { verificationCache } from '@/lib/verification-cache';
-import { useToast } from '@/hooks/use-toast';
+import { useEnhancedToast } from '@/components/enhanced-toast';
 
 interface VerifyResult {
   confidence: number;
@@ -18,7 +18,7 @@ export function useVerify() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
-  const { toast } = useToast();
+  const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
 
   const verify = async (content: string, userId: string) => {
     setLoading(true);
@@ -31,10 +31,7 @@ export function useVerify() {
       if (cachedResult) {
         console.log('Using cached verification result');
         setResult(cachedResult);
-        toast({
-          title: "Verification Retrieved",
-          description: "Found previous verification from cache",
-        });
+        showCacheHit('content');
         setLoading(false);
         return;
       }
@@ -52,7 +49,6 @@ export function useVerify() {
         throw new Error(fnError.message || 'Verification failed');
       }
 
-      console.log('Verification result:', data);
       setResult(data);
       
       // Cache the result
@@ -60,7 +56,9 @@ export function useVerify() {
       
     } catch (err) {
       console.error('Verification error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred during verification');
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during verification';
+      setError(errorMessage);
+      showVerificationError(errorMessage);
     } finally {
       setLoading(false);
     }

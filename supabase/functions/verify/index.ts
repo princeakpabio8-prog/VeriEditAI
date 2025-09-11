@@ -252,7 +252,16 @@ async function performWikipediaVerification(content: string): Promise<{confidenc
 // Enhanced Perplexity verification (existing functionality)
 async function performPerplexityVerification(content: string, category: string): Promise<{confidence: number, analysis: string, sources: VerificationSource[]}> {
   try {
-    const searchPrompt = `Verify this ${category} claim with current, factual information: "${content}". Provide confidence score (0-100), detailed analysis, and cite specific sources with URLs.`;
+    let searchPrompt: string;
+    let systemPrompt: string;
+    
+    if (category === 'business') {
+      searchPrompt = `Analyze this business/entrepreneurship content for credibility and realism: "${content}". Consider: revenue claims plausibility, business model viability, timeline feasibility, and general entrepreneurship best practices. Provide confidence score (0-100) and detailed analysis.`;
+      systemPrompt = `You are a business analyst and entrepreneurship expert. When analyzing personal business stories, focus on: 1) Plausibility of revenue/timeline claims based on industry norms, 2) Soundness of described business strategies, 3) Realistic market conditions, 4) Common entrepreneurship patterns. Provide balanced analysis acknowledging that personal anecdotes may not be independently verifiable but can be assessed for credibility based on business logic and market realities.`;
+    } else {
+      searchPrompt = `Verify this ${category} claim with current, factual information: "${content}". Provide confidence score (0-100), detailed analysis, and cite specific sources with URLs.`;
+      systemPrompt = `You are an expert fact-checker specializing in ${category}. Analyze claims with real-time data and provide accurate verification results with confidence scores and specific source citations including URLs.`;
+    }
     
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
@@ -265,7 +274,7 @@ async function performPerplexityVerification(content: string, category: string):
         messages: [
           {
             role: 'system',
-            content: `You are an expert fact-checker specializing in ${category}. Analyze claims with real-time data and provide accurate verification results with confidence scores and specific source citations including URLs.`
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -367,55 +376,83 @@ async function performPerplexityVerification(content: string, category: string):
 async function performMultiSourceVerification(content: string, category: string): Promise<VerificationResult> {
   console.log('Starting multi-source verification...');
   
-  // Run all verification sources in parallel for speed
-  const [perplexityResult, googleResult, newsResult, wikipediaResult] = await Promise.allSettled([
-    performPerplexityVerification(content, category),
-    performGoogleFactCheck(content),
-    performNewsVerification(content, category),
-    performWikipediaVerification(content)
-  ]);
+  // For business/personal stories, focus on AI analysis and news verification
+  // Skip fact-checking APIs that won't have personal anecdote data
+  let sourcesToRun;
+  
+  if (category === 'business') {
+    sourcesToRun = [
+      performPerplexityVerification(content, category),
+      performNewsVerification(content, category)
+    ];
+  } else {
+    sourcesToRun = [
+      performPerplexityVerification(content, category),
+      performGoogleFactCheck(content),
+      performNewsVerification(content, category),
+      performWikipediaVerification(content)
+    ];
+  }
+  
+  const results = await Promise.allSettled(sourcesToRun);
 
   // Collect results from successful verifications
-  const results = [];
+  const verificationResults = [];
   const allSources: VerificationSource[] = [];
   const methods: string[] = [];
 
-  if (perplexityResult.status === 'fulfilled') {
-    results.push({ name: 'AI Analysis', ...perplexityResult.value });
-    allSources.push(...perplexityResult.value.sources);
-    methods.push('Real-time AI Analysis');
-  }
-
-  if (googleResult.status === 'fulfilled') {
-    results.push({ name: 'Google Fact Check', ...googleResult.value });
-    allSources.push(...googleResult.value.sources);
-    methods.push('Professional Fact Checkers');
-  }
-
-  if (newsResult.status === 'fulfilled') {
-    results.push({ name: 'News Verification', ...newsResult.value });
-    allSources.push(...newsResult.value.sources);
-    methods.push('Current News Coverage');
-  }
-
-  if (wikipediaResult.status === 'fulfilled') {
-    results.push({ name: 'Wikipedia Check', ...wikipediaResult.value });
-    allSources.push(...wikipediaResult.value.sources);
-    methods.push('Encyclopedia Verification');
+  // Process results based on category
+  if (category === 'business') {
+    if (results[0]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Business Analysis', ...results[0].value });
+      allSources.push(...results[0].value.sources);
+      methods.push('AI Business Analysis');
+    }
+    if (results[1]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Market Verification', ...results[1].value });
+      allSources.push(...results[1].value.sources);
+      methods.push('Industry News Coverage');
+    }
+  } else {
+    if (results[0]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'AI Analysis', ...results[0].value });
+      allSources.push(...results[0].value.sources);
+      methods.push('Real-time AI Analysis');
+    }
+    if (results[1]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Google Fact Check', ...results[1].value });
+      allSources.push(...results[1].value.sources);
+      methods.push('Professional Fact Checkers');
+    }
+    if (results[2]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'News Verification', ...results[2].value });
+      allSources.push(...results[2].value.sources);
+      methods.push('Current News Coverage');
+    }
+    if (results[3]?.status === 'fulfilled') {
+      verificationResults.push({ name: 'Wikipedia Check', ...results[3].value });
+      allSources.push(...results[3].value.sources);
+      methods.push('Encyclopedia Verification');
+    }
   }
 
   // Consensus algorithm - weighted average based on source reliability
   let totalWeightedConfidence = 0;
   let totalWeight = 0;
 
-  for (const result of results) {
+  for (const result of verificationResults) {
     let weight = 1;
     
-    // Weight different sources based on their reliability for fact-checking
-    if (result.name === 'Google Fact Check') weight = 1.5; // Professional fact-checkers get higher weight
-    if (result.name === 'AI Analysis') weight = 1.2; // AI analysis gets good weight
-    if (result.name === 'News Verification') weight = 1.1; // News coverage
-    if (result.name === 'Wikipedia Check') weight = 1.0; // Wikipedia baseline
+    // Weight different sources based on their reliability for different content types
+    if (category === 'business') {
+      if (result.name === 'Business Analysis') weight = 1.3; // AI business analysis gets higher weight for business content
+      if (result.name === 'Market Verification') weight = 1.1; // Market coverage
+    } else {
+      if (result.name === 'Google Fact Check') weight = 1.5; // Professional fact-checkers get higher weight
+      if (result.name === 'AI Analysis') weight = 1.2; // AI analysis gets good weight
+      if (result.name === 'News Verification') weight = 1.1; // News coverage
+      if (result.name === 'Wikipedia Check') weight = 1.0; // Wikipedia baseline
+    }
     
     totalWeightedConfidence += result.confidence * weight;
     totalWeight += weight;
@@ -424,13 +461,13 @@ async function performMultiSourceVerification(content: string, category: string)
   const consensusConfidence = totalWeight > 0 ? Math.round(totalWeightedConfidence / totalWeight) : 50;
   
   // Calculate source consensus (how much sources agree)
-  const confidences = results.map(r => r.confidence);
+  const confidences = verificationResults.map(r => r.confidence);
   const avgConfidence = confidences.reduce((a, b) => a + b, 0) / confidences.length;
   const variance = confidences.reduce((acc, conf) => acc + Math.pow(conf - avgConfidence, 2), 0) / confidences.length;
   const sourceConsensus = Math.max(0, Math.min(100, 100 - Math.sqrt(variance)));
 
   // Combine analyses
-  const combinedAnalysis = results.map(r => `**${r.name}**: ${r.analysis}`).join('\n\n');
+  const combinedAnalysis = verificationResults.map(r => `**${r.name}**: ${r.analysis}`).join('\n\n');
 
   // Remove duplicate sources and prioritize by reliability
   const uniqueSources = allSources

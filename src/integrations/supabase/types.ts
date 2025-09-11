@@ -403,33 +403,30 @@ export type Database = {
       }
     }
     Views: {
-      payment_logs_safe: {
+      payment_logs_summary: {
         Row: {
           created_at: string | null
-          error_message: string | null
+          error_status: string | null
           event_type: string | null
           id: string | null
-          payload_summary: Json | null
           status: string | null
-          tx_ref: string | null
+          tx_ref_status: string | null
         }
         Insert: {
           created_at?: string | null
-          error_message?: never
+          error_status?: never
           event_type?: string | null
           id?: string | null
-          payload_summary?: never
           status?: string | null
-          tx_ref?: never
+          tx_ref_status?: never
         }
         Update: {
           created_at?: string | null
-          error_message?: never
+          error_status?: never
           event_type?: string | null
           id?: string | null
-          payload_summary?: never
           status?: string | null
-          tx_ref?: never
+          tx_ref_status?: never
         }
         Relationships: []
       }

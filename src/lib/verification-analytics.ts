@@ -125,8 +125,8 @@ class VerificationAnalytics {
     // Optional: Send to external analytics service
     // This could be Google Analytics, Mixpanel, etc.
     try {
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'verification_completed', {
+      if (typeof (window as any).gtag !== 'undefined') {
+        (window as any).gtag('event', 'verification_completed', {
           category: data.category,
           success: data.success,
           confidence: data.confidence,

@@ -55,7 +55,7 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [functions.verify]
-verify_jwt = true
+verify_jwt = false
 
 [functions.enhanced-verify]
 verify_jwt = true

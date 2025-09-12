@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { VerificationUpload } from '@/components/verification-upload';
 import { VerificationResult } from '@/components/verification-result';
+import { PerformanceDashboard } from '@/components/performance-dashboard';
 import { FeatureGuard } from '@/components/feature-guard';
 import { CacheStatus } from '@/components/cache-status';
 import { Navigation } from '@/components/ui/navigation';
@@ -209,6 +210,12 @@ export default function Verify() {
                     </CardContent>
                   </Card>
                 </div>
+              </div>
+            )}
+            {/* Performance Dashboard - Only show on upload stage */}
+            {verificationState.stage === 'upload' && (
+              <div className="mt-12">
+                <PerformanceDashboard />
               </div>
             )}
           </FeatureGuard>

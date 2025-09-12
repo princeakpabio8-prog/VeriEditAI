@@ -46,16 +46,16 @@ serve(async (req) => {
     console.log(`📝 Analyzing content: ${content.substring(0, 100)}...`);
     console.log(`👤 User ID: ${user_id || 'anonymous'}`);
 
-    // Get Perplexity API key
-    const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY');
+    // Get Tavily API key
+    const tavilyApiKey = Deno.env.get('TAVILY_API_KEY');
     
     let result: VerificationResult;
     
-    if (perplexityApiKey) {
-      console.log('🤖 Using Perplexity AI for verification...');
-      result = await verifyWithPerplexity(content, perplexityApiKey);
+    if (tavilyApiKey) {
+      console.log('🔍 Using Tavily Search API for verification...');
+      result = await verifyWithTavily(content, tavilyApiKey);
     } else {
-      console.log('⚡ Using fallback analysis (no Perplexity key)...');
+      console.log('⚡ Using fallback analysis (no Tavily key)...');
       result = await fallbackAnalysis(content);
     }
 
@@ -85,82 +85,72 @@ serve(async (req) => {
   }
 });
 
-async function verifyWithPerplexity(content: string, apiKey: string): Promise<VerificationResult> {
+async function verifyWithTavily(content: string, apiKey: string): Promise<VerificationResult> {
   const startTime = Date.now();
   
   try {
-    const prompt = `As a fact-checking expert, analyze this content for accuracy and reliability:
+    const query = `Fact-check and verify: "${content}"`;
 
-"${content}"
-
-Provide:
-1. A confidence score (0-100) based on factual accuracy
-2. Overall status (verified/inconclusive/disputed)
-3. A brief summary of your findings
-4. Detailed analysis explaining your reasoning
-5. Any relevant sources or evidence
-
-Focus on factual claims, logical consistency, and verifiable information.`;
-
-    console.log('🔍 Sending request to Perplexity API...');
+    console.log('🔍 Sending request to Tavily Search API...');
     
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const response = await fetch('https://api.tavily.com/search', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional fact-checker. Provide accurate, evidence-based analysis.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.2,
-        top_p: 0.9,
-        max_tokens: 1000,
-        return_images: false,
-        return_related_questions: false,
-        search_recency_filter: 'month',
-        frequency_penalty: 1,
-        presence_penalty: 0
+        api_key: apiKey,
+        query: query,
+        search_depth: "advanced",
+        include_answer: true,
+        include_raw_content: true,
+        max_results: 8,
+        include_domains: ["reuters.com", "bbc.com", "cnn.com", "npr.org", "apnews.com", "factcheck.org", "snopes.com", "politifact.com", "nytimes.com"]
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Tavily API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content || '';
+    console.log('🔍 Tavily search results received');
     
-    console.log('🤖 AI analysis received');
+    const answer = data.answer || '';
+    const searchResults = data.results || [];
     
-    // Parse AI response and extract structured data
-    const confidence = extractConfidence(aiResponse);
+    // Process sources from search results
+    const sources = searchResults.map((result: any) => ({
+      title: result.title || 'Unknown Source',
+      url: result.url || '',
+      snippet: result.content ? result.content.substring(0, 200) + '...' : '',
+      reliability_score: calculateReliabilityScore(result.url)
+    }));
+
+    // Calculate confidence based on search results quality
+    const confidence = calculateTavilyConfidence(answer, searchResults);
     const status = getStatusFromConfidence(confidence);
+    
+    // Create comprehensive summary
+    const summary = answer 
+      ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sources.length}\n\n${answer.substring(0, 200)}...`
+      : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${content.substring(0, 100)}..."`;
     
     return {
       confidence,
       status,
-      summary: `**🔍 AI-POWERED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\n\n${aiResponse.substring(0, 200)}...`,
-      analysis: aiResponse,
-      sources: extractSources(aiResponse),
+      summary,
+      analysis: `Tavily Search Analysis:\n\n${answer || `Based on ${searchResults.length} sources found, this claim has been evaluated for accuracy using real-time web search and reliable news sources.`}\n\nSearch completed with ${sources.length} relevant sources found.`,
+      sources,
       source_consensus: confidence,
-      verification_method: ['Perplexity AI', 'Real-time Search', 'Fact Checking'],
+      verification_method: ['Tavily Search', 'Real-time Web Search', 'Source Analysis'],
       category: categorizeContent(content),
       created_at: new Date().toISOString(),
       processing_time: Date.now() - startTime
     };
 
   } catch (error) {
-    console.error('🚨 Perplexity API failed:', error);
+    console.error('🚨 Tavily API failed:', error);
     throw error;
   }
 }
@@ -228,6 +218,61 @@ function extractSources(text: string): Array<{ title: string; url: string; snipp
     snippet: 'Referenced in AI analysis',
     reliability_score: 75 + Math.random() * 20
   }));
+}
+
+// Helper function to calculate confidence based on Tavily results
+function calculateTavilyConfidence(answer: string, results: any[]): number {
+  let confidence = 50; // Base confidence
+  
+  // Increase confidence based on number of sources
+  confidence += Math.min(results.length * 5, 25);
+  
+  // Increase confidence if answer is detailed
+  if (answer && answer.length > 100) {
+    confidence += 10;
+  }
+  
+  // Increase confidence based on source reliability
+  const reliableSources = results.filter((r: any) => r.url && (
+    r.url.includes('reuters.com') || 
+    r.url.includes('bbc.com') || 
+    r.url.includes('apnews.com') ||
+    r.url.includes('factcheck.org') ||
+    r.url.includes('snopes.com') ||
+    r.url.includes('politifact.com')
+  ));
+  confidence += reliableSources.length * 3;
+  
+  return Math.min(confidence, 95); // Cap at 95%
+}
+
+// Helper function to calculate source reliability score
+function calculateReliabilityScore(url: string): number {
+  if (!url) return 50;
+  
+  const domain = url.toLowerCase();
+  
+  // High reliability sources
+  if (domain.includes('reuters.com') || domain.includes('apnews.com') || domain.includes('bbc.com')) {
+    return 95;
+  }
+  
+  // Fact-checking sites
+  if (domain.includes('factcheck.org') || domain.includes('snopes.com') || domain.includes('politifact.com')) {
+    return 90;
+  }
+  
+  // Major news outlets
+  if (domain.includes('cnn.com') || domain.includes('npr.org') || domain.includes('nytimes.com')) {
+    return 85;
+  }
+  
+  // Government and educational sources
+  if (domain.includes('.gov') || domain.includes('.edu')) {
+    return 80;
+  }
+  
+  return 60; // Default reliability
 }
 
 function categorizeContent(content: string): string {

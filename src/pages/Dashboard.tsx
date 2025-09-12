@@ -15,6 +15,7 @@ import { LicenseStatus } from '@/components/license-status';
 import { FeatureGuard } from '@/components/feature-guard';
 import { useLicense } from '@/contexts/LicenseContext';
 import { VerificationAnalytics } from '@/components/verification-analytics';
+import { EnhancedAnalyticsDashboard } from '@/components/enhanced-analytics-dashboard';
 import { BulkVerification } from '@/components/bulk-verification';
 import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -219,12 +220,13 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
-            <TabsTrigger value="export">Export Data</TabsTrigger>
-          </TabsList>
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="executive">Executive</TabsTrigger>
+          <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
+          <TabsTrigger value="export">Export Data</TabsTrigger>
+        </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             {/* Quick Actions */}
@@ -324,9 +326,13 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="analytics">
-            <VerificationAnalytics />
-          </TabsContent>
+        <TabsContent value="analytics">
+          <VerificationAnalytics />
+        </TabsContent>
+
+        <TabsContent value="executive">
+          <EnhancedAnalyticsDashboard />
+        </TabsContent>
 
           <TabsContent value="bulk">
             <div className="text-center py-8">

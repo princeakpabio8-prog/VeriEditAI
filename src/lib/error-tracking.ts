@@ -122,7 +122,7 @@ class ErrorTracker {
       userAgent: navigator.userAgent,
       url: window.location.href,
       timestamp: new Date().toISOString(),
-      buildVersion: process.env.REACT_APP_VERSION || 'unknown',
+      buildVersion: (window as any).__BUILD_VERSION__ ?? 'unknown',
       ...overrides
     };
   }
@@ -332,14 +332,27 @@ export const useErrorHandler = () => {
 // Performance monitoring
 export const performanceMonitor = {
   startTiming: (name: string) => {
-    performance.mark(`${name}-start`);
+    try {
+      if (typeof performance !== 'undefined' && performance.mark) {
+        performance.mark(`${name}-start`);
+      }
+    } catch (error) {
+      // Silently fail if performance API is not available
+    }
   },
 
   endTiming: (name: string, threshold: number = 3000) => {
-    performance.mark(`${name}-end`);
-    const measure = performance.measure(name, `${name}-start`, `${name}-end`);
-    errorTracker.capturePerformanceIssue(name, measure.duration, threshold);
-    return measure.duration;
+    try {
+      if (typeof performance !== 'undefined' && performance.mark && performance.measure) {
+        performance.mark(`${name}-end`);
+        const measure = performance.measure(name, `${name}-start`, `${name}-end`);
+        errorTracker.capturePerformanceIssue(name, measure.duration, threshold);
+        return measure.duration;
+      }
+    } catch (error) {
+      // Silently fail if performance API fails
+    }
+    return 0;
   },
 
   measureAsync: async <T>(name: string, fn: () => Promise<T>, threshold: number = 5000): Promise<T> => {

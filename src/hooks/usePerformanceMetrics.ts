@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { verificationCache } from '@/lib/verification-cache';
 import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
 import { verificationAnalytics } from '@/lib/verification-analytics';
@@ -24,7 +24,7 @@ export function usePerformanceMetrics() {
     lastUpdated: Date.now()
   });
 
-  const refreshMetrics = () => {
+  const refreshMetrics = useCallback(() => {
     const analyticsData = verificationAnalytics.getMetrics();
     const basicCacheStats = verificationCache.getStats();
     const enhancedCacheStats = enhancedVerificationCache.getStats();
@@ -54,7 +54,7 @@ export function usePerformanceMetrics() {
       tavilyApiHealth,
       lastUpdated: Date.now()
     });
-  };
+  }, []);
 
   useEffect(() => {
     refreshMetrics();

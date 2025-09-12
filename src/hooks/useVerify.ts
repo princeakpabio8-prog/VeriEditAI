@@ -33,7 +33,6 @@ export function useVerify() {
   const verify = useCallback(async (content: string, userId: string, bypassCache = false) => {
     const key = `${userId}::${content}`;
     const startTime = Date.now();
-    const performanceTimer = performanceMonitor.startTiming('verification_process');
 
     // Prevent duplicate in-flight requests for the same content/user
     if (inFlightKeys.current.has(key)) {
@@ -46,6 +45,7 @@ export function useVerify() {
     setResult(null);
 
     try {
+      performanceMonitor.startTiming('verification_process');
       // Check cache first (unless bypassed)
       if (!bypassCache) {
         const cachedResult = verificationCache.get(content, userId);
@@ -130,7 +130,11 @@ export function useVerify() {
           }
 
           const processingTime = Date.now() - startTime;
-          performanceMonitor.endTiming('verification_process');
+          try {
+            performanceMonitor.endTiming('verification_process');
+          } catch (error) {
+            // Ignore performance monitoring errors
+          }
           
           console.log(`✅ Verification successful in ${processingTime}ms`);
           console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
@@ -186,7 +190,11 @@ export function useVerify() {
 
     } catch (err) {
       const processingTime = Date.now() - startTime;
-          performanceMonitor.endTiming('verification_process');
+      try {
+        performanceMonitor.endTiming('verification_process');
+      } catch (error) {
+        // Ignore performance monitoring errors
+      }
       console.error('💥 Verification completely failed after all attempts:', err);
       
       // Track failed verification analytics

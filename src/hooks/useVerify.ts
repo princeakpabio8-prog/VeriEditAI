@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { verificationCache } from '@/lib/verification-cache';
 import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
 import { useEnhancedToast } from '@/components/enhanced-toast';
+import { errorTracker, performanceMonitor } from '@/lib/error-tracking';
+import { verificationAnalytics } from '@/lib/verification-analytics';
 
 interface VerifyResult {
   confidence: number;
@@ -31,6 +33,7 @@ export function useVerify() {
   const verify = useCallback(async (content: string, userId: string, bypassCache = false) => {
     const key = `${userId}::${content}`;
     const startTime = Date.now();
+    const performanceTimer = performanceMonitor.startTiming('verification_process');
 
     // Prevent duplicate in-flight requests for the same content/user
     if (inFlightKeys.current.has(key)) {
@@ -49,7 +52,36 @@ export function useVerify() {
         if (cachedResult) {
           const cacheAge = Math.round((Date.now() - (cachedResult.created_at ? new Date(cachedResult.created_at).getTime() : 0)) / 1000 / 60);
           console.log(`💾 Using cached verification result (${cacheAge} minutes old)`);
+          
+          // Track cache hit analytics
+          verificationAnalytics.trackVerification({
+            success: true,
+            processingTime: Date.now() - startTime,
+            confidence: cachedResult.confidence || 0,
+            category: 'cached',
+            userId
+          });
+          
           setResult(cachedResult);
+          showCacheHit('content');
+          setLoading(false);
+          return;
+        }
+
+        // Check enhanced cache
+        const enhancedCached = enhancedVerificationCache.get(content, userId);
+        if (enhancedCached) {
+          console.log('🎯 Enhanced cache hit!');
+          
+          verificationAnalytics.trackVerification({
+            success: true,
+            processingTime: Date.now() - startTime,
+            confidence: enhancedCached.confidence || 0,
+            category: 'enhanced_cached',
+            userId
+          });
+          
+          setResult(enhancedCached);
           showCacheHit('content');
           setLoading(false);
           return;
@@ -61,9 +93,9 @@ export function useVerify() {
       inFlightKeys.current.add(key);
       console.log('🚀 Calling verify edge function...');
 
-      // Enhanced error handling with retry logic
+      // Enhanced error handling with retry logic and exponential backoff
       let attemptCount = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3;
       let lastError: any = null;
 
       while (attemptCount < maxAttempts) {
@@ -71,6 +103,8 @@ export function useVerify() {
         console.log(`📡 Verification attempt ${attemptCount}/${maxAttempts}`);
 
         try {
+          const apiTimer = performanceMonitor.startTiming('tavily_api_call');
+          
           const { data, error: fnError } = await supabase.functions.invoke('verify', {
             body: {
               content,
@@ -78,7 +112,10 @@ export function useVerify() {
             }
           });
 
+          performanceMonitor.endTiming('tavily_api_call');
+
           if (fnError) {
+            errorTracker.captureError(new Error(fnError.message || 'Unknown API error'));
             throw new Error(fnError.message || `API Error: ${fnError.details || 'Unknown error'}`);
           }
 
@@ -93,14 +130,26 @@ export function useVerify() {
           }
 
           const processingTime = Date.now() - startTime;
+          performanceMonitor.endTiming('verification_process');
+          
           console.log(`✅ Verification successful in ${processingTime}ms`);
           console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
 
+          // Track successful verification analytics
+          verificationAnalytics.trackVerification({
+            success: true,
+            processingTime,
+            confidence: data.confidence || 0,
+            category: data.category || 'general',
+            userId
+          });
+
           setResult(data);
 
-          // Cache the result (only if not bypassed)
+          // Cache the result in both caches (only if not bypassed)
           if (!bypassCache) {
             verificationCache.set(content, userId, data);
+            enhancedVerificationCache.set(content, userId, data);
           }
 
           showVerificationSuccess(data?.confidence ?? 0, data?.processing_time || processingTime);
@@ -111,24 +160,53 @@ export function useVerify() {
           console.error(`❌ Attempt ${attemptCount} failed:`, err);
           
           if (attemptCount < maxAttempts) {
-            console.log('🔄 Retrying in 1 second...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const delay = Math.pow(2, attemptCount - 1) * 1000; // Exponential backoff: 1s, 2s, 4s
+            console.log(`🔄 Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
           }
         }
       }
 
-      // All attempts failed
+      // All attempts failed - check for similar cached results as fallback
+      const similarResults = enhancedVerificationCache.findSimilar(content, userId, 0.7);
+      if (similarResults.length > 0) {
+        console.log('🔄 Using similar cached result as fallback');
+        const fallbackResult = similarResults[0];
+        setResult({
+          ...fallbackResult.result,
+          fromFallback: true,
+          originalError: lastError?.message
+        });
+        
+        showVerificationSuccess(fallbackResult.result.confidence || 0, Date.now() - startTime);
+        return;
+      }
+
       throw lastError;
 
     } catch (err) {
       const processingTime = Date.now() - startTime;
+          performanceMonitor.endTiming('verification_process');
       console.error('💥 Verification completely failed after all attempts:', err);
+      
+      // Track failed verification analytics
+      verificationAnalytics.trackVerification({
+        success: false,
+        processingTime,
+        confidence: 0,
+        category: 'error',
+        userId,
+        error: err?.name || 'UnknownError'
+      });
+      
+      // Capture detailed error information
+      errorTracker.captureError(err instanceof Error ? err : new Error('Verification failed'));
       
       let errorMessage = 'Verification failed - please try again';
       
       if (err instanceof Error) {
         if (err.message.includes('API Error')) {
-          errorMessage = 'Service temporarily unavailable - please try again';
+          errorMessage = 'Tavily API temporarily unavailable - please try again';
         } else if (err.message.includes('Invalid verification result')) {
           errorMessage = 'Invalid response from verification service';
         } else if (err.message.includes('No data received')) {
@@ -140,9 +218,6 @@ export function useVerify() {
       
       setError(errorMessage);
       showVerificationError(errorMessage);
-      
-      // Track error for analytics
-      console.log(`📈 Error analytics: ${errorMessage} (${processingTime}ms)`);
       
     } finally {
       inFlightKeys.current.delete(key);

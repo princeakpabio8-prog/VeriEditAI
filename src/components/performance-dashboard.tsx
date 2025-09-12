@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Activity, Clock, TrendingUp, Zap, Database, Gauge, RefreshCw } from 'lucide-react';
 import { verificationCache } from '@/lib/verification-cache';
 import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
+import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
 
 interface PerformanceMetrics {
   avgResponseTime: number;
@@ -25,15 +26,8 @@ interface CacheMetrics {
 }
 
 export function PerformanceDashboard() {
-  const [metrics, setMetrics] = useState<PerformanceMetrics>({
-    avgResponseTime: 0,
-    successRate: 0,
-    totalVerifications: 0,
-    cacheHitRate: 0,
-    systemHealth: 'Good',
-    lastUpdate: new Date()
-  });
-
+  const { metrics: realTimeMetrics, refreshMetrics: refreshRealTimeMetrics } = usePerformanceMetrics();
+  
   const [cacheMetrics, setCacheMetrics] = useState<{
     basic: CacheMetrics;
     enhanced: CacheMetrics;
@@ -51,20 +45,6 @@ export function PerformanceDashboard() {
       // Get cache statistics
       const basicStats = verificationCache.getStats();
       const enhancedStats = enhancedVerificationCache.getStats();
-      
-      // Simulate performance metrics (in real app, this would come from analytics)
-      const avgResponseTime = Math.floor(Math.random() * 1000) + 800; // 800-1800ms
-      const successRate = Math.floor(Math.random() * 15) + 85; // 85-100%
-      const totalVerifications = basicStats.size + enhancedStats.totalEntries + Math.floor(Math.random() * 100);
-      
-      setMetrics({
-        avgResponseTime,
-        successRate,
-        totalVerifications,
-        cacheHitRate: Math.round((basicStats.hitRate + enhancedStats.averageConfidence) / 2),
-        systemHealth: getSystemHealth(avgResponseTime, successRate),
-        lastUpdate: new Date()
-      });
 
       setCacheMetrics({
         basic: {
@@ -81,6 +61,9 @@ export function PerformanceDashboard() {
         }
       });
 
+      // Refresh real-time metrics
+      refreshRealTimeMetrics();
+
     } catch (error) {
       console.error('Failed to refresh metrics:', error);
     } finally {
@@ -92,7 +75,7 @@ export function PerformanceDashboard() {
     refreshMetrics();
     const interval = setInterval(refreshMetrics, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshRealTimeMetrics]);
 
   const getSystemHealth = (responseTime: number, successRate: number): 'Excellent' | 'Good' | 'Fair' | 'Poor' => {
     if (responseTime < 1000 && successRate > 95) return 'Excellent';
@@ -151,12 +134,12 @@ export function PerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              <Badge variant={getHealthBadgeVariant(metrics.systemHealth)}>
-                {metrics.systemHealth}
+              <Badge variant={getHealthBadgeVariant(realTimeMetrics.systemHealth)}>
+                {realTimeMetrics.systemHealth}
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Overall system status
+              Real-time system monitoring
             </p>
           </CardContent>
         </Card>
@@ -167,15 +150,13 @@ export function PerformanceDashboard() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.avgResponseTime}ms</div>
+            <div className="text-2xl font-bold">{Math.round(realTimeMetrics.responseTime)}ms</div>
             <Progress 
-              value={Math.max(0, 100 - (metrics.avgResponseTime / 30))} 
+              value={Math.max(0, 100 - (realTimeMetrics.responseTime / 30))} 
               className="mt-2"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {metrics.avgResponseTime < 1000 ? 'Excellent' : 
-               metrics.avgResponseTime < 1500 ? 'Good' : 
-               metrics.avgResponseTime < 2000 ? 'Fair' : 'Needs improvement'}
+              Tavily API response time
             </p>
           </CardContent>
         </Card>
@@ -186,12 +167,10 @@ export function PerformanceDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.successRate}%</div>
-            <Progress value={metrics.successRate} className="mt-2" />
+            <div className="text-2xl font-bold">{Math.round(realTimeMetrics.successRate)}%</div>
+            <Progress value={realTimeMetrics.successRate} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">
-              {metrics.successRate > 95 ? 'Excellent' : 
-               metrics.successRate > 90 ? 'Good' : 
-               metrics.successRate > 80 ? 'Fair' : 'Needs attention'}
+              Real verification success rate
             </p>
           </CardContent>
         </Card>
@@ -202,7 +181,7 @@ export function PerformanceDashboard() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalVerifications.toLocaleString()}</div>
+            <div className="text-2xl font-bold">{realTimeMetrics.totalVerifications.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">
               All time count
             </p>
@@ -294,15 +273,15 @@ export function PerformanceDashboard() {
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Avg Response Time</span>
-                      <span>{metrics.avgResponseTime}ms</span>
+                      <span>{Math.round(realTimeMetrics.responseTime)}ms</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Success Rate</span>
-                      <span>{metrics.successRate}%</span>
+                      <span>{Math.round(realTimeMetrics.successRate)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Cache Hit Rate</span>
-                      <span>{metrics.cacheHitRate}%</span>
+                      <span>{Math.round(realTimeMetrics.cacheHitRate)}%</span>
                     </div>
                   </div>
                 </div>
@@ -312,17 +291,19 @@ export function PerformanceDashboard() {
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Health Status</span>
-                      <span className={getHealthColor(metrics.systemHealth)}>
-                        {metrics.systemHealth}
+                      <span className={getHealthColor(realTimeMetrics.systemHealth)}>
+                        {realTimeMetrics.systemHealth}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Last Updated</span>
-                      <span>{metrics.lastUpdate.toLocaleTimeString()}</span>
+                      <span>{new Date(realTimeMetrics.lastUpdated).toLocaleTimeString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">AI Integration</span>
-                      <Badge variant="secondary">Perplexity API</Badge>
+                      <Badge variant={realTimeMetrics.tavilyApiHealth === 'Healthy' ? 'secondary' : 'destructive'}>
+                        Tavily API ({realTimeMetrics.tavilyApiHealth})
+                      </Badge>
                     </div>
                   </div>
                 </div>

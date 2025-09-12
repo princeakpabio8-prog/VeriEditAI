@@ -52,10 +52,17 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
           {licenseInfo.icon}
         </div>
         <CardTitle className="text-lg">
-          {licenseInfo.name} Feature
+          {license?.license_type === 'trial' ? 'Free Plan Limit Reached' : `${licenseInfo.name} Feature`}
         </CardTitle>
         <CardDescription>
-          This feature requires a {licenseInfo.name.toLowerCase()} license or higher
+          {license?.license_type === 'trial' ? (
+            <>
+              You've used {license.current_usage || 0} of {license.max_usage || 5} free monthly verifications. 
+              Upgrade to continue verifying content.
+            </>
+          ) : (
+            `This feature requires a ${licenseInfo.name.toLowerCase()} license or higher`
+          )}
         </CardDescription>
       </CardHeader>
       {showUpgrade && (
@@ -65,7 +72,7 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
             className="gap-2"
           >
             <Crown className="h-4 w-4" />
-            Upgrade License
+            {license?.license_type === 'trial' ? 'Upgrade for Unlimited Verifications' : 'Upgrade License'}
           </Button>
         </CardContent>
       )}

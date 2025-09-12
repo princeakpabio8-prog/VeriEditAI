@@ -516,6 +516,10 @@ export type Database = {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
       }
+      reset_monthly_usage_for_free_users: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       upgrade_user_subscription: {
         Args: {
           expires_date?: string

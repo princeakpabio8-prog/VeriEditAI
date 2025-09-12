@@ -1,104 +1,75 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLicense } from '@/contexts/LicenseContext';
-import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
-import { VerificationProgress } from '@/components/verification-progress';
 import { VerificationResult } from '@/components/verification-result';
-import { CacheStatus } from '@/components/cache-status';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { FeatureGuard } from '@/components/feature-guard';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Clock, AlertTriangle, Zap, Shield, Search } from 'lucide-react';
+import { CacheStatus } from '@/components/cache-status';
+import { Navigation } from '@/components/ui/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { CheckCircle, FileText, Shield, TrendingUp, Activity } from 'lucide-react';
+import { toast } from 'sonner';
+import { useVerify } from '@/hooks/useVerify';
 
 interface VerificationState {
-  stage: 'upload' | 'processing' | 'completed';
-  verificationId?: string;
+  stage: 'upload' | 'completed';
   content?: string;
   result?: any;
 }
 
-const Verify = () => {
+export default function Verify() {
   const { user } = useAuth();
-  const { incrementUsage } = useLicense();
-  const { toast } = useToast();
-  const navigate = useNavigate();
+  const { verify, loading, error, result } = useVerify();
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
 
   const handleVerificationStart = async (data: any) => {
     if (!user) {
-      // Store verification data for after login
-      sessionStorage.setItem('pendingVerification', JSON.stringify(data));
-      navigate('/auth');
+      toast.error('Please sign in to verify content');
       return;
     }
 
     try {
-      // Check license usage
-      const usageResult = await incrementUsage(1);
-      if (!usageResult.success) {
-        toast({
-          title: "Usage Limit Reached",
-          description: usageResult.error || "Upgrade to continue verifying content.",
-          variant: "destructive",
-          action: (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/billing')}
-            >
-              Upgrade
-            </Button>
-          ),
-        });
-        return;
-      }
-
-      // Generate verification ID
-      const verificationId = crypto.randomUUID();
-
+      console.log('Starting instant verification...');
+      await verify(data.content, user.id);
+      
       setVerificationState({
-        stage: 'processing',
-        verificationId,
-        content: data.content
+        stage: 'completed',
+        content: data.content,
+        result: result
       });
-
-      toast({
-        title: "Verification Started",
-        description: "Your content is being analyzed...",
-      });
-
-    } catch (error: any) {
+      
+    } catch (error) {
       console.error('Error starting verification:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to start verification",
-        variant: "destructive",
-      });
+      toast.error('Failed to verify content');
     }
   };
 
-  const handleVerificationComplete = (result: any) => {
+  const handleNewVerification = () => {
     setVerificationState({
-      stage: 'completed',
-      verificationId: verificationState.verificationId,
-      result
+      stage: 'upload'
     });
   };
 
-  const handleNewVerification = () => {
-    setVerificationState({ stage: 'upload' });
+  const handleHealthCheck = async () => {
+    if (!user) {
+      toast.error('Please sign in to run health check');
+      return;
+    }
+    
+    const testContent = "The Earth is round and orbits the Sun.";
+    try {
+      await verify(testContent, user.id, true); // bypass cache for health check
+      toast.success('Health check passed! Verification system is working.');
+    } catch (error) {
+      toast.error('Health check failed: ' + (error as Error).message);
+    }
   };
 
-  // Desktop UI
   return (
     <div className="min-h-screen bg-background">
-      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">
@@ -112,29 +83,80 @@ const Verify = () => {
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto">
-          {verificationState.stage === 'upload' && (
-            <div className="space-y-12">
-              <FeatureGuard 
-                feature="verification"
-                fallback={
-                  <Card className="border-amber-500/50 bg-amber-500/5 p-8">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-semibold mb-4">License Required</h3>
-                      <p className="text-muted-foreground mb-6">
-                        A valid license is required to access verification features.
-                      </p>
-                      <Button size="lg" onClick={() => navigate('/billing')}>
-                        Get License
-                      </Button>
-                    </div>
-                  </Card>
-                }
-              >
-                <VerificationUpload onVerificationStart={handleVerificationStart} />
-              </FeatureGuard>
+          <FeatureGuard 
+            feature="verification"
+            fallback={
+              <Card className="border-amber-500/50 bg-amber-500/5 p-8">
+                <div className="text-center">
+                  <h3 className="text-2xl font-semibold mb-4">License Required</h3>
+                  <p className="text-muted-foreground mb-6">
+                    A valid license is required to access verification features.
+                  </p>
+                  <Button size="lg" onClick={() => window.location.href = '/billing'}>
+                    Get License
+                  </Button>
+                </div>
+              </Card>
+            }
+          >
+            {verificationState.stage === 'upload' && (
+              <>
+                <VerificationUpload onVerificationStart={handleVerificationStart} isLoading={loading} />
+                <div className="mt-4 flex justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleHealthCheck}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    <Activity className="h-4 w-4" />
+                    Health Check
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {(verificationState.stage === 'completed' || result) && (
+              <VerificationResult
+                verificationId={`instant_${Date.now()}`}
+                trustScore={(verificationState.result || result)?.confidence || 0}
+                status={(verificationState.result || result)?.status || 'unknown'}
+                summary={(verificationState.result || result)?.summary || 'No summary available'}
+                analysis={(verificationState.result || result)?.analysis || 'No analysis available'}
+                sources={((verificationState.result || result)?.sources || []).map((s: any) => ({
+                  id: s.id || Math.random().toString(),
+                  title: s.title || 'Unknown Source',
+                  url: s.url || '#',
+                  content_snippet: s.content_snippet || s.snippet || '',
+                  reliability_score: s.reliability_score || undefined,
+                }))}
+                sourceConsensus={(verificationState.result || result)?.source_consensus || 0}
+                methods={(verificationState.result || result)?.verification_method || ['AI Analysis']}
+                category={(verificationState.result || result)?.category || 'general'}
+                processingTime={1500}
+                onNewVerification={handleNewVerification}
+                content={verificationState.content || 'No content'}
+              />
+            )}
+            
+            {error && (
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-destructive font-medium">Verification Error</p>
+                <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleNewVerification}
+                  className="mt-2"
+                >
+                  Try Again
+                </Button>
+              </div>
+            )}
 
-              {/* How it Works */}
-              <div className="space-y-8">
+            {/* How it Works - Only show on upload stage */}
+            {verificationState.stage === 'upload' && (
+              <div className="space-y-8 mt-12">
                 <h2 className="text-3xl font-bold text-center text-foreground">
                   How It Works
                 </h2>
@@ -143,7 +165,7 @@ const Verify = () => {
                     <CardHeader>
                       <div className="flex justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Search className="h-6 w-6 text-primary" />
+                          <FileText className="h-6 w-6 text-primary" />
                         </div>
                       </div>
                       <CardTitle className="text-lg">AI Analysis</CardTitle>
@@ -175,7 +197,7 @@ const Verify = () => {
                     <CardHeader>
                       <div className="flex justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Zap className="h-6 w-6 text-primary" />
+                          <CheckCircle className="h-6 w-6 text-primary" />
                         </div>
                       </div>
                       <CardTitle className="text-lg">Instant Results</CardTitle>
@@ -188,40 +210,8 @@ const Verify = () => {
                   </Card>
                 </div>
               </div>
-            </div>
-          )}
-
-          {verificationState.stage === 'processing' && verificationState.verificationId && verificationState.content && (
-            <VerificationProgress
-              verificationId={verificationState.verificationId}
-              content={verificationState.content}
-              onComplete={handleVerificationComplete}
-              onCancel={handleNewVerification}
-            />
-          )}
-
-          {verificationState.stage === 'completed' && verificationState.result && (
-            <VerificationResult
-              verificationId={verificationState.verificationId!}
-              trustScore={verificationState.result.confidence || 0}
-              status={verificationState.result.status}
-              summary={verificationState.result.summary}
-              analysis={verificationState.result.analysis}
-              sources={(verificationState.result.sources || []).map((s: any) => ({
-                id: s.id,
-                title: s.title,
-                url: s.url,
-                content_snippet: s.content_snippet || s.snippet || '',
-                reliability_score: s.reliability_score || undefined,
-              }))}
-              sourceConsensus={verificationState.result.source_consensus}
-              methods={verificationState.result.verification_method}
-              category={verificationState.result.category}
-              processingTime={verificationState.result.processing_time || 3000}
-              onNewVerification={handleNewVerification}
-              content={verificationState.content}
-            />
-          )}
+            )}
+          </FeatureGuard>
         </div>
       </main>
 
@@ -229,6 +219,4 @@ const Verify = () => {
       <CacheStatus />
     </div>
   );
-};
-
-export default Verify;
+}

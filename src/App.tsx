@@ -63,7 +63,11 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route path="/verify" element={<Verify />} />
+          <Route path="/verify" element={
+            <ProtectedRoute>
+              <Verify />
+            </ProtectedRoute>
+          } />
             <Route 
               path="/verification-dashboard" 
               element={

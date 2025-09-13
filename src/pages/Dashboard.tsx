@@ -21,6 +21,7 @@ import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
+import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Verification {
@@ -233,66 +234,66 @@ const Dashboard = () => {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Total Verifications</CardTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <MobileCard className="bg-gradient-card border-border/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base md:text-lg">Total Verifications</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-primary">
+                  <div className="text-2xl md:text-3xl font-bold text-primary">
                     {verifications.length}
                   </div>
                 </CardContent>
-              </Card>
+              </MobileCard>
 
-              <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Queue Status</CardTitle>
+              <MobileCard className="bg-gradient-card border-border/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base md:text-lg">Queue Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-trust-high">
+                  <div className="text-2xl md:text-3xl font-bold text-trust-high">
                     {getStats().pending + getStats().processing}
                   </div>
-                  <p className="text-sm text-muted-foreground">Items in queue</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Items in queue</p>
                 </CardContent>
-              </Card>
+              </MobileCard>
 
-              <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-lg">Success Rate</CardTitle>
+              <MobileCard className="bg-gradient-card border-border/50">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base md:text-lg">Success Rate</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-3xl font-bold text-trust-medium">
+                  <div className="text-2xl md:text-3xl font-bold text-trust-medium">
                     {Math.round(getStats().successRate)}%
                   </div>
                 </CardContent>
-              </Card>
+              </MobileCard>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex flex-col md:flex-row gap-3 md:gap-4">
               <FeatureGuard 
                 feature="verification"
                 fallback={
-                  <Card className="border-amber-500/50 bg-amber-500/5 p-6">
+                  <MobileCard className="border-amber-500/50 bg-amber-500/5 p-4 md:p-6">
                     <div className="text-center">
                       <h3 className="text-lg font-semibold mb-2">Verification Unavailable</h3>
-                      <p className="text-muted-foreground mb-4">
+                      <p className="text-muted-foreground mb-4 text-sm">
                         A valid license is required to use verification features.
                       </p>
-                      <Button onClick={() => window.location.href = '/billing'}>
+                      <MobileButton onClick={() => window.location.href = '/billing'}>
                         Upgrade to Pro with Flutterwave
-                      </Button>
+                      </MobileButton>
                     </div>
-                  </Card>
+                  </MobileCard>
                 }
               >
                 <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
                   <DialogTrigger asChild>
-                    <Button size="lg" className="gap-2">
+                    <MobileButton size="lg" className="gap-2 flex-1">
                       <Plus className="h-5 w-5" />
                       New Verification
-                    </Button>
+                    </MobileButton>
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
@@ -310,10 +311,10 @@ const Dashboard = () => {
 
                 <Dialog open={showBulkModal} onOpenChange={setShowBulkModal}>
                   <DialogTrigger asChild>
-                    <Button variant="outline" size="lg" className="gap-2">
+                    <MobileButton variant="outline" size="lg" className="gap-2 flex-1">
                       <Package className="h-5 w-5" />
                       Bulk Verification
-                    </Button>
+                    </MobileButton>
                   </DialogTrigger>
                   <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>

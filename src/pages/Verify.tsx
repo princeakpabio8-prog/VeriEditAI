@@ -11,6 +11,9 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, FileText, Shield, TrendingUp, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVerify } from '@/hooks/useVerify';
+import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
+import { MobileVerificationUI } from '@/components/mobile-verification-ui';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface VerificationState {
   stage: 'upload' | 'completed';
@@ -21,6 +24,7 @@ interface VerificationState {
 export default function Verify() {
   const { user } = useAuth();
   const { verify, loading, error, result } = useVerify();
+  const isMobile = useIsMobile();
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
@@ -68,9 +72,37 @@ export default function Verify() {
     }
   };
 
+  // Mobile-specific verification UI
+  if (isMobile) {
+    return (
+      <MobileOptimizedUI>
+        <div className="min-h-screen bg-background">
+          <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+          
+          <main className="container mx-auto px-4 py-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Content Verification</h1>
+              <p className="text-muted-foreground">
+                AI-powered fact-checking and trust analysis
+              </p>
+            </div>
+
+            <MobileVerificationUI
+              onVerify={handleVerificationStart}
+              loading={loading}
+              result={result}
+              error={error}
+            />
+          </main>
+        </div>
+      </MobileOptimizedUI>
+    );
+  }
+
+  // Desktop UI
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">

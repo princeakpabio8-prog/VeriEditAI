@@ -20,6 +20,8 @@ import { BulkVerification } from '@/components/bulk-verification';
 import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Verification {
   id: string;
@@ -42,6 +44,7 @@ const Dashboard = () => {
   const [processingVerification, setProcessingVerification] = useState(false);
   const { addToQueue, queue, startQueue, getStats } = useVerificationQueue();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
@@ -198,7 +201,7 @@ const Dashboard = () => {
     );
   }
 
-  return (
+  const content = (
     <div className="min-h-screen bg-background">
       <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
       
@@ -430,6 +433,12 @@ const Dashboard = () => {
         </Card>
       </main>
     </div>
+  );
+
+  return isMobile ? (
+    <MobileOptimizedUI>{content}</MobileOptimizedUI>
+  ) : (
+    content
   );
 };
 

@@ -10,12 +10,15 @@ import { FlutterwaveCheckout } from '@/components/flutterwave-checkout';
 import { SubscriptionManager } from '@/components/subscription-manager';
 import { Users, Crown, Zap, Shield, Star, CreditCard, BarChart3 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Billing = () => {
   const { user } = useAuth();
   const [monthlyUsage, setMonthlyUsage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
@@ -103,7 +106,7 @@ const Billing = () => {
     );
   };
 
-  return (
+  const content = (
     <div className="min-h-screen bg-background">
       <Navigation 
         isAuthenticated={!!user} 
@@ -355,6 +358,12 @@ const Billing = () => {
         </div>
       </main>
     </div>
+  );
+
+  return isMobile ? (
+    <MobileOptimizedUI>{content}</MobileOptimizedUI>
+  ) : (
+    content
   );
 };
 

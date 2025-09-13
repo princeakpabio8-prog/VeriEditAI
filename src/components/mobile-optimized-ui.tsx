@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -89,45 +90,49 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
         <div className="grid grid-cols-4 gap-1 p-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-2"
-            onClick={() => window.location.href = '/dashboard'}
-          >
-            <Home className="h-4 w-4" />
-            <span className="text-xs">Home</span>
-          </Button>
+          <Link to="/dashboard">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/dashboard' ? 'text-primary bg-primary/10' : ''}`}
+            >
+              <Home className="h-4 w-4" />
+              <span className="text-xs">Home</span>
+            </Button>
+          </Link>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-2"
-            onClick={() => window.location.href = '/verify'}
-          >
-            <Search className="h-4 w-4" />
-            <span className="text-xs">Verify</span>
-          </Button>
+          <Link to="/verify">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/verify' ? 'text-primary bg-primary/10' : ''}`}
+            >
+              <Search className="h-4 w-4" />
+              <span className="text-xs">Verify</span>
+            </Button>
+          </Link>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-2"
-            onClick={() => window.location.href = '/dashboard?tab=analytics'}
-          >
-            <BarChart3 className="h-4 w-4" />
-            <span className="text-xs">Analytics</span>
-          </Button>
+          <Link to="/billing">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/billing' ? 'text-primary bg-primary/10' : ''}`}
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs">Billing</span>
+            </Button>
+          </Link>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex flex-col gap-1 h-auto py-2"
-            onClick={() => window.location.href = '/profile'}
-          >
-            <User className="h-4 w-4" />
-            <span className="text-xs">Profile</span>
-          </Button>
+          <Link to="/profile">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/profile' ? 'text-primary bg-primary/10' : ''}`}
+            >
+              <User className="h-4 w-4" />
+              <span className="text-xs">Profile</span>
+            </Button>
+          </Link>
         </div>
       </nav>
 

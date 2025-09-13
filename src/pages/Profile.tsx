@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { User, Settings, CreditCard, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Profile {
   full_name: string;
@@ -23,6 +25,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [verificationCount, setVerificationCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (user) {
@@ -124,7 +127,7 @@ const Profile = () => {
     });
   };
 
-  return (
+  const content = (
     <div className="min-h-screen bg-background">
       <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
       
@@ -306,6 +309,12 @@ const Profile = () => {
         </div>
       </main>
     </div>
+  );
+
+  return isMobile ? (
+    <MobileOptimizedUI>{content}</MobileOptimizedUI>
+  ) : (
+    content
   );
 };
 

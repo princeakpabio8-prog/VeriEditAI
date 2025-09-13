@@ -84,7 +84,7 @@ serve(async (req) => {
     const { data: upgradeResult, error: upgradeError } = await supabaseService
       .rpc("upgrade_user_subscription", {
         user_uuid: user.id,
-        plan: payment.plan_type,
+        plan: payment.plan,
         payment_uuid: payment.id,
         expires_date: expiryDate.toISOString()
       });
@@ -98,7 +98,7 @@ serve(async (req) => {
       success: true, 
       message: "Payment verified and subscription upgraded",
       payment_id: payment.id,
-      plan: payment.plan_type
+      plan: payment.plan
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -136,8 +136,8 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
   };
 
   const config = (plan: Plan, txRef: string) => ({
-    public_key: "FLWPUBK_TEST-SANDBOXDEMOKEY-X", // Using sandbox key directly since env vars not supported
-    PBFPubKey: "FLWPUBK_TEST-SANDBOXDEMOKEY-X", // Using sandbox key directly since env vars not supported
+    public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
+    PBFPubKey: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
     tx_ref: txRef,
     amount: plan.price,
     currency: plan.currency,
@@ -201,7 +201,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
   const handleFlutterPayment = async (plan: Plan) => {
     if (!user) {
       toast({
-        title: "Authentication Required",
+        title: "Authentication Required", 
         description: "Please log in to upgrade your plan",
         variant: "destructive"
       });
@@ -209,9 +209,37 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     }
 
     setLoading(plan.id);
-    const txRef = `${user.id}_${Date.now()}`;
 
     try {
+      // Check for existing pending payments
+      const { data: existingPayments } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('plan', plan.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      // If there's a recent pending payment (within last 5 minutes), don't create a new one
+      if (existingPayments && existingPayments.length > 0) {
+        const lastPayment = existingPayments[0];
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const paymentTime = new Date(lastPayment.created_at);
+        
+        if (paymentTime > fiveMinutesAgo) {
+          toast({
+            title: "Payment in Progress",
+            description: "You already have a pending payment. Please wait or check your payment status.",
+            variant: "destructive",
+          });
+          setLoading(null);
+          return;
+        }
+      }
+
+      const txRef = `${user.id}_${Date.now()}`;
+      
       // Create payment record first
       await createPaymentRecord(plan, txRef);
       
@@ -226,10 +254,10 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
       });
       
     } catch (error) {
-      console.error('Failed to create payment record:', error);
+      console.error('Failed to initialize payment:', error);
       toast({
         title: "Error",
-        description: "Failed to initialize payment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to initialize payment. Please try again.",
         variant: "destructive"
       });
       setLoading(null);

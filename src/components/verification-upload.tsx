@@ -19,7 +19,7 @@ interface VerificationUploadProps {
 
 interface VerificationData {
   type?: "text" | "url" | "file";
-  contentType?: "text" | "url" | "file";
+  contentType?: "text" | "url" | "file" | "image";
   content: string;
   fileName?: string;
   fileSize?: number;
@@ -66,7 +66,12 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
       "application/msword",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       "text/csv",
-      "application/json"
+      "application/json",
+      "image/jpeg",
+      "image/jpg", 
+      "image/png",
+      "image/gif",
+      "image/webp"
     ];
 
     if (file.size > maxSize) {
@@ -81,7 +86,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Unsupported file type",
-        description: "Please select a text, PDF, Word, CSV, or JSON file.",
+        description: "Please select a text, PDF, Word, CSV, JSON, or image file.",
         variant: "destructive"
       });
       return false;
@@ -176,7 +181,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
     }
   };
 
-  const handleVerifyFile = () => {
+  const handleVerifyFile = async () => {
     if (!selectedFile) {
       toast({
         title: "No file selected",
@@ -186,11 +191,44 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
       return;
     }
 
-    onVerificationStart?.({
-      type: "file",
-      content: selectedFile.name,
-      fileName: selectedFile.name,
-      fileSize: selectedFile.size
+    // Check if it's an image file
+    const isImage = selectedFile.type.startsWith('image/');
+    
+    if (isImage) {
+      // Handle image verification with Google Vision API
+      try {
+        const base64 = await fileToBase64(selectedFile);
+        onVerificationStart?.({
+          type: "file",
+          contentType: "image",
+          content: base64,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size
+        });
+      } catch (error) {
+        toast({
+          title: "Error processing image",
+          description: "Failed to process the image file.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      // Handle regular file verification
+      onVerificationStart?.({
+        type: "file",
+        content: selectedFile.name,
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size
+      });
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
     });
   };
 
@@ -333,7 +371,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 type="file"
                 onChange={handleFileSelect}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept=".txt,.pdf,.doc,.docx,.csv,.json"
+                accept=".txt,.pdf,.doc,.docx,.csv,.json,.jpg,.jpeg,.png,.gif,.webp"
               />
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground mb-2">
@@ -343,7 +381,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 {selectedFile ? (
                   `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
                 ) : (
-                  "or click to browse • PDF, Word, Text, CSV, JSON up to 10MB"
+                  "or click to browse • PDF, Word, Text, CSV, JSON, Images up to 10MB"
                 )}
               </p>
               {selectedFile && (

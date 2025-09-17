@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      image_verifications: {
+        Row: {
+          content_analysis: Json | null
+          created_at: string
+          id: string
+          image_url: string | null
+          labels: Json | null
+          ocr_text: string | null
+          safe_search: Json | null
+          updated_at: string
+          verification_id: string
+        }
+        Insert: {
+          content_analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          labels?: Json | null
+          ocr_text?: string | null
+          safe_search?: Json | null
+          updated_at?: string
+          verification_id: string
+        }
+        Update: {
+          content_analysis?: Json | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          labels?: Json | null
+          ocr_text?: string | null
+          safe_search?: Json | null
+          updated_at?: string
+          verification_id?: string
+        }
+        Relationships: []
+      }
       licenses: {
         Row: {
           created_at: string

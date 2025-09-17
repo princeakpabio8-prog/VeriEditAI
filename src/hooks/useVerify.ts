@@ -30,7 +30,7 @@ export function useVerify() {
   const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
   const inFlightKeys = useRef<Set<string>>(new Set());
 
-  const verify = useCallback(async (content: string, userId: string, bypassCache = false) => {
+  const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any) => {
     const key = `${userId}::${content}`;
     const startTime = Date.now();
 
@@ -105,11 +105,39 @@ export function useVerify() {
         try {
           const apiTimer = performanceMonitor.startTiming('tavily_api_call');
           
-          const { data, error: fnError } = await supabase.functions.invoke('verify', {
-            body: {
-              content,
-              user_id: userId
+          // Check if this is an image verification
+          let functionName = 'verify';
+          let requestBody: any = { content, user_id: userId };
+          
+          if (verificationData?.contentType === 'image') {
+            functionName = 'image-verify';
+            // Create a verification record first for image processing
+            const { data: verificationRecord, error: verificationError } = await supabase
+              .from('verifications')
+              .insert({
+                user_id: userId,
+                content: verificationData.fileName || 'Image upload',
+                content_type: 'image',
+                file_name: verificationData.fileName,
+                file_size: verificationData.fileSize,
+                status: 'processing'
+              })
+              .select()
+              .single();
+            
+            if (verificationError) {
+              throw new Error('Failed to create verification record');
             }
+            
+            requestBody = {
+              imageBase64: content,
+              verificationId: verificationRecord.id,
+              userId: userId
+            };
+          }
+          
+          const { data, error: fnError } = await supabase.functions.invoke(functionName, {
+            body: requestBody
           });
 
           performanceMonitor.endTiming('tavily_api_call');

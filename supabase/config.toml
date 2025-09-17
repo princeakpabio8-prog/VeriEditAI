@@ -60,6 +60,9 @@ verify_jwt = false
 [functions.enhanced-verify]
 verify_jwt = true
 
+[functions.image-verify]
+verify_jwt = true
+
 [functions.create-checkout]
 verify_jwt = true
 

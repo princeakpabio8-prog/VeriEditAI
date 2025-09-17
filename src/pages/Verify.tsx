@@ -37,7 +37,7 @@ export default function Verify() {
 
     try {
       console.log('Starting instant verification...');
-      await verify(data.content, user.id);
+      await verify(data.content, user.id, false, data);
       
       setVerificationState({
         stage: 'completed',

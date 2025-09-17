@@ -49,7 +49,7 @@ export function MobileVerificationUI({
   const isMobile = useIsMobile();
 
   const validateFile = (file: File) => {
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 10 * 1024 * 1024; // 10MB - aligned with backend
     const allowedTypes = [
       'text/plain',
       'application/pdf',
@@ -61,7 +61,7 @@ export function MobileVerificationUI({
     ];
 
     if (file.size > maxSize) {
-      return "File size must be less than 20MB";
+      return "File size must be less than 10MB";
     }
 
     if (!allowedTypes.includes(file.type)) {
@@ -111,6 +111,7 @@ export function MobileVerificationUI({
         contentType: 'text' as const
       });
 
+      console.log('Starting text verification:', textContent.slice(0, 50) + '...');
       onVerify({
         type: 'text',
         content: validation.content,
@@ -141,6 +142,7 @@ export function MobileVerificationUI({
         contentType: 'url' as const
       });
 
+      console.log('Starting URL verification:', urlContent);
       onVerify({
         type: 'url',
         content: validation.content,
@@ -166,24 +168,49 @@ export function MobileVerificationUI({
     }
 
     try {
-      const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = error => reject(error);
-        });
-      };
+      const isImage = selectedFile.type.startsWith('image/');
+      console.log('Starting file verification:', selectedFile.name, 'isImage:', isImage);
 
-      const base64 = await fileToBase64(selectedFile);
-      onVerify({
-        type: 'file',
-        content: base64,
-        fileName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileSize: selectedFile.size,
-      });
+      if (isImage) {
+        // For images, convert to base64 and set contentType to 'image'
+        const fileToBase64 = (file: File): Promise<string> => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result.split(',')[1]); // Remove data:image/jpeg;base64, prefix
+            };
+            reader.onerror = error => reject(error);
+          });
+        };
+
+        const base64Content = await fileToBase64(selectedFile);
+        console.log('Image converted to base64, length:', base64Content.length);
+        
+        onVerify({
+          type: 'file',
+          content: base64Content,
+          contentType: 'image',
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size,
+        });
+      } else {
+        // For non-image files, send file name and set contentType to 'file'
+        console.log('Processing non-image file:', selectedFile.name);
+        
+        onVerify({
+          type: 'file',
+          content: selectedFile.name,
+          contentType: 'file',
+          fileName: selectedFile.name,
+          fileType: selectedFile.type,
+          fileSize: selectedFile.size,
+        });
+      }
     } catch (error) {
+      console.error('File verification error:', error);
       toast({
         title: "File Error",
         description: "Failed to process the selected file",
@@ -394,7 +421,7 @@ export function MobileVerificationUI({
                         />
 
                         <p className="text-xs text-muted-foreground text-center">
-                          Supports PDF, Word docs, images (max 20MB)
+                          Supports PDF, Word docs, images (max 10MB)
                         </p>
                       </div>
                     ) : (

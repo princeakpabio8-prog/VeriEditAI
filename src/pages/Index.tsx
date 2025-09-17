@@ -5,6 +5,7 @@ import { VerificationUpload } from "@/components/verification-upload";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Footer from "@/components/ui/footer";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -126,6 +127,7 @@ const Index = () => {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 };

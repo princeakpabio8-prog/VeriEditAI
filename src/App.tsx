@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Billing from "./pages/Billing";
 import License from "./pages/License";
 import Verify from "./pages/Verify";
+import About from "./pages/About";
 import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 import VerificationDashboard from "./components/VerificationDashboard";
@@ -76,6 +77,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="/about" element={<About />} />
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

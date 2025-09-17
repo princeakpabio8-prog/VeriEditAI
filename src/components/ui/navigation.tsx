@@ -49,9 +49,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
-                <Link to="/verify" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Verify Content
-                </Link>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>

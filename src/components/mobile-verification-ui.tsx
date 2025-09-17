@@ -197,17 +197,51 @@ export function MobileVerificationUI({
           fileSize: selectedFile.size,
         });
       } else {
-        // For non-image files, send file name and set contentType to 'file'
-        console.log('Processing non-image file:', selectedFile.name);
-        
-        onVerify({
-          type: 'file',
-          content: selectedFile.name,
-          contentType: 'file',
-          fileName: selectedFile.name,
-          fileType: selectedFile.type,
-          fileSize: selectedFile.size,
-        });
+        // For non-image files, extract text content when possible and send actual content
+        console.log('Processing non-image file:', selectedFile.name, selectedFile.type);
+
+        if (selectedFile.type === 'text/plain') {
+          const readText = (file: File): Promise<string> => {
+            return new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsText(file);
+              reader.onload = () => resolve((reader.result as string) || '');
+              reader.onerror = (e) => reject(e);
+            });
+          };
+
+          const rawText = await readText(selectedFile);
+          try {
+            const validation = validateAndSanitize({
+              content: rawText,
+              contentType: 'file' as const,
+              fileName: selectedFile.name,
+              fileSize: selectedFile.size,
+            });
+
+            onVerify({
+              type: 'file',
+              content: validation.content,
+              contentType: 'file',
+              fileName: selectedFile.name,
+              fileType: selectedFile.type,
+              fileSize: selectedFile.size,
+            });
+          } catch (e: any) {
+            console.error('File validation failed:', e);
+            toast({
+              title: 'Validation Error',
+              description: e.message || 'Invalid file content',
+              variant: 'destructive',
+            });
+          }
+        } else {
+          toast({
+            title: 'Unsupported on Mobile',
+            description: 'Document extraction for PDF/Word is not supported on mobile yet. Please upload an image or paste text/URL.',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       console.error('File verification error:', error);

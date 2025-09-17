@@ -32,6 +32,8 @@ serve(async (req) => {
   }
 
   try {
+    const startTime = Date.now();
+    console.log('🚀 Starting image verification...');
     const { imageBase64, verificationId, userId } = await req.json();
     
     if (!imageBase64 || !verificationId || !userId) {
@@ -74,11 +76,28 @@ serve(async (req) => {
 
     console.log('Image verification completed successfully');
 
+    const processingTime = Date.now() - startTime;
+
+    // Build standardized verification result
+    const confidence = calculateImageConfidence(imageResult);
+    const status = getStatusFromConfidence(confidence);
+    const topLabels = (imageResult.labels || []).slice(0, 3).map(l => l.description).join(', ');
+
+    const result = {
+      confidence,
+      status,
+      summary: `Image analysis via Google Vision. Quality: ${imageResult.contentAnalysis.imageQuality}. Labels: ${topLabels || 'None'}.`,
+      analysis: `OCR length: ${imageResult.ocrText?.length || 0}. Manipulation risk: ${imageResult.contentAnalysis.manipulationRisk}. SafeSearch: adult=${imageResult.safeSearch.adult}, violence=${imageResult.safeSearch.violence}, racy=${imageResult.safeSearch.racy}.`,
+      sources: [],
+      source_consensus: confidence,
+      verification_method: ['Google Vision AI', 'Image Analysis'],
+      category: 'image',
+      created_at: new Date().toISOString(),
+      processing_time: processingTime,
+    };
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        imageVerification: imageResult,
-      }),
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -214,4 +233,33 @@ function analyzeImageContent(
     labelCount: labels.length,
     avgConfidence: avgLabelScore,
   };
+}
+
+function getStatusFromConfidence(confidence: number): string {
+  if (confidence >= 70) return 'verified';
+  if (confidence >= 40) return 'inconclusive';
+  return 'disputed';
+}
+
+function calculateImageConfidence(imageResult: ImageVerificationResult): number {
+  let confidence = Math.round((imageResult.contentAnalysis?.hasText ? 0.6 : 0.5) * 100);
+
+  // Adjust based on image quality
+  const quality = imageResult.contentAnalysis?.imageQuality;
+  if (quality === 'high') confidence += 15;
+  else if (quality === 'medium') confidence += 8;
+  else if (quality === 'low') confidence += 0;
+
+  // Penalize unsafe content
+  const unsafeLevels = ['LIKELY', 'VERY_LIKELY'];
+  if (unsafeLevels.includes(imageResult.safeSearch.adult)) confidence -= 20;
+  if (unsafeLevels.includes(imageResult.safeSearch.violence)) confidence -= 15;
+  if (unsafeLevels.includes(imageResult.safeSearch.racy)) confidence -= 10;
+
+  // OCR text presence slightly increases confidence
+  if ((imageResult.ocrText || '').length > 50) confidence += 5;
+
+  // Clamp
+  confidence = Math.max(10, Math.min(confidence, 90));
+  return confidence;
 }

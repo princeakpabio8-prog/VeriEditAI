@@ -149,7 +149,7 @@ class VerificationAnalytics {
     
     this.metrics.successRate = this.metrics.totalVerifications > 0
       ? ((this.metrics.totalVerifications - totalErrors) / this.metrics.totalVerifications) * 100
-      : 0;
+      : 100; // Default to 100% when no data instead of 0%
   }
 
   // Performance optimization insights
@@ -196,35 +196,32 @@ class VerificationAnalytics {
 
   // Real-time monitoring
   startRealTimeMonitoring() {
-    // Monitor for anomalies
+    // Monitor for anomalies only if we have meaningful data
     setInterval(() => {
-      const insights = this.getPerformanceInsights();
-      
-      insights.forEach(insight => {
-        if (insight.type === 'error') {
-          console.warn(`Performance Alert: ${insight.message}`);
-          
-          // Could trigger alert to admin/monitoring service
-          this.triggerAlert(insight);
-        }
-      });
-    }, 60000); // Check every minute
+      if (this.metrics.totalVerifications > 5) { // Only monitor with sufficient data
+        const insights = this.getPerformanceInsights();
+        
+        insights.forEach(insight => {
+          if (insight.type === 'error') {
+            console.warn(`Performance Alert: ${insight.message}`);
+            
+            // Could trigger alert to admin/monitoring service
+            this.triggerAlert(insight);
+          }
+        });
+      }
+    }, 300000); // Check every 5 minutes instead of 1 minute
   }
 
   private triggerAlert(insight: any) {
     // Implementation for alerting system
     // Could send to monitoring service, email, etc.
     try {
-      // Example: Send to monitoring endpoint
-      fetch('/api/alerts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'performance_alert',
-          insight,
-          timestamp: Date.now()
-        })
-      }).catch(() => {}); // Silent fail
+      // Log to console only for now - no API endpoint needed
+      console.info('Performance Alert triggered:', insight);
+      
+      // Future: Could implement actual alerting service here
+      // For now, we just log the alert without trying to send to non-existent endpoint
     } catch (error) {
       // Silent fail for alerts
     }

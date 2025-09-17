@@ -40,7 +40,7 @@ async function verifyWithClaude(content: string, category: string): Promise<any>
     
     // Extract confidence score
     const confidenceMatch = analysis.match(/confidence[:\s]*(\d+)/i);
-    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 75;
+    const confidence = confidenceMatch ? Math.min(parseInt(confidenceMatch[1]), 80) : 60;
     
     return { confidence, analysis, sources: [] };
   } catch (error) {
@@ -79,7 +79,7 @@ async function verifyWithGPT(content: string, category: string): Promise<any> {
     const analysis = data.choices[0].message.content;
     
     const confidenceMatch = analysis.match(/confidence[:\s]*(\d+)/i);
-    const confidence = confidenceMatch ? parseInt(confidenceMatch[1]) : 75;
+    const confidence = confidenceMatch ? Math.min(parseInt(confidenceMatch[1]), 80) : 60;
     
     return { confidence, analysis, sources: [] };
   } catch (error) {
@@ -109,7 +109,7 @@ async function verifyWithAcademicSources(content: string): Promise<any> {
     }));
     
     return {
-      confidence: papers.length > 0 ? 85 : 50,
+      confidence: papers.length > 0 ? Math.min(70, 45 + papers.length * 5) : 40,
       analysis: papers.length > 0 ? 
         `Found ${papers.length} academic paper(s) related to this topic.` :
         'No academic papers found for this topic.',

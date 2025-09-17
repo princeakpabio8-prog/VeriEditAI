@@ -163,14 +163,15 @@ async function fallbackAnalysis(content: string): Promise<VerificationResult> {
   const hasUrls = /https?:\/\//.test(content);
   const hasCapitalWords = /[A-Z]{2,}/.test(content);
   
-  // Enhanced scoring algorithm
-  let confidence = Math.min(words * 3 + 20, 85);
-  if (hasNumbers) confidence += 5;
-  if (hasUrls) confidence += 10;
-  if (hasCapitalWords) confidence += 5;
-  if (words > 50) confidence += 10;
+  // More conservative scoring algorithm
+  let confidence = Math.min(words * 1.5 + 15, 65);
+  if (hasNumbers) confidence += 3;
+  if (hasUrls) confidence += 5;
+  if (hasCapitalWords) confidence += 2;
+  if (words > 50) confidence += 5;
+  if (words < 10) confidence -= 10; // Penalty for very short content
   
-  confidence = Math.max(25, Math.min(confidence, 90));
+  confidence = Math.max(15, Math.min(confidence, 75));
   
   const status = getStatusFromConfidence(confidence);
   
@@ -222,14 +223,19 @@ function extractSources(text: string): Array<{ title: string; url: string; snipp
 
 // Helper function to calculate confidence based on Tavily results
 function calculateTavilyConfidence(answer: string, results: any[]): number {
-  let confidence = 50; // Base confidence
+  let confidence = 35; // Lower base confidence
   
-  // Increase confidence based on number of sources
-  confidence += Math.min(results.length * 5, 25);
+  // More conservative scoring based on sources
+  confidence += Math.min(results.length * 3, 15);
   
-  // Increase confidence if answer is detailed
+  // Moderate increase for detailed answers
   if (answer && answer.length > 100) {
-    confidence += 10;
+    confidence += 8;
+  }
+  
+  // Check for contradictory sources (penalty)
+  if (results.length > 3 && answer.toLowerCase().includes('disputed')) {
+    confidence -= 15;
   }
   
   // Increase confidence based on source reliability
@@ -241,9 +247,15 @@ function calculateTavilyConfidence(answer: string, results: any[]): number {
     r.url.includes('snopes.com') ||
     r.url.includes('politifact.com')
   ));
-  confidence += reliableSources.length * 3;
+  confidence += reliableSources.length * 5;
   
-  return Math.min(confidence, 95); // Cap at 95%
+  // Penalty for low-quality sources
+  const lowQualitySources = results.filter((r: any) => r.url && (
+    r.url.includes('social') || r.url.includes('blog') || r.url.includes('forum')
+  ));
+  confidence -= lowQualitySources.length * 3;
+  
+  return Math.min(confidence, 85); // Cap at 85% instead of 95%
 }
 
 // Helper function to calculate source reliability score

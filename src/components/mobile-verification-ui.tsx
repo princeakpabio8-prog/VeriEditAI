@@ -1,17 +1,32 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoadingSkeleton } from "./loading-skeleton";
-import { CheckCircle, AlertTriangle, Share, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { validateAndSanitize } from "@/lib/validation";
+import { 
+  CheckCircle, 
+  AlertTriangle, 
+  Share, 
+  FileText, 
+  ChevronDown, 
+  ChevronUp,
+  Upload,
+  Camera,
+  Link as LinkIcon,
+  X,
+  Image as ImageIcon
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MobileVerificationUIProps {
-  onVerify: (content: string) => void;
+  onVerify: (data: any) => void;
   loading: boolean;
   result: any;
   error: string | null;
@@ -23,13 +38,65 @@ export function MobileVerificationUI({
   result, 
   error 
 }: MobileVerificationUIProps) {
-  const [content, setContent] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [urlContent, setUrlContent] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [validationError, setValidationError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
-  const handleSubmit = () => {
-    if (!content.trim()) {
+  const validateFile = (file: File) => {
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const allowedTypes = [
+      'text/plain',
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (file.size > maxSize) {
+      return "File size must be less than 20MB";
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      return "Unsupported file type. Please use PDF, Word, or image files.";
+    }
+
+    return null;
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const error = validateFile(file);
+      if (error) {
+        setValidationError(error);
+        toast({
+          title: "Invalid File",
+          description: error,
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+      setValidationError("");
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+  };
+
+  const handleTextVerify = () => {
+    if (!textContent.trim()) {
       toast({
         title: "Content Required",
         description: "Please enter content to verify",
@@ -37,7 +104,92 @@ export function MobileVerificationUI({
       });
       return;
     }
-    onVerify(content);
+
+    try {
+      const validation = validateAndSanitize({
+        content: textContent,
+        contentType: 'text' as const
+      });
+
+      onVerify({
+        type: 'text',
+        content: validation.content,
+      });
+    } catch (error: any) {
+      setValidationError(error.message || 'Invalid content');
+      toast({
+        title: "Validation Error",
+        description: error.message || 'Invalid content',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUrlVerify = () => {
+    if (!urlContent.trim()) {
+      toast({
+        title: "URL Required",
+        description: "Please enter a URL to verify",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const validation = validateAndSanitize({
+        content: urlContent,
+        contentType: 'url' as const
+      });
+
+      onVerify({
+        type: 'url',
+        content: validation.content,
+      });
+    } catch (error: any) {
+      setValidationError(error.message || 'Invalid URL format');
+      toast({
+        title: "Validation Error",
+        description: error.message || 'Invalid URL format',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileVerify = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "File Required",
+        description: "Please select a file to verify",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const fileToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = error => reject(error);
+        });
+      };
+
+      const base64 = await fileToBase64(selectedFile);
+      onVerify({
+        type: 'file',
+        content: base64,
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        fileSize: selectedFile.size,
+      });
+    } catch (error) {
+      toast({
+        title: "File Error",
+        description: "Failed to process the selected file",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -91,47 +243,217 @@ export function MobileVerificationUI({
             AI Fact Checker
           </h1>
           <p className="text-muted-foreground text-sm">
-            Verify content with AI-powered analysis
+            Verify text, URLs, or files with AI-powered analysis
           </p>
         </motion.div>
 
-        {/* Input Card */}
+        {/* Input Card with Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Card className="border-border/50 shadow-lg">
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Content to Verify
-                </label>
-                <Textarea
-                  placeholder="Enter text, URL, or claim to fact-check..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[100px] resize-none text-base"
-                  disabled={loading}
-                />
-              </div>
-              
-              <Button
-                onClick={handleSubmit}
-                disabled={loading || !content.trim()}
-                className="w-full h-12 text-base font-medium"
-                size="lg"
-              >
-                {loading ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
-                  />
-                ) : (
-                  "Verify Content"
-                )}
-              </Button>
+            <CardContent className="p-4">
+              <Tabs defaultValue="text" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="text" className="text-xs">
+                    <FileText className="h-3 w-3 mr-1" />
+                    Text
+                  </TabsTrigger>
+                  <TabsTrigger value="url" className="text-xs">
+                    <LinkIcon className="h-3 w-3 mr-1" />
+                    URL
+                  </TabsTrigger>
+                  <TabsTrigger value="file" className="text-xs">
+                    <Upload className="h-3 w-3 mr-1" />
+                    File
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Text Input */}
+                <TabsContent value="text" className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Content to Verify
+                    </label>
+                    <Textarea
+                      placeholder="Enter text or claim to fact-check..."
+                      value={textContent}
+                      onChange={(e) => setTextContent(e.target.value)}
+                      className="min-h-[100px] resize-none text-base"
+                      disabled={loading}
+                    />
+                    <div className="text-xs text-muted-foreground text-right">
+                      {textContent.length}/5000
+                    </div>
+                  </div>
+                  
+                  <Button
+                    onClick={handleTextVerify}
+                    disabled={loading || !textContent.trim()}
+                    className="w-full h-12 text-base font-medium"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      "Verify Text"
+                    )}
+                  </Button>
+                </TabsContent>
+
+                {/* URL Input */}
+                <TabsContent value="url" className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      URL to Verify
+                    </label>
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/article"
+                      value={urlContent}
+                      onChange={(e) => setUrlContent(e.target.value)}
+                      className="text-base h-12"
+                      disabled={loading}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter a web link to verify its content
+                    </p>
+                  </div>
+                  
+                  <Button
+                    onClick={handleUrlVerify}
+                    disabled={loading || !urlContent.trim()}
+                    className="w-full h-12 text-base font-medium"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      "Verify URL"
+                    )}
+                  </Button>
+                </TabsContent>
+
+                {/* File Input */}
+                <TabsContent value="file" className="space-y-4">
+                  <div className="space-y-4">
+                    <label className="text-sm font-medium text-foreground">
+                      File to Verify
+                    </label>
+                    
+                    {!selectedFile ? (
+                      <div className="space-y-3">
+                        {/* File Upload Buttons */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-12 flex flex-col items-center justify-center gap-1"
+                            disabled={loading}
+                          >
+                            <Upload className="h-4 w-4" />
+                            <span className="text-xs">Choose File</span>
+                          </Button>
+                          
+                          <Button
+                            variant="outline"
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="h-12 flex flex-col items-center justify-center gap-1"
+                            disabled={loading}
+                          >
+                            <Camera className="h-4 w-4" />
+                            <span className="text-xs">Camera</span>
+                          </Button>
+                        </div>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp"
+                        />
+                        
+                        <input
+                          ref={cameraInputRef}
+                          type="file"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          accept="image/*"
+                          capture="environment"
+                        />
+
+                        <p className="text-xs text-muted-foreground text-center">
+                          Supports PDF, Word docs, images (max 20MB)
+                        </p>
+                      </div>
+                    ) : (
+                      /* Selected File Display */
+                      <div className="border border-border rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">
+                                {selectedFile.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={removeFile}
+                            className="h-8 w-8 p-0 flex-shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <Button
+                    onClick={handleFileVerify}
+                    disabled={loading || !selectedFile}
+                    className="w-full h-12 text-base font-medium"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      "Verify File"
+                    )}
+                  </Button>
+                </TabsContent>
+              </Tabs>
+
+              {/* Validation Error */}
+              {validationError && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700"
+                >
+                  {validationError}
+                </motion.div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

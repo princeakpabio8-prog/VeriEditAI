@@ -36,13 +36,17 @@ export default function Verify() {
     }
 
     try {
-      console.log('Starting instant verification...');
-      await verify(data.content, user.id, false, data);
+      console.log('Starting instant verification...', { isMobile });
+      const fresh = await verify(data.content, user.id, isMobile, data);
+      
+      if (fresh && (fresh as any).fromFallback) {
+        toast('Showing a similar cached result due to network issues.');
+      }
       
       setVerificationState({
         stage: 'completed',
         content: data.content,
-        result: result
+        result: fresh || result
       });
       
     } catch (error) {

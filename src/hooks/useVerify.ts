@@ -20,6 +20,11 @@ interface VerifyResult {
   source_consensus?: number;
   verification_method?: string[];
   category?: string;
+  // Flags to indicate origin of the result
+  fromCache?: boolean;
+  fromEnhancedCache?: boolean;
+  fromFallback?: boolean;
+  originalError?: string;
   created_at: string;
 }
 
@@ -30,7 +35,7 @@ export function useVerify() {
   const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
   const inFlightKeys = useRef<Set<string>>(new Set());
 
-  const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any) => {
+  const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any): Promise<VerifyResult | null> => {
     const safeContent = (content ?? '').toString();
     const key = `${(userId ?? '').toString()}::${safeContent}`;
     const startTime = Date.now();
@@ -38,7 +43,7 @@ export function useVerify() {
     // Prevent duplicate in-flight requests for the same content/user
     if (inFlightKeys.current.has(key)) {
       console.log('🚫 Duplicate verify request ignored for key:', key.substring(0, 30) + '...');
-      return;
+      return null;
     }
 
     setLoading(true);
@@ -53,7 +58,7 @@ export function useVerify() {
       showVerificationError(msg);
       setLoading(false);
       inFlightKeys.current.delete(key);
-      return;
+      return null;
     }
 
     try {
@@ -74,10 +79,11 @@ export function useVerify() {
             userId
           });
           
-          setResult(cachedResult);
+          const flagged = { ...(cachedResult as any), fromCache: true } as VerifyResult;
+          setResult(flagged);
           showCacheHit('content');
           setLoading(false);
-          return;
+          return flagged;
         }
 
         // Check enhanced cache
@@ -93,10 +99,11 @@ export function useVerify() {
             userId
           });
           
-          setResult(enhancedCached);
+          const flagged = { ...(enhancedCached as any), fromEnhancedCache: true } as VerifyResult;
+          setResult(flagged);
           showCacheHit('content');
           setLoading(false);
-          return;
+          return flagged;
         }
       } else {
         console.log('⚡ Bypassing cache for fresh verification');
@@ -197,7 +204,7 @@ export function useVerify() {
           }
 
           showVerificationSuccess(data?.confidence ?? 0, data?.processing_time || processingTime);
-          return; // Success, exit the retry loop
+          return data as VerifyResult; // Success, exit the retry loop
 
         } catch (err) {
           lastError = err;
@@ -212,18 +219,20 @@ export function useVerify() {
       }
 
       // All attempts failed - check for similar cached results as fallback
-      const similarResults = enhancedVerificationCache.findSimilar(safeContent, userId, 0.7);
-      if (similarResults.length > 0) {
-        console.log('🔄 Using similar cached result as fallback');
-        const fallbackResult = similarResults[0];
-        setResult({
-          ...fallbackResult.result,
-          fromFallback: true,
-          originalError: lastError?.message
-        });
-        
-        showVerificationSuccess(fallbackResult.result.confidence || 0, Date.now() - startTime);
-        return;
+      if (!bypassCache) {
+        const similarResults = enhancedVerificationCache.findSimilar(safeContent, userId, 0.7);
+        if (similarResults.length > 0) {
+          console.log('🔄 Using similar cached result as fallback');
+          const fallbackResult = similarResults[0];
+          const flagged = {
+            ...(fallbackResult.result as any),
+            fromFallback: true,
+            originalError: lastError?.message
+          } as VerifyResult;
+          setResult(flagged);
+          showVerificationSuccess(fallbackResult.result.confidence || 0, Date.now() - startTime);
+          return flagged;
+        }
       }
 
       throw lastError;

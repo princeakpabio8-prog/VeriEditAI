@@ -71,42 +71,70 @@ export const usePWA = () => {
     };
   }, [toast]);
 
-  useEffect(() => {
-    // Register service worker and check for updates
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered successfully');
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setStatus(prev => ({ ...prev, updateAvailable: true }));
-                  toast({
-                    title: "Update Available",
-                    description: "A new version of the app is ready to install",
-                    action: (
-                      <button 
-                        onClick={() => window.location.reload()}
-                        className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm"
-                      >
-                        Update
-                      </button>
-                    ),
-                  });
-                }
+useEffect(() => {
+  // Register service worker and check for updates
+  if (!('serviceWorker' in navigator)) return;
+
+  let reloaded = false;
+  const handleControllerChange = () => {
+    if (reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  };
+
+  const onVisibility = () => {
+    if (document.visibilityState === 'visible') {
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        try { reg?.update(); } catch (e) { console.debug('SW update check failed', e); }
+      });
+    }
+  };
+
+  navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+  navigator.serviceWorker.register('/sw.js')
+    .then((registration) => {
+      console.log('Service Worker registered successfully');
+
+      // Immediately check for updates
+      try { registration.update(); } catch (e) { console.debug('SW update check failed', e); }
+
+      // Also check when tab becomes visible
+      document.addEventListener('visibilitychange', onVisibility);
+
+      // Listen for new updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setStatus(prev => ({ ...prev, updateAvailable: true }));
+              toast({
+                title: "Update Available",
+                description: "A new version of the app is ready to install",
+                action: (
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="bg-primary text-primary-foreground px-3 py-1 rounded text-sm"
+                  >
+                    Update
+                  </button>
+                ),
               });
             }
           });
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  }, [toast]);
+        }
+      });
+    })
+    .catch((error) => {
+      console.error('Service Worker registration failed:', error);
+    });
+
+  return () => {
+    navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    document.removeEventListener('visibilitychange', onVisibility);
+  };
+}, [toast]);
 
   const installApp = async (): Promise<boolean> => {
     if (!installPrompt) {

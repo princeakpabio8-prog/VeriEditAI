@@ -1,6 +1,6 @@
 // Service Worker for PWA and offline support
-const CACHE_NAME = 'verification-app-v1';
-const OFFLINE_CACHE = 'verification-offline-v1';
+const CACHE_NAME = 'verification-app-v3';
+const OFFLINE_CACHE = 'verification-offline-v3';
 
 // Assets to cache for offline use
 const STATIC_ASSETS = [
@@ -83,7 +83,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - serve cached content when offline
+// Fetch event - smarter strategy to avoid stale HTML
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -97,47 +97,40 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) {
     return;
   }
-  
+
+  // Network-first for navigations (HTML) to prevent stale UI
+  if (request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const networkResponse = await fetch(request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, networkResponse.clone());
+        return networkResponse;
+      } catch (err) {
+        // Fallback to any cached page or offline page
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        return caches.match('/offline.html');
+      }
+    })());
+    return;
+  }
+
+  // Cache-first for other same-origin GET requests with background update
   event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        
-        // Try to fetch from network
-        return fetch(request)
-          .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // Clone the response for caching
+    caches.match(request).then((cachedResponse) => {
+      const fetchPromise = fetch(request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
             const responseToCache = response.clone();
-            
-            // Cache the response for future use
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(request, responseToCache);
-              });
-            
-            return response;
-          })
-          .catch(() => {
-            // Return offline fallback for navigation requests
-            if (request.mode === 'navigate') {
-              return caches.match('/offline.html');
-            }
-            
-            // Return empty response for other requests
-            return new Response('', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
-          });
-      })
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
 

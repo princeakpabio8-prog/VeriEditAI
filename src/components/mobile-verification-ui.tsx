@@ -12,7 +12,9 @@ import { LoadingSkeleton } from "./loading-skeleton";
 import { validateAndSanitize } from "@/lib/validation";
 import { 
   CheckCircle, 
-  AlertTriangle, 
+  AlertTriangle,
+  Info,
+  Clock,
   Share, 
   FileText, 
   ChevronDown, 
@@ -253,19 +255,29 @@ export function MobileVerificationUI({
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'bg-gray-500/10 text-gray-700 border-gray-200';
+    
     switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-700 border-green-200';
-      case 'flagged': return 'bg-red-500/10 text-red-700 border-red-200';
-      default: return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
+      case 'completed': 
+      case 'verified': return 'bg-green-500/10 text-green-700 border-green-200';
+      case 'flagged': 
+      case 'disputed': return 'bg-red-500/10 text-red-700 border-red-200';
+      case 'inconclusive': return 'bg-yellow-500/10 text-yellow-700 border-yellow-200';
+      default: return 'bg-gray-500/10 text-gray-700 border-gray-200';
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | undefined) => {
+    if (!status) return <Info className="h-4 w-4" />;
+    
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4" />;
-      case 'flagged': return <AlertTriangle className="h-4 w-4" />;
-      default: return <AlertTriangle className="h-4 w-4" />;
+      case 'completed': 
+      case 'verified': return <CheckCircle className="h-4 w-4" />;
+      case 'flagged': 
+      case 'disputed': return <AlertTriangle className="h-4 w-4" />;
+      case 'inconclusive': return <Clock className="h-4 w-4" />;
+      default: return <Info className="h-4 w-4" />;
     }
   };
 

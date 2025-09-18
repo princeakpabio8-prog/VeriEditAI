@@ -218,7 +218,9 @@ export function VerificationExport({
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return 'bg-gray-500/10 text-gray-700 border-gray-200';
+    
     switch (status.toLowerCase()) {
       case 'verified':
       case 'completed':
@@ -234,11 +236,12 @@ export function VerificationExport({
     }
   };
 
-  const getTrustScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
+const getTrustScoreColor = (score: number | undefined) => {
+  if (!score) return 'text-gray-600';
+  if (score >= 80) return 'text-green-600';
+  if (score >= 60) return 'text-yellow-600';
+  return 'text-red-600';
+};
 
   return (
     <Card>

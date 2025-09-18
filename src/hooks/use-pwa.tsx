@@ -192,7 +192,11 @@ export const usePWA = () => {
 
   // Get install instructions based on device/browser
   const getInstallInstructions = (): string => {
-    const userAgent = navigator.userAgent.toLowerCase();
+    const userAgent = navigator?.userAgent?.toLowerCase();
+    
+    if (!userAgent) {
+      return "Use your browser's 'Add to Home Screen' or 'Install App' option";
+    }
     
     if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
       return "Tap the Share button and select 'Add to Home Screen'";

@@ -44,11 +44,11 @@ class AccessibilityManager {
   private detectScreenReader(): boolean {
     // Various methods to detect screen readers
     return !!(
-      navigator.userAgent.includes('NVDA') ||
-      navigator.userAgent.includes('JAWS') ||
-      navigator.userAgent.includes('VoiceOver') ||
+      navigator?.userAgent?.includes('NVDA') ||
+      navigator?.userAgent?.includes('JAWS') ||
+      navigator?.userAgent?.includes('VoiceOver') ||
       (window as any).speechSynthesis ||
-      document.body.classList.contains('sr-only')
+      document.body?.classList?.contains('sr-only')
     );
   }
 
@@ -282,6 +282,8 @@ class AccessibilityManager {
   }
 
   getFocusableElements(container: HTMLElement = document.body): HTMLElement[] {
+    if (!container || !container.querySelectorAll) return [];
+    
     const selector = [
       'a[href]',
       'button:not([disabled])',
@@ -309,9 +311,11 @@ class AccessibilityManager {
   }
 
   private getElementDescription(element: HTMLElement): string {
+    if (!element || !element.tagName) return 'unknown element';
+    
     const tagName = element.tagName.toLowerCase();
-    const ariaLabel = element.getAttribute('aria-label');
-    const title = element.getAttribute('title');
+    const ariaLabel = element.getAttribute?.('aria-label');
+    const title = element.getAttribute?.('title');
     const text = element.textContent?.trim();
 
     if (ariaLabel) return ariaLabel;

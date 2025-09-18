@@ -61,7 +61,7 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
               Upgrade to continue verifying content.
             </>
           ) : (
-            `This feature requires a ${licenseInfo.name.toLowerCase()} license or higher`
+            `This feature requires a ${licenseInfo?.name?.toLowerCase() || 'premium'} license or higher`
           )}
         </CardDescription>
       </CardHeader>

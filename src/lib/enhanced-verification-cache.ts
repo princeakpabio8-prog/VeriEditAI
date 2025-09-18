@@ -25,9 +25,26 @@ class EnhancedVerificationCache {
   }
 
   private generateKey(content: string, userId: string): string {
-    // Create content hash for consistent caching
-    const normalizedContent = content.toLowerCase().trim().substring(0, 500);
-    return `${userId}:${btoa(normalizedContent).slice(0, 32)}`;
+    // Create content hash for consistent caching (null-safe)
+    const normalizedContent = (content ?? '').toString().toLowerCase().trim().slice(0, 500);
+    const safeUser = (userId ?? '').toString();
+    let hash = '';
+    try {
+      // Safely encode possibly non-ASCII content
+      const enc = new TextEncoder();
+      const data = enc.encode(normalizedContent);
+      const bin = Array.from(data, b => String.fromCharCode(b)).join('');
+      hash = btoa(bin).slice(0, 32);
+    } catch {
+      // Fallback simple hash
+      let h = 0;
+      for (let i = 0; i < normalizedContent.length; i++) {
+        h = ((h << 5) - h) + normalizedContent.charCodeAt(i);
+        h |= 0;
+      }
+      hash = Math.abs(h).toString(36).slice(0, 32);
+    }
+    return `${safeUser}:${hash}`;
   }
 
   get(content: string, userId: string): any | null {
@@ -104,21 +121,21 @@ class EnhancedVerificationCache {
 
   // Find similar verifications
   findSimilar(content: string, userId: string, threshold = 0.7): CachedVerification[] {
-    const normalizedContent = content.toLowerCase().trim();
+    const normalizedContent = (content ?? '').toString().toLowerCase().trim();
     const words = normalizedContent.split(/\s+/).filter(w => w.length > 3);
     
     return Array.from(this.cache.values())
       .filter(cached => cached.userId === userId)
       .map(cached => {
-        const cachedWords = cached.content.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+        const cachedWords = (cached.content ?? '').toString().toLowerCase().split(/\s+/).filter(w => w.length > 3);
         const commonWords = words.filter(word => cachedWords.includes(word));
         const similarity = commonWords.length / Math.max(words.length, cachedWords.length);
         
-        return { ...cached, similarity };
+        return { ...cached, similarity } as CachedVerification & { similarity: number };
       })
-      .filter(cached => cached.similarity >= threshold)
-      .sort((a, b) => b.similarity - a.similarity)
-      .slice(0, 5);
+      .filter((cached: any) => cached.similarity >= threshold)
+      .sort((a: any, b: any) => b.similarity - a.similarity)
+      .slice(0, 5) as any;
   }
 
   private cleanExpired(): void {

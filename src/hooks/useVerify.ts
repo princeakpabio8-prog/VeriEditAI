@@ -31,7 +31,8 @@ export function useVerify() {
   const inFlightKeys = useRef<Set<string>>(new Set());
 
   const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any) => {
-    const key = `${userId}::${content}`;
+    const safeContent = (content ?? '').toString();
+    const key = `${(userId ?? '').toString()}::${safeContent}`;
     const startTime = Date.now();
 
     // Prevent duplicate in-flight requests for the same content/user
@@ -44,11 +45,22 @@ export function useVerify() {
     setError(null);
     setResult(null);
 
+    // Guard against empty/invalid content
+    if (!safeContent || safeContent.trim().length === 0) {
+      const msg = 'Please provide content to verify.';
+      console.warn('verify() called with empty content');
+      setError(msg);
+      showVerificationError(msg);
+      setLoading(false);
+      inFlightKeys.current.delete(key);
+      return;
+    }
+
     try {
       performanceMonitor.startTiming('verification_process');
       // Check cache first (unless bypassed)
       if (!bypassCache) {
-        const cachedResult = verificationCache.get(content, userId);
+        const cachedResult = verificationCache.get(safeContent, userId);
         if (cachedResult) {
           const cacheAge = Math.round((Date.now() - (cachedResult.created_at ? new Date(cachedResult.created_at).getTime() : 0)) / 1000 / 60);
           console.log(`💾 Using cached verification result (${cacheAge} minutes old)`);
@@ -69,7 +81,7 @@ export function useVerify() {
         }
 
         // Check enhanced cache
-        const enhancedCached = enhancedVerificationCache.get(content, userId);
+        const enhancedCached = enhancedVerificationCache.get(safeContent, userId);
         if (enhancedCached) {
           console.log('🎯 Enhanced cache hit!');
           
@@ -107,7 +119,7 @@ export function useVerify() {
           
           // Check if this is an image verification
           let functionName = 'verify';
-          let requestBody: any = { content, user_id: userId };
+          let requestBody: any = { content: safeContent, user_id: (userId ?? '').toString() };
           
           if (verificationData?.contentType === 'image') {
             functionName = 'image-verify';
@@ -130,7 +142,7 @@ export function useVerify() {
             }
             
             requestBody = {
-              imageBase64: content,
+              imageBase64: safeContent,
               verificationId: verificationRecord.id,
               userId: userId
             };
@@ -180,8 +192,8 @@ export function useVerify() {
 
           // Cache the result in both caches (only if not bypassed)
           if (!bypassCache) {
-            verificationCache.set(content, userId, data);
-            enhancedVerificationCache.set(content, userId, data);
+            verificationCache.set(safeContent, userId, data);
+            enhancedVerificationCache.set(safeContent, userId, data);
           }
 
           showVerificationSuccess(data?.confidence ?? 0, data?.processing_time || processingTime);
@@ -200,7 +212,7 @@ export function useVerify() {
       }
 
       // All attempts failed - check for similar cached results as fallback
-      const similarResults = enhancedVerificationCache.findSimilar(content, userId, 0.7);
+      const similarResults = enhancedVerificationCache.findSimilar(safeContent, userId, 0.7);
       if (similarResults.length > 0) {
         console.log('🔄 Using similar cached result as fallback');
         const fallbackResult = similarResults[0];

@@ -135,15 +135,29 @@ class ErrorTracker {
   }
 
   private getContext(overrides: Partial<ErrorContext> = {}): ErrorContext {
-    return {
+    const base: ErrorContext = {
       userId: this.userId,
       sessionId: this.sessionId,
       userAgent: navigator.userAgent,
       url: window.location.href,
       timestamp: new Date().toISOString(),
       buildVersion: (window as any).__BUILD_VERSION__ ?? 'unknown',
-      ...overrides
     };
+
+    const swControlled = !!navigator.serviceWorker?.controller;
+    const swScriptURL = navigator.serviceWorker?.controller?.scriptURL as any;
+
+    const merged: ErrorContext = {
+      ...base,
+      ...overrides,
+      additionalData: {
+        swControlled,
+        swScriptURL,
+        ...(overrides.additionalData || {})
+      }
+    };
+
+    return merged;
   }
 
   private generateFingerprint(error: Partial<ErrorReport>): string {

@@ -92,7 +92,7 @@ useEffect(() => {
 
   navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
-  navigator.serviceWorker.register('/sw.js')
+  navigator.serviceWorker.register('/sw.js?v=4')
     .then((registration) => {
       console.log('Service Worker registered successfully');
 
@@ -175,9 +175,18 @@ useEffect(() => {
   };
 
   const updateApp = () => {
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-      window.location.reload();
+    if ('serviceWorker' in navigator) {
+      const send = (msg: any) => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage(msg);
+        } else {
+          navigator.serviceWorker.getRegistration().then(reg => reg?.active?.postMessage(msg));
+        }
+      };
+      // Clear caches first, then activate new SW
+      send({ type: 'CLEAR_ALL_CACHES' });
+      send({ type: 'SKIP_WAITING' });
+      setTimeout(() => window.location.reload(), 100);
     }
   };
 

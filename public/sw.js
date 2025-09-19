@@ -1,6 +1,7 @@
 // Service Worker for PWA and offline support
-const CACHE_NAME = 'verification-app-v3';
-const OFFLINE_CACHE = 'verification-offline-v3';
+const SW_VERSION = 'v4';
+const CACHE_NAME = `verification-app-${SW_VERSION}`;
+const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
 // Assets to cache for offline use
 const STATIC_ASSETS = [
@@ -95,6 +96,12 @@ self.addEventListener('fetch', (event) => {
   
   // Skip cross-origin requests
   if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Special endpoint to report SW version
+  if (url.pathname === '/sw-version') {
+    event.respondWith(new Response(JSON.stringify({ version: SW_VERSION, cacheName: CACHE_NAME, offlineCache: OFFLINE_CACHE }), { headers: { 'Content-Type': 'application/json' } }));
     return;
   }
 
@@ -265,12 +272,23 @@ async function processOfflineVerifications() {
 // Message event for communication with main app
 self.addEventListener('message', (event) => {
   console.log('Service Worker received message:', event.data);
-  
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+
+  const type = event.data && event.data.type;
+  if (!type) return;
+
+  if (type === 'SKIP_WAITING') {
     self.skipWaiting();
+    return;
   }
-  
-  if (event.data && event.data.type === 'CACHE_VERIFICATION') {
+
+  if (type === 'CLEAR_ALL_CACHES') {
+    event.waitUntil(
+      caches.keys().then((names) => Promise.all(names.map((n) => caches.delete(n)))).then(() => self.clients.claim())
+    );
+    return;
+  }
+
+  if (type === 'CACHE_VERIFICATION') {
     caches.open(OFFLINE_CACHE)
       .then((cache) => {
         cache.put(

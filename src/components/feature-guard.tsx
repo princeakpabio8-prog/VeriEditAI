@@ -3,6 +3,7 @@ import { useLicense } from '@/contexts/LicenseContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Lock, Crown, Zap } from 'lucide-react';
+import { safeLower } from '@/lib/utils';
 
 interface FeatureGuardProps {
   feature: string;
@@ -61,7 +62,7 @@ export const FeatureGuard: React.FC<FeatureGuardProps> = ({
               Upgrade to continue verifying content.
             </>
           ) : (
-            `This feature requires a ${licenseInfo?.name?.toLowerCase() || 'premium'} license or higher`
+            `This feature requires a ${safeLower(licenseInfo?.name) || 'premium'} license or higher`
           )}
         </CardDescription>
       </CardHeader>

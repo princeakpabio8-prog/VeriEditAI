@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Download, FileText, Image, Loader2 } from "lucide-react";
 import jsPDF from 'jspdf';
+import { safeLower } from "@/lib/utils";
 
 interface VerificationExportProps {
   verificationId: string;
@@ -71,7 +72,7 @@ export function VerificationExport({
       addText("Verification Details", 16, true);
       addText(`Verification ID: ${verificationId}`, 12);
       addText(`Date: ${new Date().toLocaleDateString()}`, 12);
-      addText(`Status: ${status.toUpperCase()}`, 12);
+      addText(`Status: ${String(status || 'unknown').toUpperCase()}`, 12);
       addText(`Trust Score: ${trustScore}%`, 12);
       if (processingTime) {
         addText(`Processing Time: ${processingTime}ms`, 12);
@@ -221,7 +222,8 @@ export function VerificationExport({
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-gray-500/10 text-gray-700 border-gray-200';
     
-    switch (status.toLowerCase()) {
+    const safeStatus = safeLower(status);
+    switch (safeStatus) {
       case 'verified':
       case 'completed':
         return 'bg-green-500/10 text-green-700 border-green-200';
@@ -267,7 +269,7 @@ const getTrustScoreColor = (score: number | undefined) => {
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
               <Badge variant="outline" className={getStatusColor(status)}>
-                {status}
+                {String(status || 'unknown')}
               </Badge>
             </div>
             <div>

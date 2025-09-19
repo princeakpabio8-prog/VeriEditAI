@@ -96,22 +96,41 @@ class ErrorTracker {
   }
 
   private setupNetworkMonitoring(): void {
+    let offlineMessageSent = false;
+    let offlineDebounceTimer: number | null = null;
+
     window.addEventListener('online', () => {
       this.isOnline = true;
+      offlineMessageSent = false;
+      if (offlineDebounceTimer) {
+        clearTimeout(offlineDebounceTimer);
+        offlineDebounceTimer = null;
+      }
       this.flushErrors();
     });
 
     window.addEventListener('offline', () => {
       this.isOnline = false;
-      this.captureError({
-        message: 'User went offline',
-        type: 'network',
-        severity: 'low',
-        context: this.getContext({
-          feature: 'network-monitoring'
-        }),
-        tags: ['connectivity']
-      });
+      
+      // Debounce offline events to prevent spam
+      if (offlineDebounceTimer) {
+        clearTimeout(offlineDebounceTimer);
+      }
+      
+      offlineDebounceTimer = window.setTimeout(() => {
+        if (!offlineMessageSent) {
+          this.captureError({
+            message: 'User went offline',
+            type: 'network',
+            severity: 'low',
+            context: this.getContext({
+              feature: 'network-monitoring'
+            }),
+            tags: ['connectivity']
+          });
+          offlineMessageSent = true;
+        }
+      }, 1000); // 1 second debounce
     });
   }
 

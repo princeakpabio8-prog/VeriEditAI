@@ -186,25 +186,39 @@ export function useVerify() {
           console.log(`✅ Verification successful in ${processingTime}ms`);
           console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
 
+          // Normalize status and category to prevent toLowerCase errors
+          const normalizedData = {
+            ...data,
+            status: typeof data.status === 'string' ? data.status.toLowerCase() : 'unknown',
+            category: typeof data.category === 'string' ? data.category.toLowerCase() : 'general'
+          } as VerifyResult;
+
+          if (typeof data.status !== 'string' && data.status != null) {
+            console.warn('useVerify: Non-string status received from API:', data.status);
+          }
+          if (typeof data.category !== 'string' && data.category != null) {
+            console.warn('useVerify: Non-string category received from API:', data.category);
+          }
+
           // Track successful verification analytics
           verificationAnalytics.trackVerification({
             success: true,
             processingTime,
-            confidence: data.confidence || 0,
-            category: data.category || 'general',
+            confidence: normalizedData.confidence || 0,
+            category: normalizedData.category || 'general',
             userId
           });
 
-          setResult(data);
+          setResult(normalizedData);
 
           // Cache the result in both caches (only if not bypassed)
           if (!bypassCache) {
-            verificationCache.set(safeContent, userId, data);
-            enhancedVerificationCache.set(safeContent, userId, data);
+            verificationCache.set(safeContent, userId, normalizedData);
+            enhancedVerificationCache.set(safeContent, userId, normalizedData);
           }
 
-          showVerificationSuccess(data?.confidence ?? 0, data?.processing_time || processingTime);
-          return data as VerifyResult; // Success, exit the retry loop
+          showVerificationSuccess(normalizedData?.confidence ?? 0, processingTime);
+          return normalizedData; // Success, exit the retry loop
 
         } catch (err) {
           lastError = err;

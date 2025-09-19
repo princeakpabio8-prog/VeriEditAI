@@ -8,6 +8,7 @@ import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { safeLower } from "@/lib/utils";
 
 interface Source {
   id?: string;
@@ -47,7 +48,14 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   onNewVerification,
   content = "",
 }) => {
-  const getStatusBadge = (status: string) => {
+  // Normalize status to prevent toLowerCase errors
+  const normalizedStatus = safeLower(status);
+  const normalizedCategory = safeLower(category || 'general');
+
+  const getStatusBadge = (statusValue: string) => {
+    const safeStatus = safeLower(statusValue);
+    if (!safeStatus) return <Badge variant="secondary">Unknown</Badge>;
+    
     const variants = {
       verified: "default",
       flagged: "secondary", 
@@ -55,8 +63,8 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
     } as const;
     
     return (
-      <Badge variant={variants[status as keyof typeof variants] || "secondary"}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <Badge variant={variants[safeStatus as keyof typeof variants] || "secondary"}>
+        {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}
       </Badge>
     );
   };
@@ -88,7 +96,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
             >
               <CardTitle className="flex items-center justify-center gap-2 mb-4">
                 Verification Complete
-                {getStatusBadge(status)}
+                {getStatusBadge(normalizedStatus)}
               </CardTitle>
             </motion.div>
             <motion.div 
@@ -119,7 +127,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
               </div>
               <div className="p-3 rounded-lg bg-muted/50 border border-border/30">
                 <div className="text-xs text-muted-foreground">Category</div>
-                <div className="text-lg font-semibold">{category ? category.charAt(0).toUpperCase() + category.slice(1) : 'General'}</div>
+                <div className="text-lg font-semibold">{normalizedCategory ? normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slice(1) : 'General'}</div>
               </div>
               <div className="p-3 rounded-lg bg-muted/50 border border-border/30">
                 <div className="text-xs text-muted-foreground">Methods Used</div>
@@ -227,7 +235,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         <VerificationExport
           verificationId={verificationId}
           trustScore={trustScore}
-          status={status}
+          status={normalizedStatus}
           summary={summary}
           sources={sources.map(s => ({
             title: s.title,

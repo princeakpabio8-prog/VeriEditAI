@@ -33,9 +33,11 @@ serve(async (req) => {
   console.log('🚀 Starting verification process...');
 
   try {
-    const { content, user_id } = await req.json();
-    
-    if (!content) {
+    const body = await req.json();
+    const user_id = body?.user_id;
+    const safeContent = String(body?.content ?? '');
+
+    if (safeContent.trim().length === 0) {
       console.error('❌ No content provided');
       return new Response(
         JSON.stringify({ error: 'Content required' }),
@@ -43,7 +45,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`📝 Analyzing content: ${content.substring(0, 100)}...`);
+    console.log(`📝 Analyzing content: ${safeContent.substring(0, 100)}...`);
     console.log(`👤 User ID: ${user_id || 'anonymous'}`);
 
     // Get Tavily API key
@@ -53,10 +55,10 @@ serve(async (req) => {
     
     if (tavilyApiKey) {
       console.log('🔍 Using Tavily Search API for verification...');
-      result = await verifyWithTavily(content, tavilyApiKey);
+      result = await verifyWithTavily(safeContent, tavilyApiKey);
     } else {
       console.log('⚡ Using fallback analysis (no Tavily key)...');
-      result = await fallbackAnalysis(content);
+      result = await fallbackAnalysis(safeContent);
     }
 
     const processingTime = Date.now() - startTime;
@@ -89,7 +91,8 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
   const startTime = Date.now();
   
   try {
-    const query = `Fact-check and verify: "${content}"`;
+    const safeContent = String(content ?? '');
+    const query = `Fact-check and verify: "${safeContent}"`;
 
     console.log('🔍 Sending request to Tavily Search API...');
     
@@ -134,7 +137,7 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
     // Create comprehensive summary
     const summary = answer 
       ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sources.length}\n\n${answer.substring(0, 200)}...`
-      : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${content.substring(0, 100)}..."`;
+      : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${safeContent.substring(0, 100)}..."`;
     
     return {
       confidence,
@@ -144,7 +147,7 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
       sources,
       source_consensus: confidence,
       verification_method: ['Tavily Search', 'Real-time Web Search', 'Source Analysis'],
-      category: categorizeContent(content),
+      category: categorizeContent(safeContent),
       created_at: new Date().toISOString(),
       processing_time: Date.now() - startTime
     };
@@ -158,10 +161,11 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
 async function fallbackAnalysis(content: string): Promise<VerificationResult> {
   console.log('⚡ Running fallback analysis...');
   
-  const words = content.split(' ').length;
-  const hasNumbers = /\d/.test(content);
-  const hasUrls = /https?:\/\//.test(content);
-  const hasCapitalWords = /[A-Z]{2,}/.test(content);
+  const safeContent = String(content ?? '');
+  const words = safeContent.split(' ').length;
+  const hasNumbers = /\d/.test(safeContent);
+  const hasUrls = /https?:\/\//.test(safeContent);
+  const hasCapitalWords = /[A-Z]{2,}/.test(safeContent);
   
   // More conservative scoring algorithm
   let confidence = Math.min(words * 1.5 + 15, 65);
@@ -183,22 +187,24 @@ async function fallbackAnalysis(content: string): Promise<VerificationResult> {
     sources: [],
     source_consensus: confidence,
     verification_method: ['Basic Analysis', 'Word Count', 'Pattern Detection'],
-    category: categorizeContent(content),
+    category: categorizeContent(safeContent),
     created_at: new Date().toISOString(),
     processing_time: 0
   };
 }
 
 function extractConfidence(text: string): number {
-  const match = text.match(/confidence[:\s]*(\d+)/i) || text.match(/(\d+)%/);
+  const safeText = String(text ?? '');
+  const match = safeText.match(/confidence[:\s]*(\d+)/i) || safeText.match(/(\d+)%/);
   if (match) {
     return Math.min(Math.max(parseInt(match[1]), 0), 100);
   }
   
   // Infer confidence from sentiment
-  if (text.toLowerCase().includes('verified') || text.toLowerCase().includes('accurate')) return 85;
-  if (text.toLowerCase().includes('disputed') || text.toLowerCase().includes('false')) return 25;
-  if (text.toLowerCase().includes('inconclusive') || text.toLowerCase().includes('unclear')) return 55;
+  const lower = safeText.toLowerCase();
+  if (lower.includes('verified') || lower.includes('accurate')) return 85;
+  if (lower.includes('disputed') || lower.includes('false')) return 25;
+  if (lower.includes('inconclusive') || lower.includes('unclear')) return 55;
   
   return 60; // Default moderate confidence
 }
@@ -225,16 +231,17 @@ function extractSources(text: string): Array<{ title: string; url: string; snipp
 function calculateTavilyConfidence(answer: string, results: any[]): number {
   let confidence = 35; // Lower base confidence
   
+  const safeAnswer = String(answer ?? '');
   // More conservative scoring based on sources
   confidence += Math.min(results.length * 3, 15);
   
   // Moderate increase for detailed answers
-  if (answer && answer.length > 100) {
+  if (safeAnswer.length > 100) {
     confidence += 8;
   }
   
   // Check for contradictory sources (penalty)
-  if (results.length > 3 && answer.toLowerCase().includes('disputed')) {
+  if (results.length > 3 && safeAnswer.toLowerCase().includes('disputed')) {
     confidence -= 15;
   }
   
@@ -262,7 +269,7 @@ function calculateTavilyConfidence(answer: string, results: any[]): number {
 function calculateReliabilityScore(url: string): number {
   if (!url) return 50;
   
-  const domain = url.toLowerCase();
+  const domain = String(url || '').toLowerCase();
   
   // High reliability sources
   if (domain.includes('reuters.com') || domain.includes('apnews.com') || domain.includes('bbc.com')) {
@@ -288,13 +295,13 @@ function calculateReliabilityScore(url: string): number {
 }
 
 function categorizeContent(content: string): string {
-  const lower = content.toLowerCase();
+  const lower = String(content || '').toLowerCase();
   
   if (lower.includes('health') || lower.includes('medical') || lower.includes('vaccine')) return 'health';
   if (lower.includes('political') || lower.includes('election') || lower.includes('government')) return 'politics';
   if (lower.includes('climate') || lower.includes('environment') || lower.includes('global warming')) return 'science';
   if (lower.includes('economic') || lower.includes('financial') || lower.includes('market')) return 'economics';
-  if (lower.includes('technology') || lower.includes('tech') || lower.includes('AI')) return 'technology';
+  if (lower.includes('technology') || lower.includes('tech') || lower.includes('ai')) return 'technology';
   
   return 'general';
 }

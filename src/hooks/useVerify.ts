@@ -28,6 +28,32 @@ interface VerifyResult {
   created_at: string;
 }
 
+// Local minimal fallback analysis to guarantee a result even if API fails
+function localFallbackAnalysis(content: string, originalError?: string) {
+  const safe = (content ?? '').toString();
+  const words = safe.trim().split(/\s+/).filter(Boolean).length;
+  const hasNumbers = /\d/.test(safe);
+  const hasUrls = /https?:\/\//.test(safe);
+
+  let confidence = Math.min(15 + words * 1.2 + (hasUrls ? 5 : 0) + (hasNumbers ? 3 : 0), 68);
+  if (words < 8) confidence = Math.max(confidence - 10, 15);
+  const status = confidence >= 70 ? 'verified' : confidence >= 40 ? 'inconclusive' : 'disputed';
+
+  return {
+    confidence: Math.round(confidence),
+    status,
+    summary: `Quick local analysis completed. Words: ${words}.` ,
+    analysis: 'Local heuristic fallback (no network).',
+    sources: [],
+    source_consensus: Math.round(confidence),
+    verification_method: ['Local Fallback'],
+    category: 'general',
+    fromFallback: true,
+    originalError,
+    created_at: new Date().toISOString(),
+  } as const;
+}
+
 export function useVerify() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -267,7 +293,7 @@ export function useVerify() {
         confidence: 0,
         category: 'error',
         userId,
-        error: err?.name || 'UnknownError'
+        error: (err as any)?.name || 'UnknownError'
       });
       
       // Capture detailed error information
@@ -289,6 +315,11 @@ export function useVerify() {
       
       setError(errorMessage);
       showVerificationError(errorMessage);
+
+      // Universal fallback: always return a minimal result for users
+      const fallback = localFallbackAnalysis(safeContent, (err as Error)?.message);
+      setResult(fallback as any);
+      return fallback as any;
       
     } finally {
       inFlightKeys.current.delete(key);

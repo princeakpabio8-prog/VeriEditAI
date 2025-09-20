@@ -92,7 +92,8 @@ async function verifyWithGPT(content: string, category: string): Promise<any> {
 async function verifyWithAcademicSources(content: string): Promise<any> {
   try {
     // Semantic Scholar API for academic papers
-    const query = encodeURIComponent(content.substring(0, 100));
+    const safeContent = String(content ?? '');
+    const query = encodeURIComponent(safeContent.substring(0, 100));
     const response = await fetch(`https://api.semanticscholar.org/graph/v1/paper/search?query=${query}&limit=5`);
     
     if (!response.ok) throw new Error('Academic API error');
@@ -187,16 +188,18 @@ serve(async (req) => {
   }
 
   try {
-    const { content, category = 'general' } = await req.json();
+    const body = await req.json();
+    const safeContent = String(body?.content ?? '');
+    const safeCategory = String(body?.category ?? 'general').toLowerCase();
     
     console.log('Starting enhanced multi-AI verification...');
     
     // Run all verification methods in parallel with timeouts
     const verificationPromises = [
-      verifyWithClaude(content, category),
-      verifyWithGPT(content, category),
-      verifyWithAcademicSources(content),
-      verifyWithGovernmentSources(content, category)
+      verifyWithClaude(safeContent, safeCategory),
+      verifyWithGPT(safeContent, safeCategory),
+      verifyWithAcademicSources(safeContent),
+      verifyWithGovernmentSources(safeContent, safeCategory)
     ];
     
     const results = await Promise.allSettled(verificationPromises.map(p => 
@@ -227,7 +230,7 @@ serve(async (req) => {
       analysis: combinedAnalysis,
       sources: allSources,
       verification_method: successfulResults.map(r => r.source),
-      category,
+      category: safeCategory,
       created_at: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

@@ -210,11 +210,12 @@ function analyzeImageContent(
   let manipulationRisk = 'low';
   
   // Check for suspicious patterns
-  const suspiciousLabels = labels.filter(label => 
-    label.description.toLowerCase().includes('screenshot') ||
-    label.description.toLowerCase().includes('computer') ||
-    label.description.toLowerCase().includes('software')
-  );
+  const suspiciousLabels = labels.filter(label => {
+    const desc = String(label?.description || '').toLowerCase();
+    return desc.includes('screenshot') ||
+      desc.includes('computer') ||
+      desc.includes('software');
+  });
   
   if (suspiciousLabels.length > 0) {
     manipulationRisk = 'medium';

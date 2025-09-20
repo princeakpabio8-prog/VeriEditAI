@@ -1,5 +1,5 @@
 // Service Worker for PWA and offline support
-const SW_VERSION = 'v4';
+const SW_VERSION = 'v5';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -9,6 +9,12 @@ const STATIC_ASSETS = [
   '/auth',
   '/dashboard',
   '/verify',
+  '/billing',
+  '/profile',
+  '/license',
+  '/about',
+  '/payment-callback',
+  '/verification-dashboard',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'

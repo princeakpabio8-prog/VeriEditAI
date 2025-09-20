@@ -92,12 +92,23 @@ useEffect(() => {
 
   navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
-  navigator.serviceWorker.register('/sw.js?v=4')
+  navigator.serviceWorker.register('/sw.js?v=5')
     .then((registration) => {
       console.log('Service Worker registered successfully');
 
       // Immediately check for updates
       try { registration.update(); } catch (e) { console.debug('SW update check failed', e); }
+
+      // Fetch and log SW version for diagnostics
+      try {
+        fetch('/sw-version')
+          .then((r) => r.json())
+          .then((info) => {
+            (window as any).__SW_VERSION__ = info?.version;
+            console.log(`[PWA] SW version: ${info?.version}, caches:`, info);
+          })
+          .catch(() => {});
+      } catch {}
 
       // Also check when tab becomes visible
       document.addEventListener('visibilitychange', onVisibility);

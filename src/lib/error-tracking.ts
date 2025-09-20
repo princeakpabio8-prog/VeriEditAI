@@ -153,6 +153,7 @@ class ErrorTracker {
       additionalData: {
         swControlled,
         swScriptURL,
+        swVersion: (window as any).__SW_VERSION__ || 'unknown',
         ...(overrides.additionalData || {})
       }
     };

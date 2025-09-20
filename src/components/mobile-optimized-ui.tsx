@@ -30,7 +30,7 @@ interface MobileOptimizedUIProps {
 export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { status: pwaStatus, installApp, shareApp } = usePWA();
+  const { status: pwaStatus, installApp, shareApp, updateApp } = usePWA();
   const { status: offlineStatus, retryQueue } = useOfflineSupport();
 
   useEffect(() => {
@@ -196,6 +196,15 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     >
                       <Share className="h-4 w-4" />
                       Share App
+                    </Button>
+
+                    <Button
+                      onClick={updateApp}
+                      variant="outline"
+                      className="w-full gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Update App (Clear Cache)
                     </Button>
                   </CardContent>
                 </Card>

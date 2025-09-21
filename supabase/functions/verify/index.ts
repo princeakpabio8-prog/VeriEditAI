@@ -76,13 +76,22 @@ serve(async (req) => {
     const processingTime = Date.now() - startTime;
     console.error('❌ Verification failed:', error);
     
+    // Always return 200 with inconclusive result for mobile compatibility
     return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Verification failed',
+      JSON.stringify({
+        confidence: 15,
+        status: 'inconclusive',
+        summary: '**⚡ VERIFICATION TEMPORARILY UNAVAILABLE**\n\nConfidence: 15%\nStatus: INCONCLUSIVE\n\nOur verification services are experiencing temporary issues. Please try again in a few moments.',
+        analysis: 'Unable to complete verification due to service issues. This may be due to network connectivity or external API limitations.',
+        sources: [],
+        source_consensus: 15,
+        verification_method: ['Fallback Analysis'],
+        category: 'general',
+        created_at: new Date().toISOString(),
         processing_time: processingTime,
-        timestamp: new Date().toISOString()
+        metadata: { fallback_reason: 'service_error', original_error: String(error) }
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
@@ -153,8 +162,20 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
     };
 
   } catch (error) {
-    console.error('🚨 Tavily API failed:', error);
-    throw error;
+    console.error('🚨 Tavily API failed, returning fallback result:', error);
+    // Return fallback result instead of throwing
+    return {
+      confidence: 20,
+      status: 'inconclusive',
+      summary: `**⚡ SEARCH VERIFICATION UNAVAILABLE**\n\nConfidence: 20%\nStatus: INCONCLUSIVE\n\nSearch services are temporarily unavailable. Using basic content analysis.`,
+      analysis: `Search API temporarily unavailable. Content analyzed: ${String(content).length} characters. Unable to cross-reference with external sources at this time.`,
+      sources: [],
+      source_consensus: 20,
+      verification_method: ['Fallback Analysis'],
+      category: categorizeContent(String(content)),
+      created_at: new Date().toISOString(),
+      processing_time: Date.now() - startTime
+    };
   }
 }
 

@@ -238,12 +238,20 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('Enhanced verification error:', error);
+    // Always return 200 with inconclusive result for mobile compatibility
     return new Response(JSON.stringify({
-      confidence: 40,
-      status: 'error',
-      summary: 'Enhanced verification system temporarily unavailable',
-      error: error.message
+      confidence: 15,
+      status: 'inconclusive',
+      summary: '**🔍 ENHANCED VERIFICATION TEMPORARILY UNAVAILABLE**\n\nConfidence: 15%\nStatus: INCONCLUSIVE\n\nOur enhanced AI verification services are experiencing temporary issues. Please try again in a few moments.',
+      analysis: 'Enhanced verification system temporarily unavailable due to service issues. This may be due to network connectivity or external AI service limitations.',
+      sources: [],
+      consensus: { agreement: 0, total_sources: 0 },
+      verification_method: ['Fallback Analysis'],
+      category: 'general',
+      created_at: new Date().toISOString(),
+      metadata: { fallback_reason: 'system_error', original_error: String(error) }
     }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }

@@ -103,9 +103,22 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in image verification:', error);
+    // Always return 200 with inconclusive result for mobile compatibility
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({
+        confidence: 15,
+        status: 'inconclusive',
+        summary: 'Image verification temporarily unavailable due to service issues. Please try again in a few moments.',
+        analysis: 'Unable to complete image analysis due to technical difficulties. This may be due to network connectivity or external service limitations.',
+        sources: [],
+        source_consensus: 15,
+        verification_method: ['Fallback Analysis'],
+        category: 'image',
+        created_at: new Date().toISOString(),
+        processing_time: 0,
+        metadata: { fallback_reason: 'service_error', original_error: String(error) }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   }
 });

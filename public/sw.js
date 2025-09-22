@@ -1,5 +1,5 @@
-// Service Worker for PWA and offline support
-const SW_VERSION = 'v5';
+// Service Worker for PWA and offline support - Force mobile updates
+const SW_VERSION = 'v6';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -26,9 +26,9 @@ const OFFLINE_FALLBACK_ROUTES = [
   '/api/analytics'
 ];
 
-// Install event - cache static assets
+// Install event - cache static assets and force immediate activation
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
+  console.log('Service Worker installing v6 - force mobile updates...');
   
   event.waitUntil(
     Promise.all([
@@ -64,15 +64,16 @@ self.addEventListener('install', (event) => {
           headers: { 'Content-Type': 'text/html' }
         }));
       })
-    ])
+    ]).then(() => {
+      // Force immediate activation to replace old service workers
+      return self.skipWaiting();
+    })
   );
-  
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and immediately take control
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
+  console.log('Service Worker activating v6...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -84,10 +85,19 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      console.log('Service Worker taking control of all clients...');
+      // Force all clients to use new service worker immediately
+      return self.clients.claim();
+    }).then(() => {
+      // Notify all clients to reload for latest updates on mobile
+      return self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'SW_UPDATED', version: 'v6' });
+        });
+      });
     })
   );
-  
-  self.clients.claim();
 });
 
 // Fetch event - smarter strategy to avoid stale HTML

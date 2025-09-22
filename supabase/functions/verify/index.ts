@@ -45,6 +45,46 @@ serve(async (req) => {
       );
     }
 
+    // Enforce quota limits for all users
+    if (user_id) {
+      console.log('🔒 Checking usage limits...');
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data: quotaResult, error: quotaError } = await supabase.rpc('increment_license_usage', {
+        user_uuid: user_id,
+        amount: 1
+      });
+
+      if (quotaError || !quotaResult?.success) {
+        console.log('❌ Quota exceeded or error:', quotaError || quotaResult);
+        return new Response(
+          JSON.stringify({
+            confidence: 0,
+            status: 'failed',
+            summary: '**🚫 VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying content.',
+            analysis: 'Verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+            sources: [],
+            source_consensus: 0,
+            verification_method: ['Quota Check'],
+            category: 'general',
+            created_at: new Date().toISOString(),
+            processing_time: 0,
+            metadata: { 
+              quota_exceeded: true, 
+              limit: quotaResult?.limit || 5,
+              error_type: 'quota_limit'
+            }
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      console.log('✅ Quota check passed');
+    }
+
     console.log(`📝 Analyzing content: ${safeContent.substring(0, 100)}...`);
     console.log(`👤 User ID: ${user_id || 'anonymous'}`);
 

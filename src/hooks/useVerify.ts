@@ -196,6 +196,24 @@ export function useVerify() {
             throw new Error('No data received from verification service');
           }
 
+          // Check for quota exceeded responses
+          if (data.metadata?.quota_exceeded) {
+            console.log('Quota exceeded response received');
+            showVerificationError(`🚫 Verification Limit Reached\n\nYou've reached your monthly limit of ${data.metadata.limit || 5} verifications. Upgrade for unlimited access.`);
+            setError('Verification limit exceeded. Please upgrade your plan.');
+            
+            // Ensure response has proper string fields for mobile compatibility
+            const quotaResult = {
+              ...data,
+              status: String(data.status || 'failed'),
+              category: String(data.category || 'general'),
+              summary: String(data.summary || 'Quota exceeded'),
+              analysis: String(data.analysis || 'Upgrade required')
+            };
+            setResult(quotaResult);
+            return quotaResult; // Return the quota response
+          }
+
           // Validation
           if (typeof data.confidence !== 'number' || !data.status || !data.summary) {
             console.warn('⚠️ Incomplete verification result:', data);

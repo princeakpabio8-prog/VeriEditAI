@@ -191,8 +191,48 @@ serve(async (req) => {
     const body = await req.json();
     const safeContent = String(body?.content ?? '');
     const safeCategory = String(body?.category ?? 'general').toLowerCase();
+    const userId = body?.userId;
     
     console.log('Starting enhanced multi-AI verification...');
+
+    // Enforce quota limits for all users
+    if (userId) {
+      console.log('🔒 Checking enhanced verification usage limits...');
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      
+      const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data: quotaResult, error: quotaError } = await supabase.rpc('increment_license_usage', {
+        user_uuid: userId,
+        amount: 1
+      });
+
+      if (quotaError || !quotaResult?.success) {
+        console.log('❌ Enhanced quota exceeded:', quotaError || quotaResult);
+        return new Response(JSON.stringify({
+          confidence: 0,
+          status: 'failed',
+          summary: '**🚫 VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying content.',
+          analysis: 'Enhanced verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+          sources: [],
+          consensus: { agreement: 0, total_sources: 0 },
+          verification_method: ['Quota Check'],
+          category: String(safeCategory),
+          created_at: new Date().toISOString(),
+          metadata: { 
+            quota_exceeded: true, 
+            limit: quotaResult?.limit || 5,
+            error_type: 'quota_limit'
+          }
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      console.log('✅ Enhanced quota check passed');
+    }
     
     // Run all verification methods in parallel with timeouts
     const verificationPromises = [

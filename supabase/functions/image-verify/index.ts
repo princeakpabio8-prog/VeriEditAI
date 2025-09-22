@@ -43,6 +43,42 @@ serve(async (req) => {
       );
     }
 
+    // Enforce quota limits for all users
+    console.log('🔒 Checking image verification usage limits...');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: quotaResult, error: quotaError } = await supabase.rpc('increment_license_usage', {
+      user_uuid: userId,
+      amount: 1
+    });
+
+    if (quotaError || !quotaResult?.success) {
+      console.log('❌ Image quota exceeded:', quotaError || quotaResult);
+      return new Response(
+        JSON.stringify({
+          confidence: 0,
+          status: 'failed',
+          summary: '**🚫 IMAGE VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying images.',
+          analysis: 'Image verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+          sources: [],
+          source_consensus: 0,
+          verification_method: ['Quota Check'],
+          category: 'image',
+          created_at: new Date().toISOString(),
+          processing_time: 0,
+          metadata: { 
+            quota_exceeded: true, 
+            limit: quotaResult?.limit || 5,
+            error_type: 'quota_limit'
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+    console.log('✅ Image quota check passed');
+
     console.log('Starting image verification for verification ID:', verificationId);
 
     const googleVisionApiKey = Deno.env.get('GOOGLE_VISION_API_KEY');

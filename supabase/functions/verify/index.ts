@@ -258,21 +258,23 @@ function extractConfidence(text: string): number {
   const safeText = String(text ?? '');
   const match = safeText.match(/confidence[:\s]*(\d+)/i) || safeText.match(/(\d+)%/);
   if (match) {
-    return Math.min(Math.max(parseInt(match[1]), 0), 100);
+    return Math.min(Math.max(parseInt(match[1]), 40), 95);
   }
   
-  // Infer confidence from sentiment
+  // Enhanced sentiment analysis with better confidence ranges
   const lower = safeText.toLowerCase();
-  if (lower.includes('verified') || lower.includes('accurate')) return 85;
-  if (lower.includes('disputed') || lower.includes('false')) return 25;
-  if (lower.includes('inconclusive') || lower.includes('unclear')) return 55;
+  if (lower.includes('verified') || lower.includes('accurate') || lower.includes('confirmed')) return 82;
+  if (lower.includes('disputed') || lower.includes('false') || lower.includes('incorrect')) return 28;
+  if (lower.includes('inconclusive') || lower.includes('unclear') || lower.includes('uncertain')) return 55;
+  if (lower.includes('likely') || lower.includes('probable')) return 72;
+  if (lower.includes('unlikely') || lower.includes('doubtful')) return 35;
   
-  return 60; // Default moderate confidence
+  return 65; // Improved default confidence
 }
 
 function getStatusFromConfidence(confidence: number): string {
-  if (confidence >= 70) return 'verified';
-  if (confidence >= 40) return 'inconclusive';
+  if (confidence >= 80) return 'verified';
+  if (confidence >= 60) return 'inconclusive';
   return 'disputed';
 }
 
@@ -288,71 +290,87 @@ function extractSources(text: string): Array<{ title: string; url: string; snipp
   }));
 }
 
-// Helper function to calculate confidence based on Tavily results
+// Enhanced multi-factor confidence calculation based on Tavily results
 function calculateTavilyConfidence(answer: string, results: any[]): number {
-  let confidence = 35; // Lower base confidence
-  
   const safeAnswer = String(answer ?? '');
-  // More conservative scoring based on sources
-  confidence += Math.min(results.length * 3, 15);
   
-  // Moderate increase for detailed answers
-  if (safeAnswer.length > 100) {
-    confidence += 8;
-  }
+  // Content Analysis Weight (40%)
+  let contentScore = 50;
+  if (safeAnswer.length > 200) contentScore += 15; // Detailed analysis
+  if (safeAnswer.length > 100) contentScore += 10; // Moderate detail
+  if (safeAnswer.includes('evidence') || safeAnswer.includes('data')) contentScore += 8;
+  if (safeAnswer.includes('study') || safeAnswer.includes('research')) contentScore += 12;
+  if (safeAnswer.toLowerCase().includes('disputed') || safeAnswer.includes('conflicting')) contentScore -= 20;
   
-  // Check for contradictory sources (penalty)
-  if (results.length > 3 && safeAnswer.toLowerCase().includes('disputed')) {
-    confidence -= 15;
-  }
+  // Source Quality Weight (35%)
+  let sourceScore = 40;
+  const sourceQualitySum = results.reduce((sum, r) => sum + calculateReliabilityScore(r.url || ''), 0);
+  const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
+  sourceScore = Math.round(avgSourceQuality * 0.8); // Scale to appropriate range
   
-  // Increase confidence based on source reliability
-  const reliableSources = results.filter((r: any) => r.url && (
-    r.url.includes('reuters.com') || 
-    r.url.includes('bbc.com') || 
-    r.url.includes('apnews.com') ||
-    r.url.includes('factcheck.org') ||
-    r.url.includes('snopes.com') ||
-    r.url.includes('politifact.com')
-  ));
-  confidence += reliableSources.length * 5;
+  // Consensus Weight (25%)
+  let consensusScore = 60;
+  if (results.length >= 3) consensusScore += 15; // Multiple sources
+  if (results.length >= 5) consensusScore += 10; // Strong consensus
   
-  // Penalty for low-quality sources
-  const lowQualitySources = results.filter((r: any) => r.url && (
-    r.url.includes('social') || r.url.includes('blog') || r.url.includes('forum')
-  ));
-  confidence -= lowQualitySources.length * 3;
+  // Check for source diversity
+  const domains = new Set(results.map(r => new URL(r.url || 'https://example.com').hostname));
+  if (domains.size >= 3) consensusScore += 10; // Diverse sources
   
-  return Math.min(confidence, 85); // Cap at 85% instead of 95%
+  // Final weighted calculation
+  const finalConfidence = Math.round(
+    (contentScore * 0.4) + (sourceScore * 0.35) + (consensusScore * 0.25)
+  );
+  
+  return Math.min(Math.max(finalConfidence, 40), 95); // Ensure range 40-95%
 }
 
-// Helper function to calculate source reliability score
+// Enhanced source reliability scoring with comprehensive database
 function calculateReliabilityScore(url: string): number {
   if (!url) return 50;
   
   const domain = String(url || '').toLowerCase();
   
-  // High reliability sources
-  if (domain.includes('reuters.com') || domain.includes('apnews.com') || domain.includes('bbc.com')) {
-    return 95;
+  // Tier 1: Premium fact-checking and wire services (95-100%)
+  if (domain.includes('reuters.com') || domain.includes('apnews.com') || 
+      domain.includes('factcheck.org') || domain.includes('snopes.com')) {
+    return 98;
   }
   
-  // Fact-checking sites
-  if (domain.includes('factcheck.org') || domain.includes('snopes.com') || domain.includes('politifact.com')) {
-    return 90;
+  // Tier 2: Major international news and government (90-94%)
+  if (domain.includes('bbc.com') || domain.includes('npr.org') || 
+      domain.includes('politifact.com') || domain.includes('.gov') || 
+      domain.includes('who.int') || domain.includes('cdc.gov')) {
+    return 92;
   }
   
-  // Major news outlets
-  if (domain.includes('cnn.com') || domain.includes('npr.org') || domain.includes('nytimes.com')) {
-    return 85;
+  // Tier 3: Academic and established news (85-89%)
+  if (domain.includes('.edu') || domain.includes('nytimes.com') || 
+      domain.includes('guardian.com') || domain.includes('washingtonpost.com') ||
+      domain.includes('nature.com') || domain.includes('science.org')) {
+    return 87;
   }
   
-  // Government and educational sources
-  if (domain.includes('.gov') || domain.includes('.edu')) {
+  // Tier 4: Regional news and specialized sources (75-84%)
+  if (domain.includes('cnn.com') || domain.includes('foxnews.com') || 
+      domain.includes('wsj.com') || domain.includes('economist.com') ||
+      domain.includes('healthline.com') || domain.includes('mayoclinic.org')) {
     return 80;
   }
   
-  return 60; // Default reliability
+  // Tier 5: General sources (60-74%)
+  if (domain.includes('wikipedia.org') || domain.includes('britannica.com')) {
+    return 70;
+  }
+  
+  // Penalty for low-quality indicators
+  if (domain.includes('blog') || domain.includes('forum') || 
+      domain.includes('social') || domain.includes('reddit') ||
+      domain.includes('facebook') || domain.includes('twitter')) {
+    return 35;
+  }
+  
+  return 65; // Improved default reliability
 }
 
 function categorizeContent(content: string): string {

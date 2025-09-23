@@ -286,30 +286,55 @@ function analyzeImageContent(
 }
 
 function getStatusFromConfidence(confidence: number): string {
-  if (confidence >= 70) return 'verified';
-  if (confidence >= 40) return 'inconclusive';
+  if (confidence >= 80) return 'verified';
+  if (confidence >= 60) return 'inconclusive';
   return 'disputed';
 }
 
 function calculateImageConfidence(imageResult: ImageVerificationResult): number {
-  let confidence = Math.round((imageResult.contentAnalysis?.hasText ? 0.6 : 0.5) * 100);
-
-  // Adjust based on image quality
+  // Multi-factor image confidence calculation
+  
+  // Base confidence (40% weight) - content analysis
+  let contentScore = 50;
+  if (imageResult.contentAnalysis?.hasText) {
+    const textLength = (imageResult.ocrText || '').length;
+    if (textLength > 100) contentScore += 20;
+    else if (textLength > 50) contentScore += 12;
+    else if (textLength > 10) contentScore += 8;
+  }
+  
+  // Image quality (35% weight)
+  let qualityScore = 40;
   const quality = imageResult.contentAnalysis?.imageQuality;
-  if (quality === 'high') confidence += 15;
-  else if (quality === 'medium') confidence += 8;
-  else if (quality === 'low') confidence += 0;
-
-  // Penalize unsafe content
+  if (quality === 'high') qualityScore = 85;
+  else if (quality === 'medium') qualityScore = 70;
+  else if (quality === 'low') qualityScore = 45;
+  
+  // Safety and authenticity (25% weight)
+  let safetyScore = 80;
   const unsafeLevels = ['LIKELY', 'VERY_LIKELY'];
-  if (unsafeLevels.includes(imageResult.safeSearch.adult)) confidence -= 20;
-  if (unsafeLevels.includes(imageResult.safeSearch.violence)) confidence -= 15;
-  if (unsafeLevels.includes(imageResult.safeSearch.racy)) confidence -= 10;
+  if (unsafeLevels.includes(imageResult.safeSearch.adult)) safetyScore -= 30;
+  if (unsafeLevels.includes(imageResult.safeSearch.violence)) safetyScore -= 25;
+  if (unsafeLevels.includes(imageResult.safeSearch.racy)) safetyScore -= 15;
+  if (unsafeLevels.includes(imageResult.safeSearch.spoof)) safetyScore -= 20;
+  if (unsafeLevels.includes(imageResult.safeSearch.medical)) safetyScore -= 10;
+  
+  // Manipulation risk assessment
+  const manipulationRisk = imageResult.contentAnalysis?.manipulationRisk;
+  if (manipulationRisk === 'high') safetyScore -= 25;
+  else if (manipulationRisk === 'medium') safetyScore -= 15;
+  
+  // Label confidence from Google Vision
+  const avgLabelConfidence = imageResult.labels.length > 0 
+    ? imageResult.labels.reduce((sum: number, label: any) => sum + (label.score || 0), 0) / imageResult.labels.length
+    : 0.5;
+  const labelBonus = Math.round(avgLabelConfidence * 10);
+  
+  // Weighted final calculation
+  const finalConfidence = Math.round(
+    (contentScore * 0.4) + (qualityScore * 0.35) + (safetyScore * 0.25) + labelBonus
+  );
 
-  // OCR text presence slightly increases confidence
-  if ((imageResult.ocrText || '').length > 50) confidence += 5;
-
-  // Clamp
-  confidence = Math.max(10, Math.min(confidence, 90));
-  return confidence;
+  // Ensure proper range for image verification (40-90%)
+  return Math.max(40, Math.min(finalConfidence, 90));
 }

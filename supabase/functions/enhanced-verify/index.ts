@@ -146,40 +146,65 @@ async function verifyWithGovernmentSources(content: string, category: string): P
   }
 }
 
-// Enhanced consensus algorithm
+// Enhanced multi-factor consensus algorithm with improved scoring
 function calculateEnhancedConsensus(results: any[]): any {
+  // Updated source weights based on reliability and accuracy
   const weights = {
-    'claude': 1.4,    // High weight for reasoning
-    'gpt': 1.3,       // High weight for reasoning  
-    'perplexity': 1.2, // Good for real-time
-    'academic': 1.5,   // Highest for academic content
-    'government': 1.4, // High for official data
-    'factcheck': 1.3,  // High for fact-checkers
-    'news': 1.0,       // Baseline
-    'wikipedia': 0.9   // Lower weight
+    'claude': 1.5,      // Highest for reasoning capability
+    'gpt': 1.4,         // High for comprehensive analysis
+    'academic': 1.8,    // Premium for peer-reviewed content
+    'government': 1.6,  // High for official data
+    'factcheck': 1.7,   // Very high for dedicated fact-checkers
+    'perplexity': 1.3,  // Good for real-time data
+    'news': 1.1,        // Slightly above baseline
+    'wikipedia': 0.9,   // Lower but still valuable
+    'social': 0.6,      // Significantly reduced
+    'blog': 0.7,        // Reduced weight
+    'forum': 0.5        // Lowest weight
   };
   
   let totalWeighted = 0;
   let totalWeight = 0;
+  let qualityBonus = 0;
   
   for (const result of results) {
     const weight = weights[result.source] || 1.0;
-    totalWeighted += result.confidence * weight;
+    const confidence = Math.min(Math.max(result.confidence || 60, 40), 95);
+    
+    totalWeighted += confidence * weight;
     totalWeight += weight;
+    
+    // Quality bonus for high-confidence, high-weight sources
+    if (confidence >= 80 && weight >= 1.4) {
+      qualityBonus += 5;
+    }
   }
   
-  const consensus = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 50;
+  let consensus = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 60;
+  consensus = Math.min(consensus + qualityBonus, 95);
   
-  // Calculate agreement level
-  const confidences = results.map(r => r.confidence);
-  const variance = confidences.reduce((acc, conf) => {
-    const avg = confidences.reduce((a, b) => a + b) / confidences.length;
-    return acc + Math.pow(conf - avg, 2);
-  }, 0) / confidences.length;
+  // Enhanced agreement calculation with quality factors
+  const confidences = results.map(r => Math.min(Math.max(r.confidence || 60, 40), 95));
+  const mean = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+  const variance = confidences.reduce((acc, conf) => acc + Math.pow(conf - mean, 2), 0) / confidences.length;
+  const standardDev = Math.sqrt(variance);
   
-  const agreement = Math.max(0, 100 - Math.sqrt(variance));
+  // Agreement based on standard deviation and source quality
+  let agreement = Math.max(0, 100 - (standardDev * 2));
   
-  return { consensus, agreement, totalSources: results.length };
+  // Bonus for multiple high-quality sources in agreement
+  const highQualitySources = results.filter(r => (weights[r.source] || 1.0) >= 1.4).length;
+  if (highQualitySources >= 2 && standardDev < 15) {
+    agreement = Math.min(agreement + 10, 100);
+  }
+  
+  return { 
+    consensus: Math.min(Math.max(consensus, 40), 95), 
+    agreement: Math.round(agreement), 
+    totalSources: results.length,
+    highQualitySources,
+    standardDeviation: Math.round(standardDev)
+  };
 }
 
 serve(async (req) => {

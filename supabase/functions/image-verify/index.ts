@@ -291,27 +291,47 @@ function getStatusFromConfidence(confidence: number): string {
   return 'disputed';
 }
 
-function calculateImageConfidence(imageResult: ImageVerificationResult): number {
-  // Multi-factor image confidence calculation
+function calculateImageConfidence(imageResult: ImageVerificationResult, originalText: string = ''): number {
+  // Multi-factor image confidence calculation with content analysis
+  const safeText = String(originalText ?? '').toLowerCase();
   
-  // Base confidence (40% weight) - content analysis
+  // Base confidence (35% weight) - content analysis
   let contentScore = 50;
   if (imageResult.contentAnalysis?.hasText) {
     const textLength = (imageResult.ocrText || '').length;
     if (textLength > 100) contentScore += 20;
     else if (textLength > 50) contentScore += 12;
     else if (textLength > 10) contentScore += 8;
+    
+    // OCR content matching bonus
+    const ocrText = (imageResult.ocrText || '').toLowerCase();
+    if (ocrText.includes('official') || ocrText.includes('government') || 
+        ocrText.includes('verified') || ocrText.includes('authentic')) {
+      contentScore += 15; // Official document indicators
+    }
   }
   
-  // Image quality (35% weight)
+  // Definitiveness and fact category bonuses
+  if (safeText.includes('president') || safeText.includes('election') || 
+      safeText.includes('official') || safeText.includes('government')) {
+    contentScore += 18; // Political/official content bonus
+  }
+  
+  // Image quality (35% weight) - enhanced scoring
   let qualityScore = 40;
   const quality = imageResult.contentAnalysis?.imageQuality;
-  if (quality === 'high') qualityScore = 85;
-  else if (quality === 'medium') qualityScore = 70;
+  if (quality === 'high') qualityScore = 88; // Increased for high quality
+  else if (quality === 'medium') qualityScore = 72;
   else if (quality === 'low') qualityScore = 45;
   
-  // Safety and authenticity (25% weight)
-  let safetyScore = 80;
+  // Professional document indicators
+  if (imageResult.labels.some((label: any) => 
+      ['document', 'text', 'paper', 'certificate', 'official'].includes(label.description?.toLowerCase()))) {
+    qualityScore += 10; // Professional document bonus
+  }
+  
+  // Safety and authenticity (30% weight) - enhanced
+  let safetyScore = 85; // Higher baseline for authenticity
   const unsafeLevels = ['LIKELY', 'VERY_LIKELY'];
   if (unsafeLevels.includes(imageResult.safeSearch.adult)) safetyScore -= 30;
   if (unsafeLevels.includes(imageResult.safeSearch.violence)) safetyScore -= 25;
@@ -319,22 +339,31 @@ function calculateImageConfidence(imageResult: ImageVerificationResult): number 
   if (unsafeLevels.includes(imageResult.safeSearch.spoof)) safetyScore -= 20;
   if (unsafeLevels.includes(imageResult.safeSearch.medical)) safetyScore -= 10;
   
-  // Manipulation risk assessment
+  // Enhanced manipulation risk assessment
   const manipulationRisk = imageResult.contentAnalysis?.manipulationRisk;
   if (manipulationRisk === 'high') safetyScore -= 25;
   else if (manipulationRisk === 'medium') safetyScore -= 15;
+  else if (manipulationRisk === 'low') safetyScore += 8; // Bonus for low manipulation risk
   
-  // Label confidence from Google Vision
+  // Label confidence from Google Vision (enhanced weight)
   const avgLabelConfidence = imageResult.labels.length > 0 
     ? imageResult.labels.reduce((sum: number, label: any) => sum + (label.score || 0), 0) / imageResult.labels.length
     : 0.5;
-  const labelBonus = Math.round(avgLabelConfidence * 10);
+  const labelBonus = Math.round(avgLabelConfidence * 12); // Increased weight
+  
+  // Government/official content bonus
+  let officialBonus = 0;
+  const ocrText = (imageResult.ocrText || '').toLowerCase();
+  if (ocrText.includes('.gov') || ocrText.includes('department of') || 
+      ocrText.includes('united states') || ocrText.includes('official')) {
+    officialBonus = 15; // Government document bonus
+  }
   
   // Weighted final calculation
   const finalConfidence = Math.round(
-    (contentScore * 0.4) + (qualityScore * 0.35) + (safetyScore * 0.25) + labelBonus
+    (contentScore * 0.35) + (qualityScore * 0.35) + (safetyScore * 0.30) + labelBonus + officialBonus
   );
 
-  // Ensure proper range for image verification (40-90%)
-  return Math.max(40, Math.min(finalConfidence, 90));
+  // Enhanced range for image verification (40-95%)
+  return Math.max(40, Math.min(finalConfidence, 95));
 }

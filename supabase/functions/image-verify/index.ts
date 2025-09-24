@@ -36,38 +36,45 @@ serve(async (req) => {
     console.log('🚀 Starting image verification...');
     const { imageBase64, verificationId, userId } = await req.json();
     
-    if (!imageBase64 || !verificationId || !userId) {
+    if (!imageBase64) {
       return new Response(
-        JSON.stringify({ error: 'Missing required parameters' }),
+        JSON.stringify({ error: 'Image data is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
-    // Enforce quota limits for all users
-    console.log('🔒 Checking image verification usage limits...');
+    // Handle missing userId/verificationId gracefully for mobile compatibility
+    const isMissingFields = !userId || !verificationId;
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    const { data: quotaResult, error: quotaError } = await supabase.rpc('increment_license_usage', {
-      user_uuid: userId,
-      amount: 1
-    });
+    let quotaResult = null;
+    
+    if (!isMissingFields) {
+      // Only check quota and store results if we have complete data
+      console.log('🔒 Checking image verification usage limits...');
+      const { data, error: quotaError } = await supabase.rpc('increment_license_usage', {
+        user_uuid: userId,
+        amount: 1
+      });
+      quotaResult = { data, error: quotaError };
 
-    if (quotaError || !quotaResult?.success) {
-      console.log('❌ Image quota exceeded:', quotaError || quotaResult);
-      return new Response(
-        JSON.stringify({
-          confidence: 0,
-          status: 'failed',
-          summary: '**🚫 IMAGE VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying images.',
-          analysis: 'Image verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
-          sources: [],
-          source_consensus: 0,
-          verification_method: ['Quota Check'],
-          category: 'image',
-          created_at: new Date().toISOString(),
-          processing_time: 0,
+      if (quotaError || !data?.success) {
+        console.log('❌ Image quota exceeded:', quotaError || data);
+        return new Response(
+          JSON.stringify({
+            confidence: 0,
+            status: 'failed',
+            summary: '**🚫 IMAGE VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying images.',
+            analysis: 'Image verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+            sources: [],
+            source_consensus: 0,
+            verification_method: ['Quota Check'],
+            category: 'image',
+            created_at: new Date().toISOString(),
+            processing_time: 0,
           metadata: { 
             quota_exceeded: true, 
             limit: quotaResult?.limit || 5,
@@ -94,20 +101,26 @@ serve(async (req) => {
     // Verify the image with Google Vision API
     const imageResult = await verifyImageWithGoogleVision(imageBase64, googleVisionApiKey);
     
-    // Store the image verification results
-    const { error: insertError } = await supabase
-      .from('image_verifications')
-      .insert({
-        verification_id: verificationId,
-        ocr_text: imageResult.ocrText,
-        content_analysis: imageResult.contentAnalysis,
-        labels: imageResult.labels,
-        safe_search: imageResult.safeSearch,
-      });
+    // Store the image verification results only if we have complete data
+    if (!isMissingFields) {
+      const { error: insertError } = await supabase
+        .from('image_verifications')
+        .insert({
+          verification_id: verificationId,
+          user_id: userId,
+          image_data: imageBase64.substring(0, 1000),
+          confidence: calculateImageConfidence(imageResult),
+          status: getStatusFromConfidence(calculateImageConfidence(imageResult)),
+          summary: `Image analysis via Google Vision. Quality: ${imageResult.contentAnalysis?.imageQuality || 'Unknown'}`,
+          analysis: `OCR length: ${imageResult.ocrText?.length || 0}. Manipulation risk: ${imageResult.contentAnalysis?.manipulationRisk || 'Unknown'}`,
+          sources: [],
+          google_vision_result: imageResult,
+          created_at: new Date().toISOString()
+        });
 
-    if (insertError) {
-      console.error('Error storing image verification:', insertError);
-      throw new Error('Failed to store image verification results');
+      if (insertError) {
+        console.error('Error storing image verification:', insertError);
+      }
     }
 
     console.log('Image verification completed successfully');
@@ -132,8 +145,14 @@ serve(async (req) => {
       processing_time: processingTime,
     };
 
+    // Add metadata for mobile compatibility
+    const finalResult = {
+      ...result,
+      ...(isMissingFields && { metadata: { missing_fields: true } })
+    };
+
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify(finalResult),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

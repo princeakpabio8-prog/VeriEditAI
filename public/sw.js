@@ -1,5 +1,5 @@
 // Service Worker for PWA and offline support - Force mobile updates
-const SW_VERSION = 'v6';
+const SW_VERSION = 'v7';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -251,31 +251,53 @@ self.addEventListener('sync', (event) => {
 // Process offline verification queue
 async function processOfflineVerifications() {
   try {
-    const cache = await caches.open(OFFLINE_CACHE);
-    const request = await cache.match('/offline-queue');
+    const cache = await caches.open(SW_VERSION);
+    const keys = await cache.keys();
     
-    if (request) {
-      const response = await request.text();
-      const queue = JSON.parse(response);
-      
-      // Process queued verifications
-      for (const item of queue) {
-        try {
-          await fetch('/api/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(item)
-          });
+    for (const request of keys) {
+      if (request.url.includes('offline-verification-')) {
+        const response = await cache.match(request);
+        if (response) {
+          const verificationData = await response.json();
           
-          // Remove processed item from queue
-          const index = queue.indexOf(item);
-          if (index > -1) {
-            queue.splice(index, 1);
+          // Skip if missing required fields
+          if (!verificationData.content && !verificationData.imageBase64) {
+            console.log('Skipping verification with missing content');
+            await cache.delete(request);
+            continue;
           }
-        } catch (error) {
-          console.error('Failed to process offline verification:', error);
+          
+          try {
+            // Determine which function to call based on content type
+            const isImage = verificationData.contentType === 'image' || verificationData.imageBase64;
+            const functionName = isImage ? 'image-verify' : 'verify';
+            const functionUrl = `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/${functionName}`;
+            
+            const result = await fetch(functionUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxdGtremRzd3hhenlpa2NoZWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MDM1NDEsImV4cCI6MjA3MzA3OTU0MX0.1vQ2RDB5dgsmUwfiy9KeVuS0P6gHlKSAUsMVo5-5vto`
+              },
+              body: JSON.stringify(verificationData)
+            });
+            
+            if (result.ok) {
+              // Success - remove from cache and store result
+              await cache.delete(request);
+              const resultData = await result.json();
+              await cache.put(
+                new Request(`verification-result-${verificationData.id}`),
+                new Response(JSON.stringify(resultData))
+              );
+            }
+          } catch (error) {
+            console.log('Failed to sync verification:', error);
+            // Keep in cache for retry
+          }
         }
       }
+    }
       
       // Update the queue
       await cache.put('/offline-queue', new Response(JSON.stringify(queue)));

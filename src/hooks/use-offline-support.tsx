@@ -162,22 +162,41 @@ export const useOfflineSupport = () => {
   };
 
   const processVerificationItem = async (item: OfflineQueueItem): Promise<void> => {
-    const response = await fetch('/api/verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(item.data)
-    });
+    try {
+      // Skip if missing required fields
+      if (!item.data.content && !item.data.imageBase64) {
+        console.log('Skipping verification item with missing content');
+        return;
+      }
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Import supabase client dynamically to avoid circular dependencies
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Determine which function to call based on content type
+      const isImage = item.data.contentType === 'image' || item.data.imageBase64;
+      const functionName = isImage ? 'image-verify' : 'verify';
+      
+      const { data: result, error } = await supabase.functions.invoke(functionName, {
+        body: item.data
+      });
+
+      if (error) {
+        throw new Error(`Verification failed: ${error.message}`);
+      }
+
+      if (result) {
+        // Update cache with server result
+        const { enhancedVerificationCache } = await import('@/lib/enhanced-verification-cache');
+        enhancedVerificationCache.set(
+          item.data.content || '',
+          item.data.userId || '',
+          result
+        );
+      }
+    } catch (error) {
+      console.error('Failed to process verification item:', error);
+      throw error;
     }
-
-    const result = await response.json();
-    
-    // Update cache with server result
-    verificationCache.result(item.data.verificationId, result);
   };
 
   const processAnalyticsItem = async (item: OfflineQueueItem): Promise<void> => {

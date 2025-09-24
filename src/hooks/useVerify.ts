@@ -314,8 +314,35 @@ export function useVerify() {
         error: (err as any)?.name || 'UnknownError'
       });
       
-      // Capture detailed error information
+      // Enhanced mobile diagnostics
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const diagnostics = {
+        operation: 'verification',
+        userId,
+        contentLength: content.length,
+        hasVerificationData: !!verificationData,
+        isMobile,
+        isOnline: navigator.onLine,
+        userAgent: navigator.userAgent,
+        swVersion: null as string | null
+      };
+      
+      // Try to get SW version for mobile debugging
+      if (isMobile && 'serviceWorker' in navigator) {
+        try {
+          const response = await fetch('/sw-version');
+          if (response.ok) {
+            const swInfo = await response.json();
+            diagnostics.swVersion = swInfo.version;
+          }
+        } catch (swError) {
+          console.log('Could not get SW version:', swError);
+        }
+      }
+      
+      // Capture detailed error information with diagnostics
       errorTracker.captureError(err instanceof Error ? err : new Error('Verification failed'));
+      console.log('Mobile verification diagnostics:', diagnostics);
       
       let errorMessage = 'Verification failed - please try again';
       

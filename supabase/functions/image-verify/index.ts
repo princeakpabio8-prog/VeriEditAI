@@ -50,8 +50,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    let quotaResult = null;
-    
     if (!isMissingFields) {
       // Only check quota and store results if we have complete data
       console.log('🔒 Checking image verification usage limits...');
@@ -59,7 +57,6 @@ serve(async (req) => {
         user_uuid: userId,
         amount: 1
       });
-      quotaResult = { data, error: quotaError };
 
       if (quotaError || !data?.success) {
         console.log('❌ Image quota exceeded:', quotaError || data);
@@ -75,14 +72,15 @@ serve(async (req) => {
             category: 'image',
             created_at: new Date().toISOString(),
             processing_time: 0,
-          metadata: { 
-            quota_exceeded: true, 
-            limit: quotaResult?.limit || 5,
-            error_type: 'quota_limit'
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-      );
+            metadata: { 
+              quota_exceeded: true, 
+              limit: data?.limit || 5,
+              error_type: 'quota_limit'
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        );
+      }
     }
     console.log('✅ Image quota check passed');
 
@@ -92,7 +90,6 @@ serve(async (req) => {
     if (!googleVisionApiKey) {
       throw new Error('Google Vision API key not configured');
     }
-
 
     // Verify the image with Google Vision API
     const imageResult = await verifyImageWithGoogleVision(imageBase64, googleVisionApiKey);
@@ -306,9 +303,8 @@ function getStatusFromConfidence(confidence: number): string {
   return 'disputed';
 }
 
-function calculateImageConfidence(imageResult: ImageVerificationResult, originalText: string = ''): number {
+function calculateImageConfidence(imageResult: ImageVerificationResult): number {
   // Multi-factor image confidence calculation with content analysis
-  const safeText = String(originalText ?? '').toLowerCase();
   
   // Base confidence (35% weight) - content analysis
   let contentScore = 50;
@@ -324,12 +320,6 @@ function calculateImageConfidence(imageResult: ImageVerificationResult, original
         ocrText.includes('verified') || ocrText.includes('authentic')) {
       contentScore += 15; // Official document indicators
     }
-  }
-  
-  // Definitiveness and fact category bonuses
-  if (safeText.includes('president') || safeText.includes('election') || 
-      safeText.includes('official') || safeText.includes('government')) {
-    contentScore += 18; // Political/official content bonus
   }
   
   // Image quality (35% weight) - enhanced scoring

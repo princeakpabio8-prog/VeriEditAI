@@ -126,7 +126,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     } else {
-      await updateLog(supabaseService, logId, "failed", result.error);
+      await updateLog(supabaseService, logId, "failed", result.error || null);
       console.error("Webhook processing failed:", result.error);
       
       return new Response(JSON.stringify({ 
@@ -142,7 +142,7 @@ serve(async (req) => {
     console.error("Webhook error:", error);
     
     if (logId) {
-      await updateLog(supabaseService, logId, "failed", error.message);
+      await updateLog(supabaseService, logId, "failed", (error as Error).message);
     }
 
     return new Response(JSON.stringify({ 
@@ -357,7 +357,7 @@ async function handleSuccessfulPayment(
     console.error("Error processing successful payment:", error);
     return { 
       success: false, 
-      error: error.message 
+      error: (error as Error).message 
     };
   }
 }
@@ -410,7 +410,7 @@ async function handleFailedPayment(
     console.error("Error processing failed payment:", error);
     return { 
       success: false, 
-      error: error.message 
+      error: (error as Error).message 
     };
   }
 }

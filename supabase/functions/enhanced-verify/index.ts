@@ -129,7 +129,7 @@ async function verifyWithGovernmentSources(content: string, category: string): P
   
   try {
     // Example: CDC for health, EPA for environment, etc.
-    const sources = [];
+    const sources: Array<{ url: string; title: string; credibility: number }> = [];
     let confidence = 50;
     let analysis = 'No government sources found.';
     
@@ -170,7 +170,7 @@ function calculateEnhancedConsensus(results: any[], originalContent: string = ''
   let qualityBonus = 0;
   
   for (const result of results) {
-    const weight = weights[result.source] || 1.0;
+    const weight = weights[result.source as keyof typeof weights] || 1.0;
     const confidence = Math.min(Math.max(result.confidence || 60, 40), 98);
     
     totalWeighted += confidence * weight;
@@ -197,7 +197,7 @@ function calculateEnhancedConsensus(results: any[], originalContent: string = ''
   let agreement = Math.max(0, 100 - (standardDev * 2));
   
   // Bonus for multiple high-quality sources in agreement
-  const highQualitySources = results.filter(r => (weights[r.source] || 1.0) >= 1.4).length;
+  const highQualitySources = results.filter(r => (weights[r.source as keyof typeof weights] || 1.0) >= 1.4).length;
   const govSources = results.filter(r => r.source === 'government').length;
   
   if (highQualitySources >= 2 && standardDev < 15) {

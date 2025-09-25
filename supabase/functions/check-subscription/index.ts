@@ -103,7 +103,7 @@ serve(async (req) => {
       subscribed: hasActiveSub,
       subscription_tier: subscriptionTier,
       subscription_end: subscriptionEnd,
-      monthly_usage,
+      monthly_usage: monthlyUsage,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
 

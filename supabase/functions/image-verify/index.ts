@@ -93,10 +93,6 @@ serve(async (req) => {
       throw new Error('Google Vision API key not configured');
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Verify the image with Google Vision API
     const imageResult = await verifyImageWithGoogleVision(imageBase64, googleVisionApiKey);

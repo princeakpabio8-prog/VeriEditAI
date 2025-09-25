@@ -17,6 +17,7 @@ import About from "./pages/About";
 import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 import VerificationDashboard from "./components/VerificationDashboard";
+import Demo from "./pages/Demo";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/demo" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/demo" element={<Demo />} />
             <Route 
               path="/dashboard" 
               element={

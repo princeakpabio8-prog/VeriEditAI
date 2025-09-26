@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Pause, ArrowRight } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const VideoDemoSection = () => {
@@ -10,6 +10,7 @@ export const VideoDemoSection = () => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
 
   const togglePlay = () => {
@@ -20,6 +21,13 @@ export const VideoDemoSection = () => {
         videoRef.current.play();
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
     }
   };
 
@@ -57,13 +65,17 @@ export const VideoDemoSection = () => {
               >
                 <video
                   ref={videoRef}
-                  className="w-full aspect-video object-cover"
+                  className="w-full aspect-video object-contain bg-black rounded-lg"
                   src="/assets/demo-video.mp4"
-                  muted
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   poster="/placeholder.svg"
                   preload="metadata"
+                  onLoadedMetadata={() => {
+                    if (videoRef.current) {
+                      videoRef.current.volume = 0.7;
+                    }
+                  }}
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -71,17 +83,32 @@ export const VideoDemoSection = () => {
                 {/* Video Overlay */}
                 {(!isPlaying || showControls) && (
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity duration-300">
-                    <Button
-                      onClick={togglePlay}
-                      size="lg"
-                      className="bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg"
-                    >
-                      {isPlaying ? (
-                        <Pause className="h-8 w-8" />
-                      ) : (
-                        <Play className="h-8 w-8 ml-1" />
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        onClick={togglePlay}
+                        size="lg"
+                        className="bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg"
+                      >
+                        {isPlaying ? (
+                          <Pause className="h-8 w-8" />
+                        ) : (
+                          <Play className="h-8 w-8 ml-1" />
+                        )}
+                      </Button>
+                      
+                      <Button
+                        onClick={toggleMute}
+                        size="lg"
+                        variant="secondary"
+                        className="bg-background/90 hover:bg-background text-foreground shadow-lg"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-6 w-6" />
+                        ) : (
+                          <Volume2 className="h-6 w-6" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 )}
 

@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigation } from "@/components/ui/navigation";
 import { HeroSection } from "@/components/hero-section";
+import { VideoDemoSection } from "@/components/video-demo-section";
 import { VerificationUpload } from "@/components/verification-upload";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +35,8 @@ const Index = () => {
       
       <main>
         <HeroSection />
+        
+        <VideoDemoSection />
         
         {/* Verification Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8">

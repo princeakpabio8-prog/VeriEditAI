@@ -43,11 +43,14 @@ export const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link to="/demo">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                Watch Demo
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="text-lg px-8 py-6"
+              onClick={() => document.getElementById('demo-video')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Watch Demo
+            </Button>
           </div>
 
           {/* Stats */}

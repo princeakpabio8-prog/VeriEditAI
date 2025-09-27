@@ -69,7 +69,6 @@ export const VideoDemoSection = () => {
                   src="/assets/demo-video.mp4"
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
-                  poster="/placeholder.svg"
                   preload="metadata"
                   onLoadedMetadata={() => {
                     if (videoRef.current) {

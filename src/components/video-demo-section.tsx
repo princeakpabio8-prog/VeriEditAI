@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,13 +12,28 @@ export const VideoDemoSection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
       } else {
-        videoRef.current.play();
+        videoRef.current.play().catch(() => {
+          // Handle autoplay restrictions on mobile
+          console.log('Autoplay was prevented');
+        });
       }
       setIsPlaying(!isPlaying);
     }
@@ -60,16 +75,20 @@ export const VideoDemoSection = () => {
             <CardContent className="p-0">
               <div 
                 className="relative group"
-                onMouseEnter={() => setShowControls(true)}
-                onMouseLeave={() => setShowControls(false)}
+                onMouseEnter={() => !isMobile && setShowControls(true)}
+                onMouseLeave={() => !isMobile && setShowControls(false)}
+                onClick={() => isMobile && setShowControls(!showControls)}
               >
                 <video
                   ref={videoRef}
-                  className="w-full aspect-video object-contain bg-black rounded-lg"
+                  className="w-full aspect-video object-contain bg-black rounded-lg cursor-pointer"
                   src="/assets/demo-video.mp4"
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   preload="metadata"
+                  playsInline
+                  webkit-playsinline="true"
+                  onClick={isMobile ? togglePlay : undefined}
                   onLoadedMetadata={() => {
                     if (videoRef.current) {
                       videoRef.current.volume = 0.7;
@@ -80,31 +99,31 @@ export const VideoDemoSection = () => {
                 </video>
 
                 {/* Video Overlay */}
-                {(!isPlaying || showControls) && (
+                {(!isPlaying || showControls || isMobile) && (
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity duration-300">
-                    <div className="flex items-center gap-4">
+                    <div className={`flex items-center gap-4 ${isMobile ? 'gap-6' : 'gap-4'}`}>
                       <Button
                         onClick={togglePlay}
-                        size="lg"
-                        className="bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg"
+                        size={isMobile ? "lg" : "lg"}
+                        className={`bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg ${isMobile ? 'h-16 w-16 rounded-full' : ''}`}
                       >
                         {isPlaying ? (
-                          <Pause className="h-8 w-8" />
+                          <Pause className={`${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`} />
                         ) : (
-                          <Play className="h-8 w-8 ml-1" />
+                          <Play className={`${isMobile ? 'h-10 w-10 ml-1' : 'h-8 w-8 ml-1'}`} />
                         )}
                       </Button>
                       
                       <Button
                         onClick={toggleMute}
-                        size="lg"
+                        size={isMobile ? "lg" : "lg"}
                         variant="secondary"
-                        className="bg-background/90 hover:bg-background text-foreground shadow-lg"
+                        className={`bg-background/90 hover:bg-background text-foreground shadow-lg ${isMobile ? 'h-16 w-16 rounded-full' : ''}`}
                       >
                         {isMuted ? (
-                          <VolumeX className="h-6 w-6" />
+                          <VolumeX className={`${isMobile ? 'h-8 w-8' : 'h-6 w-6'}`} />
                         ) : (
-                          <Volume2 className="h-6 w-6" />
+                          <Volume2 className={`${isMobile ? 'h-8 w-8' : 'h-6 w-6'}`} />
                         )}
                       </Button>
                     </div>

@@ -13,6 +13,8 @@ export const VideoDemoSection = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   // Detect mobile device
   useEffect(() => {
@@ -79,24 +81,40 @@ export const VideoDemoSection = () => {
                 onMouseLeave={() => !isMobile && setShowControls(false)}
                 onClick={() => isMobile && setShowControls(!showControls)}
               >
-                <video
-                  ref={videoRef}
-                  className="w-full aspect-video object-contain bg-black rounded-lg cursor-pointer"
-                  src="/assets/demo-video.mp4"
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  preload="metadata"
-                  playsInline
-                  webkit-playsinline="true"
-                  onClick={isMobile ? togglePlay : undefined}
-                  onLoadedMetadata={() => {
-                    if (videoRef.current) {
-                      videoRef.current.volume = 0.7;
-                    }
-                  }}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                {videoError ? (
+                  <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
+                    <div className="text-center p-8">
+                      <p className="text-muted-foreground mb-4">Video preview not available</p>
+                      <Button onClick={handleWatchFull} variant="outline">
+                        Watch Full Demo
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    className="w-full aspect-video object-contain bg-black rounded-lg cursor-pointer"
+                    src="/assets/demo-video.mp4"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onLoadedData={() => setVideoLoaded(true)}
+                    onError={() => {
+                      console.log('Video failed to load on mobile');
+                      setVideoError(true);
+                    }}
+                    preload={isMobile ? "none" : "metadata"}
+                    playsInline
+                    muted={isMobile} // Start muted on mobile to help with autoplay
+                    onClick={isMobile ? togglePlay : undefined}
+                    onLoadedMetadata={() => {
+                      if (videoRef.current && !isMobile) {
+                        videoRef.current.volume = 0.7;
+                      }
+                    }}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                )}
 
                 {/* Video Overlay */}
                 {(!isPlaying || showControls || isMobile) && (

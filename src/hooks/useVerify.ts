@@ -230,11 +230,16 @@ export function useVerify() {
           console.log(`✅ Verification successful in ${processingTime}ms`);
           console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
 
-          // Normalize status and category to prevent toLowerCase errors
+          // Safely normalize status and category to prevent toLowerCase errors on mobile
+          const safeStatus = data.status ?? '';
+          const safeCategory = data.category ?? '';
+          
           const normalizedData = {
             ...data,
-            status: typeof data.status === 'string' ? data.status.toLowerCase() : 'unknown',
-            category: typeof data.category === 'string' ? data.category.toLowerCase() : 'general'
+            status: (typeof safeStatus === 'string' && safeStatus.length > 0) ? safeStatus.toLowerCase() : 'unknown',
+            category: (typeof safeCategory === 'string' && safeCategory.length > 0) ? safeCategory.toLowerCase() : 'general',
+            summary: String(data.summary || 'Verification completed'),
+            analysis: String(data.analysis || 'Analysis completed')
           } as VerifyResult;
 
           if (typeof data.status !== 'string' && data.status != null) {

@@ -27,6 +27,11 @@ export const VideoDemoSection = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted || isMobile;
+    }
+  }, [isMuted, isMobile]);
   const togglePlay = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -37,7 +42,7 @@ export const VideoDemoSection = () => {
           console.log('Autoplay was prevented');
         });
       }
-      setIsPlaying(!isPlaying);
+      // State is updated via onPlay/onPause events
     }
   };
 
@@ -102,9 +107,11 @@ export const VideoDemoSection = () => {
                       console.log('Video failed to load on mobile');
                       setVideoError(true);
                     }}
-                    preload={isMobile ? "none" : "metadata"}
+                    preload="metadata"
                     playsInline
-                    muted={isMobile} // Start muted on mobile to help with autoplay
+                    // @ts-ignore - for iOS Safari inline playback
+                    webkit-playsinline="true"
+                    muted={isMuted || isMobile} // Ensure muted on mobile and reflect user toggle
                     onClick={isMobile ? togglePlay : undefined}
                     onLoadedMetadata={() => {
                       if (videoRef.current && !isMobile) {

@@ -1,5 +1,5 @@
 // Service Worker for PWA and offline support - Force mobile updates
-const SW_VERSION = 'v7';
+const SW_VERSION = 'v8';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -28,7 +28,7 @@ const OFFLINE_FALLBACK_ROUTES = [
 
 // Install event - cache static assets and force immediate activation
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing v6 - force mobile updates...');
+  console.log('Service Worker installing v8 - force mobile updates...');
   
   event.waitUntil(
     Promise.all([
@@ -73,7 +73,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches and immediately take control
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating v6...');
+  console.log('Service Worker activating v8...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -93,7 +93,7 @@ self.addEventListener('activate', (event) => {
       // Notify all clients to reload for latest updates on mobile
       return self.clients.matchAll().then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v6' });
+          client.postMessage({ type: 'SW_UPDATED', version: 'v8' });
         });
       });
     })
@@ -104,20 +104,28 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-  
-  // Skip cross-origin requests
-  if (url.origin !== self.location.origin) {
+
+  // Only handle same-origin GET requests
+  if (request.method !== 'GET' || url.origin !== self.location.origin) {
     return;
   }
 
   // Special endpoint to report SW version
   if (url.pathname === '/sw-version') {
     event.respondWith(new Response(JSON.stringify({ version: SW_VERSION, cacheName: CACHE_NAME, offlineCache: OFFLINE_CACHE }), { headers: { 'Content-Type': 'application/json' } }));
+    return;
+  }
+
+  // Bypass caching for Range requests (used by media streaming)
+  if (request.headers.has('range')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Bypass caching for media files to avoid partial content issues on mobile
+  const mediaExtRegex = /\.(mp4|webm|mov|m4v|mp3|wav|m4a|ogg)$/i;
+  if (mediaExtRegex.test(url.pathname)) {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 

@@ -20,6 +20,8 @@ export default function VerificationDashboard() {
     await verify(input.trim(), user.id, true); // Bypass cache
   };
 
+  const displayStatus = String(result?.status || 'unknown');
+
   return (
     <div className="p-6 max-w-2xl mx-auto text-white">
       <div className="mb-6">
@@ -91,11 +93,11 @@ export default function VerificationDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-white">Verification Result</h2>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-              result.status === 'verified' ? 'bg-green-900/30 text-green-400 border border-green-700' :
-              result.status === 'flagged' ? 'bg-red-900/30 text-red-400 border border-red-700' :
+              displayStatus === 'verified' ? 'bg-green-900/30 text-green-400 border border-green-700' :
+              displayStatus === 'flagged' ? 'bg-red-900/30 text-red-400 border border-red-700' :
               'bg-yellow-900/30 text-yellow-400 border border-yellow-700'
             }`}>
-              {result.status.charAt(0).toUpperCase() + result.status.slice(1).replace('_', ' ')}
+              {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).replace('_', ' ')}
             </div>
           </div>
           

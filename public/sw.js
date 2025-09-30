@@ -1,5 +1,5 @@
-// Service Worker for PWA and offline support - Force mobile updates
-const SW_VERSION = 'v8';
+// Service Worker for PWA and offline support - Optimized for mobile
+const SW_VERSION = 'v9';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -26,15 +26,19 @@ const OFFLINE_FALLBACK_ROUTES = [
   '/api/analytics'
 ];
 
-// Install event - cache static assets and force immediate activation
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing v8 - force mobile updates...');
+  console.log('Service Worker installing v9...');
   
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAME).then((cache) => {
         console.log('Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
+        return cache.addAll(STATIC_ASSETS).catch((err) => {
+          console.warn('Failed to cache some assets:', err);
+          // Continue even if some assets fail to cache
+          return Promise.resolve();
+        });
       }),
       caches.open(OFFLINE_CACHE).then((cache) => {
         console.log('Setting up offline cache');
@@ -64,16 +68,14 @@ self.addEventListener('install', (event) => {
           headers: { 'Content-Type': 'text/html' }
         }));
       })
-    ]).then(() => {
-      // Force immediate activation to replace old service workers
-      return self.skipWaiting();
-    })
+    ])
+    // Don't skip waiting - let the browser handle updates naturally
   );
 });
 
-// Activate event - clean up old caches and immediately take control
+// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating v8...');
+  console.log('Service Worker activating v9...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -86,16 +88,9 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('Service Worker taking control of all clients...');
-      // Force all clients to use new service worker immediately
-      return self.clients.claim();
-    }).then(() => {
-      // Notify all clients to reload for latest updates on mobile
-      return self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'SW_UPDATED', version: 'v8' });
-        });
-      });
+      console.log('Service Worker activated - ready for next page load');
+      // Only claim clients if explicitly requested (via message)
+      // Don't force immediate takeover to avoid disrupting current sessions
     })
   );
 });
@@ -122,9 +117,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Bypass caching for media files to avoid partial content issues on mobile
-  const mediaExtRegex = /\.(mp4|webm|mov|m4v|mp3|wav|m4a|ogg)$/i;
+  // Bypass caching for all media files to prevent mobile playback issues
+  const mediaExtRegex = /\.(mp4|webm|mov|m4v|mp3|wav|m4a|ogg|avi|flv|mkv)$/i;
   if (mediaExtRegex.test(url.pathname)) {
+    event.respondWith(
+      fetch(request, { 
+        cache: 'no-store',
+        // Important for mobile Safari
+        credentials: 'same-origin'
+      })
+    );
+    return;
+  }
+
+  // Also bypass for video-related API calls
+  if (url.pathname.includes('/video') || url.pathname.includes('/media')) {
     event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
@@ -323,7 +330,21 @@ self.addEventListener('message', (event) => {
   if (!type) return;
 
   if (type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    event.waitUntil(
+      self.skipWaiting().then(() => {
+        // Notify all clients that update is ready
+        return self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'SW_READY', version: SW_VERSION });
+          });
+        });
+      })
+    );
+    return;
+  }
+  
+  if (type === 'CLAIM_CLIENTS') {
+    event.waitUntil(self.clients.claim());
     return;
   }
 

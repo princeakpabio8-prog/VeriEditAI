@@ -20,32 +20,38 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>
 );
 
-// Register service worker for PWA functionality with auto-updates
+// Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('SW registered: ', registration);
         
-        // Listen for service worker updates
+        // Listen for service worker updates - notify instead of auto-reload
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New service worker available, reloading...');
-                // Auto-reload for critical mobile compatibility updates
-                setTimeout(() => window.location.reload(), 1000);
+                console.log('New service worker available');
+                
+                // Show notification instead of auto-reload
+                if ('Notification' in window && Notification.permission === 'granted') {
+                  new Notification('Update Available', {
+                    body: 'A new version is available. Refresh to update.',
+                    icon: '/favicon.ico'
+                  });
+                }
               }
             });
           }
         });
         
-        // Check for updates every 10 seconds on mobile
+        // Check for updates every 5 minutes on mobile (not 10 seconds)
         if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
           setInterval(() => {
             registration.update().catch(() => {}); // Silent update check
-          }, 10000);
+          }, 5 * 60 * 1000); // Check every 5 minutes
         }
       })
       .catch((registrationError) => {

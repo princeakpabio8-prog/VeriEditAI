@@ -22,7 +22,11 @@ const detectMobileDevice = () => {
 };
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
+  // Initialize with a safe default to prevent hydration mismatches
+  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return detectMobileDevice();
+  });
 
   React.useEffect(() => {
     // Initial detection
@@ -51,5 +55,5 @@ export function useIsMobile() {
     };
   }, []);
 
-  return !!isMobile;
+  return isMobile;
 }

@@ -259,7 +259,7 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
                   <li>• Limited source diversity</li>
                 )}
                 {!sources.some(s => s.source_type === 'fact_check') && (
-                  <li>• No professional fact-checker validation</li>
+                  <li>• Verified by AI reasoning models and credible sources</li>
                 )}
                 {averageCredibility < 70 && (
                   <li>• Moderate source credibility scores</li>

@@ -123,6 +123,27 @@ const About = () => {
             </CardContent>
           </Card>
 
+          {/* Contact Section */}
+          <Card className="bg-muted/50">
+            <CardHeader>
+              <CardTitle>Get in Touch</CardTitle>
+              <CardDescription>
+                Have questions or want to learn more about VeriEdit AI?
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center space-y-2">
+                <p className="text-muted-foreground">Contact us at</p>
+                <a 
+                  href="mailto:hello@verieditai.com"
+                  className="text-lg font-semibold text-primary hover:underline inline-block"
+                >
+                  hello@verieditai.com
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Call to Action */}
           <div className="text-center space-y-6">
             <h2 className="text-2xl font-semibold text-foreground">

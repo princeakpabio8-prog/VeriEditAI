@@ -65,6 +65,12 @@ const Footer = () => {
               <Link to="/about" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Leadership Team
               </Link>
+              <a 
+                href="mailto:hello@verieditai.com"
+                className="block text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Contact Us
+              </a>
             </div>
           </div>
         </div>

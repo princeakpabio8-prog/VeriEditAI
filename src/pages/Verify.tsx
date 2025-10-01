@@ -14,6 +14,8 @@ import { useVerify } from '@/hooks/useVerify';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileVerificationUI } from '@/components/mobile-verification-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { normalizeVerifyResult } from '@/lib/normalizers';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 interface VerificationState {
   stage: 'upload' | 'completed';
@@ -43,10 +45,13 @@ export default function Verify() {
         toast('Showing a similar cached result due to network issues.');
       }
       
+      // Normalize result before setting state to ensure safe types
+      const normalizedResult = fresh ? normalizeVerifyResult(fresh) : null;
+      
       setVerificationState({
         stage: 'completed',
         content: data.content,
-        result: fresh || result
+        result: normalizedResult || result
       });
       
     } catch (error) {
@@ -91,12 +96,14 @@ export default function Verify() {
               </p>
             </div>
 
-            <MobileVerificationUI
-              onVerify={handleVerificationStart}
-              loading={loading}
-              result={result}
-              error={error}
-            />
+            <ErrorBoundary>
+              <MobileVerificationUI
+                onVerify={handleVerificationStart}
+                loading={loading}
+                result={result}
+                error={error}
+              />
+            </ErrorBoundary>
           </main>
         </div>
       </MobileOptimizedUI>

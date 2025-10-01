@@ -256,9 +256,10 @@ export function MobileVerificationUI({
   };
 
   const getStatusColor = (status: string | undefined) => {
-    if (!status) return 'bg-gray-500/10 text-gray-700 border-gray-200';
+    const safeStatus = typeof status === 'string' ? status : undefined;
+    if (!safeStatus) return 'bg-gray-500/10 text-gray-700 border-gray-200';
     
-    switch (status) {
+    switch (safeStatus) {
       case 'completed': 
       case 'verified': return 'bg-green-500/10 text-green-700 border-green-200';
       case 'flagged': 
@@ -269,9 +270,10 @@ export function MobileVerificationUI({
   };
 
   const getStatusIcon = (status: string | undefined) => {
-    if (!status) return <Info className="h-4 w-4" />;
+    const safeStatus = typeof status === 'string' ? status : undefined;
+    if (!safeStatus) return <Info className="h-4 w-4" />;
     
-    switch (status) {
+    switch (safeStatus) {
       case 'completed': 
       case 'verified': return <CheckCircle className="h-4 w-4" />;
       case 'flagged': 

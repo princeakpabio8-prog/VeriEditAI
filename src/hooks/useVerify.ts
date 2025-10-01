@@ -5,6 +5,7 @@ import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
 import { useEnhancedToast } from '@/components/enhanced-toast';
 import { errorTracker, performanceMonitor } from '@/lib/error-tracking';
 import { verificationAnalytics } from '@/lib/verification-analytics';
+import { normalizeVerifyResult } from '@/lib/normalizers';
 
 interface VerifyResult {
   confidence: number;
@@ -105,11 +106,11 @@ export function useVerify() {
             userId
           });
           
-          const flagged = { ...(cachedResult as any), fromCache: true } as VerifyResult;
-          setResult(flagged);
+          const normalized = normalizeVerifyResult({ ...(cachedResult as any), fromCache: true });
+          setResult(normalized as any);
           showCacheHit('content');
           setLoading(false);
-          return flagged;
+          return normalized as any;
         }
 
         // Check enhanced cache
@@ -125,11 +126,11 @@ export function useVerify() {
             userId
           });
           
-          const flagged = { ...(enhancedCached as any), fromEnhancedCache: true } as VerifyResult;
-          setResult(flagged);
+          const normalized = normalizeVerifyResult({ ...(enhancedCached as any), fromEnhancedCache: true });
+          setResult(normalized as any);
           showCacheHit('content');
           setLoading(false);
-          return flagged;
+          return normalized as any;
         }
       } else {
         console.log('⚡ Bypassing cache for fresh verification');
@@ -202,16 +203,10 @@ export function useVerify() {
             showVerificationError(`🚫 Verification Limit Reached\n\nYou've reached your monthly limit of ${data.metadata.limit || 5} verifications. Upgrade for unlimited access.`);
             setError('Verification limit exceeded. Please upgrade your plan.');
             
-            // Ensure response has proper string fields for mobile compatibility
-            const quotaResult = {
-              ...data,
-              status: String(data.status || 'failed'),
-              category: String(data.category || 'general'),
-              summary: String(data.summary || 'Quota exceeded'),
-              analysis: String(data.analysis || 'Upgrade required')
-            };
-            setResult(quotaResult);
-            return quotaResult; // Return the quota response
+            // Normalize quota result to ensure safe types
+            const quotaResult = normalizeVerifyResult(data);
+            setResult(quotaResult as any);
+            return quotaResult as any;
           }
 
           // Validation
@@ -230,24 +225,8 @@ export function useVerify() {
           console.log(`✅ Verification successful in ${processingTime}ms`);
           console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
 
-          // Safely normalize status and category to prevent toLowerCase errors on mobile
-          const safeStatus = data.status ?? '';
-          const safeCategory = data.category ?? '';
-          
-          const normalizedData = {
-            ...data,
-            status: (typeof safeStatus === 'string' && safeStatus.length > 0) ? safeStatus.toLowerCase() : 'unknown',
-            category: (typeof safeCategory === 'string' && safeCategory.length > 0) ? safeCategory.toLowerCase() : 'general',
-            summary: String(data.summary || 'Verification completed'),
-            analysis: String(data.analysis || 'Analysis completed')
-          } as VerifyResult;
-
-          if (typeof data.status !== 'string' && data.status != null) {
-            console.warn('useVerify: Non-string status received from API:', data.status);
-          }
-          if (typeof data.category !== 'string' && data.category != null) {
-            console.warn('useVerify: Non-string category received from API:', data.category);
-          }
+          // Use normalizer to ensure safe types
+          const normalizedData = normalizeVerifyResult(data) as VerifyResult;
 
           // Track successful verification analytics
           verificationAnalytics.trackVerification({
@@ -287,14 +266,14 @@ export function useVerify() {
         if (similarResults.length > 0) {
           console.log('🔄 Using similar cached result as fallback');
           const fallbackResult = similarResults[0];
-          const flagged = {
+          const normalized = normalizeVerifyResult({
             ...(fallbackResult.result as any),
             fromFallback: true,
             originalError: lastError?.message
-          } as VerifyResult;
-          setResult(flagged);
-          showVerificationSuccess(fallbackResult.result.confidence || 0, Date.now() - startTime);
-          return flagged;
+          });
+          setResult(normalized as any);
+          showVerificationSuccess(normalized.confidence || 0, Date.now() - startTime);
+          return normalized as any;
         }
       }
 
@@ -368,8 +347,9 @@ export function useVerify() {
 
       // Universal fallback: always return a minimal result for users
       const fallback = localFallbackAnalysis(safeContent, (err as Error)?.message);
-      setResult(fallback as any);
-      return fallback as any;
+      const normalized = normalizeVerifyResult(fallback as any);
+      setResult(normalized as any);
+      return normalized as any;
       
     } finally {
       inFlightKeys.current.delete(key);

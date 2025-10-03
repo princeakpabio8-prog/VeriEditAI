@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Shield, Target, Users } from "lucide-react";
+import { ArrowLeft, ExternalLink, Shield, Target, Users, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const About = () => {
@@ -52,6 +52,30 @@ const About = () => {
                   building reliable AI systems, Prince drives VeriEdit AI's mission to create 
                   a more trustworthy digital information ecosystem.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Why We Exist - Video Section */}
+          <Card className="border-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Video className="h-5 w-5 text-primary" />
+                Why We Exist
+              </CardTitle>
+              <CardDescription>Hear our mission in 7 minutes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/LpIkzJ4C-aI"
+                  title="VeriEdit AI - Why We Exist"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  aria-label="Interview with the founder explaining VeriEdit AI's mission"
+                />
               </div>
             </CardContent>
           </Card>

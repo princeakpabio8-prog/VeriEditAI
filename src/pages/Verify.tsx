@@ -231,6 +231,7 @@ export default function Verify() {
                     processingTime={1500}
                     onNewVerification={handleNewVerification}
                     content={verificationState.content || 'No content'}
+                    industry={verificationState.selectedTemplate?.industry}
                   />
                 )}
                 

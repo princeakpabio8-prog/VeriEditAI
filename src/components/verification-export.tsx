@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileText, Image, Loader2 } from "lucide-react";
+import { Download, FileText, Image, Loader2, Shield } from "lucide-react";
 import jsPDF from 'jspdf';
 import { safeLower } from "@/lib/utils";
+import QRCode from 'qrcode';
 
 interface VerificationExportProps {
   verificationId: string;
@@ -20,6 +21,7 @@ interface VerificationExportProps {
   }>;
   content: string;
   processingTime?: number;
+  industry?: 'bank' | 'ngo';
 }
 
 export function VerificationExport({
@@ -29,19 +31,82 @@ export function VerificationExport({
   summary,
   sources,
   content,
-  processingTime
+  processingTime,
+  industry = 'ngo'
 }: VerificationExportProps) {
   const [exporting, setExporting] = useState(false);
   const [exportFormat, setExportFormat] = useState<'pdf' | 'json' | 'csv'>('pdf');
   const { toast } = useToast();
+
+  const appName = "VeriEdit";
+  const verificationUrl = `https://veriedit.com/verify/${verificationId}`;
+  
+  const getBadgeText = () => {
+    if (industry === 'bank') {
+      return trustScore >= 80 ? "BANKING COMPLIANCE VERIFIED" : "BANKING VERIFICATION COMPLETE";
+    }
+    return trustScore >= 80 ? "DONOR TRUST VERIFIED" : "IMPACT VERIFIED";
+  };
 
   const generatePDF = async () => {
     setExporting(true);
     try {
       const pdf = new jsPDF();
       const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 20;
       let yPosition = margin;
+
+      // Generate QR code for verification URL
+      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+
+      // Helper function to add header to each page
+      const addPageHeader = () => {
+        // Verified Badge
+        pdf.setFillColor(34, 197, 94); // Green color
+        pdf.roundedRect(pageWidth - 70, 10, 60, 25, 3, 3, 'F');
+        
+        // Shield icon (simplified)
+        pdf.setFillColor(255, 255, 255);
+        pdf.circle(pageWidth - 55, 18, 3, 'F');
+        
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("✓ VERIFIED", pageWidth - 65, 22);
+        pdf.text(appName.toUpperCase(), pageWidth - 65, 28);
+        
+        // QR Code in top right
+        pdf.addImage(qrCodeDataUrl, 'PNG', pageWidth - 35, 10, 25, 25);
+        
+        // Reset text color
+        pdf.setTextColor(0, 0, 0);
+      };
+
+      // Helper function to add footer to each page
+      const addPageFooter = () => {
+        const footerY = pageHeight - 15;
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(100, 100, 100);
+        
+        // Branding footer
+        pdf.text(`Verified by ${appName} | Verification ID: ${verificationId}`, margin, footerY);
+        pdf.text(`View online: ${verificationUrl}`, margin, footerY + 5);
+        
+        // Page number
+        pdf.setFontSize(7);
+        pdf.text(`Page ${pdf.getCurrentPageInfo().pageNumber}`, pageWidth - margin - 15, footerY);
+        
+        pdf.setTextColor(0, 0, 0);
+      };
 
       // Helper function to add text with word wrapping
       const addText = (text: string, fontSize = 12, isBold = false) => {
@@ -55,18 +120,48 @@ export function VerificationExport({
         const lines = pdf.splitTextToSize(text, pageWidth - 2 * margin);
         
         // Check if we need a new page
-        if (yPosition + (lines.length * fontSize * 0.4) > pdf.internal.pageSize.getHeight() - margin) {
+        if (yPosition + (lines.length * fontSize * 0.4) > pageHeight - 30) {
+          addPageFooter();
           pdf.addPage();
-          yPosition = margin;
+          yPosition = margin + 40;
+          addPageHeader();
         }
         
         pdf.text(lines, margin, yPosition);
         yPosition += lines.length * fontSize * 0.4 + 5;
       };
 
-      // Header
-      addText("CONTENT VERIFICATION REPORT", 20, true);
+      // Add header to first page
+      addPageHeader();
+      yPosition = 45;
+
+      // Verification Certificate Badge
+      pdf.setFillColor(240, 245, 255);
+      pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 35, 5, 5, 'F');
+      
       yPosition += 10;
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(37, 99, 235);
+      pdf.text(getBadgeText(), pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 8;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`Trust Score: ${trustScore}% | Status: ${String(status || 'verified').toUpperCase()}`, pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 8;
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Issued: ${new Date().toLocaleDateString()} | Verification ID: ${verificationId}`, pageWidth / 2, yPosition, { align: 'center' });
+      
+      pdf.setTextColor(0, 0, 0);
+      yPosition += 20;
+
+      // Main Header
+      addText("CONTENT VERIFICATION REPORT", 20, true);
+      yPosition += 5;
 
       // Verification Details
       addText("Verification Details", 16, true);
@@ -102,18 +197,11 @@ export function VerificationExport({
         });
       }
 
-      // Footer
-      yPosition = pdf.internal.pageSize.getHeight() - 30;
-      pdf.setFontSize(8);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(
-        "This report was generated by AI-powered content verification system.",
-        margin,
-        yPosition
-      );
+      // Add footer to last page
+      addPageFooter();
 
       // Save the PDF
-      pdf.save(`verification-report-${verificationId}.pdf`);
+      pdf.save(`${appName.toLowerCase()}-verification-${verificationId}.pdf`);
 
       toast({
         title: "Export Complete",
@@ -142,9 +230,14 @@ export function VerificationExport({
       content,
       sources,
       processingTime,
+      verified_by: appName,
+      verification_url: verificationUrl,
+      industry,
+      badge: getBadgeText(),
       metadata: {
         exportFormat: 'json',
-        version: '1.0'
+        version: '1.0',
+        signature: `${appName}-${verificationId}-${Date.now()}`
       }
     };
 
@@ -169,13 +262,18 @@ export function VerificationExport({
 
   const generateCSV = () => {
     const csvData = [
+      ['Verified By', appName],
+      ['Verification URL', verificationUrl],
+      ['Badge', getBadgeText()],
+      ['', ''],
       ['Field', 'Value'],
       ['Verification ID', verificationId],
       ['Date', new Date().toISOString()],
       ['Trust Score', `${trustScore}%`],
       ['Status', status],
+      ['Industry', industry || 'General'],
       ['Processing Time', `${processingTime || 0}ms`],
-      ['Summary', summary.replace(/,/g, ';')], // Replace commas to avoid CSV issues
+      ['Summary', summary.replace(/,/g, ';')],
       ['Content', content.substring(0, 500).replace(/,/g, ';')],
       ['', ''],
       ['Sources', ''],
@@ -249,11 +347,11 @@ const getTrustScoreColor = (score: number | undefined) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Download className="h-5 w-5" />
-          Export Verification Report
+          <Shield className="h-5 w-5 text-green-600" />
+          Export Verified Report
         </CardTitle>
         <CardDescription>
-          Download your verification results in multiple formats
+          Download branded verification reports with authenticity badge
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

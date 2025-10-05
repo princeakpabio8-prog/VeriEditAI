@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle2, Download, FileText, Shield, TrendingUp } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import QRCode from 'qrcode';
 
 interface ComplianceMetrics {
   totalVerifications: number;
@@ -26,24 +27,67 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({
   industry,
   dateRange 
 }) => {
-  const generatePDFReport = () => {
+  const generatePDFReport = async () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const appName = "VeriEdit";
+    const reportId = `RPT-${Date.now()}`;
+    const verificationUrl = `https://veriedit.com/compliance/${reportId}`;
+
+    // Generate QR code
+    const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {
+      width: 200,
+      margin: 1
+    });
+
+    // Add header badge
+    doc.setFillColor(34, 197, 94);
+    doc.roundedRect(pageWidth - 70, 10, 60, 25, 3, 3, 'F');
+    
+    doc.setFillColor(255, 255, 255);
+    doc.circle(pageWidth - 55, 18, 3, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("✓ CERTIFIED", pageWidth - 65, 22);
+    doc.text(appName.toUpperCase(), pageWidth - 65, 28);
+    
+    // Add QR Code
+    doc.addImage(qrCodeDataUrl, 'PNG', pageWidth - 35, 10, 25, 25);
+    
+    doc.setTextColor(0, 0, 0);
+
+    // Compliance Badge
+    doc.setFillColor(240, 245, 255);
+    doc.roundedRect(20, 45, pageWidth - 40, 30, 5, 5, 'F');
+    
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(37, 99, 235);
+    const badgeText = industry === 'bank' ? 'BANKING COMPLIANCE CERTIFIED' : 'NGO ACCOUNTABILITY CERTIFIED';
+    doc.text(badgeText, pageWidth / 2, 58, { align: 'center' });
+    
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Report ID: ${reportId} | Generated: ${format(new Date(), 'PPP')}`, pageWidth / 2, 68, { align: 'center' });
+    
+    doc.setTextColor(0, 0, 0);
     
     // Header
     doc.setFontSize(20);
-    doc.text(`${industry === 'bank' ? 'Banking' : 'NGO'} Compliance Report`, pageWidth / 2, 20, { align: 'center' });
+    doc.text(`${industry === 'bank' ? 'Banking' : 'NGO'} Compliance Report`, pageWidth / 2, 90, { align: 'center' });
     
     doc.setFontSize(10);
-    doc.text(`Generated: ${format(new Date(), 'PPP')}`, pageWidth / 2, 28, { align: 'center' });
-    doc.text(`Period: ${format(dateRange.start, 'PP')} - ${format(dateRange.end, 'PP')}`, pageWidth / 2, 34, { align: 'center' });
+    doc.text(`Period: ${format(dateRange.start, 'PP')} - ${format(dateRange.end, 'PP')}`, pageWidth / 2, 98, { align: 'center' });
     
     // Metrics
     doc.setFontSize(14);
-    doc.text('Executive Summary', 14, 50);
+    doc.text('Executive Summary', 14, 110);
     
     doc.setFontSize(10);
-    let yPos = 60;
+    let yPos = 120;
     
     const reportData = [
       ['Total Verifications Processed', metrics.totalVerifications.toString()],
@@ -101,10 +145,14 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({
     });
     
     // Footer
+    const footerY = pageHeight - 15;
     doc.setFontSize(8);
-    doc.text('This report is confidential and intended for internal compliance use only.', pageWidth / 2, 280, { align: 'center' });
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Certified by ${appName} | Report ID: ${reportId}`, 14, footerY);
+    doc.text(`Verify online: ${verificationUrl}`, 14, footerY + 5);
+    doc.text('This report is confidential and intended for internal compliance use only.', pageWidth / 2, footerY + 10, { align: 'center' });
     
-    doc.save(`compliance-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    doc.save(`${appName.toLowerCase()}-compliance-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   return (

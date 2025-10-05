@@ -35,6 +35,7 @@ interface VerificationResultProps {
   processingTime?: number;
   onNewVerification?: () => void;
   content?: string;
+  industry?: 'bank' | 'ngo';
 }
 
 export const VerificationResult: React.FC<VerificationResultProps> = ({
@@ -50,6 +51,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   processingTime,
   onNewVerification,
   content = "",
+  industry,
 }) => {
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   
@@ -294,6 +296,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           }))}
           content={content}
           processingTime={processingTime}
+          industry={industry}
         />
       </motion.div>
 

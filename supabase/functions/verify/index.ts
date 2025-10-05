@@ -336,12 +336,12 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const hasNumbers = /\d+/.test(safeAnswer);
   const hasCitations = safeAnswer.includes('[') || safeAnswer.includes('according to');
   
-  if (hasSpecificDates) contentScore += 10;
-  if (hasSpecificNames) contentScore += 8;
-  if (hasNumbers && safeAnswer.length > 100) contentScore += 5;
-  if (hasCitations) contentScore += 12;
-  if (safeAnswer.includes('evidence') || safeAnswer.includes('data')) contentScore += 8;
-  if (safeAnswer.includes('study') || safeAnswer.includes('research')) contentScore += 12;
+  if (hasSpecificDates) contentScore += 12;
+  if (hasSpecificNames) contentScore += 10;
+  if (hasNumbers && safeAnswer.length > 100) contentScore += 8;
+  if (hasCitations) contentScore += 15;
+  if (safeAnswer.includes('evidence') || safeAnswer.includes('data')) contentScore += 10;
+  if (safeAnswer.includes('study') || safeAnswer.includes('research')) contentScore += 15;
   
   // Uncertainty indicators (reduce confidence)
   if (safeAnswer.includes('may') || safeAnswer.includes('might') || 
@@ -356,15 +356,21 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
     contentScore -= 25;
   }
   
+  // Clamp contentScore to max 100
+  contentScore = Math.min(contentScore, 100);
+  
   // Source Quality Weight (30%)
   let sourceScore = 40;
   const sourceQualitySum = results.reduce((sum, r) => sum + calculateReliabilityScore(r.url || ''), 0);
   const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
-  sourceScore = Math.round(avgSourceQuality * 0.8); // Scale to appropriate range
+  sourceScore = Math.round(avgSourceQuality * 0.9); // Increased from 0.8 to give more weight to good sources
   
   // Government source bonus
   const hasGovSource = results.some(r => (r.url || '').toLowerCase().includes('.gov'));
-  if (hasGovSource) sourceScore += 25;
+  if (hasGovSource) sourceScore += 20;
+  
+  // Clamp sourceScore to max 100
+  sourceScore = Math.min(sourceScore, 100);
   
   // Recency Weight (10%) - Temporal awareness
   let recencyScore = 50;
@@ -387,12 +393,12 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   
   // Consensus Weight (20%)
   let consensusScore = 60;
-  if (results.length >= 3) consensusScore += 15; // Multiple sources
-  if (results.length >= 5) consensusScore += 10; // Strong consensus
+  if (results.length >= 3) consensusScore += 18; // Multiple sources (increased)
+  if (results.length >= 5) consensusScore += 12; // Strong consensus (increased)
   
   // Check for source diversity
   const domains = new Set(results.map(r => new URL(r.url || 'https://example.com').hostname));
-  if (domains.size >= 3) consensusScore += 10; // Diverse sources
+  if (domains.size >= 3) consensusScore += 12; // Diverse sources (increased)
   
   // Contradiction detection - check if sources disagree
   const hedgeWords = ['however', 'but', 'although', 'despite', 'contradicts'];
@@ -416,7 +422,10 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
     !safeAnswer.toLowerCase().includes('however') && 
     !safeAnswer.toLowerCase().includes('but') &&
     !safeAnswer.toLowerCase().includes('disputed');
-  if (allSourcesAgree) consensusScore += 15;
+  if (allSourcesAgree) consensusScore += 18; // Increased from 15
+  
+  // Clamp consensusScore to max 100
+  consensusScore = Math.min(consensusScore, 100);
   
   // Answer Quality Weight (10%) - Moderate scoring for completeness
   let answerQuality = 50;

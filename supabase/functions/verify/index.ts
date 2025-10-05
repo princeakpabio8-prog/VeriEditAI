@@ -171,11 +171,12 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
     const answer = data.answer || '';
     const searchResults = data.results || [];
     
-    // Process sources from search results
+    // Process sources from search results with full content
     const sources = searchResults.map((result: any) => ({
       title: result.title || 'Unknown Source',
       url: result.url || '',
-      snippet: result.content ? result.content.substring(0, 200) + '...' : '',
+      content_snippet: result.content ? result.content.substring(0, 200) + '...' : '',
+      full_content: result.content || '',
       reliability_score: calculateReliabilityScore(result.url)
     }));
 

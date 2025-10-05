@@ -15,6 +15,7 @@ interface Source {
   url: string;
   title: string;
   content_snippet: string;
+  full_content?: string;
   reliability_score: number;
   source_type?: 'perplexity' | 'fact_check' | 'news' | 'encyclopedia' | 'academic' | 'government';
 }
@@ -48,9 +49,34 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   onNewVerification,
   content = "",
 }) => {
+  const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
+  
   // Normalize status to prevent toLowerCase errors
   const normalizedStatus = safeLower(status);
   const normalizedCategory = safeLower(category || 'general');
+
+  const handleOpenSource = (url: string) => {
+    try {
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Failed to open source:', error);
+    }
+  };
+
+  const toggleSourceExpansion = (index: number) => {
+    setExpandedSources(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
 
   const getStatusBadge = (statusValue: string) => {
     const safeStatus = safeLower(statusValue);
@@ -189,38 +215,60 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {sources.map((source, index) => (
-                <motion.div 
-                  key={source.id || index}
-                  className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border/30"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 2.2 + index * 0.1 }}
-                >
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-sm">{source.title}</h4>
-                      {source.reliability_score && (
-                        <Badge variant="outline" className="text-xs">
-                          {source.reliability_score}% reliable
-                        </Badge>
-                      )}
+              {sources.map((source, index) => {
+                const isExpanded = expandedSources.has(index);
+                const hasFullContent = source.full_content && source.full_content.length > (source.content_snippet?.length || 0);
+                
+                return (
+                  <motion.div 
+                    key={source.id || index}
+                    className="flex items-start gap-3 p-4 rounded-lg bg-muted/50 border border-border/30"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 2.2 + index * 0.1 }}
+                  >
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm">{source.title}</h4>
+                        {source.reliability_score && (
+                          <Badge variant="outline" className="text-xs">
+                            {source.reliability_score}% reliable
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          {isExpanded && hasFullContent 
+                            ? source.full_content 
+                            : source.content_snippet}
+                        </p>
+                        
+                        {hasFullContent && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSourceExpansion(index)}
+                            className="h-8 text-xs"
+                          >
+                            {isExpanded ? 'Show Less' : 'Read More'}
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenSource(source.url)}
+                        className="w-full"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Read Full Article
+                      </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {source.content_snippet}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 h-8 px-2"
-                      onClick={() => window.open(source.url, '_blank')}
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      View Source
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </CardContent>
           </Card>
         </motion.div>

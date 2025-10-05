@@ -249,6 +249,7 @@ export type Database = {
         Row: {
           content_snippet: string | null
           created_at: string
+          full_content: string | null
           id: string
           reliability_score: number | null
           title: string | null
@@ -258,6 +259,7 @@ export type Database = {
         Insert: {
           content_snippet?: string | null
           created_at?: string
+          full_content?: string | null
           id?: string
           reliability_score?: number | null
           title?: string | null
@@ -267,6 +269,7 @@ export type Database = {
         Update: {
           content_snippet?: string | null
           created_at?: string
+          full_content?: string | null
           id?: string
           reliability_score?: number | null
           title?: string | null

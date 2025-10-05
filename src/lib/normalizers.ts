@@ -14,6 +14,7 @@ export interface NormalizedVerificationResult {
     url: string;
     content_snippet?: string;
     snippet?: string;
+    full_content?: string;
     reliability_score?: number;
     source_type?: string;
   }>;
@@ -131,6 +132,12 @@ function normalizeSingleSource(s: any): NormalizedVerificationResult['sources'][
       ? s.snippet 
       : '';
   
+  const full_content = typeof s.full_content === 'string'
+    ? s.full_content
+    : typeof s.content === 'string'
+      ? s.content
+      : content_snippet;
+  
   const reliability_score = typeof s.reliability_score === 'number' 
     ? s.reliability_score 
     : undefined;
@@ -144,6 +151,7 @@ function normalizeSingleSource(s: any): NormalizedVerificationResult['sources'][
     url,
     content_snippet,
     snippet: content_snippet, // Keep both for compatibility
+    full_content,
     reliability_score,
     source_type,
   };

@@ -23,7 +23,8 @@ import {
   Camera,
   Link as LinkIcon,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ export function MobileVerificationUI({
   const [urlContent, setUrlContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedSources, setExpandedSources] = useState<Set<number>>(new Set());
   const [validationError, setValidationError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -281,6 +283,34 @@ export function MobileVerificationUI({
       case 'inconclusive': return <Clock className="h-4 w-4" />;
       default: return <Info className="h-4 w-4" />;
     }
+  };
+
+  const handleOpenSource = (url: string) => {
+    try {
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      toast({
+        title: "Unable to open source",
+        description: "Please copy the URL manually.",
+        variant: "destructive",
+      });
+      console.error('Failed to open source:', error);
+    }
+  };
+
+  const toggleSourceExpansion = (index: number) => {
+    setExpandedSources(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
 
   const shareResult = () => {
@@ -644,21 +674,59 @@ export function MobileVerificationUI({
 
                   {/* Sources */}
                   {result.sources?.length > 0 && (
-                    <div className="pt-2 border-t border-border/50">
+                    <div className="pt-2 border-t border-border/50 space-y-2">
                       <h4 className="text-xs font-medium text-muted-foreground mb-2">
                         Sources ({result.sources.length})
                       </h4>
-                      <div className="space-y-1">
-                        {result.sources.slice(0, 2).map((source: any, idx: number) => (
-                          <div key={idx} className="text-xs text-blue-600 truncate">
-                            • {source.title}
-                          </div>
-                        ))}
-                        {result.sources.length > 2 && (
-                          <div className="text-xs text-muted-foreground">
-                            +{result.sources.length - 2} more sources
-                          </div>
-                        )}
+                      <div className="space-y-3">
+                        {result.sources.slice(0, 3).map((source: any, idx: number) => {
+                          const isExpanded = expandedSources.has(idx);
+                          const hasFullContent = source.full_content && source.full_content.length > (source.content_snippet?.length || 0);
+                          
+                          return (
+                            <div key={idx} className="p-3 bg-muted/30 rounded-lg space-y-2 border border-border/30">
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-xs font-medium line-clamp-2 flex-1">
+                                  {source.title}
+                                </span>
+                                <Badge variant="outline" className="text-xs shrink-0">
+                                  {source.reliability_score}%
+                                </Badge>
+                              </div>
+                              
+                              {source.content_snippet && (
+                                <div className="space-y-2">
+                                  <p className="text-xs text-muted-foreground">
+                                    {isExpanded && hasFullContent 
+                                      ? source.full_content 
+                                      : source.content_snippet}
+                                  </p>
+                                  
+                                  {hasFullContent && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => toggleSourceExpansion(idx)}
+                                      className="h-6 text-xs px-2"
+                                    >
+                                      {isExpanded ? 'Show Less' : 'Show More'}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenSource(source.url)}
+                                className="w-full h-8 text-xs"
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Read Full Article
+                              </Button>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -259,8 +259,10 @@ function extractConfidence(text: string): number {
 
 function getStatusFromConfidence(confidence: number): string {
   if (confidence >= 80) return 'verified';
-  if (confidence >= 60) return 'inconclusive';
-  return 'disputed';
+  if (confidence >= 70) return 'likely_accurate';
+  if (confidence >= 55) return 'inconclusive';
+  if (confidence >= 40) return 'disputed';
+  return 'false';
 }
 
 function extractSources(text: string): Array<{ title: string; url: string; snippet?: string; reliability_score?: number }> {
@@ -283,6 +285,23 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   // Content Analysis Weight (30%) - Evidence-based scoring
   let contentScore = 50;
   
+  // NEGATION DETECTION - Check if answer contradicts the claim
+  const lowerAnswer = safeAnswer.toLowerCase();
+  const contentWords = safeContent.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
+  
+  // Negation words that indicate the claim is false
+  const negationWords = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality', 'myth', 'misconception'];
+  const hasNegation = negationWords.some(neg => lowerAnswer.includes(neg));
+  
+  // Check if answer contains original claim keywords + negation
+  const claimKeywordsInAnswer = contentWords.filter(word => lowerAnswer.includes(word)).length;
+  
+  if (hasNegation && claimKeywordsInAnswer >= 2) {
+    // Answer is DEBUNKING the claim - major penalty
+    contentScore -= 60;
+    console.log('🚨 CONTRADICTION DETECTED: Answer contradicts the original claim');
+  }
+  
   // Evidence quality indicators (not keyword gaming)
   const hasSpecificDates = /\b(19|20)\d{2}\b/.test(safeAnswer);
   const hasSpecificNames = /\b[A-Z][a-z]+\s[A-Z][a-z]+\b/.test(safeAnswer);
@@ -302,9 +321,10 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
     contentScore -= 15;
   }
   
-  // Disputed/conflicting (major penalty)
-  if (safeAnswer.toLowerCase().includes('disputed') || safeAnswer.includes('conflicting') || 
-      safeAnswer.includes('controversy')) {
+  // Disputed/conflicting/debunked (major penalty)
+  if (lowerAnswer.includes('disputed') || lowerAnswer.includes('conflicting') || 
+      lowerAnswer.includes('controversy') || lowerAnswer.includes('debunked') ||
+      lowerAnswer.includes('the truth is') || lowerAnswer.includes('in fact')) {
     contentScore -= 25;
   }
   

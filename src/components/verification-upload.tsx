@@ -11,6 +11,7 @@ import { TrustScoreExplanation } from "./trust-score-explanation";
 import { validateAndSanitize, verificationRateLimiter } from '@/lib/validation';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
+import { parseDocument, isDocumentFile } from '@/lib/document-parser';
 
 interface VerificationUploadProps {
   onVerificationStart?: (data: VerificationData) => void;
@@ -18,11 +19,12 @@ interface VerificationUploadProps {
 }
 
 interface VerificationData {
-  type?: "text" | "url" | "file";
-  contentType?: "text" | "url" | "file" | "image";
+  type?: "text" | "url" | "file" | "document";
+  contentType?: "text" | "url" | "file" | "image" | "document";
   content: string;
   fileName?: string;
   fileSize?: number;
+  metadata?: any;
 }
 
 export const VerificationUpload = ({ onVerificationStart, isLoading = false }: VerificationUploadProps) => {
@@ -212,13 +214,46 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
           variant: "destructive"
         });
       }
+    } else if (isDocumentFile(selectedFile)) {
+      // Handle document verification (PDF, Word, Text)
+      try {
+        toast({
+          title: "Processing document...",
+          description: "Extracting text from your document",
+        });
+
+        const parsed = await parseDocument(selectedFile);
+
+        if (!parsed.metadata.extractionSuccess || !parsed.text || parsed.text.trim().length === 0) {
+          toast({
+            title: "Empty or Unreadable Document",
+            description: parsed.metadata.errorMessage || "Could not extract text from the document",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        onVerificationStart?.({
+          type: "file",
+          contentType: "document",
+          content: parsed.text,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          metadata: parsed.metadata,
+        });
+      } catch (error: any) {
+        toast({
+          title: "Document Parsing Failed",
+          description: error.message || "Could not read the document. It may be corrupted or password-protected.",
+          variant: "destructive",
+        });
+      }
     } else {
-      // Handle regular file verification
-      onVerificationStart?.({
-        type: "file",
-        content: selectedFile.name,
-        fileName: selectedFile.name,
-        fileSize: selectedFile.size
+      // Unsupported file type
+      toast({
+        title: "Unsupported File Type",
+        description: "Please upload a PDF, Word document, text file, or image.",
+        variant: "destructive",
       });
     }
   };

@@ -42,10 +42,31 @@ export const fileContentSchema = z.object({
     .max(10 * 1024 * 1024, 'File size cannot exceed 10MB') // 10MB limit
 });
 
+export const documentContentSchema = z.object({
+  content: z.string()
+    .min(10, 'Document must contain at least 10 characters'),
+  contentType: z.literal('document'),
+  fileName: z.string()
+    .min(1, 'File name is required')
+    .max(255, 'File name too long'),
+  fileSize: z.number()
+    .min(1, 'File size must be greater than 0')
+    .max(20 * 1024 * 1024, 'File size cannot exceed 20MB'),
+  metadata: z.object({
+    pageCount: z.number().optional(),
+    author: z.string().optional(),
+    createdAt: z.date().optional(),
+    fileType: z.enum(['pdf', 'docx', 'doc', 'txt', 'unknown']),
+    extractionSuccess: z.boolean(),
+    errorMessage: z.string().optional()
+  }).optional()
+});
+
 export const verificationSchema = z.discriminatedUnion('contentType', [
   textContentSchema,
   urlContentSchema,
-  fileContentSchema
+  fileContentSchema,
+  documentContentSchema
 ]);
 
 // Sanitization functions
@@ -86,6 +107,12 @@ export const validateAndSanitize = (data: unknown) => {
         content: sanitizeUrl(parsed.content)
       };
     case 'file':
+      return {
+        ...parsed,
+        content: sanitizeText(parsed.content),
+        fileName: sanitizeText(parsed.fileName)
+      };
+    case 'document':
       return {
         ...parsed,
         content: sanitizeText(parsed.content),

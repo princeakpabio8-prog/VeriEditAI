@@ -12,6 +12,7 @@ import { LoadingSkeleton } from "./loading-skeleton";
 import { TrustScoreFeedback } from "./trust-score-feedback";
 import { validateAndSanitize } from "@/lib/validation";
 import { useAuth } from "@/contexts/AuthContext";
+import { parseDocument, isDocumentFile } from "@/lib/document-parser";
 import { 
   CheckCircle, 
   AlertTriangle,
@@ -241,10 +242,45 @@ export function MobileVerificationUI({
               variant: 'destructive',
             });
           }
+        } else if (isDocumentFile(selectedFile)) {
+          // Parse documents (PDF, Word, etc.)
+          try {
+            toast({
+              title: "Processing document...",
+              description: "Extracting text from your document",
+            });
+
+            const parsed = await parseDocument(selectedFile);
+
+            if (!parsed.metadata.extractionSuccess || !parsed.text || parsed.text.trim().length === 0) {
+              toast({
+                title: "Empty or Unreadable Document",
+                description: parsed.metadata.errorMessage || "Could not extract text from the document",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            onVerify({
+              type: 'file',
+              content: parsed.text,
+              contentType: 'document',
+              fileName: selectedFile.name,
+              fileType: selectedFile.type,
+              fileSize: selectedFile.size,
+              metadata: parsed.metadata,
+            });
+          } catch (error: any) {
+            toast({
+              title: 'Document Parsing Failed',
+              description: error.message || 'Could not read the document',
+              variant: 'destructive',
+            });
+          }
         } else {
           toast({
-            title: 'Unsupported on Mobile',
-            description: 'Document extraction for PDF/Word is not supported on mobile yet. Please upload an image or paste text/URL.',
+            title: 'Unsupported File Type',
+            description: 'Please upload an image, PDF, Word document, or text file.',
             variant: 'destructive',
           });
         }

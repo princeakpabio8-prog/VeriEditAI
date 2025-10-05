@@ -144,7 +144,7 @@ export function useVerify() {
         try {
           const apiTimer = performanceMonitor.startTiming('tavily_api_call');
           
-          // Check if this is an image verification
+          // Check if this is an image or document verification
           let functionName = 'verify';
           let requestBody: any = { content: safeContent, user_id: (userId ?? '').toString() };
           
@@ -172,6 +172,18 @@ export function useVerify() {
               imageBase64: safeContent,
               verificationId: verificationRecord.id,
               userId: userId
+            };
+          } else if (verificationData?.contentType === 'document') {
+            // For documents, content is already extracted text
+            functionName = 'verify';
+            requestBody = {
+              content: safeContent,
+              user_id: (userId ?? '').toString(),
+              metadata: {
+                fileName: verificationData.fileName,
+                fileSize: verificationData.fileSize,
+                documentMetadata: verificationData.metadata
+              }
             };
           }
           

@@ -313,27 +313,16 @@ function calculateImageConfidence(imageResult: ImageVerificationResult): number 
     if (textLength > 100) contentScore += 20;
     else if (textLength > 50) contentScore += 12;
     else if (textLength > 10) contentScore += 8;
-    
-    // OCR content matching bonus
-    const ocrText = (imageResult.ocrText || '').toLowerCase();
-    if (ocrText.includes('official') || ocrText.includes('government') || 
-        ocrText.includes('verified') || ocrText.includes('authentic')) {
-      contentScore += 15; // Official document indicators
-    }
+    // Removed keyword bonuses to prevent gaming
   }
   
   // Image quality (35% weight) - enhanced scoring
   let qualityScore = 40;
   const quality = imageResult.contentAnalysis?.imageQuality;
-  if (quality === 'high') qualityScore = 88; // Increased for high quality
+  if (quality === 'high') qualityScore = 88;
   else if (quality === 'medium') qualityScore = 72;
   else if (quality === 'low') qualityScore = 45;
-  
-  // Professional document indicators
-  if (imageResult.labels.some((label: any) => 
-      ['document', 'text', 'paper', 'certificate', 'official'].includes(label.description?.toLowerCase()))) {
-    qualityScore += 10; // Professional document bonus
-  }
+  // Removed label-based bonuses to prevent gaming
   
   // Safety and authenticity (30% weight) - enhanced
   let safetyScore = 85; // Higher baseline for authenticity
@@ -354,19 +343,11 @@ function calculateImageConfidence(imageResult: ImageVerificationResult): number 
   const avgLabelConfidence = imageResult.labels.length > 0 
     ? imageResult.labels.reduce((sum: number, label: any) => sum + (label.score || 0), 0) / imageResult.labels.length
     : 0.5;
-  const labelBonus = Math.round(avgLabelConfidence * 12); // Increased weight
+  const labelBonus = Math.round(avgLabelConfidence * 12);
   
-  // Government/official content bonus
-  let officialBonus = 0;
-  const ocrText = (imageResult.ocrText || '').toLowerCase();
-  if (ocrText.includes('.gov') || ocrText.includes('department of') || 
-      ocrText.includes('united states') || ocrText.includes('official')) {
-    officialBonus = 15; // Government document bonus
-  }
-  
-  // Weighted final calculation
+  // Weighted final calculation (removed all keyword-based bonuses)
   const finalConfidence = Math.round(
-    (contentScore * 0.35) + (qualityScore * 0.35) + (safetyScore * 0.30) + labelBonus + officialBonus
+    (contentScore * 0.35) + (qualityScore * 0.35) + (safetyScore * 0.30) + labelBonus
   );
 
   // Enhanced range for image verification (40-95%)

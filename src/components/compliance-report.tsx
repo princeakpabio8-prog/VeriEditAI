@@ -33,7 +33,7 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({
     const pageHeight = doc.internal.pageSize.getHeight();
     const appName = "VeriEdit";
     const reportId = `RPT-${Date.now()}`;
-    const verificationUrl = `https://veriedit.com/compliance/${reportId}`;
+    const verificationUrl = `https://verieditai.com/compliance/${reportId}`;
 
     // Generate QR code
     const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, {

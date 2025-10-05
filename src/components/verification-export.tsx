@@ -39,7 +39,7 @@ export function VerificationExport({
   const { toast } = useToast();
 
   const appName = "VeriEdit";
-  const verificationUrl = `https://veriedit.com/verify/${verificationId}`;
+  const verificationUrl = `https://verieditai.com/verify/${verificationId}`;
   
   const getBadgeText = () => {
     if (industry === 'bank') {
@@ -69,22 +69,36 @@ export function VerificationExport({
 
       // Helper function to add header to each page
       const addPageHeader = () => {
-        // Verified Badge
-        pdf.setFillColor(34, 197, 94); // Green color
-        pdf.roundedRect(pageWidth - 70, 10, 60, 25, 3, 3, 'F');
+        // Professional gradient header background
+        pdf.setFillColor(15, 23, 42); // Dark blue-gray
+        pdf.rect(0, 0, pageWidth, 40, 'F');
         
-        // Shield icon (simplified)
-        pdf.setFillColor(255, 255, 255);
-        pdf.circle(pageWidth - 55, 18, 3, 'F');
+        // Brand accent line
+        pdf.setFillColor(0, 186, 242); // Primary cyan
+        pdf.rect(0, 0, pageWidth, 3, 'F');
+        
+        // Company branding
+        pdf.setFontSize(18);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(0, 186, 242); // Primary color
+        pdf.text(appName, 20, 20);
+        
+        pdf.setFontSize(8);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(148, 163, 184); // Muted text
+        pdf.text("AI-Powered Content Verification", 20, 26);
+        
+        // Verified Badge
+        pdf.setFillColor(34, 197, 94); // Green
+        pdf.roundedRect(pageWidth - 70, 8, 50, 24, 3, 3, 'F');
         
         pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(8);
+        pdf.setFontSize(10);
         pdf.setFont("helvetica", "bold");
-        pdf.text("✓ VERIFIED", pageWidth - 65, 22);
-        pdf.text(appName.toUpperCase(), pageWidth - 65, 28);
-        
-        // QR Code in top right
-        pdf.addImage(qrCodeDataUrl, 'PNG', pageWidth - 35, 10, 25, 25);
+        pdf.text("✓ VERIFIED", pageWidth - 65, 18);
+        pdf.setFontSize(7);
+        pdf.setFont("helvetica", "normal");
+        pdf.text("Authenticity Guaranteed", pageWidth - 65, 24);
         
         // Reset text color
         pdf.setTextColor(0, 0, 0);
@@ -92,18 +106,35 @@ export function VerificationExport({
 
       // Helper function to add footer to each page
       const addPageFooter = () => {
-        const footerY = pageHeight - 15;
-        pdf.setFontSize(8);
-        pdf.setFont("helvetica", "normal");
-        pdf.setTextColor(100, 100, 100);
+        const footerY = pageHeight - 25;
         
-        // Branding footer
-        pdf.text(`Verified by ${appName} | Verification ID: ${verificationId}`, margin, footerY);
-        pdf.text(`View online: ${verificationUrl}`, margin, footerY + 5);
+        // Footer separator line
+        pdf.setDrawColor(226, 232, 240); // Border color
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
         
-        // Page number
+        // QR code in footer (smaller)
+        pdf.addImage(qrCodeDataUrl, 'PNG', margin, footerY, 15, 15);
+        
+        // Footer text
         pdf.setFontSize(7);
-        pdf.text(`Page ${pdf.getCurrentPageInfo().pageNumber}`, pageWidth - margin - 15, footerY);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(100, 116, 139);
+        
+        pdf.text(`Certified by ${appName} AI`, margin + 20, footerY + 5);
+        pdf.text(`Verification ID: ${verificationId}`, margin + 20, footerY + 10);
+        pdf.text(`Verify online: ${verificationUrl}`, margin + 20, footerY + 15);
+        
+        // Page number (right aligned)
+        pdf.setFontSize(8);
+        pdf.setTextColor(71, 85, 105);
+        const pageText = `Page ${pdf.getCurrentPageInfo().pageNumber}`;
+        pdf.text(pageText, pageWidth - margin - 15, footerY + 10);
+        
+        // Security watermark
+        pdf.setFontSize(6);
+        pdf.setTextColor(203, 213, 225);
+        pdf.text("This document is digitally certified and tamper-evident", pageWidth / 2, pageHeight - 5, { align: 'center' });
         
         pdf.setTextColor(0, 0, 0);
       };
@@ -133,67 +164,218 @@ export function VerificationExport({
 
       // Add header to first page
       addPageHeader();
-      yPosition = 45;
+      yPosition = 50;
 
-      // Verification Certificate Badge
-      pdf.setFillColor(240, 245, 255);
-      pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 35, 5, 5, 'F');
+      // Professional Certificate Badge with gradient effect
+      pdf.setFillColor(240, 249, 255); // Light blue background
+      pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 45, 8, 8, 'F');
       
-      yPosition += 10;
-      pdf.setFontSize(16);
+      // Border accent
+      pdf.setDrawColor(0, 186, 242);
+      pdf.setLineWidth(1.5);
+      pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 45, 8, 8, 'S');
+      
+      yPosition += 12;
+      
+      // Main badge title
+      pdf.setFontSize(18);
       pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(37, 99, 235);
+      pdf.setTextColor(0, 186, 242); // Primary cyan
       pdf.text(getBadgeText(), pageWidth / 2, yPosition, { align: 'center' });
       
+      yPosition += 10;
+      
+      // Trust score with visual indicator
+      const trustScoreText = `Trust Score: ${trustScore}%`;
+      const statusText = `Status: ${String(status || 'verified').toUpperCase()}`;
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      
+      // Color code the trust score
+      if (trustScore >= 80) {
+        pdf.setTextColor(34, 197, 94); // Green
+      } else if (trustScore >= 60) {
+        pdf.setTextColor(234, 179, 8); // Yellow
+      } else {
+        pdf.setTextColor(239, 68, 68); // Red
+      }
+      pdf.text(trustScoreText, pageWidth / 2, yPosition, { align: 'center' });
+      
       yPosition += 8;
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(71, 85, 105);
+      pdf.text(statusText, pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 8;
+      pdf.setFontSize(7);
+      pdf.setTextColor(148, 163, 184);
+      pdf.text(`Issued: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageWidth / 2, yPosition, { align: 'center' });
+      pdf.text(`Verification ID: ${verificationId}`, pageWidth / 2, yPosition + 4, { align: 'center' });
+      
+      pdf.setTextColor(0, 0, 0);
+      yPosition += 18;
+
+      // Section divider
+      pdf.setDrawColor(226, 232, 240);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 15;
+
+      // Main Header with icon
+      pdf.setFontSize(22);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(30, 41, 59); // Dark slate
+      pdf.text("VERIFICATION REPORT", margin, yPosition);
+      yPosition += 15;
+
+      // Verification Details Section
+      pdf.setFillColor(249, 250, 251); // Light gray background
+      pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 50, 5, 5, 'F');
+      yPosition += 8;
+      
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(51, 65, 85);
+      pdf.text("Verification Details", margin + 5, yPosition);
+      yPosition += 10;
+      
       pdf.setFontSize(10);
       pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(`Trust Score: ${trustScore}% | Status: ${String(status || 'verified').toUpperCase()}`, pageWidth / 2, yPosition, { align: 'center' });
+      pdf.setTextColor(71, 85, 105);
       
+      // Two-column layout for details
+      const col1X = margin + 5;
+      const col2X = pageWidth / 2 + 5;
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Verification ID:", col1X, yPosition);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(verificationId, col1X + 35, yPosition);
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Status:", col2X, yPosition);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(String(status || 'unknown').toUpperCase(), col2X + 20, yPosition);
       yPosition += 8;
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(`Issued: ${new Date().toLocaleDateString()} | Verification ID: ${verificationId}`, pageWidth / 2, yPosition, { align: 'center' });
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Date:", col1X, yPosition);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), col1X + 35, yPosition);
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Trust Score:", col2X, yPosition);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`${trustScore}%`, col2X + 25, yPosition);
+      yPosition += 8;
+      
+      if (processingTime) {
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Processing Time:", col1X, yPosition);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`${processingTime}ms`, col1X + 35, yPosition);
+        yPosition += 8;
+      }
       
       pdf.setTextColor(0, 0, 0);
-      yPosition += 20;
+      yPosition += 15;
 
-      // Main Header
-      addText("CONTENT VERIFICATION REPORT", 20, true);
-      yPosition += 5;
+      // Content Analyzed Section
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(51, 65, 85);
+      pdf.text("Content Analyzed", margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(71, 85, 105);
+      const contentLines = pdf.splitTextToSize(content.substring(0, 500) + (content.length > 500 ? '...' : ''), pageWidth - 2 * margin);
+      pdf.text(contentLines, margin, yPosition);
+      yPosition += contentLines.length * 5 + 15;
 
-      // Verification Details
-      addText("Verification Details", 16, true);
-      addText(`Verification ID: ${verificationId}`, 12);
-      addText(`Date: ${new Date().toLocaleDateString()}`, 12);
-      addText(`Status: ${String(status || 'unknown').toUpperCase()}`, 12);
-      addText(`Trust Score: ${trustScore}%`, 12);
-      if (processingTime) {
-        addText(`Processing Time: ${processingTime}ms`, 12);
+      // Check if we need a new page
+      if (yPosition > pageHeight - 60) {
+        addPageFooter();
+        pdf.addPage();
+        yPosition = 50;
+        addPageHeader();
       }
-      yPosition += 10;
 
-      // Content Analysis
-      addText("Content Analyzed", 16, true);
-      addText(content.substring(0, 500) + (content.length > 500 ? '...' : ''), 10);
-      yPosition += 10;
+      // Analysis Summary Section
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(51, 65, 85);
+      pdf.text("AI Analysis Summary", margin, yPosition);
+      yPosition += 8;
+      
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(71, 85, 105);
+      const summaryLines = pdf.splitTextToSize(summary, pageWidth - 2 * margin);
+      pdf.text(summaryLines, margin, yPosition);
+      yPosition += summaryLines.length * 5 + 15;
 
-      // Summary
-      addText("Analysis Summary", 16, true);
-      addText(summary, 12);
-      yPosition += 10;
+      // Check if we need a new page for sources
+      if (yPosition > pageHeight - 60) {
+        addPageFooter();
+        pdf.addPage();
+        yPosition = 50;
+        addPageHeader();
+      }
 
-      // Sources
+      // Verification Sources Section
       if (sources.length > 0) {
-        addText("Verification Sources", 16, true);
+        pdf.setFontSize(14);
+        pdf.setFont("helvetica", "bold");
+        pdf.setTextColor(51, 65, 85);
+        pdf.text(`Verification Sources (${sources.length})`, margin, yPosition);
+        yPosition += 10;
+        
         sources.forEach((source, index) => {
-          addText(`${index + 1}. ${source.title}`, 12, true);
-          addText(`   URL: ${source.url}`, 10);
-          if (source.reliability_score) {
-            addText(`   Reliability: ${source.reliability_score}%`, 10);
+          // Check if we need a new page
+          if (yPosition > pageHeight - 70) {
+            addPageFooter();
+            pdf.addPage();
+            yPosition = 50;
+            addPageHeader();
           }
-          yPosition += 5;
+          
+          // Source number and reliability badge
+          pdf.setFillColor(249, 250, 251);
+          pdf.roundedRect(margin, yPosition, pageWidth - 2 * margin, 25, 3, 3, 'F');
+          
+          pdf.setFontSize(11);
+          pdf.setFont("helvetica", "bold");
+          pdf.setTextColor(0, 186, 242);
+          pdf.text(`${index + 1}.`, margin + 3, yPosition + 8);
+          
+          pdf.setTextColor(30, 41, 59);
+          const titleLines = pdf.splitTextToSize(source.title, pageWidth - 2 * margin - 40);
+          pdf.text(titleLines, margin + 10, yPosition + 8);
+          
+          // Reliability badge
+          if (source.reliability_score) {
+            const reliabilityColor: [number, number, number] = source.reliability_score >= 80 ? [34, 197, 94] : 
+                                    source.reliability_score >= 60 ? [234, 179, 8] : [239, 68, 68];
+            pdf.setFillColor(reliabilityColor[0], reliabilityColor[1], reliabilityColor[2]);
+            pdf.roundedRect(pageWidth - margin - 35, yPosition + 3, 32, 10, 2, 2, 'F');
+            
+            pdf.setFontSize(8);
+            pdf.setFont("helvetica", "bold");
+            pdf.setTextColor(255, 255, 255);
+            pdf.text(`${source.reliability_score}%`, pageWidth - margin - 19, yPosition + 10, { align: 'center' });
+          }
+          
+          // URL
+          pdf.setFontSize(8);
+          pdf.setFont("helvetica", "normal");
+          pdf.setTextColor(100, 116, 139);
+          const urlText = source.url.length > 70 ? source.url.substring(0, 67) + '...' : source.url;
+          pdf.text(urlText, margin + 10, yPosition + 18);
+          
+          yPosition += 30;
         });
       }
 
@@ -344,45 +526,54 @@ const getTrustScoreColor = (score: number | undefined) => {
 };
 
   return (
-    <Card>
+    <Card className="bg-gradient-card border-border/50 shadow-md hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-green-600" />
-          Export Verified Report
-        </CardTitle>
-        <CardDescription>
-          Download branded verification reports with authenticity badge
-        </CardDescription>
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-lg bg-green-500/10">
+            <Shield className="h-6 w-6 text-green-600" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">Export Verified Report</CardTitle>
+            <CardDescription>
+              Download professionally branded verification reports with authenticity badge
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Verification Summary */}
-        <div className="p-4 border rounded-lg bg-muted/30">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Trust Score</p>
-              <p className={`text-lg font-semibold ${getTrustScoreColor(trustScore)}`}>
+        <div className="p-5 border rounded-lg bg-gradient-to-br from-muted/50 to-muted/20 border-border/50">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="p-3 rounded-lg bg-background/60 hover:bg-background/80 transition-colors">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Trust Score</p>
+              <p className={`text-2xl font-bold ${getTrustScoreColor(trustScore)}`}>
                 {trustScore}%
               </p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Status</p>
-              <Badge variant="outline" className={getStatusColor(status)}>
+            <div className="p-3 rounded-lg bg-background/60 hover:bg-background/80 transition-colors">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
+              <Badge variant="outline" className={`${getStatusColor(status)} mt-1`}>
                 {String(status || 'unknown')}
               </Badge>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Sources</p>
-              <p className="text-lg font-semibold">{sources.length}</p>
+            <div className="p-3 rounded-lg bg-background/60 hover:bg-background/80 transition-colors">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Sources</p>
+              <p className="text-2xl font-bold text-foreground">{sources.length}</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">ID</p>
-              <p className="text-sm font-mono">{verificationId.slice(0, 8)}...</p>
+            <div className="p-3 rounded-lg bg-background/60 hover:bg-background/80 transition-colors">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Verification ID</p>
+              <p className="text-sm font-mono text-foreground">{verificationId.slice(0, 8)}...</p>
             </div>
           </div>
           
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">Summary</p>
-            <p className="text-sm whitespace-pre-wrap break-words">{summary}</p>
+          <div className="pt-4 border-t border-border/30">
+            <div className="flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-primary" />
+              <p className="text-sm font-semibold text-foreground">Summary</p>
+            </div>
+            <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words bg-background/40 p-3 rounded border border-border/30">
+              {summary}
+            </p>
           </div>
         </div>
 
@@ -432,21 +623,31 @@ const getTrustScoreColor = (score: number | undefined) => {
           <Button 
             onClick={handleExport} 
             disabled={exporting}
-            className="w-full"
+            className="w-full shadow-md hover:shadow-lg transition-shadow"
             size="lg"
           >
             {exporting ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                 Generating {exportFormat.toUpperCase()}...
               </>
             ) : (
               <>
-                <Download className="h-4 w-4 mr-2" />
-                Export {exportFormat.toUpperCase()}
+                <Download className="h-5 w-5 mr-2" />
+                Export as {exportFormat.toUpperCase()}
               </>
             )}
           </Button>
+          
+          {/* Professional note */}
+          <div className="mt-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Shield className="h-4 w-4 text-primary mt-0.5" />
+              <p className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Authenticity Guaranteed:</span> All exported reports include QR codes and verification IDs for authenticity verification at verieditai.com
+              </p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

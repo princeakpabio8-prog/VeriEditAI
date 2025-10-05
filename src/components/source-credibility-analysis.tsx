@@ -83,36 +83,66 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
   return (
     <div className="space-y-6">
       {/* Credibility Overview */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="bg-gradient-card border-border/50 shadow-md hover:shadow-lg transition-shadow duration-300">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-primary" />
-            Source Credibility Analysis
-          </CardTitle>
-          <CardDescription>
-            Enhanced verification with AI reasoning models and credible sources
-          </CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Shield className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Source Credibility Analysis</CardTitle>
+              <CardDescription>
+                Enhanced verification with AI reasoning models and credible sources
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Overall Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${getCredibilityColor(confidence)}`}>
-                {confidence}%
+            <div className="p-5 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all duration-300">
+              <div className="text-center space-y-2">
+                <div className={`text-4xl font-bold ${getCredibilityColor(confidence)}`}>
+                  {confidence}%
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${getCredibilityColor(confidence).replace('text-', 'bg-')} transition-all duration-1000`}
+                    style={{ width: `${confidence}%` }}
+                  />
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">Verification Confidence</p>
               </div>
-              <p className="text-sm text-muted-foreground">Verification Confidence</p>
             </div>
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${getCredibilityColor(averageCredibility)}`}>
-                {averageCredibility}%
+            <div className="p-5 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all duration-300">
+              <div className="text-center space-y-2">
+                <div className={`text-4xl font-bold ${getCredibilityColor(averageCredibility)}`}>
+                  {averageCredibility}%
+                </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${getCredibilityColor(averageCredibility).replace('text-', 'bg-')} transition-all duration-1000`}
+                    style={{ width: `${averageCredibility}%` }}
+                  />
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">Avg. Source Credibility</p>
               </div>
-              <p className="text-sm text-muted-foreground">Average Source Credibility</p>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {sources.length}
+            <div className="p-5 rounded-lg bg-gradient-to-br from-muted/60 to-muted/30 border border-border/40 hover:border-primary/30 transition-all duration-300">
+              <div className="text-center space-y-2">
+                <div className="text-4xl font-bold text-primary">
+                  {sources.length}
+                </div>
+                <div className="flex justify-center gap-1">
+                  {[...Array(Math.min(5, sources.length))].map((_, i) => (
+                    <div key={i} className="w-2 h-2 rounded-full bg-primary" />
+                  ))}
+                  {sources.length > 5 && (
+                    <span className="text-xs text-muted-foreground">+{sources.length - 5}</span>
+                  )}
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">Verified Sources</p>
               </div>
-              <p className="text-sm text-muted-foreground">Verified Sources</p>
             </div>
           </div>
 
@@ -154,12 +184,19 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
       </Card>
 
       {/* Individual Source Analysis */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="bg-gradient-card border-border/50 shadow-md hover:shadow-lg transition-shadow duration-300">
         <CardHeader>
-          <CardTitle className="text-lg">Individual Source Credibility</CardTitle>
-          <CardDescription>
-            Detailed analysis of each verification source
-          </CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-accent/10">
+              <CheckCircle className="h-5 w-5 text-accent" />
+            </div>
+            <div>
+              <CardTitle className="text-xl">Individual Source Credibility</CardTitle>
+              <CardDescription>
+                Detailed credibility analysis of each verification source
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {sources.length === 0 ? (
@@ -173,18 +210,28 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
           ) : (
             <div className="space-y-4">
               {sources.map((source, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {getSourceIcon(source.source_type)}
-                      <h5 className="font-medium text-sm line-clamp-2">
-                        {source.title}
-                      </h5>
+                <div 
+                  key={index} 
+                  className="group border border-border/50 hover:border-primary/40 rounded-lg p-5 space-y-4 bg-gradient-to-br from-muted/40 to-muted/20 hover:from-muted/60 hover:to-muted/30 transition-all duration-300 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className="p-2 rounded-lg bg-background/80 group-hover:bg-primary/10 transition-colors">
+                        {getSourceIcon(source.source_type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-semibold text-sm leading-tight mb-1 group-hover:text-primary transition-colors">
+                          {source.title}
+                        </h5>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {source.source_type.replace('_', ' ')}
+                        </p>
+                      </div>
                     </div>
                     <Badge 
                       variant={source.reliability_score >= 80 ? "default" : 
                               source.reliability_score >= 60 ? "secondary" : "destructive"}
-                      className="ml-2"
+                      className="shrink-0 font-bold"
                     >
                       {getCredibilityLevel(source.reliability_score)}
                     </Badge>
@@ -192,29 +239,38 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span>Credibility Score</span>
-                      <span className={getCredibilityColor(source.reliability_score)}>
+                      <span className="font-medium">Credibility Score</span>
+                      <span className={`font-bold ${getCredibilityColor(source.reliability_score)}`}>
                         {source.reliability_score}%
                       </span>
                     </div>
-                    <Progress value={source.reliability_score} className="h-2" />
+                    <div className="relative">
+                      <Progress value={source.reliability_score} className="h-3" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold text-foreground/80 mix-blend-difference">
+                          {source.reliability_score}%
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground line-clamp-2">
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 bg-background/40 p-3 rounded border border-border/30">
                     {source.content_snippet}
                   </p>
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pt-2 border-t border-border/30">
                     <Badge variant="outline" className="text-xs capitalize">
+                      <Globe className="h-3 w-3 mr-1" />
                       {source.source_type.replace('_', ' ')}
                     </Badge>
                     <a 
                       href={source.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 group/link"
                     >
-                      View Source →
+                      View Source 
+                      <span className="group-hover/link:translate-x-1 transition-transform">→</span>
                     </a>
                   </div>
                 </div>

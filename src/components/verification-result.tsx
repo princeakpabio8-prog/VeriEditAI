@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { TrustScoreDisplay } from './trust-score-display';
 import { TrustScoreExplanation } from './trust-score-explanation';
+import { TrustScoreFeedback } from './trust-score-feedback';
 import { VerificationExport } from './verification-export';
 import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ExternalLink, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { safeLower } from "@/lib/utils";
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Source {
   id?: string;
@@ -310,6 +312,25 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           verification_method={methods || ['AI Analysis']}
           confidence={trustScore}
         />
+      </motion.div>
+
+      {/* User Feedback Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 2.4 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Help Us Improve</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TrustScoreFeedback
+              verificationId={verificationId}
+              userId={useAuth().user?.id}
+            />
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Action Buttons */}

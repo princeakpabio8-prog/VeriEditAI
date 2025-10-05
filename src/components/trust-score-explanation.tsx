@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Tooltip,
@@ -12,93 +13,196 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Info, Shield, ShieldCheck, ShieldAlert, ShieldX } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Info, 
+  Shield, 
+  AlertTriangle, 
+  XCircle, 
+  HelpCircle,
+  CheckCircle2,
+  Clock,
+  FileText,
+  Users
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface TrustScoreExplanationProps {
   type?: 'tooltip' | 'dialog' | 'inline';
   trigger?: React.ReactNode;
+  scoreBreakdown?: {
+    contentScore?: number;
+    sourceScore?: number;
+    consensusScore?: number;
+    recencyScore?: number;
+    answerQuality?: number;
+  };
 }
 
-const TrustScoreExplanation = ({ type = 'tooltip', trigger }: TrustScoreExplanationProps) => {
+const TrustScoreExplanation = ({ 
+  type = 'tooltip', 
+  trigger,
+  scoreBreakdown 
+}: TrustScoreExplanationProps) => {
+  const hasBreakdown = scoreBreakdown && Object.keys(scoreBreakdown).length > 0;
+
   const explanationContent = (
     <div className="space-y-4">
+      {hasBreakdown && (
+        <div className="space-y-3">
+          <h4 className="font-semibold text-sm flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Trust Score Breakdown
+          </h4>
+          <div className="space-y-2">
+            {scoreBreakdown.contentScore !== undefined && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Content Quality (30%)</span>
+                  <span className="font-medium">{Math.round(scoreBreakdown.contentScore * 0.3)}/30</span>
+                </div>
+                <Progress value={scoreBreakdown.contentScore} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Evidence-based scoring: dates, names, citations, data
+                </p>
+              </div>
+            )}
+            
+            {scoreBreakdown.sourceScore !== undefined && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Source Reliability (30%)</span>
+                  <span className="font-medium">{Math.round(scoreBreakdown.sourceScore * 0.3)}/30</span>
+                </div>
+                <Progress value={scoreBreakdown.sourceScore} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Average credibility of all sources (.gov, fact-checkers, news)
+                </p>
+              </div>
+            )}
+            
+            {scoreBreakdown.consensusScore !== undefined && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Source Consensus (20%)</span>
+                  <span className="font-medium">{Math.round(scoreBreakdown.consensusScore * 0.2)}/20</span>
+                </div>
+                <Progress value={scoreBreakdown.consensusScore} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Agreement between sources, diversity, contradiction detection
+                </p>
+              </div>
+            )}
+            
+            {scoreBreakdown.recencyScore !== undefined && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    Recency (10%)
+                  </span>
+                  <span className="font-medium">{Math.round(scoreBreakdown.recencyScore * 0.1)}/10</span>
+                </div>
+                <Progress value={scoreBreakdown.recencyScore} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  How recent are the sources? Newer = higher score
+                </p>
+              </div>
+            )}
+            
+            {scoreBreakdown.answerQuality !== undefined && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Answer Quality (10%)</span>
+                  <span className="font-medium">{Math.round(scoreBreakdown.answerQuality * 0.1)}/10</span>
+                </div>
+                <Progress value={scoreBreakdown.answerQuality} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Completeness and detail of the verification answer
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-          <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-green-800 dark:text-green-200">High Trust (80-100%)</span>
-              <Badge variant="outline" className="text-xs border-green-300 text-green-700 dark:text-green-300">
-                Verified
-              </Badge>
-            </div>
-            <p className="text-sm text-green-700 dark:text-green-300">
-              Content is highly credible with strong supporting evidence from multiple reliable sources. 
-              Claims are well-documented and factually accurate.
-            </p>
-          </div>
-        </div>
+        <h4 className="font-semibold text-sm flex items-center gap-2">
+          <Shield className="h-4 w-4" />
+          Trust Score Levels
+        </h4>
+        <div className="space-y-2">
+          <Card className="border-green-200 dark:border-green-900">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                <span className="font-medium text-sm">High Trust (80-100%)</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-muted-foreground">
+                Multiple reliable sources agree. Strong evidence with specific details.
+              </p>
+            </CardContent>
+          </Card>
 
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-          <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-yellow-800 dark:text-yellow-200">Medium Trust (60-79%)</span>
-              <Badge variant="outline" className="text-xs border-yellow-300 text-yellow-700 dark:text-yellow-300">
-                Partially Verified
-              </Badge>
-            </div>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
-              Content has some supporting evidence but may contain mixed information. 
-              Some claims verified, others need additional confirmation.
-            </p>
-          </div>
-        </div>
+          <Card className="border-yellow-200 dark:border-yellow-900">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="font-medium text-sm">Medium Trust (60-79%)</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-muted-foreground">
+                Some verification possible. Limited sources or mixed signals.
+              </p>
+            </CardContent>
+          </Card>
 
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
-          <ShieldAlert className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-orange-800 dark:text-orange-200">Low Trust (40-59%)</span>
-              <Badge variant="outline" className="text-xs border-orange-300 text-orange-700 dark:text-orange-300">
-                Questionable
-              </Badge>
-            </div>
-            <p className="text-sm text-orange-700 dark:text-orange-300">
-              Content has limited supporting evidence or contains conflicting information. 
-              Claims should be independently verified before trusting.
-            </p>
-          </div>
-        </div>
+          <Card className="border-orange-200 dark:border-orange-900">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <span className="font-medium text-sm">Low Trust (40-59%)</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-muted-foreground">
+                Insufficient evidence or conflicting information from sources.
+              </p>
+            </CardContent>
+          </Card>
 
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-          <ShieldX className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-red-800 dark:text-red-200">Very Low Trust (0-39%)</span>
-              <Badge variant="outline" className="text-xs border-red-300 text-red-700 dark:text-red-300">
-                Unreliable
-              </Badge>
-            </div>
-            <p className="text-sm text-red-700 dark:text-red-300">
-              Content likely contains misinformation or lacks credible evidence. 
-              Multiple sources contradict the claims or no supporting evidence found.
-            </p>
-          </div>
+          <Card className="border-red-200 dark:border-red-900">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                <span className="font-medium text-sm">Very Low Trust (0-39%)</span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-muted-foreground">
+                Disputed claims, unreliable sources, or contradictory evidence.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <div className="pt-3 border-t border-border">
-        <h4 className="font-semibold mb-2 text-sm">How We Calculate Trust Scores</h4>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Cross-reference claims with multiple authoritative sources</li>
-          <li>• Evaluate source credibility and reliability</li>
-          <li>• Check for supporting evidence and documentation</li>
-          <li>• Analyze consistency across different information sources</li>
-          <li>• Factor in recent updates and temporal relevance</li>
+      <div className="space-y-2 pt-2 border-t">
+        <h4 className="font-semibold text-sm flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          How We Calculate Trust
+        </h4>
+        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+          <li>Evidence-based content analysis (not keyword matching)</li>
+          <li>Source credibility from .gov, fact-checkers, major news</li>
+          <li>Consensus detection and contradiction analysis</li>
+          <li>Temporal awareness (recent sources prioritized)</li>
+          <li>Answer completeness and detail quality</li>
         </ul>
       </div>
     </div>
@@ -122,6 +226,9 @@ const TrustScoreExplanation = ({ type = 'tooltip', trigger }: TrustScoreExplanat
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Understanding Trust Scores</DialogTitle>
+            <DialogDescription>
+              Understanding how we calculate verification trust scores
+            </DialogDescription>
           </DialogHeader>
           {explanationContent}
         </DialogContent>

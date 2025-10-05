@@ -9,7 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { LoadingSkeleton } from "./loading-skeleton";
+import { TrustScoreFeedback } from "./trust-score-feedback";
 import { validateAndSanitize } from "@/lib/validation";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   CheckCircle, 
   AlertTriangle,
@@ -730,6 +732,14 @@ export function MobileVerificationUI({
                       </div>
                     </div>
                   )}
+
+                  {/* User Feedback */}
+                  <div className="pt-2 border-t border-border/50">
+                    <TrustScoreFeedback
+                      verificationId={result.id}
+                      userId={useAuth().user?.id}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>

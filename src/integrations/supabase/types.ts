@@ -393,6 +393,44 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          feedback_type: string
+          id: string
+          updated_at: string
+          user_id: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          feedback_type: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          feedback_type?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_feedback_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification_logs: {
         Row: {
           created_at: string
@@ -438,6 +476,7 @@ export type Database = {
           id: string
           processing_time_ms: number | null
           result_summary: string | null
+          score_breakdown: Json | null
           status: string
           trust_score: number | null
           updated_at: string
@@ -452,6 +491,7 @@ export type Database = {
           id?: string
           processing_time_ms?: number | null
           result_summary?: string | null
+          score_breakdown?: Json | null
           status?: string
           trust_score?: number | null
           updated_at?: string
@@ -466,6 +506,7 @@ export type Database = {
           id?: string
           processing_time_ms?: number | null
           result_summary?: string | null
+          score_breakdown?: Json | null
           status?: string
           trust_score?: number | null
           updated_at?: string

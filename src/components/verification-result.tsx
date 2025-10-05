@@ -61,12 +61,26 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
 
   const handleOpenSource = (url: string) => {
     try {
+      console.log('Opening source URL:', url);
+      
+      if (!url || url.trim() === '') {
+        console.error('Invalid URL provided');
+        return;
+      }
+      
       const opened = window.open(url, '_blank', 'noopener,noreferrer');
       if (!opened) {
+        console.warn('Popup blocked, attempting direct navigation');
         window.location.href = url;
       }
     } catch (error) {
       console.error('Failed to open source:', error);
+      // Fallback: try direct navigation
+      try {
+        window.location.href = url;
+      } catch (fallbackError) {
+        console.error('Fallback navigation also failed:', fallbackError);
+      }
     }
   };
 

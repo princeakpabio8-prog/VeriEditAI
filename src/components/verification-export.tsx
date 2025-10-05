@@ -382,7 +382,7 @@ const getTrustScoreColor = (score: number | undefined) => {
           
           <div>
             <p className="text-sm text-muted-foreground mb-2">Summary</p>
-            <p className="text-sm">{summary.substring(0, 200)}...</p>
+            <p className="text-sm whitespace-pre-wrap break-words">{summary}</p>
           </div>
         </div>
 

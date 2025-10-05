@@ -10,7 +10,7 @@ import { IndustryTemplates } from '@/components/industry-templates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, FileText, Shield, TrendingUp, Activity, Briefcase } from 'lucide-react';
+import { CheckCircle, FileText, Shield, TrendingUp, Activity, Briefcase, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVerify } from '@/hooks/useVerify';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
@@ -112,6 +112,30 @@ export default function Verify() {
       toast.success('Health check passed! Verification system is working.');
     } catch (error) {
       toast.error('Health check failed: ' + (error as Error).message);
+    }
+  };
+
+  const handleRefreshNoCache = async () => {
+    if (!user) {
+      toast.error('Please sign in to refresh verification');
+      return;
+    }
+    const freshContent = verificationState.content;
+    if (!freshContent || freshContent.trim().length === 0) {
+      toast.error('No content to re-verify');
+      return;
+    }
+    try {
+      const fresh = await verify(freshContent, user.id, true);
+      const normalizedResult = fresh ? normalizeVerifyResult(fresh) : null;
+      setVerificationState((prev) => ({
+        ...prev,
+        stage: 'completed',
+        result: normalizedResult || result
+      }));
+      toast.success('Refreshed with a fresh verification (no cache).');
+    } catch (e) {
+      toast.error('Refresh failed: ' + (e as Error).message);
     }
   };
 
@@ -233,6 +257,20 @@ export default function Verify() {
                     content={verificationState.content || 'No content'}
                     industry={verificationState.selectedTemplate?.industry}
                   />
+                )}
+
+                {(verificationState.stage === 'completed' || result) && verificationState.content && (
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="secondary"
+                      onClick={handleRefreshNoCache}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Refresh (no cache)
+                    </Button>
+                  </div>
                 )}
                 
                 {error && (

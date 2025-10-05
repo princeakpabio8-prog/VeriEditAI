@@ -92,6 +92,12 @@ serve(async (req) => {
     const contentType = detectContentType(safeContent);
     console.log(`🎯 Content type detected: ${contentType}`);
 
+    // Enhanced fraud detection for banking use cases
+    const fraudAnalysis = detectFraudPatterns(safeContent);
+    if (fraudAnalysis.hasFraudIndicators) {
+      console.log('⚠️ Fraud indicators detected:', fraudAnalysis.patterns);
+    }
+
     let result: VerificationResult;
     
     if (contentType === 'fiction') {
@@ -116,8 +122,21 @@ serve(async (req) => {
     const processingTime = Date.now() - startTime;
     result.processing_time = processingTime;
 
+    // Add fraud alert to result if detected
+    if (fraudAnalysis.hasFraudIndicators) {
+      (result as any).fraudAlert = {
+        detected: true,
+        patterns: fraudAnalysis.patterns,
+        severity: fraudAnalysis.patterns.length >= 3 ? 'high' : fraudAnalysis.patterns.length >= 2 ? 'medium' : 'low'
+      };
+      result.summary = `${result.summary}\n\n⚠️ **FRAUD ALERT**: ${fraudAnalysis.patterns.length} fraud indicator(s) detected: ${fraudAnalysis.patterns.join(', ')}`;
+    }
+
     console.log(`✅ Verification complete in ${processingTime}ms`);
     console.log(`📊 Confidence: ${result.confidence}% | Status: ${result.status}`);
+    if (fraudAnalysis.hasFraudIndicators) {
+      console.log(`⚠️ Fraud Alert: ${fraudAnalysis.patterns.length} patterns detected`);
+    }
 
     return new Response(
       JSON.stringify(result),
@@ -147,6 +166,41 @@ serve(async (req) => {
     );
   }
 });
+
+// Enhanced fraud detection patterns for banks
+function detectFraudPatterns(content: string): { hasFraudIndicators: boolean; patterns: string[] } {
+  const lowerContent = content.toLowerCase();
+  const fraudPatterns: string[] = [];
+  
+  // Financial fraud indicators
+  const fraudKeywords = [
+    'wire transfer urgently', 'send money now', 'verify your account immediately',
+    'suspended account', 'unusual activity detected', 'confirm your password',
+    'guaranteed return', 'risk-free investment', 'limited time offer',
+    'inheritance windfall', 'lottery winner', 'tax refund pending',
+    'bitcoin investment', 'cryptocurrency scheme', 'ponzi', 'pyramid scheme',
+    'money laundering', 'offshore account', 'untraceable payment',
+    'gift card payment', 'western union', 'urgent wire transfer'
+  ];
+  
+  fraudKeywords.forEach(keyword => {
+    if (lowerContent.includes(keyword)) {
+      fraudPatterns.push(keyword);
+    }
+  });
+  
+  // Check for suspicious patterns
+  if (/\d{16}/.test(content)) fraudPatterns.push('potential card number');
+  if (/\d{3}-\d{2}-\d{4}/.test(content)) fraudPatterns.push('potential SSN');
+  if (lowerContent.match(/click here|click this link|verify now/)) {
+    fraudPatterns.push('phishing language');
+  }
+  
+  return {
+    hasFraudIndicators: fraudPatterns.length > 0,
+    patterns: fraudPatterns
+  };
+}
 
 function detectContentType(content: string): 'factual' | 'fiction' | 'opinion' {
   const lower = content.toLowerCase();

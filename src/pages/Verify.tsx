@@ -6,9 +6,11 @@ import { PerformanceDashboard } from '@/components/performance-dashboard';
 import { FeatureGuard } from '@/components/feature-guard';
 import { CacheStatus } from '@/components/cache-status';
 import { Navigation } from '@/components/ui/navigation';
+import { IndustryTemplates } from '@/components/industry-templates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, FileText, Shield, TrendingUp, Activity } from 'lucide-react';
+import { CheckCircle, FileText, Shield, TrendingUp, Activity, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVerify } from '@/hooks/useVerify';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
@@ -23,6 +25,16 @@ interface VerificationState {
   result?: any;
 }
 
+interface TemplateConfig {
+  id: string;
+  name: string;
+  industry: 'bank' | 'ngo';
+  icon: React.ReactNode;
+  description: string;
+  verificationFocus: string[];
+  suggestedContent: string;
+}
+
 export default function Verify() {
   const { user } = useAuth();
   const { verify, loading, error, result } = useVerify();
@@ -30,6 +42,11 @@ export default function Verify() {
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
+
+  const handleTemplateSelection = (template: TemplateConfig) => {
+    setVerificationState({ stage: 'upload' });
+    toast.success(`${template.name} template selected`);
+  };
 
   const handleVerificationStart = async (data: any) => {
     if (!user) {
@@ -126,7 +143,7 @@ export default function Verify() {
         </div>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <FeatureGuard 
             feature="verification"
             fallback={
@@ -143,60 +160,79 @@ export default function Verify() {
               </Card>
             }
           >
-            {verificationState.stage === 'upload' && (
-              <>
-                <VerificationUpload onVerificationStart={handleVerificationStart} isLoading={loading} />
-                <div className="mt-4 flex justify-center">
-                  <Button 
-                    variant="outline" 
-                    onClick={handleHealthCheck}
-                    disabled={loading}
-                    className="flex items-center gap-2"
-                  >
-                    <Activity className="h-4 w-4" />
-                    Health Check
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {(verificationState.stage === 'completed' || result) && (
-              <VerificationResult
-                verificationId={`instant_${Date.now()}`}
-                trustScore={(verificationState.result || result)?.confidence || 0}
-                status={(verificationState.result || result)?.status || 'unknown'}
-                summary={(verificationState.result || result)?.summary || 'No summary available'}
-                analysis={(verificationState.result || result)?.analysis || 'No analysis available'}
-                sources={((verificationState.result || result)?.sources || []).map((s: any) => ({
-                  id: s.id || Math.random().toString(),
-                  title: s.title || 'Unknown Source',
-                  url: s.url || '#',
-                  content_snippet: s.content_snippet || s.snippet || '',
-                  reliability_score: s.reliability_score || undefined,
-                }))}
-                sourceConsensus={(verificationState.result || result)?.source_consensus || 0}
-                methods={(verificationState.result || result)?.verification_method || ['AI Analysis']}
-                category={(verificationState.result || result)?.category || 'general'}
-                processingTime={1500}
-                onNewVerification={handleNewVerification}
-                content={verificationState.content || 'No content'}
-              />
-            )}
-            
-            {error && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <p className="text-destructive font-medium">Verification Error</p>
-                <p className="text-sm text-muted-foreground mt-1">{error}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleNewVerification}
-                  className="mt-2"
-                >
-                  Try Again
-                </Button>
-              </div>
-            )}
+            <Tabs defaultValue="verify" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="verify">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Standard Verification
+                </TabsTrigger>
+                <TabsTrigger value="templates">
+                  <Briefcase className="h-4 w-4 mr-2" />
+                  Industry Templates
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="verify">
+                {verificationState.stage === 'upload' && (
+                  <>
+                    <VerificationUpload onVerificationStart={handleVerificationStart} isLoading={loading} />
+                    <div className="mt-4 flex justify-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleHealthCheck}
+                        disabled={loading}
+                        className="flex items-center gap-2"
+                      >
+                        <Activity className="h-4 w-4" />
+                        Health Check
+                      </Button>
+                    </div>
+                  </>
+                )}
+                
+                {(verificationState.stage === 'completed' || result) && (
+                  <VerificationResult
+                    verificationId={`instant_${Date.now()}`}
+                    trustScore={(verificationState.result || result)?.confidence || 0}
+                    status={(verificationState.result || result)?.status || 'unknown'}
+                    summary={(verificationState.result || result)?.summary || 'No summary available'}
+                    analysis={(verificationState.result || result)?.analysis || 'No analysis available'}
+                    sources={((verificationState.result || result)?.sources || []).map((s: any) => ({
+                      id: s.id || Math.random().toString(),
+                      title: s.title || 'Unknown Source',
+                      url: s.url || '#',
+                      content_snippet: s.content_snippet || s.snippet || '',
+                      reliability_score: s.reliability_score || undefined,
+                    }))}
+                    sourceConsensus={(verificationState.result || result)?.source_consensus || 0}
+                    methods={(verificationState.result || result)?.verification_method || ['AI Analysis']}
+                    category={(verificationState.result || result)?.category || 'general'}
+                    processingTime={1500}
+                    onNewVerification={handleNewVerification}
+                    content={verificationState.content || 'No content'}
+                  />
+                )}
+                
+                {error && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <p className="text-destructive font-medium">Verification Error</p>
+                    <p className="text-sm text-muted-foreground mt-1">{error}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleNewVerification}
+                      className="mt-2"
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="templates">
+                <IndustryTemplates onSelectTemplate={handleTemplateSelection} />
+              </TabsContent>
+            </Tabs>
 
             {/* How it Works - Only show on upload stage */}
             {verificationState.stage === 'upload' && (

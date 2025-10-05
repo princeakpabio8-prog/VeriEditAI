@@ -153,11 +153,45 @@ function detectContentType(content: string): 'factual' | 'fiction' | 'opinion' {
   
   // Fiction indicators - characters, stories, movies, games, books
   const fictionKeywords = [
+    // Popular Franchises (Original + Extended)
     'harry potter', 'lord of the rings', 'game of thrones', 'avengers',
     'marvel', 'dc comics', 'star wars', 'pokemon', 'naruto', 'dragon ball',
+    'batman', 'superman', 'spiderman', 'iron man', 'thor',
+    'the witcher', 'breaking bad', 'stranger things',
+    'sherlock holmes', 'james bond', 'indiana jones',
+    'the hobbit', 'hunger games', 'twilight', 'divergent',
+    'transformers', 'jurassic park', 'avatar', 'matrix',
+    'disney', 'pixar',
+    
+    // Fantasy & Sci-Fi Indicators
+    'wizard', 'witch', 'magic spell', 'dragon', 'elf', 'dwarf',
+    'alien', 'spaceship', 'lightsaber', 'time travel',
+    'parallel universe', 'multiverse', 'teleport', 'prophecy', 'quest',
+    
+    // Literary & Storytelling Terms
+    'chapter', 'plot', 'storyline', 'narrator', 'author wrote',
+    'fantasy world', 'fictional world', 'made-up', 'imaginary',
+    'once upon a time', 'the end', 'sequel', 'prequel', 'fanfiction', 'comic book',
+    
+    // Media Type Indicators
     'in the movie', 'in the book', 'in the show', 'in the series', 'in the game',
     'character from', 'fictional character', 'story', 'novel', 'film',
-    'superhero', 'villain', 'protagonist', 'animated', 'anime', 'manga'
+    
+    // Character Types
+    'superhero', 'villain', 'protagonist', 'animated', 'anime', 'manga',
+    
+    // Video Game Specific
+    'minecraft', 'fortnite', 'call of duty', 'league of legends',
+    'world of warcraft', 'zelda', 'mario', 'sonic', 'gameplay', 'player character',
+    
+    // Nigerian/African Fiction Context
+    'nollywood movie', 'nollywood', 'yoruba movie', 'igbo folklore',
+    'anansi stories', 'african folktale', 'village story', 'juju magic',
+    'mami water', 'spirit world',
+    
+    // General Fiction Phrases
+    'in the story', 'based on the book', 'adaptation of',
+    'fictional account', 'creative work'
   ];
   
   // Opinion indicators - subjective statements

@@ -32,22 +32,15 @@ interface VerifyResult {
 // Local minimal fallback analysis to guarantee a result even if API fails
 function localFallbackAnalysis(content: string, originalError?: string) {
   const safe = (content ?? '').toString();
-  const words = safe.trim().split(/\s+/).filter(Boolean).length;
-  const hasNumbers = /\d/.test(safe);
-  const hasUrls = /https?:\/\//.test(safe);
-
-  let confidence = Math.min(15 + words * 1.2 + (hasUrls ? 5 : 0) + (hasNumbers ? 3 : 0), 68);
-  if (words < 8) confidence = Math.max(confidence - 10, 15);
-  const status = confidence >= 70 ? 'verified' : confidence >= 40 ? 'inconclusive' : 'disputed';
 
   return {
-    confidence: Math.round(confidence),
-    status,
-    summary: `Quick local analysis completed. Words: ${words}.` ,
-    analysis: 'Local heuristic fallback (no network).',
+    confidence: 50,
+    status: 'inconclusive',
+    summary: `Unable to verify: Network or API unavailable. Content analyzed: ${safe.length} characters.`,
+    analysis: 'Verification requires external sources. Please try again when connected.',
     sources: [],
-    source_consensus: Math.round(confidence),
-    verification_method: ['Local Fallback'],
+    source_consensus: 50,
+    verification_method: ['Unavailable - Offline'],
     category: 'general',
     fromFallback: true,
     originalError,

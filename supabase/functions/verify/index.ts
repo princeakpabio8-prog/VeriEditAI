@@ -224,31 +224,15 @@ async function fallbackAnalysis(content: string): Promise<VerificationResult> {
   console.log('⚡ Running fallback analysis...');
   
   const safeContent = String(content ?? '');
-  const words = safeContent.split(' ').length;
-  const hasNumbers = /\d/.test(safeContent);
-  const hasUrls = /https?:\/\//.test(safeContent);
-  const hasCapitalWords = /[A-Z]{2,}/.test(safeContent);
-  
-  // More conservative scoring algorithm
-  let confidence = Math.min(words * 1.5 + 15, 65);
-  if (hasNumbers) confidence += 3;
-  if (hasUrls) confidence += 5;
-  if (hasCapitalWords) confidence += 2;
-  if (words > 50) confidence += 5;
-  if (words < 10) confidence -= 10; // Penalty for very short content
-  
-  confidence = Math.max(15, Math.min(confidence, 75));
-  
-  const status = getStatusFromConfidence(confidence);
   
   return {
-    confidence,
-    status,
-    summary: `**⚡ QUICK VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nWords: ${words}\n\nBasic analysis completed. For comprehensive verification, AI integration is recommended.`,
-    analysis: `Content analysis: ${words} words detected. Score factors include length (${words > 50 ? 'good' : 'short'}), structure (${hasNumbers ? 'numbers present' : 'text only'}), and format (${hasUrls ? 'URLs included' : 'plain text'}).`,
+    confidence: 50,
+    status: 'inconclusive',
+    summary: `**⚡ VERIFICATION UNAVAILABLE**\n\nConfidence: 50%\nStatus: INCONCLUSIVE\n\nUnable to verify: Network or API unavailable. Verification requires external sources.`,
+    analysis: 'Verification requires external sources to fact-check content. Please try again when connected or when services are available.',
     sources: [],
-    source_consensus: confidence,
-    verification_method: ['Basic Analysis', 'Word Count', 'Pattern Detection'],
+    source_consensus: 50,
+    verification_method: ['Unavailable - Offline'],
     category: categorizeContent(safeContent),
     created_at: new Date().toISOString(),
     processing_time: 0
@@ -296,27 +280,35 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const safeAnswer = String(answer ?? '');
   const safeContent = String(originalContent ?? '').toLowerCase();
   
-  // Content Analysis Weight (40%)
+  // Content Analysis Weight (30%) - Evidence-based scoring
   let contentScore = 50;
-  if (safeAnswer.length > 200) contentScore += 15; // Detailed analysis
-  if (safeAnswer.length > 100) contentScore += 10; // Moderate detail
+  
+  // Evidence quality indicators (not keyword gaming)
+  const hasSpecificDates = /\b(19|20)\d{2}\b/.test(safeAnswer);
+  const hasSpecificNames = /\b[A-Z][a-z]+\s[A-Z][a-z]+\b/.test(safeAnswer);
+  const hasNumbers = /\d+/.test(safeAnswer);
+  const hasCitations = safeAnswer.includes('[') || safeAnswer.includes('according to');
+  
+  if (hasSpecificDates) contentScore += 10;
+  if (hasSpecificNames) contentScore += 8;
+  if (hasNumbers && safeAnswer.length > 100) contentScore += 5;
+  if (hasCitations) contentScore += 12;
   if (safeAnswer.includes('evidence') || safeAnswer.includes('data')) contentScore += 8;
   if (safeAnswer.includes('study') || safeAnswer.includes('research')) contentScore += 12;
-  if (safeAnswer.toLowerCase().includes('disputed') || safeAnswer.includes('conflicting')) contentScore -= 20;
   
-  // Enhanced definitiveness detection
-  if (safeContent.includes('is the') || safeContent.includes('was elected') || 
-      safeContent.includes('currently serves') || safeContent.includes('president of')) {
-    contentScore += 20; // Definitive statements bonus
+  // Uncertainty indicators (reduce confidence)
+  if (safeAnswer.includes('may') || safeAnswer.includes('might') || 
+      safeAnswer.includes('possibly') || safeAnswer.includes('unclear')) {
+    contentScore -= 15;
   }
   
-  // Official status keywords bonus
-  if (safeContent.includes('president') || safeContent.includes('elected') || 
-      safeContent.includes('inaugurated') || safeContent.includes('official')) {
-    contentScore += 15; // Official terminology bonus
+  // Disputed/conflicting (major penalty)
+  if (safeAnswer.toLowerCase().includes('disputed') || safeAnswer.includes('conflicting') || 
+      safeAnswer.includes('controversy')) {
+    contentScore -= 25;
   }
   
-  // Source Quality Weight (35%)
+  // Source Quality Weight (30%)
   let sourceScore = 40;
   const sourceQualitySum = results.reduce((sum, r) => sum + calculateReliabilityScore(r.url || ''), 0);
   const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
@@ -326,7 +318,26 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const hasGovSource = results.some(r => (r.url || '').toLowerCase().includes('.gov'));
   if (hasGovSource) sourceScore += 25;
   
-  // Consensus Weight (25%)
+  // Recency Weight (10%) - Temporal awareness
+  let recencyScore = 50;
+  const currentYear = new Date().getFullYear();
+  
+  results.forEach(r => {
+    const publishedDate = r.published_date || r.date;
+    if (publishedDate) {
+      const publishYear = new Date(publishedDate).getFullYear();
+      const age = currentYear - publishYear;
+      
+      if (age === 0) recencyScore += 20; // This year
+      else if (age === 1) recencyScore += 10; // Last year
+      else if (age <= 3) recencyScore += 5; // Recent
+      else if (age > 5) recencyScore -= 10; // Outdated
+    }
+  });
+  
+  recencyScore = Math.min(Math.max(recencyScore, 30), 100);
+  
+  // Consensus Weight (20%)
   let consensusScore = 60;
   if (results.length >= 3) consensusScore += 15; // Multiple sources
   if (results.length >= 5) consensusScore += 10; // Strong consensus
@@ -335,6 +346,23 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const domains = new Set(results.map(r => new URL(r.url || 'https://example.com').hostname));
   if (domains.size >= 3) consensusScore += 10; // Diverse sources
   
+  // Contradiction detection - check if sources disagree
+  const hedgeWords = ['however', 'but', 'although', 'despite', 'contradicts'];
+  let contradictionPenalty = 0;
+  hedgeWords.forEach(word => {
+    if (safeAnswer.toLowerCase().includes(word)) contradictionPenalty += 5;
+  });
+  
+  // Check for large variance in source reliability = disagreement
+  if (results.length >= 3) {
+    const reliabilities = results.map(r => calculateReliabilityScore(r.url));
+    const max = Math.max(...reliabilities);
+    const min = Math.min(...reliabilities);
+    if (max - min > 30) contradictionPenalty += 10;
+  }
+  
+  consensusScore -= Math.min(contradictionPenalty, 30);
+  
   // Unanimous consensus bonus - check if all sources agree
   const allSourcesAgree = results.length > 2 && 
     !safeAnswer.toLowerCase().includes('however') && 
@@ -342,33 +370,19 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
     !safeAnswer.toLowerCase().includes('disputed');
   if (allSourcesAgree) consensusScore += 15;
   
-  // Political fact verification bonus
-  if (safeContent.includes('president') || safeContent.includes('election')) {
-    // Check for cross-party verification (multiple political perspectives)
-    const politicalSources = results.filter(r => {
-      const url = (r.url || '').toLowerCase();
-      return url.includes('reuters') || url.includes('apnews') || 
-             url.includes('bbc') || url.includes('npr') || url.includes('.gov');
-    });
-    if (politicalSources.length >= 2) consensusScore += 15; // Cross-party verification
-  }
+  // Answer Quality Weight (10%) - Moderate scoring for completeness
+  let answerQuality = 50;
+  if (safeAnswer.length > 150) answerQuality += 10; // Detailed
+  if (safeAnswer.length < 50) answerQuality -= 10; // Too brief
+  answerQuality = Math.min(Math.max(answerQuality, 30), 100);
   
-  // Final weighted calculation
+  // Final weighted calculation: Content 30%, Source 30%, Consensus 20%, Recency 10%, Answer 10%
   const finalConfidence = Math.round(
-    (contentScore * 0.4) + (sourceScore * 0.35) + (consensusScore * 0.25)
+    (contentScore * 0.3) + (sourceScore * 0.3) + (consensusScore * 0.2) + 
+    (recencyScore * 0.1) + (answerQuality * 0.1)
   );
   
-  // Fact category bonuses for verifiable facts
-  let factBonus = 0;
-  if (safeContent.includes('president') && safeContent.includes('united states')) {
-    factBonus = 20; // Verifiable government position
-  } else if (safeContent.includes('elected') || safeContent.includes('election results')) {
-    factBonus = 15; // Election facts
-  } else if (safeContent.includes('official') || safeContent.includes('government')) {
-    factBonus = 10; // Official statements
-  }
-  
-  return Math.min(Math.max(finalConfidence + factBonus, 40), 98); // Enhanced range 40-98%
+  return Math.min(Math.max(finalConfidence, 40), 98); // Range 40-98%
 }
 
 // Enhanced source reliability scoring with government verification priority

@@ -23,6 +23,7 @@ interface VerificationState {
   stage: 'upload' | 'completed';
   content?: string;
   result?: any;
+  selectedTemplate?: TemplateConfig;
 }
 
 interface TemplateConfig {
@@ -44,8 +45,11 @@ export default function Verify() {
   });
 
   const handleTemplateSelection = (template: TemplateConfig) => {
-    setVerificationState({ stage: 'upload' });
-    toast.success(`${template.name} template selected`);
+    setVerificationState({ 
+      stage: 'upload',
+      selectedTemplate: template 
+    });
+    toast.success(`${template.name} template selected - auto-populating content`);
   };
 
   const handleVerificationStart = async (data: any) => {
@@ -56,7 +60,19 @@ export default function Verify() {
 
     try {
       console.log('Starting instant verification...', { isMobile });
-      const fresh = await verify(data.content, user.id, isMobile, data);
+      
+      // Add template metadata if a template is selected
+      const verificationData = {
+        ...data,
+        template: verificationState.selectedTemplate ? {
+          id: verificationState.selectedTemplate.id,
+          name: verificationState.selectedTemplate.name,
+          industry: verificationState.selectedTemplate.industry,
+          verificationFocus: verificationState.selectedTemplate.verificationFocus
+        } : undefined
+      };
+      
+      const fresh = await verify(data.content, user.id, isMobile, verificationData);
       
       if (fresh && (fresh as any).fromFallback) {
         toast('Showing a similar cached result due to network issues.');
@@ -79,7 +95,8 @@ export default function Verify() {
 
   const handleNewVerification = () => {
     setVerificationState({
-      stage: 'upload'
+      stage: 'upload',
+      selectedTemplate: verificationState.selectedTemplate // Keep template selected
     });
   };
 
@@ -175,7 +192,11 @@ export default function Verify() {
               <TabsContent value="verify">
                 {verificationState.stage === 'upload' && (
                   <>
-                    <VerificationUpload onVerificationStart={handleVerificationStart} isLoading={loading} />
+                    <VerificationUpload 
+                      onVerificationStart={handleVerificationStart} 
+                      isLoading={loading}
+                      selectedTemplate={verificationState.selectedTemplate}
+                    />
                     <div className="mt-4 flex justify-center">
                       <Button 
                         variant="outline" 

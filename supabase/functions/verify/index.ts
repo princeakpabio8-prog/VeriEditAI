@@ -36,6 +36,7 @@ serve(async (req) => {
     const body = await req.json();
     const user_id = body?.user_id;
     const safeContent = String(body?.content ?? '');
+    const template = body?.template; // Template metadata from frontend
 
     if (safeContent.trim().length === 0) {
       console.error('❌ No content provided');
@@ -87,13 +88,18 @@ serve(async (req) => {
 
     console.log(`📝 Analyzing content: ${safeContent.substring(0, 100)}...`);
     console.log(`👤 User ID: ${user_id || 'anonymous'}`);
+    if (template) {
+      console.log(`🏷️ Template: ${template.name} (${template.industry})`);
+      console.log(`🎯 Verification Focus: ${template.verificationFocus.join(', ')}`);
+    }
 
     // Detect content type first
     const contentType = detectContentType(safeContent);
     console.log(`🎯 Content type detected: ${contentType}`);
 
     // Enhanced fraud detection for banking use cases
-    const fraudAnalysis = detectFraudPatterns(safeContent);
+    // Increase sensitivity for bank templates
+    const fraudAnalysis = detectFraudPatterns(safeContent, template?.industry === 'bank');
     if (fraudAnalysis.hasFraudIndicators) {
       console.log('⚠️ Fraud indicators detected:', fraudAnalysis.patterns);
     }
@@ -112,7 +118,7 @@ serve(async (req) => {
       
       if (tavilyApiKey) {
         console.log('🔍 Using Tavily Search API for verification...');
-        result = await verifyWithTavily(safeContent, tavilyApiKey);
+        result = await verifyWithTavily(safeContent, tavilyApiKey, template);
       } else {
         console.log('⚡ Using fallback analysis (no Tavily key)...');
         result = await fallbackAnalysis(safeContent);
@@ -129,7 +135,22 @@ serve(async (req) => {
         patterns: fraudAnalysis.patterns,
         severity: fraudAnalysis.patterns.length >= 3 ? 'high' : fraudAnalysis.patterns.length >= 2 ? 'medium' : 'low'
       };
-      result.summary = `${result.summary}\n\n⚠️ **FRAUD ALERT**: ${fraudAnalysis.patterns.length} fraud indicator(s) detected: ${fraudAnalysis.patterns.join(', ')}`;
+      
+      // More prominent warning for bank templates
+      const alertPrefix = template?.industry === 'bank' 
+        ? '🚨 **CRITICAL FRAUD ALERT** 🚨' 
+        : '⚠️ **FRAUD ALERT**';
+      
+      result.summary = `${result.summary}\n\n${alertPrefix}: ${fraudAnalysis.patterns.length} fraud indicator(s) detected: ${fraudAnalysis.patterns.join(', ')}`;
+    }
+    
+    // Add template context to result
+    if (template) {
+      (result as any).templateContext = {
+        name: template.name,
+        industry: template.industry,
+        verificationFocus: template.verificationFocus
+      };
     }
 
     console.log(`✅ Verification complete in ${processingTime}ms`);
@@ -168,7 +189,7 @@ serve(async (req) => {
 });
 
 // Enhanced fraud detection patterns for banks
-function detectFraudPatterns(content: string): { hasFraudIndicators: boolean; patterns: string[] } {
+function detectFraudPatterns(content: string, isBankTemplate = false): { hasFraudIndicators: boolean; patterns: string[] } {
   const lowerContent = content.toLowerCase();
   const fraudPatterns: string[] = [];
   
@@ -194,6 +215,16 @@ function detectFraudPatterns(content: string): { hasFraudIndicators: boolean; pa
   if (/\d{3}-\d{2}-\d{4}/.test(content)) fraudPatterns.push('potential SSN');
   if (lowerContent.match(/click here|click this link|verify now/)) {
     fraudPatterns.push('phishing language');
+  }
+  
+  // Additional checks for bank templates - more sensitive
+  if (isBankTemplate) {
+    if (lowerContent.includes('account') && lowerContent.includes('suspended')) {
+      fraudPatterns.push('account suspension claim');
+    }
+    if (lowerContent.match(/urgent|immediately|asap|right now/)) {
+      fraudPatterns.push('urgency tactics');
+    }
   }
   
   return {
@@ -295,12 +326,18 @@ async function handleOpinion(content: string): Promise<VerificationResult> {
   };
 }
 
-async function verifyWithTavily(content: string, apiKey: string): Promise<VerificationResult> {
+async function verifyWithTavily(content: string, apiKey: string, template?: any): Promise<VerificationResult> {
   const startTime = Date.now();
   
   try {
     const safeContent = String(content ?? '');
-    const query = `Fact-check and verify: "${safeContent}"`;
+    
+    // Customize query based on template
+    let query = `Fact-check and verify: "${safeContent}"`;
+    if (template) {
+      const focusAreas = template.verificationFocus?.join(', ') || '';
+      query = `${template.industry === 'bank' ? 'Financial fraud detection' : 'NGO fact-checking'}: Verify this claim focusing on ${focusAreas}. Content: "${safeContent}"`;
+    }
 
     console.log('🔍 Sending request to Tavily Search API...');
     

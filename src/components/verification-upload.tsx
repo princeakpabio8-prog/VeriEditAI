@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,9 +13,20 @@ import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { parseDocument, isDocumentFile } from '@/lib/document-parser';
 
+interface TemplateConfig {
+  id: string;
+  name: string;
+  industry: 'bank' | 'ngo';
+  icon: React.ReactNode;
+  description: string;
+  verificationFocus: string[];
+  suggestedContent: string;
+}
+
 interface VerificationUploadProps {
   onVerificationStart?: (data: VerificationData) => void;
   isLoading?: boolean;
+  selectedTemplate?: TemplateConfig;
 }
 
 interface VerificationData {
@@ -27,14 +38,60 @@ interface VerificationData {
   metadata?: any;
 }
 
-export const VerificationUpload = ({ onVerificationStart, isLoading = false }: VerificationUploadProps) => {
+export const VerificationUpload = ({ onVerificationStart, isLoading = false, selectedTemplate }: VerificationUploadProps) => {
   const { user } = useAuth();
   const [textContent, setTextContent] = useState("");
   const [urlContent, setUrlContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState("text");
   const { toast } = useToast();
+
+  // Auto-switch tab and load example content when template is selected
+  const loadTemplateExample = (template: TemplateConfig) => {
+    const examples: Record<string, { tab: string; content: string }> = {
+      'bank-kyc': {
+        tab: 'file',
+        content: 'Upload ID cards, passports, utility bills, or bank statements for KYC verification'
+      },
+      'bank-transaction': {
+        tab: 'text',
+        content: 'Customer claims: "I made a wire transfer of $50,000 to account ending in 4521 on December 15th, but the recipient says they never received it. My account shows the transaction was completed successfully. This is urgent as I need to send money to my elderly mother for her medical expenses."'
+      },
+      'bank-compliance': {
+        tab: 'file',
+        content: 'Upload compliance reports, regulatory filings, or policy documents'
+      },
+      'ngo-grant': {
+        tab: 'text',
+        content: 'Grant Proposal Excerpt: "Our organization has successfully reduced malaria cases by 87% in rural communities over the past 3 years. We served 15,000 beneficiaries across 50 villages. Independent studies from WHO confirm our intervention reduced transmission rates by half. We request $500,000 to expand to 100 more villages, projecting to save 2,000 lives annually based on our proven track record."'
+      },
+      'ngo-program': {
+        tab: 'text',
+        content: 'Program Report: "In Q4 2024, we distributed 10,000 mosquito nets to 5,000 households. Post-distribution surveys show 95% household coverage and 80% consistent usage rates. Our field monitors visited 500 randomly selected homes to verify net usage. Hospital records indicate a 60% reduction in malaria-related admissions in program areas compared to control regions."'
+      },
+      'ngo-media': {
+        tab: 'text',
+        content: 'Social Media Post to Verify: "Breaking: New study reveals that drinking lemon water every morning cures cancer in 90% of patients. Pharmaceutical companies don\'t want you to know this simple trick! Share this to save lives. #NaturalHealing #CancerCure"'
+      }
+    };
+
+    const example = examples[template.id];
+    if (example) {
+      setActiveTab(example.tab);
+      if (example.tab === 'text') {
+        setTextContent(example.content);
+      }
+    }
+  };
+
+  // Auto-load example when template changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      loadTemplateExample(selectedTemplate);
+    }
+  }, [selectedTemplate]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -300,7 +357,29 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
           </Card>
         )}
         
-        <Tabs defaultValue="text" className="w-full">
+        {/* Template Context Display */}
+        {selectedTemplate && (
+          <Card className="border-primary/50 bg-primary/5 mb-6">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5">{selectedTemplate.icon}</div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-sm mb-1">{selectedTemplate.name}</h4>
+                  <p className="text-xs text-muted-foreground mb-2">{selectedTemplate.description}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedTemplate.verificationFocus.map((focus, idx) => (
+                      <span key={idx} className="text-xs bg-background px-2 py-0.5 rounded">
+                        {focus}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="text" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -317,11 +396,26 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
           </TabsList>
 
           <TabsContent value="text" className="space-y-4">
+            {selectedTemplate && (
+              <div className="bg-muted/50 p-3 rounded-md mb-4">
+                <p className="text-xs text-muted-foreground mb-2">
+                  💡 <strong>Template Guidance:</strong> {selectedTemplate.suggestedContent}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => loadTemplateExample(selectedTemplate)}
+                  className="text-xs"
+                >
+                  Load Example Content
+                </Button>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="text-content">Text Content</Label>
               <Textarea
                 id="text-content"
-                placeholder="Paste the text content you want to verify..."
+                placeholder={selectedTemplate ? selectedTemplate.suggestedContent : "Paste the text content you want to verify..."}
                 value={textContent}
                 onChange={(e) => {
                   setTextContent(e.target.value);
@@ -387,6 +481,13 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
           </TabsContent>
 
           <TabsContent value="file" className="space-y-4">
+            {selectedTemplate && (
+              <div className="bg-muted/50 p-3 rounded-md mb-4">
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Template Guidance:</strong> {selectedTemplate.suggestedContent}
+                </p>
+              </div>
+            )}
             <div
               className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                 dragActive 

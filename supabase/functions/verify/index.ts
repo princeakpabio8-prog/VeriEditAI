@@ -181,13 +181,39 @@ async function verifyWithTavily(content: string, apiKey: string): Promise<Verifi
     }));
 
     // Calculate confidence based on search results quality
-    const confidence = calculateTavilyConfidence(answer, searchResults, content);
-    const status = getStatusFromConfidence(confidence);
+    let confidence = calculateTavilyConfidence(answer, searchResults, content);
+    
+    // Double-check for refutation in the answer itself
+    const lowerAnswer = answer.toLowerCase();
+    const lowerContent = content.toLowerCase();
+    const contentKeywords = content.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
+    const negationInAnswer = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality'].some(neg => lowerAnswer.includes(neg));
+    const keywordsInAnswer = contentKeywords.filter(word => lowerAnswer.includes(word)).length;
+    
+    const isRefuted = negationInAnswer && keywordsInAnswer >= 2;
+    
+    if (isRefuted) {
+      // The answer is clearly refuting the claim - force low confidence and FALSE status
+      confidence = Math.min(confidence, 30);
+      console.log(`🚨 REFUTATION CONFIRMED: Answer refutes the claim. Capping confidence at 30%.`);
+    }
+    
+    let status = getStatusFromConfidence(confidence);
+    
+    // Force FALSE status if refuted
+    if (isRefuted && confidence < 40) {
+      status = 'false';
+    }
     
     // Create comprehensive summary
-    const summary = answer 
+    let summary = answer 
       ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sources.length}\n\n${answer.substring(0, 200)}...`
       : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${safeContent.substring(0, 100)}..."`;
+    
+    // Prepend refutation warning if detected
+    if (isRefuted) {
+      summary = `⚠️ **Refutation detected: The claim appears to be false.**\n\n${summary}`;
+    }
     
     return {
       confidence,
@@ -290,15 +316,17 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const contentWords = safeContent.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
   
   // Negation words that indicate the claim is false
-  const negationWords = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality', 'myth', 'misconception'];
+  const negationWords = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality', 'myth', 'misconception', 'debunked'];
   const hasNegation = negationWords.some(neg => lowerAnswer.includes(neg));
   
   // Check if answer contains original claim keywords + negation
   const claimKeywordsInAnswer = contentWords.filter(word => lowerAnswer.includes(word)).length;
   
+  let isDebunking = false;
   if (hasNegation && claimKeywordsInAnswer >= 2) {
     // Answer is DEBUNKING the claim - major penalty
     contentScore -= 60;
+    isDebunking = true;
     console.log('🚨 CONTRADICTION DETECTED: Answer contradicts the original claim');
   }
   
@@ -396,13 +424,33 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   if (safeAnswer.length < 50) answerQuality -= 10; // Too brief
   answerQuality = Math.min(Math.max(answerQuality, 30), 100);
   
+  // If debunking detected, reduce positive contributions from sources and consensus
+  let effectiveSourceScore = sourceScore;
+  let effectiveConsensusScore = consensusScore;
+  
+  if (isDebunking) {
+    // When sources are debunking the claim, high source quality actually means the claim is FALSE
+    // So we reduce their positive contribution to final confidence
+    effectiveSourceScore = Math.round(sourceScore * 0.4);
+    effectiveConsensusScore = Math.round(consensusScore * 0.4);
+    console.log(`📊 Debunking detected - reducing source/consensus weights`);
+  }
+  
   // Final weighted calculation: Content 30%, Source 30%, Consensus 20%, Recency 10%, Answer 10%
-  const finalConfidence = Math.round(
-    (contentScore * 0.3) + (sourceScore * 0.3) + (consensusScore * 0.2) + 
+  let finalConfidence = Math.round(
+    (contentScore * 0.3) + (effectiveSourceScore * 0.3) + (effectiveConsensusScore * 0.2) + 
     (recencyScore * 0.1) + (answerQuality * 0.1)
   );
   
-  return Math.min(Math.max(finalConfidence, 40), 98); // Range 40-98%
+  // If debunking, clamp to maximum 30%
+  if (isDebunking) {
+    finalConfidence = Math.min(finalConfidence, 30);
+  }
+  
+  // Log detailed scores for debugging
+  console.log(`📊 Score breakdown: content=${contentScore}, source=${effectiveSourceScore}, consensus=${effectiveConsensusScore}, recency=${recencyScore}, quality=${answerQuality}, debunking=${isDebunking}, final=${finalConfidence}`);
+  
+  return Math.min(Math.max(finalConfidence, 5), 98); // Range 5-98%
 }
 
 // Enhanced source reliability scoring with government verification priority

@@ -161,6 +161,32 @@ All colors MUST be HSL.
   .trust-score-reveal {
     animation: trust-score-reveal 1.2s ease-out forwards;
   }
+
+  /* Professional card hover effects */
+  .card-hover-lift {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Glassmorphism effect */
+  .glass-effect {
+    @apply bg-background/60 backdrop-blur-md border border-border/40;
+  }
+
+  /* Professional gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  /* Professional badge glow */
+  .badge-glow {
+    @apply shadow-[0_0_15px_rgba(0,186,242,0.3)];
+  }
 }
 
 @keyframes trust-pulse {
@@ -204,5 +230,23 @@ All colors MUST be HSL.
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 186, 242, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 186, 242, 0.6);
   }
 }

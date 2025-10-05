@@ -88,17 +88,29 @@ serve(async (req) => {
     console.log(`📝 Analyzing content: ${safeContent.substring(0, 100)}...`);
     console.log(`👤 User ID: ${user_id || 'anonymous'}`);
 
-    // Get Tavily API key
-    const tavilyApiKey = Deno.env.get('TAVILY_API_KEY');
-    
+    // Detect content type first
+    const contentType = detectContentType(safeContent);
+    console.log(`🎯 Content type detected: ${contentType}`);
+
     let result: VerificationResult;
     
-    if (tavilyApiKey) {
-      console.log('🔍 Using Tavily Search API for verification...');
-      result = await verifyWithTavily(safeContent, tavilyApiKey);
+    if (contentType === 'fiction') {
+      console.log('📚 Handling fictional content...');
+      result = await handleFiction(safeContent);
+    } else if (contentType === 'opinion') {
+      console.log('💭 Handling opinion content...');
+      result = await handleOpinion(safeContent);
     } else {
-      console.log('⚡ Using fallback analysis (no Tavily key)...');
-      result = await fallbackAnalysis(safeContent);
+      // Factual verification
+      const tavilyApiKey = Deno.env.get('TAVILY_API_KEY');
+      
+      if (tavilyApiKey) {
+        console.log('🔍 Using Tavily Search API for verification...');
+        result = await verifyWithTavily(safeContent, tavilyApiKey);
+      } else {
+        console.log('⚡ Using fallback analysis (no Tavily key)...');
+        result = await fallbackAnalysis(safeContent);
+      }
     }
 
     const processingTime = Date.now() - startTime;
@@ -135,6 +147,65 @@ serve(async (req) => {
     );
   }
 });
+
+function detectContentType(content: string): 'factual' | 'fiction' | 'opinion' {
+  const lower = content.toLowerCase();
+  
+  // Fiction indicators - characters, stories, movies, games, books
+  const fictionKeywords = [
+    'harry potter', 'lord of the rings', 'game of thrones', 'avengers',
+    'marvel', 'dc comics', 'star wars', 'pokemon', 'naruto', 'dragon ball',
+    'in the movie', 'in the book', 'in the show', 'in the series', 'in the game',
+    'character from', 'fictional character', 'story', 'novel', 'film',
+    'superhero', 'villain', 'protagonist', 'animated', 'anime', 'manga'
+  ];
+  
+  // Opinion indicators - subjective statements
+  const opinionKeywords = [
+    'i think', 'i believe', 'in my opinion', 'i feel',
+    'best', 'worst', 'better than', 'should', 'must',
+    'favorite', 'prefer', 'like', 'hate', 'love'
+  ];
+  
+  if (fictionKeywords.some(kw => lower.includes(kw))) return 'fiction';
+  if (opinionKeywords.some(kw => lower.includes(kw))) return 'opinion';
+  
+  return 'factual';
+}
+
+async function handleFiction(content: string): Promise<VerificationResult> {
+  console.log('📚 Processing fictional content...');
+  
+  return {
+    confidence: 95,
+    status: 'verified',
+    summary: `**📚 FICTIONAL CONTENT DETECTED**\n\nConfidence: 95%\nStatus: VERIFIED\n\nThis appears to be about fictional content (books, movies, games, etc.). Fiction is neither true nor false - it's creative storytelling.\n\nContent: "${content.substring(0, 150)}..."`,
+    analysis: 'This content references fictional works or creative storytelling. Fiction is a form of artistic expression and is not subject to factual verification. Characters, events, and worlds in fiction are part of imaginative narratives.',
+    sources: [],
+    source_consensus: 95,
+    verification_method: ['Fiction Detection'],
+    category: 'fiction',
+    created_at: new Date().toISOString(),
+    processing_time: 0
+  };
+}
+
+async function handleOpinion(content: string): Promise<VerificationResult> {
+  console.log('💭 Processing opinion content...');
+  
+  return {
+    confidence: 50,
+    status: 'inconclusive',
+    summary: `**💭 OPINION DETECTED**\n\nConfidence: 50%\nStatus: INCONCLUSIVE\n\nThis appears to be a subjective opinion or personal belief. Opinions cannot be fact-checked as true or false.\n\nContent: "${content.substring(0, 150)}..."`,
+    analysis: 'This content expresses a personal opinion or subjective judgment, which is not subject to objective verification. Opinions are personal viewpoints that may vary from person to person and are neither factually true nor false.',
+    sources: [],
+    source_consensus: 50,
+    verification_method: ['Opinion Detection'],
+    category: 'opinion',
+    created_at: new Date().toISOString(),
+    processing_time: 0
+  };
+}
 
 async function verifyWithTavily(content: string, apiKey: string): Promise<VerificationResult> {
   const startTime = Date.now();
@@ -529,6 +600,10 @@ function calculateReliabilityScore(url: string): number {
 
 function categorizeContent(content: string): string {
   const lower = String(content || '').toLowerCase();
+  
+  // Check for fiction first
+  if (lower.includes('movie') || lower.includes('book') || lower.includes('show') || 
+      lower.includes('game') || lower.includes('character') || lower.includes('series')) return 'fiction';
   
   if (lower.includes('health') || lower.includes('medical') || lower.includes('vaccine')) return 'health';
   if (lower.includes('political') || lower.includes('election') || lower.includes('government')) return 'politics';

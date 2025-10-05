@@ -65,10 +65,6 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
     const allowedTypes = [
       "text/plain",
       "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "text/csv",
-      "application/json",
       "image/jpeg",
       "image/jpg", 
       "image/png",
@@ -88,7 +84,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
     if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Unsupported file type",
-        description: "Please select a text, PDF, Word, CSV, JSON, or image file.",
+        description: "Please select a PDF, text file, or image. Word documents coming soon!",
         variant: "destructive"
       });
       return false;
@@ -252,7 +248,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
       // Unsupported file type
       toast({
         title: "Unsupported File Type",
-        description: "Please upload a PDF, Word document, text file, or image.",
+        description: "Please upload a PDF, text file, or image.",
         variant: "destructive",
       });
     }
@@ -406,7 +402,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 type="file"
                 onChange={handleFileSelect}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept=".txt,.pdf,.doc,.docx,.csv,.json,.jpg,.jpeg,.png,.gif,.webp"
+                accept=".txt,.pdf,.jpg,.jpeg,.png,.gif,.webp"
               />
               <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-lg font-medium text-foreground mb-2">
@@ -416,7 +412,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false }: V
                 {selectedFile ? (
                   `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`
                 ) : (
-                  "or click to browse • PDF, Word, Text, CSV, JSON, Images up to 10MB"
+                  "or click to browse • PDF, Text, Images up to 10MB"
                 )}
               </p>
               {selectedFile && (

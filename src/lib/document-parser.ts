@@ -1,5 +1,7 @@
-import PDFParse from 'pdf-parse';
-import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js`;
 
 export interface DocumentMetadata {
   pageCount?: number;
@@ -28,17 +30,14 @@ export async function parseDocument(file: File): Promise<ParsedDocument> {
       return await parsePDF(file);
     }
 
-    // Word documents (.docx)
+    // Word documents (.docx, .doc) - not supported in browser, recommend text extraction on server
     if (
       fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      fileName.endsWith('.docx')
+      fileType === 'application/msword' ||
+      fileName.endsWith('.docx') ||
+      fileName.endsWith('.doc')
     ) {
-      return await parseWordDocument(file);
-    }
-
-    // Legacy Word documents (.doc)
-    if (fileType === 'application/msword' || fileName.endsWith('.doc')) {
-      return await parseWordDocument(file);
+      throw new Error('Word documents are not supported yet. Please convert to PDF or plain text first.');
     }
 
     // Plain text files
@@ -55,20 +54,41 @@ export async function parseDocument(file: File): Promise<ParsedDocument> {
 }
 
 /**
- * Parse PDF files and extract text content
+ * Parse PDF files and extract text content using PDF.js (browser-compatible)
  */
 async function parsePDF(file: File): Promise<ParsedDocument> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = new Uint8Array(arrayBuffer);
+    
+    // Load the PDF document
+    const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
 
-    const data = await PDFParse(buffer);
+    const numPages = pdf.numPages;
+    let fullText = '';
 
-    if (!data.text || data.text.trim().length === 0) {
+    // Extract text from each page
+    for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      
+      // Combine text items into a single string
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(' ');
+      
+      fullText += pageText + '\n';
+    }
+
+    // Get metadata
+    const metadata = await pdf.getMetadata();
+    const metadataInfo = metadata.info as any;
+    
+    if (!fullText || fullText.trim().length === 0) {
       return {
         text: '',
         metadata: {
-          pageCount: data.numpages || 0,
+          pageCount: numPages,
           fileType: 'pdf',
           extractionSuccess: false,
           errorMessage: 'PDF appears to be empty or contains only images (no selectable text)',
@@ -77,11 +97,11 @@ async function parsePDF(file: File): Promise<ParsedDocument> {
     }
 
     return {
-      text: data.text.trim(),
+      text: fullText.trim(),
       metadata: {
-        pageCount: data.numpages || 0,
-        author: data.info?.Author,
-        createdAt: data.info?.CreationDate ? new Date(data.info.CreationDate) : undefined,
+        pageCount: numPages,
+        author: metadataInfo?.Author,
+        createdAt: metadataInfo?.CreationDate ? new Date(metadataInfo.CreationDate) : undefined,
         fileType: 'pdf',
         extractionSuccess: true,
       },
@@ -101,38 +121,6 @@ async function parsePDF(file: File): Promise<ParsedDocument> {
 
     // Handle corrupted PDFs
     throw new Error(`Failed to parse PDF: ${error.message || 'File may be corrupted'}`);
-  }
-}
-
-/**
- * Parse Word documents (.doc, .docx) and extract text content
- */
-async function parseWordDocument(file: File): Promise<ParsedDocument> {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-
-    const result = await mammoth.extractRawText({ arrayBuffer });
-
-    if (!result.value || result.value.trim().length === 0) {
-      return {
-        text: '',
-        metadata: {
-          fileType: file.name.endsWith('.docx') ? 'docx' : 'doc',
-          extractionSuccess: false,
-          errorMessage: 'Word document appears to be empty',
-        },
-      };
-    }
-
-    return {
-      text: result.value.trim(),
-      metadata: {
-        fileType: file.name.endsWith('.docx') ? 'docx' : 'doc',
-        extractionSuccess: true,
-      },
-    };
-  } catch (error: any) {
-    throw new Error(`Failed to parse Word document: ${error.message || 'File may be corrupted'}`);
   }
 }
 
@@ -172,13 +160,11 @@ async function parseTextFile(file: File): Promise<ParsedDocument> {
 export function isDocumentFile(file: File): boolean {
   const documentTypes = [
     'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-    'application/msword', // .doc
     'text/plain',
   ];
 
   const fileName = file.name.toLowerCase();
-  const documentExtensions = ['.pdf', '.doc', '.docx', '.txt'];
+  const documentExtensions = ['.pdf', '.txt'];
 
   return (
     documentTypes.includes(file.type) ||

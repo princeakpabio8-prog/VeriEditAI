@@ -63,8 +63,6 @@ export function MobileVerificationUI({
       'image/jpeg',
       'image/png',
       'image/webp',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
 
     if (file.size > maxSize) {
@@ -72,7 +70,7 @@ export function MobileVerificationUI({
     }
 
     if (!allowedTypes.includes(file.type)) {
-      return "Unsupported file type. Please use PDF, Word, or image files.";
+      return "Unsupported file type. Please use PDF, text, or image files.";
     }
 
     return null;
@@ -280,7 +278,7 @@ export function MobileVerificationUI({
         } else {
           toast({
             title: 'Unsupported File Type',
-            description: 'Please upload an image, PDF, Word document, or text file.',
+            description: 'Please upload an image, PDF, or text file.',
             variant: 'destructive',
           });
         }
@@ -524,7 +522,7 @@ export function MobileVerificationUI({
                           type="file"
                           onChange={handleFileSelect}
                           className="hidden"
-                          accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp"
+                          accept=".pdf,.txt,.jpg,.jpeg,.png,.webp"
                         />
                         
                         <input

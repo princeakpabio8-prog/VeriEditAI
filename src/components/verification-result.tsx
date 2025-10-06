@@ -263,6 +263,137 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         </motion.div>
       )}
 
+      {/* Transparency Report Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.8 }}
+      >
+        <Card className="bg-gradient-card border-primary/20 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Shield className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">📊 Transparency Report</CardTitle>
+                <CardDescription>
+                  How this trust score was calculated with full methodology breakdown
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Score Breakdown */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-foreground">Trust Score Breakdown</h4>
+              <p className="text-xs text-muted-foreground">
+                Our AI uses 5 key factors to calculate the {trustScore}% trust score for this verification:
+              </p>
+              
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Evidence Quality (30%)</span>
+                    <span className="text-sm text-muted-foreground">Assesses claim details, citations, data</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/80" style={{ width: '30%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Source Credibility (30%)</span>
+                    <span className="text-sm text-muted-foreground">Evaluates reliability of sources</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/80" style={{ width: '30%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Source Consensus (20%)</span>
+                    <span className="text-sm text-muted-foreground">Checks if sources agree</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/80" style={{ width: '20%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Information Recency (10%)</span>
+                    <span className="text-sm text-muted-foreground">How current the sources are</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/80" style={{ width: '10%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Analysis Completeness (10%)</span>
+                    <span className="text-sm text-muted-foreground">Depth of investigation</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary/80" style={{ width: '10%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Source Scores */}
+            {sources && sources.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold text-foreground">Individual Source Credibility Scores</h4>
+                <div className="space-y-2">
+                  {sources.slice(0, 5).map((source, index) => {
+                    const reliabilityColor = source.reliability_score >= 80 ? 'text-trust-high' : 
+                                            source.reliability_score >= 60 ? 'text-trust-medium' : 'text-trust-low';
+                    return (
+                      <div key={index} className="flex items-center justify-between p-2 rounded bg-muted/30">
+                        <span className="text-xs flex-1 truncate">{source.title}</span>
+                        <Badge variant="outline" className={`text-xs font-bold ${reliabilityColor} border-current ml-2`}>
+                          {source.reliability_score}%
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Methodology Explanation */}
+            <div className="p-4 rounded-lg bg-muted/30 border border-border/30">
+              <h4 className="text-sm font-semibold mb-2 text-foreground">Verification Methodology</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This verification used advanced AI analysis combined with real-time web search across {sources.length} trusted sources. 
+                The trust score reflects factual integrity based on evidence quality, source credibility, and cross-verification. 
+                Higher scores (80%+) indicate strong supporting evidence from multiple reliable sources.
+              </p>
+            </div>
+
+            {/* Audit Trail */}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t border-border/30">
+              <div className="flex items-center gap-1">
+                <Shield className="h-3 w-3" />
+                <span>Verification ID: {verificationId.substring(0, 8)}...</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{new Date().toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FileText className="h-3 w-3" />
+                <span>{sources.length} sources</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Sources Card */}
       {sources && sources.length > 0 && (
         <motion.div

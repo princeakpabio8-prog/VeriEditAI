@@ -444,15 +444,17 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                         )}
                       </div>
                       
-                      <a
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-9 px-3 w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          window.open(source.url, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-9 px-3 w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground group-hover:bg-primary group-hover:text-primary-foreground cursor-pointer"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Original Source
-                      </a>
+                      </button>
                     </div>
                   </motion.div>
                 );

@@ -263,15 +263,17 @@ export const SourceCredibilityAnalysis: React.FC<SourceCredibilityAnalysisProps>
                       <Globe className="h-3 w-3 mr-1" />
                       {source.source_type.replace('_', ' ')}
                     </Badge>
-                    <a 
-                      href={source.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 group/link"
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(source.url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1 group/link cursor-pointer"
                     >
                       View Source 
                       <span className="group-hover/link:translate-x-1 transition-transform">→</span>
-                    </a>
+                    </button>
                   </div>
                 </div>
               ))}

@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock } from "lucide-react";
-import { useState } from "react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
 import { motion } from 'framer-motion';
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationProps {
   isAuthenticated?: boolean;
@@ -17,8 +18,30 @@ interface NavigationProps {
 export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!authUser?.id) {
+        setIsAdmin(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id)
+        .eq('role', 'admin')
+        .single();
+      
+      setIsAdmin(!!data);
+    };
+    
+    checkAdminStatus();
+  }, [authUser?.id]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -61,6 +84,11 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
                   Profile
                 </Link>
+                {isAdmin && (
+                  <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Admin
+                  </Link>
+                )}
               </>
             ) : (
               <>
@@ -122,6 +150,16 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                       <Settings className="h-4 w-4 mr-2" />
                       Profile & Settings
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        <UserCog className="h-4 w-4 mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         setIsProfileOpen(false);

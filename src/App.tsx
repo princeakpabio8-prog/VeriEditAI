@@ -18,6 +18,7 @@ import PaymentCallback from "./pages/PaymentCallback";
 import NotFound from "./pages/NotFound";
 import VerificationDashboard from "./components/VerificationDashboard";
 import Demo from "./pages/Demo";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <VerificationDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               } 
             />

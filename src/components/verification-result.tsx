@@ -59,30 +59,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   const normalizedStatus = safeLower(status);
   const normalizedCategory = safeLower(category || 'general');
 
-  const handleOpenSource = (url: string) => {
-    try {
-      console.log('Opening source URL:', url);
-      
-      if (!url || url.trim() === '') {
-        console.error('Invalid URL provided');
-        return;
-      }
-      
-      const opened = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!opened) {
-        console.warn('Popup blocked, attempting direct navigation');
-        window.location.href = url;
-      }
-    } catch (error) {
-      console.error('Failed to open source:', error);
-      // Fallback: try direct navigation
-      try {
-        window.location.href = url;
-      } catch (fallbackError) {
-        console.error('Fallback navigation also failed:', fallbackError);
-      }
-    }
-  };
+  // Removed - no longer needed as we use native <a> tags for reliable new tab opening
 
   const toggleSourceExpansion = (index: number) => {
     setExpandedSources(prev => {
@@ -467,15 +444,15 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                         )}
                       </div>
                       
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenSource(source.url)}
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+                      <a
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 h-9 px-3 w-full border border-input bg-background hover:bg-accent hover:text-accent-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Original Source
-                      </Button>
+                      </a>
                     </div>
                   </motion.div>
                 );

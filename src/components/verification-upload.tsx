@@ -295,9 +295,21 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
           metadata: parsed.metadata,
         });
       } catch (error: any) {
+        const errorMsg = error.message || "Could not read the document.";
+        let description = errorMsg;
+        
+        // Provide specific guidance for common errors
+        if (errorMsg.includes('worker') || errorMsg.includes('module')) {
+          description = "PDF processing error. For images, try uploading the original JPG/PNG instead of a PDF.";
+        } else if (errorMsg.includes('password') || errorMsg.includes('encrypted')) {
+          description = "This document is password-protected. Please unlock it first.";
+        } else if (errorMsg.includes('HEIC')) {
+          description = "HEIC format not supported. Please convert to JPG or PNG first.";
+        }
+        
         toast({
           title: "Document Parsing Failed",
-          description: error.message || "Could not read the document. It may be corrupted or password-protected.",
+          description,
           variant: "destructive",
         });
       }

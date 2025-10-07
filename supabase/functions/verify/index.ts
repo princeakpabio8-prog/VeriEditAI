@@ -444,7 +444,7 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     // Calculate confidence based on search results quality
     let confidence = await calculateTavilyConfidenceWithCategory(
       answer, 
-      searchResults, 
+      sourcesWithScores, 
       content,
       primaryCategory,
       supabase
@@ -886,8 +886,11 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     /\b(football|soccer|basketball|sports)\b.*\b(team|club)\b/i,
     
     // Historical facts (with dates)
-    /\b(founded|established|created|born|died|built)\b.*\b(in |on )?(19|20)\d{2}\b/i,
-    /\b(19|20)\d{2}\b.*\b(founded|established|created|born|died|built)\b/i,
+    /\b(founded|established|created|born|died|built|won|awarded|broke|set)\b.*\b(in |on )?(19|20)\d{2}\b/i,
+    /\b(19|20)\d{2}\b.*\b(founded|established|created|born|died|built|won|awarded|broke|set)\b/i,
+    // Sports achievements and records (treated as established facts once in past)
+    /\b(won|captured|secured|took)\b.*\b(title|trophy|award|ballon d'or|world cup|olympics|championship|ballon d’ors?)\b.*\b(19|20)\d{2}\b/i,
+    /\b(19|20)\d{2}\b.*\b(won|awarded|broke|set)\b.*\b(record|title|award|ballon d'or|world cup|olympics|championship|ballon d’ors?)\b/i,
     
     // Scientific constants
     /\b(speed of light|gravity|water boils|freezing point|speed of sound)\b/i,

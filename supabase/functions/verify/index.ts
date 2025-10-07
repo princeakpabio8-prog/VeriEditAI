@@ -855,6 +855,13 @@ async function calculateTavilyConfidence(
     finalConfidence = Math.min(finalConfidence + 10, 96);
     finalConfidence = Math.max(finalConfidence, 88);
   }
+
+  // Sports achievements known-fact boost: push well-known club/nation titles higher
+  const sportsKeywords = /\b(premier league|la liga|serie a|bundesliga|champions league|ucl|fa cup|carabao cup|copa del rey|europa league|world cup|olympics|championship|league title|trophy)\b/i;
+  if (isEstablishedFact && sportsKeywords.test(safeContent)) {
+    finalConfidence = Math.max(finalConfidence, 92);
+    finalConfidence = Math.min(finalConfidence + 5, 97);
+  }
   
   // Log detailed scores for debugging
   console.log(`📊 Score breakdown: content=${contentScore}, source=${effectiveSourceScore}, consensus=${effectiveConsensusScore}, recency=${recencyScore}, quality=${answerQuality}, debunking=${isDebunking}, final=${finalConfidence}`);
@@ -878,6 +885,9 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
   }
   
   // Established fact patterns (check BEFORE current-event)
+  // Extended handling for sports facts without explicit years, while guarding against current-season phrasing.
+  const currentEventIndicators = /\b(today|yesterday|this week|this month|recently|latest|breaking|now|this season|last season|this year|last year|currently|ongoing)\b|\b20\d{2}\/\d{2}\b/i;
+  
   const establishedPatterns = [
     // Geographic facts
     /\b(is in|located in|based in|situated in|found in)\b.*\b(country|city|state|region|continent)\b/i,
@@ -912,9 +922,14 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     }
   }
   
+  // Sports achievements without explicit year (treat as established if not phrased as current-season)
+  const sportsNoYearPattern = /\b(has won|have won|won)\b.*\b(premier league|la liga|serie a|bundesliga|champions league|ucl|fa cup|carabao cup|copa del rey|europa league|world cup|olympics|championship|league title|trophy)\b/i;
+  if (sportsNoYearPattern.test(lowerContent) && !currentEventIndicators.test(lowerContent)) {
+    return 'established-fact';
+  }
+  
   // Current event indicators (needs recent sources)
-  if (lowerContent.match(/\b(today|yesterday|this week|this month|recently|latest|breaking|now)\b/) ||
-      lowerContent.match(/\b(202[3-9]|current|ongoing)\b/)) {
+  if (currentEventIndicators.test(lowerContent)) {
     return 'current-event';
   }
   

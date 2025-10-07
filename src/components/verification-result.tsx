@@ -6,7 +6,8 @@ import { TrustScoreExplanation } from './trust-score-explanation';
 import { TrustScoreFeedback } from './trust-score-feedback';
 import { VerificationExport } from './verification-export';
 import { SourceCredibilityAnalysis } from './source-credibility-analysis';
-import { ExternalLink, Clock, FileText, Activity, Shield } from 'lucide-react';
+import { ShareModal } from './share-modal';
+import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { safeLower } from "@/lib/utils";
@@ -54,6 +55,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   industry,
 }) => {
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
+  const [shareModalOpen, setShareModalOpen] = React.useState(false);
   
   // Normalize status to prevent toLowerCase errors
   const normalizedStatus = safeLower(status);
@@ -464,11 +466,12 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         </motion.div>
       )}
 
-      {/* Export Section */}
+      {/* Export and Share Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 2.3 }}
+        className="space-y-4"
       >
         <VerificationExport
           verificationId={verificationId}
@@ -484,7 +487,36 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           processingTime={processingTime}
           industry={industry}
         />
+        
+        {/* Share Button */}
+        <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h3 className="font-semibold text-lg mb-1">Share This Verification</h3>
+                <p className="text-sm text-muted-foreground">
+                  Generate a public link to share these verification results with anyone
+                </p>
+              </div>
+              <Button 
+                onClick={() => setShareModalOpen(true)}
+                size="lg"
+                className="gap-2 min-w-[160px]"
+              >
+                <Share2 className="h-4 w-4" />
+                Share Report
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
+
+      {/* Share Modal */}
+      <ShareModal
+        verificationId={verificationId}
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+      />
 
       {/* Enhanced Source Credibility Analysis */}
       <motion.div

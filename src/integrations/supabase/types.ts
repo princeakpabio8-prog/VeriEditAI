@@ -245,6 +245,59 @@ export type Database = {
         }
         Relationships: []
       }
+      public_verifications: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
+          share_token: string
+          updated_at: string
+          user_id: string
+          verification_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          share_token: string
+          updated_at?: string
+          user_id: string
+          verification_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          share_token?: string
+          updated_at?: string
+          user_id?: string
+          verification_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_verifications_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sources: {
         Row: {
           content_snippet: string | null

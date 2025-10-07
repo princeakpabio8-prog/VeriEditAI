@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import VerificationDashboard from "./components/VerificationDashboard";
 import Demo from "./pages/Demo";
 import AdminDashboard from "./pages/AdminDashboard";
+import ShareVerification from "./pages/ShareVerification";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,8 @@ const App = () => (
             />
             <Route path="/about" element={<About />} />
             <Route path="/payment-callback" element={<PaymentCallback />} />
+            {/* Public route for shared verifications - no auth required */}
+            <Route path="/share/:shareToken" element={<ShareVerification />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -877,13 +877,7 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     return 'disputed-claim';
   }
   
-  // Current event indicators (needs recent sources)
-  if (lowerContent.match(/\b(today|yesterday|this week|this month|recently|latest|breaking|now)\b/) ||
-      lowerContent.match(/\b(202[3-9]|current|ongoing)\b/)) {
-    return 'current-event';
-  }
-  
-  // Established fact patterns
+  // Established fact patterns (check BEFORE current-event)
   const establishedPatterns = [
     // Geographic facts
     /\b(is in|located in|based in|situated in|found in)\b.*\b(country|city|state|region|continent)\b/i,
@@ -899,6 +893,7 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     // Sports achievements and records (treated as established facts once in past)
     /\b(won|captured|secured|took)\b.*\b(title|trophy|award|ballon d'or|world cup|olympics|championship|ballon d’ors?)\b.*\b(19|20)\d{2}\b/i,
     /\b(19|20)\d{2}\b.*\b(won|awarded|broke|set)\b.*\b(record|title|award|ballon d'or|world cup|olympics|championship|ballon d’ors?)\b/i,
+    /\b(record for most wins|most .* wins|all-time record)\b/i,
     
     // Scientific constants
     /\b(speed of light|gravity|water boils|freezing point|speed of sound)\b/i,
@@ -915,6 +910,12 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     if (pattern.test(lowerContent)) {
       return 'established-fact';
     }
+  }
+  
+  // Current event indicators (needs recent sources)
+  if (lowerContent.match(/\b(today|yesterday|this week|this month|recently|latest|breaking|now)\b/) ||
+      lowerContent.match(/\b(202[3-9]|current|ongoing)\b/)) {
+    return 'current-event';
   }
   
   // Default to current-event (strict requirements)

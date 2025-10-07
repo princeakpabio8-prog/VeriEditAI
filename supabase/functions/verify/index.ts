@@ -635,7 +635,7 @@ async function calculateTavilyConfidence(
   console.log(`🎯 Fact type detected: ${factType}${isEstablishedFact ? ' (applying universal fact bonuses)' : ''}`);
   
   // Content Analysis Weight (30%) - Evidence-based scoring
-  let contentScore = isEstablishedFact ? 60 : 50; // Start higher for established facts
+  let contentScore = isEstablishedFact ? 75 : 50; // Higher baseline for established facts
   
   // NEGATION DETECTION - Check if answer contradicts the claim
   const lowerAnswer = safeAnswer.toLowerCase();
@@ -759,7 +759,7 @@ async function calculateTavilyConfidence(
     });
   } else {
     // For established facts, old sources are acceptable
-    recencyScore = 80; // Don't penalize established facts for old sources
+    recencyScore = 90; // Strong recency baseline for established facts
   }
   
   recencyScore = Math.min(Math.max(recencyScore, 30), 100);
@@ -776,9 +776,11 @@ async function calculateTavilyConfidence(
   // Contradiction detection - check if sources disagree
   const hedgeWords = ['however', 'but', 'although', 'despite', 'contradicts'];
   let contradictionPenalty = 0;
-  hedgeWords.forEach(word => {
-    if (safeAnswer.toLowerCase().includes(word)) contradictionPenalty += 5;
-  });
+  if (!isEstablishedFact) {
+    hedgeWords.forEach(word => {
+      if (safeAnswer.toLowerCase().includes(word)) contradictionPenalty += 5;
+    });
+  }
   
   // Check for large variance in source reliability = disagreement
   if (results.length >= 3 && results[0].reliability_score !== undefined) {
@@ -846,6 +848,12 @@ async function calculateTavilyConfidence(
   // Minimum confidence for high-quality established facts
   if (isEstablishedFact && effectiveConsensusScore === 100 && effectiveSourceScore >= 80) {
     finalConfidence = Math.max(finalConfidence, 85); // Ensure minimum 85% for perfect consensus + good sources
+  }
+  
+  // Moderate established-fact boost and floor
+  if (isEstablishedFact && !isDebunking && effectiveConsensusScore >= 80 && effectiveSourceScore >= 70) {
+    finalConfidence = Math.min(finalConfidence + 10, 96);
+    finalConfidence = Math.max(finalConfidence, 88);
   }
   
   // Log detailed scores for debugging

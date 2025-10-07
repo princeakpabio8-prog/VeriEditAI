@@ -474,7 +474,7 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     
     // Create comprehensive summary with full answer (no truncation)
     let summary = answer 
-      ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sources.length}\n\n${answer}`
+      ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sourcesWithScores.length}\n\n${answer}`
       : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${safeContent.substring(0, 100)}..."`;
     
     // Prepend refutation warning if detected

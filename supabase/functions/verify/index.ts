@@ -159,8 +159,75 @@ serve(async (req) => {
       console.log(`⚠️ Fraud Alert: ${fraudAnalysis.patterns.length} patterns detected`);
     }
 
+    // Save verification to database
+    let verificationId = null;
+    if (user_id) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        // Save verification
+        const { data: verification, error: dbError } = await supabase
+          .from('verifications')
+          .insert({
+            user_id: user_id,
+            content: safeContent,
+            content_type: contentType,
+            trust_score: result.confidence,
+            result_summary: result.summary,
+            category: result.category,
+            status: result.status,
+            processing_time_ms: processingTime,
+            score_breakdown: {
+              source_consensus: result.source_consensus,
+              verification_method: result.verification_method
+            }
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('Error saving verification:', dbError);
+        } else {
+          verificationId = verification.id;
+          console.log(`💾 Verification saved with ID: ${verificationId}`);
+
+          // Save sources
+          if (result.sources && result.sources.length > 0) {
+            const sourcesToInsert = result.sources.map(source => ({
+              verification_id: verificationId,
+              url: source.url,
+              title: source.title,
+              content_snippet: source.snippet || source.content_snippet || '',
+              full_content: source.full_content || '',
+              reliability_score: source.reliability_score || 60,
+              domain: new URL(source.url).hostname,
+              source_type: source.source_type || 'news'
+            }));
+
+            const { error: sourcesError } = await supabase
+              .from('sources')
+              .insert(sourcesToInsert);
+
+            if (sourcesError) {
+              console.error('Error saving sources:', sourcesError);
+            } else {
+              console.log(`💾 Saved ${sourcesToInsert.length} sources`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error in database save:', err);
+      }
+    }
+
     return new Response(
-      JSON.stringify(result),
+      JSON.stringify({
+        ...result,
+        verificationId: verificationId
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

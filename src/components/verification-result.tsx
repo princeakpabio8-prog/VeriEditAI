@@ -24,7 +24,7 @@ interface Source {
 }
 
 interface VerificationResultProps {
-  verificationId: string;
+  verificationId: string | null;
   trustScore: number;
   status: string;
   summary: string;
@@ -498,25 +498,29 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                   Generate a public link to share these verification results with anyone
                 </p>
               </div>
-              <Button 
-                onClick={() => setShareModalOpen(true)}
-                size="lg"
-                className="gap-2 min-w-[160px]"
-              >
-                <Share2 className="h-4 w-4" />
-                Share Report
-              </Button>
+              {verificationId && (
+                <Button 
+                  onClick={() => setShareModalOpen(true)}
+                  size="lg"
+                  className="gap-2 min-w-[160px]"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share Report
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
       </motion.div>
 
       {/* Share Modal */}
-      <ShareModal
-        verificationId={verificationId}
-        isOpen={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-      />
+      {verificationId && (
+        <ShareModal
+          verificationId={verificationId}
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+        />
+      )}
 
       {/* Enhanced Source Credibility Analysis */}
       <motion.div
@@ -547,7 +551,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           </CardHeader>
           <CardContent>
             <TrustScoreFeedback
-              verificationId={verificationId}
+              verificationId={verificationId || 'temp'}
               userId={useAuth().user?.id}
             />
           </CardContent>

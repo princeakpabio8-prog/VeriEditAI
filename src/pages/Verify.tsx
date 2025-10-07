@@ -237,7 +237,7 @@ export default function Verify() {
                 
                 {(verificationState.stage === 'completed' || result) && (
                   <VerificationResult
-                    verificationId={`instant_${Date.now()}`}
+                    verificationId={(verificationState.result || result)?.verificationId || null}
                     trustScore={(verificationState.result || result)?.confidence || 0}
                     status={(verificationState.result || result)?.status || 'unknown'}
                     summary={(verificationState.result || result)?.summary || 'No summary available'}

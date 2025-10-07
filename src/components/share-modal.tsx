@@ -54,7 +54,15 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
         body: { verificationId },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to create share link');
+      }
+
+      if (!data?.shareUrl) {
+        console.error('No share URL in response:', data);
+        throw new Error('Invalid response from server');
+      }
 
       setShareUrl(data.shareUrl);
       setShareToken(data.shareToken);
@@ -66,9 +74,10 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
       });
     } catch (error) {
       console.error('Error creating share:', error);
+      const errorMessage = error?.message || error?.error || 'Please try again';
       toast({
         title: 'Failed to create share link',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

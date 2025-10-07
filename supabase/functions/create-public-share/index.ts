@@ -85,8 +85,12 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingShare) {
-      // Return existing share
-      const shareUrl = `${supabaseUrl.replace('https://sqtkkzdswxazyikcheds.supabase.co', 'https://veriedit-ai.lovable.app')}/share/${existingShare.share_token}`;
+      // Return existing share - use request origin for proper URL
+      const origin = req.headers.get('origin') || 'https://veriedit-ai.lovable.app';
+      const shareUrl = `${origin}/share/${existingShare.share_token}`;
+      
+      console.log('Returning existing share:', { shareToken: existingShare.share_token, shareUrl });
+      
       return new Response(
         JSON.stringify({ 
           shareUrl,
@@ -133,10 +137,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate shareable URL
-    const shareUrl = `${supabaseUrl.replace('https://sqtkkzdswxazyikcheds.supabase.co', 'https://veriedit-ai.lovable.app')}/share/${shareToken}`;
+    // Generate shareable URL - use request origin for proper URL
+    const origin = req.headers.get('origin') || 'https://veriedit-ai.lovable.app';
+    const shareUrl = `${origin}/share/${shareToken}`;
 
-    console.log('Share created successfully:', { shareToken, verificationId });
+    console.log('Share created successfully:', { shareToken, verificationId, shareUrl });
 
     return new Response(
       JSON.stringify({
@@ -150,8 +155,17 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in create-public-share:', error);
+    console.error('Error details:', { 
+      message: error.message, 
+      stack: error.stack,
+      name: error.name 
+    });
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        message: error.message,
+        details: error.toString()
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -17,22 +17,25 @@ export default defineConfig({
       input: {
         popup: resolve(__dirname, "popup/popup.html"),
         "service-worker": resolve(__dirname, "background/service-worker.ts"),
-        content: resolve(__dirname, "content-scripts/content.ts"),
+        "content-script": resolve(__dirname, "content/content-script.ts"),
       },
       output: {
         entryFileNames: (chunkInfo) => {
           if (chunkInfo.name === "service-worker") {
             return "background/[name].js";
           }
-          if (chunkInfo.name === "content") {
-            return "content-scripts/[name].js";
+          if (chunkInfo.name === "content-script") {
+            return "content/[name].js";
           }
-          return "[name]/[name].js";
+          if (chunkInfo.name === "popup") {
+            return "popup/[name].js";
+          }
+          return "[name].js";
         },
         chunkFileNames: "chunks/[name]-[hash].js",
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === "content.css") {
-            return "content-scripts/[name][extname]";
+          if (assetInfo.name === "popup.css") {
+            return "popup/[name][extname]";
           }
           return "assets/[name][extname]";
         },

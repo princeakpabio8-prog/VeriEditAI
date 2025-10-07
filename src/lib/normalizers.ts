@@ -22,6 +22,7 @@ export interface NormalizedVerificationResult {
   sourceConsensus?: number;
   processingTime?: number;
   created_at?: string;
+  verificationId?: string | null;
   fromCache?: boolean;
   fromEnhancedCache?: boolean;
   fromLocalFallback?: boolean;
@@ -95,6 +96,10 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
     ? raw.created_at 
     : new Date().toISOString();
 
+  const verificationId = typeof raw.verificationId === 'string' 
+    ? raw.verificationId 
+    : null;
+
   return {
     confidence,
     status,
@@ -106,6 +111,7 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
     sourceConsensus,
     processingTime,
     created_at,
+    verificationId,
     fromCache: raw.fromCache === true,
     fromEnhancedCache: raw.fromEnhancedCache === true,
     fromLocalFallback: raw.fromLocalFallback === true,

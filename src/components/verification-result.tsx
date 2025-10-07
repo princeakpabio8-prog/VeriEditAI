@@ -358,7 +358,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
             <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t border-border/30">
               <div className="flex items-center gap-1">
                 <Shield className="h-3 w-3" />
-                <span>Verification ID: {verificationId.substring(0, 8)}...</span>
+                <span>Verification ID: {verificationId ? verificationId.substring(0, 8) + '...' : 'N/A'}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />

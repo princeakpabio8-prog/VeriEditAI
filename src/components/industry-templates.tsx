@@ -6,13 +6,13 @@ import {
   Building2, Heart, FileText, Shield, CheckCircle2, Users,
   Stethoscope, Pill, Activity, GraduationCap, BookOpen, School,
   Gavel, Scale, FileCheck, Umbrella, ClipboardCheck, 
-  Newspaper, Camera, Radio, Landmark, Flag
+  Newspaper, Camera, Radio, Landmark, Flag, Plane, FileSearch, MapPin
 } from 'lucide-react';
 
 interface TemplateConfig {
   id: string;
   name: string;
-  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government';
+  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration';
   icon: React.ReactNode;
   description: string;
   verificationFocus: string[];
@@ -225,12 +225,40 @@ const templates: TemplateConfig[] = [
     description: 'Validate official government statements and communications',
     verificationFocus: ['Statement accuracy', 'Policy verification', 'Official source check'],
     suggestedContent: 'Paste government announcements, policy documents, or official statements'
+  },
+  // Immigration Templates
+  {
+    id: 'immigration-visa',
+    name: 'Visa Document Verification',
+    industry: 'immigration',
+    icon: <Plane className="h-5 w-5" />,
+    description: 'Verify visa applications, travel documents, and supporting evidence',
+    verificationFocus: ['Document authenticity', 'Supporting evidence validation', 'Application consistency'],
+    suggestedContent: 'Upload passport copies, visa applications, travel itineraries, or sponsorship letters'
+  },
+  {
+    id: 'immigration-credential',
+    name: 'Immigration Credential Assessment',
+    industry: 'immigration',
+    icon: <FileSearch className="h-5 w-5" />,
+    description: 'Validate foreign credentials, educational qualifications, and work experience',
+    verificationFocus: ['Credential authenticity', 'Institution verification', 'Equivalency validation'],
+    suggestedContent: 'Upload foreign degrees, transcripts, professional certifications, or employment letters'
+  },
+  {
+    id: 'immigration-citizenship',
+    name: 'Citizenship Application Validation',
+    industry: 'immigration',
+    icon: <MapPin className="h-5 w-5" />,
+    description: 'Verify citizenship application documents and residency proofs',
+    verificationFocus: ['Residency verification', 'Identity document validation', 'Legal compliance check'],
+    suggestedContent: 'Upload birth certificates, marriage certificates, residency proofs, or naturalization documents'
   }
 ];
 
 interface IndustryTemplatesProps {
   onSelectTemplate: (template: TemplateConfig) => void;
-  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'all';
+  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'all';
 }
 
 export const IndustryTemplates: React.FC<IndustryTemplatesProps> = ({ 
@@ -246,7 +274,7 @@ export const IndustryTemplates: React.FC<IndustryTemplatesProps> = ({
       <div>
         <h3 className="text-lg font-semibold mb-2">Industry Templates</h3>
         <p className="text-sm text-muted-foreground">
-          Pre-configured verification workflows for banks and NGOs
+          Pre-configured verification workflows for multiple industries including banking, healthcare, legal, immigration, and more
         </p>
       </div>
 

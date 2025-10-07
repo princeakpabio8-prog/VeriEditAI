@@ -6,13 +6,14 @@ import {
   Building2, Heart, FileText, Shield, CheckCircle2, Users,
   Stethoscope, Pill, Activity, GraduationCap, BookOpen, School,
   Gavel, Scale, FileCheck, Umbrella, ClipboardCheck, 
-  Newspaper, Camera, Radio, Landmark, Flag, Plane, FileSearch, MapPin
+  Newspaper, Camera, Radio, Landmark, Flag, Plane, FileSearch, MapPin,
+  Package, PackageCheck, Ship
 } from 'lucide-react';
 
 interface TemplateConfig {
   id: string;
   name: string;
-  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration';
+  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs';
   icon: React.ReactNode;
   description: string;
   verificationFocus: string[];
@@ -253,12 +254,40 @@ const templates: TemplateConfig[] = [
     description: 'Verify citizenship application documents and residency proofs',
     verificationFocus: ['Residency verification', 'Identity document validation', 'Legal compliance check'],
     suggestedContent: 'Upload birth certificates, marriage certificates, residency proofs, or naturalization documents'
+  },
+  // Customs Templates
+  {
+    id: 'customs-declaration',
+    name: 'Customs Declaration Verification',
+    industry: 'customs',
+    icon: <Package className="h-5 w-5" />,
+    description: 'Verify customs declarations and cargo documentation',
+    verificationFocus: ['Declaration accuracy', 'Document authenticity', 'Compliance verification'],
+    suggestedContent: 'Upload customs declarations, commercial invoices, or packing lists'
+  },
+  {
+    id: 'customs-import-export',
+    name: 'Import/Export Document Validation',
+    industry: 'customs',
+    icon: <Ship className="h-5 w-5" />,
+    description: 'Validate import/export permits and trade documents',
+    verificationFocus: ['Permit authenticity', 'Trade compliance', 'Document consistency'],
+    suggestedContent: 'Upload import/export licenses, bills of lading, or certificates of origin'
+  },
+  {
+    id: 'customs-duty',
+    name: 'Duty Assessment Verification',
+    industry: 'customs',
+    icon: <PackageCheck className="h-5 w-5" />,
+    description: 'Verify duty calculations and tariff classifications',
+    verificationFocus: ['Duty accuracy', 'Tariff validation', 'Value verification'],
+    suggestedContent: 'Upload duty assessment forms, valuation documents, or tariff schedules'
   }
 ];
 
 interface IndustryTemplatesProps {
   onSelectTemplate: (template: TemplateConfig) => void;
-  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'all';
+  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs' | 'all';
 }
 
 export const IndustryTemplates: React.FC<IndustryTemplatesProps> = ({ 

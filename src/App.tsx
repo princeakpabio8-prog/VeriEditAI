@@ -20,6 +20,7 @@ import VerificationDashboard from "./components/VerificationDashboard";
 import Demo from "./pages/Demo";
 import AdminDashboard from "./pages/AdminDashboard";
 import ShareVerification from "./pages/ShareVerification";
+import Extensions from "./pages/Extensions";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
               } 
             />
             <Route path="/about" element={<About />} />
+            <Route path="/extensions" element={<Extensions />} />
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* Public route for shared verifications - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />

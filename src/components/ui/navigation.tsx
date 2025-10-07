@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,6 +75,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>
+                <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Extensions
+                </Link>
                 <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Billing
                 </Link>
@@ -98,6 +101,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Pricing
                 </a>
+                <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Extensions
+                </Link>
               </>
             )}
             
@@ -228,6 +234,13 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   About
                 </Link>
                 <Link
+                  to="/extensions"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Extensions
+                </Link>
+                <Link
                   to="/profile"
                   className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
@@ -251,6 +264,13 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 >
                   Pricing
                 </a>
+                <Link
+                  to="/extensions"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Extensions
+                </Link>
               </>
             )}
             

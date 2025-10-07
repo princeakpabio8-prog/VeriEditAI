@@ -28,6 +28,9 @@ const Footer = () => {
               <Link to="/dashboard" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Dashboard
               </Link>
+              <Link to="/extensions" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Browser Extension
+              </Link>
               <Link to="/about" className="block text-muted-foreground hover:text-foreground transition-colors">
                 About Us
               </Link>

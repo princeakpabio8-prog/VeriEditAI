@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Navigation } from '@/components/ui/navigation';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { User, Settings, CreditCard, BarChart3 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { User, Settings, CreditCard, BarChart3, Puzzle, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -197,6 +199,25 @@ const Profile = () => {
                 </form>
               </CardContent>
             </Card>
+
+            {/* Browser Extension Info */}
+            <Alert className="bg-gradient-card border-primary/20">
+              <Puzzle className="h-4 w-4 text-primary" />
+              <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-medium text-foreground mb-1">Browser Extension Available</p>
+                  <p className="text-sm text-muted-foreground">
+                    Verify content on social media platforms. Generate an API key below to get started.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" asChild className="whitespace-nowrap">
+                  <Link to="/extensions">
+                    Learn More
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
+              </AlertDescription>
+            </Alert>
 
             {/* API Keys */}
             <ApiKeyManager />

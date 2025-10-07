@@ -334,33 +334,105 @@ export type Database = {
           },
         ]
       }
+      source_reputation: {
+        Row: {
+          accuracy_rate: number | null
+          base_score: number
+          created_at: string
+          domain: string
+          editorial_quality: number | null
+          failed_verifications: number
+          id: string
+          last_verified_at: string | null
+          metadata: Json | null
+          political_bias: number | null
+          region: string | null
+          source_type: string | null
+          successful_verifications: number
+          updated_at: string
+          verification_count: number
+        }
+        Insert: {
+          accuracy_rate?: number | null
+          base_score?: number
+          created_at?: string
+          domain: string
+          editorial_quality?: number | null
+          failed_verifications?: number
+          id?: string
+          last_verified_at?: string | null
+          metadata?: Json | null
+          political_bias?: number | null
+          region?: string | null
+          source_type?: string | null
+          successful_verifications?: number
+          updated_at?: string
+          verification_count?: number
+        }
+        Update: {
+          accuracy_rate?: number | null
+          base_score?: number
+          created_at?: string
+          domain?: string
+          editorial_quality?: number | null
+          failed_verifications?: number
+          id?: string
+          last_verified_at?: string | null
+          metadata?: Json | null
+          political_bias?: number | null
+          region?: string | null
+          source_type?: string | null
+          successful_verifications?: number
+          updated_at?: string
+          verification_count?: number
+        }
+        Relationships: []
+      }
       sources: {
         Row: {
+          adjusted_reliability_score: number | null
+          base_reliability_score: number | null
           content_snippet: string | null
           created_at: string
+          domain: string | null
           full_content: string | null
           id: string
+          political_bias: number | null
           reliability_score: number | null
+          source_region: string | null
+          source_type: string | null
           title: string | null
           url: string
           verification_id: string
         }
         Insert: {
+          adjusted_reliability_score?: number | null
+          base_reliability_score?: number | null
           content_snippet?: string | null
           created_at?: string
+          domain?: string | null
           full_content?: string | null
           id?: string
+          political_bias?: number | null
           reliability_score?: number | null
+          source_region?: string | null
+          source_type?: string | null
           title?: string | null
           url: string
           verification_id: string
         }
         Update: {
+          adjusted_reliability_score?: number | null
+          base_reliability_score?: number | null
           content_snippet?: string | null
           created_at?: string
+          domain?: string | null
           full_content?: string | null
           id?: string
+          political_bias?: number | null
           reliability_score?: number | null
+          source_region?: string | null
+          source_type?: string | null
           title?: string | null
           url?: string
           verification_id?: string
@@ -482,6 +554,60 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_categories: {
+        Row: {
+          confidence_weights: Json
+          created_at: string
+          description: string | null
+          detection_patterns: Json
+          display_name: string
+          id: string
+          is_active: boolean | null
+          keywords: Json
+          max_source_age_days: number | null
+          min_sources: number | null
+          name: string
+          parent_category: string | null
+          required_source_types: string[] | null
+          updated_at: string
+          verification_criteria: Json
+        }
+        Insert: {
+          confidence_weights?: Json
+          created_at?: string
+          description?: string | null
+          detection_patterns?: Json
+          display_name: string
+          id?: string
+          is_active?: boolean | null
+          keywords?: Json
+          max_source_age_days?: number | null
+          min_sources?: number | null
+          name: string
+          parent_category?: string | null
+          required_source_types?: string[] | null
+          updated_at?: string
+          verification_criteria?: Json
+        }
+        Update: {
+          confidence_weights?: Json
+          created_at?: string
+          description?: string | null
+          detection_patterns?: Json
+          display_name?: string
+          id?: string
+          is_active?: boolean | null
+          keywords?: Json
+          max_source_age_days?: number | null
+          min_sources?: number | null
+          name?: string
+          parent_category?: string | null
+          required_source_types?: string[] | null
+          updated_at?: string
+          verification_criteria?: Json
+        }
+        Relationships: []
+      }
       verification_feedback: {
         Row: {
           comment: string | null
@@ -557,9 +683,12 @@ export type Database = {
       }
       verifications: {
         Row: {
+          category: string | null
+          category_confidence: number | null
           content: string
           content_type: string
           created_at: string
+          detected_categories: Json | null
           file_name: string | null
           file_size: number | null
           id: string
@@ -572,9 +701,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
+          category_confidence?: number | null
           content: string
           content_type: string
           created_at?: string
+          detected_categories?: Json | null
           file_name?: string | null
           file_size?: number | null
           id?: string
@@ -587,9 +719,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
+          category_confidence?: number | null
           content?: string
           content_type?: string
           created_at?: string
+          detected_categories?: Json | null
           file_name?: string | null
           file_size?: number | null
           id?: string
@@ -646,6 +781,10 @@ export type Database = {
       generate_license_key: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_adjusted_source_score: {
+        Args: { _base_score: number; _domain: string }
+        Returns: number
       }
       get_payment_stats: {
         Args: Record<PropertyKey, never>

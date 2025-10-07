@@ -332,9 +332,41 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
   try {
     const safeContent = String(content ?? '');
     
-    // Customize query based on template - Make it highly specific to avoid generic responses
+    // Initialize Supabase client for category detection and source scoring
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Detect content category using ML-powered detection
+    const detectedCategories = await detectContentCategory(safeContent, supabase);
+    const primaryCategory = detectedCategories.length > 0 ? detectedCategories[0] : null;
+    
+    console.log(`🎯 Category detection: ${primaryCategory ? `${primaryCategory.displayName} (${primaryCategory.confidence}% confidence)` : 'general'}`);
+    if (primaryCategory) {
+      console.log(`📋 Matched keywords: ${primaryCategory.matchedKeywords.slice(0, 3).join(', ')}`);
+      console.log(`🔍 Min sources required: ${primaryCategory.minSources}, Max age: ${primaryCategory.maxSourceAgeDays ? `${primaryCategory.maxSourceAgeDays} days` : 'unlimited'}`);
+    }
+    
+    // Customize query based on template OR category
     let query = `Analyze this specific claim in detail with evidence: "${safeContent}". Provide: 1) What exactly is being claimed, 2) Evidence for/against with sources, 3) Final verdict with reasoning. Be specific to THIS claim, not general information about fact-checking.`;
-    if (template) {
+    
+    if (primaryCategory) {
+      // Adjust query based on category
+      const categoryHints: Record<string, string> = {
+        'scientific': 'Focus on peer-reviewed research, studies, and scientific consensus.',
+        'financial': 'Verify with official market data, financial reports, and regulatory sources.',
+        'legal': 'Check court records, legal precedents, and official regulatory documents.',
+        'historical': 'Verify with academic sources, historical records, and primary documents.',
+        'geopolitical': 'Check official government statements, international organization reports.',
+        'social-media-viral': 'Verify original source, check for manipulation, context, and satire detection.',
+        'sports': 'Verify with official league statistics and sports authorities.',
+        'statistical': 'Check survey methodology, sample size, margin of error, and data sources.'
+      };
+      
+      const hint = categoryHints[primaryCategory.category] || '';
+      query = `${primaryCategory.displayName} claim verification: "${safeContent}". ${hint} Provide specific evidence and sources.`;
+    } else if (template) {
       const focusAreas = template.verificationFocus?.join(', ') || '';
       query = `${template.industry === 'bank' ? 'Financial fraud detection' : 'NGO fact-checking'}: Analyze this specific claim focusing on ${focusAreas}. Content: "${safeContent}". Provide detailed evidence, not generic information.`;
     }
@@ -391,17 +423,32 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       };
     }
     
-    // Process sources from search results with full content
-    const sources = searchResults.map((result: any) => ({
-      title: result.title || 'Unknown Source',
-      url: result.url || '',
-      content_snippet: result.content ? result.content.substring(0, 200) + '...' : '',
-      full_content: result.content || '',
-      reliability_score: calculateReliabilityScore(result.url)
-    }));
+    // Process sources from search results with full content and dynamic scoring
+    const sourcesWithScores = await Promise.all(
+      searchResults.map(async (result: any) => {
+        const scoreData = await calculateReliabilityScore(result.url || '', supabase);
+        return {
+          title: result.title || 'Unknown Source',
+          url: result.url || '',
+          content_snippet: result.content ? result.content.substring(0, 200) + '...' : '',
+          full_content: result.content || '',
+          reliability_score: scoreData.adjustedScore,
+          base_reliability_score: scoreData.baseScore,
+          domain: scoreData.domain,
+          source_region: scoreData.region,
+          source_type: scoreData.sourceType
+        };
+      })
+    );
 
     // Calculate confidence based on search results quality
-    let confidence = calculateTavilyConfidence(answer, searchResults, content);
+    let confidence = await calculateTavilyConfidenceWithCategory(
+      answer, 
+      searchResults, 
+      content,
+      primaryCategory,
+      supabase
+    );
     
     // Double-check for refutation in the answer itself
     const lowerAnswer = answer.toLowerCase();
@@ -439,13 +486,28 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       confidence,
       status,
       summary,
-      analysis: `Tavily Search Analysis:\n\n${answer || `Based on ${searchResults.length} sources found, this claim has been evaluated for accuracy using real-time web search and reliable news sources.`}\n\nSearch completed with ${sources.length} relevant sources found.`,
-      sources,
+      analysis: `Tavily Search Analysis:\n\n${answer || `Based on ${searchResults.length} sources found, this claim has been evaluated for accuracy using real-time web search and reliable news sources.`}\n\nSearch completed with ${sourcesWithScores.length} relevant sources found.${primaryCategory ? `\n\nCategory: ${primaryCategory.displayName} (${primaryCategory.confidence}% match)` : ''}`,
+      sources: sourcesWithScores,
       source_consensus: confidence,
-      verification_method: ['Tavily Search', 'Real-time Web Search', 'Source Analysis'],
-      category: categorizeContent(safeContent),
+      verification_method: ['Tavily Search', 'Real-time Web Search', 'Source Analysis', primaryCategory ? 'Category-Specific Verification' : ''].filter(Boolean),
+      category: primaryCategory?.category || categorizeContent(safeContent),
       created_at: new Date().toISOString(),
-      processing_time: Date.now() - startTime
+      processing_time: Date.now() - startTime,
+      ...(primaryCategory && {
+        categoryMetadata: {
+          name: primaryCategory.category,
+          displayName: primaryCategory.displayName,
+          confidence: primaryCategory.confidence,
+          matchedKeywords: primaryCategory.matchedKeywords,
+          criteria: primaryCategory.criteria
+        }
+      }),
+      ...(detectedCategories.length > 0 && {
+        detectedCategories: detectedCategories.map(cat => ({
+          name: cat.category,
+          confidence: cat.confidence
+        }))
+      })
     };
 
   } catch (error) {
@@ -523,9 +585,45 @@ function extractSources(text: string): Array<{ title: string; url: string; snipp
   }));
 }
 
+// Enhanced multi-factor confidence calculation with category-specific weights
+async function calculateTavilyConfidenceWithCategory(
+  answer: string, 
+  results: any[], 
+  originalContent: string = '',
+  category: CategoryMatch | null = null,
+  supabaseClient: any
+): Promise<number> {
+  // Use category-specific weights if available, otherwise use defaults
+  const weights = category?.weights || {
+    source_quality: 0.30,
+    consensus: 0.20,
+    recency: 0.10,
+    completeness: 0.10,
+    content_analysis: 0.30
+  };
+  
+  console.log(`📊 Using confidence weights:`, weights);
+  
+  return calculateTavilyConfidence(answer, results, originalContent, weights, category);
+}
+
 // Enhanced multi-factor confidence calculation with fact category bonuses
 // Returns both the confidence score and detailed breakdown
-function calculateTavilyConfidence(answer: string, results: any[], originalContent: string = ''): number {
+function calculateTavilyConfidence(
+  answer: string, 
+  results: any[], 
+  originalContent: string = '',
+  customWeights: any = null,
+  category: CategoryMatch | null = null
+): number {
+  // Use custom weights or defaults
+  const weights = customWeights || {
+    source_quality: 0.30,
+    consensus: 0.20,
+    recency: 0.10,
+    completeness: 0.10,
+    content_analysis: 0.30
+  };
   const safeAnswer = String(answer ?? '');
   const safeContent = String(originalContent ?? '').toLowerCase();
   
@@ -586,15 +684,46 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   // Clamp contentScore to max 100
   contentScore = Math.min(contentScore, 100);
   
-  // Source Quality Weight (30%)
+  // Source Quality Weight (30%) - now using pre-calculated scores from async function
   let sourceScore = 40;
-  const sourceQualitySum = results.reduce((sum, r) => sum + calculateReliabilityScore(r.url || ''), 0);
-  const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
-  sourceScore = Math.round(avgSourceQuality * 0.9); // Increased from 0.8 to give more weight to good sources
+  
+  // Check if results have reliability_score already (from async processing)
+  const hasPreScored = results.length > 0 && results[0].reliability_score !== undefined;
+  
+  if (hasPreScored) {
+    // Use pre-calculated adjusted scores
+    const sourceQualitySum = results.reduce((sum: number, r: any) => sum + (r.reliability_score || 60), 0);
+    const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
+    sourceScore = Math.round(avgSourceQuality * 0.9);
+  } else {
+    // Fallback: calculate synchronously with base scores only
+    const syncScores = results.map(r => {
+      const url = r.url || '';
+      const domain = url.toLowerCase();
+      if (domain.includes('.gov')) return 99;
+      if (domain.includes('factcheck') || domain.includes('snopes')) return 96;
+      if (domain.includes('reuters') || domain.includes('bbc')) return 88;
+      if (domain.includes('.edu')) return 84;
+      return 60;
+    });
+    const avgSourceQuality = syncScores.length > 0 ? syncScores.reduce((a, b) => a + b, 0) / syncScores.length : 60;
+    sourceScore = Math.round(avgSourceQuality * 0.9);
+  }
   
   // Government source bonus
-  const hasGovSource = results.some(r => (r.url || '').toLowerCase().includes('.gov'));
+  const hasGovSource = results.some((r: any) => (r.url || '').toLowerCase().includes('.gov'));
   if (hasGovSource) sourceScore += 20;
+  
+  // Category-specific source type requirements check
+  if (category?.requiredSourceTypes && category.requiredSourceTypes.length > 0) {
+    const hasRequiredTypes = category.requiredSourceTypes.some(reqType => 
+      results.some((r: any) => r.source_type === reqType)
+    );
+    if (!hasRequiredTypes) {
+      sourceScore -= 15; // Penalty for missing required source types
+      console.log(`⚠️ Missing required source types: ${category.requiredSourceTypes.join(', ')}`);
+    }
+  }
   
   // Clamp sourceScore to max 100
   sourceScore = Math.min(sourceScore, 100);
@@ -770,71 +899,260 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
   return 'current-event';
 }
 
-// Enhanced source reliability scoring with government verification priority
-function calculateReliabilityScore(url: string): number {
-  if (!url) return 50;
+// Enhanced source reliability scoring with international support and dynamic adjustment
+async function calculateReliabilityScore(url: string, supabaseClient: any): Promise<{
+  baseScore: number;
+  adjustedScore: number;
+  domain: string;
+  region: string;
+  sourceType: string;
+}> {
+  if (!url) return { baseScore: 50, adjustedScore: 50, domain: '', region: 'Global', sourceType: 'general' };
   
   const domain = String(url || '').toLowerCase();
+  let extractedDomain = '';
+  try {
+    extractedDomain = new URL(url).hostname.replace('www.', '');
+  } catch (e) {
+    extractedDomain = domain;
+  }
   
-  // Tier 0: Official government sources (98-100%)
-  if (domain.includes('.gov') || domain.includes('whitehouse.gov') || 
+  let baseScore = 60;
+  let region = 'Global';
+  let sourceType = 'general';
+  
+  // Tier 1: International Government and official sources (98-99)
+  if (domain.includes('.gov') || domain.includes('cdc.gov') || 
+      domain.includes('nih.gov') || domain.includes('who.int') ||
+      domain.includes('.gov.uk') || domain.includes('.gc.ca') ||
+      domain.includes('.canada.ca') || domain.includes('.gov.au') ||
+      domain.includes('europa.eu') || domain.includes('ec.europa.eu') ||
+      domain.includes('un.org') || domain.includes('.gouv.fr') ||
+      domain.includes('.bundesregierung.de') || domain.includes('whitehouse.gov') ||
       domain.includes('congress.gov') || domain.includes('fec.gov') ||
       domain.includes('ballotpedia.org')) {
-    return 99; // Highest for official government
+    baseScore = 99;
+    sourceType = 'government';
+    if (domain.includes('.gov.uk')) region = 'UK';
+    else if (domain.includes('.gc.ca') || domain.includes('.canada.ca')) region = 'CA';
+    else if (domain.includes('.gov.au')) region = 'AU';
+    else if (domain.includes('europa.eu') || domain.includes('ec.europa.eu') || 
+             domain.includes('.gouv.fr') || domain.includes('.bundesregierung.de')) region = 'EU';
+    else region = 'US';
   }
   
-  // Tier 1: Premium fact-checking and wire services (95-98%)
-  if (domain.includes('reuters.com') || domain.includes('apnews.com') || 
-      domain.includes('factcheck.org') || domain.includes('snopes.com') ||
-      domain.includes('politifact.com')) {
-    return 96;
+  // Tier 2: International Fact-checking organizations (94-96)
+  else if (domain.includes('snopes.com') || domain.includes('factcheck.org') ||
+      domain.includes('politifact.com') || domain.includes('reuters.com/fact-check') ||
+      domain.includes('fullfact.org') || domain.includes('correctiv.org') ||
+      domain.includes('chequeado.com') || domain.includes('aos-fatos.org') ||
+      domain.includes('africacheck.org') || domain.includes('factcheck.afp.com') ||
+      domain.includes('leadstories.com')) {
+    baseScore = 96;
+    sourceType = 'fact-checker';
+    if (domain.includes('fullfact.org')) region = 'UK';
+    else if (domain.includes('correctiv.org')) region = 'EU';
+    else if (domain.includes('chequeado.com')) region = 'Global';
+    else if (domain.includes('aos-fatos.org')) region = 'Global';
+    else if (domain.includes('africacheck.org')) region = 'Global';
+    else region = 'US';
   }
   
-  // Tier 2: Major international news and agencies (90-94%)
-  if (domain.includes('bbc.com') || domain.includes('npr.org') || 
-      domain.includes('who.int') || domain.includes('cdc.gov') ||
+  // Tier 3: International Major news outlets (85-92)
+  else if (domain.includes('reuters.com') || domain.includes('apnews.com') ||
+      domain.includes('bbc.com') || domain.includes('bbc.co.uk') ||
+      domain.includes('theguardian.com') || domain.includes('npr.org') ||
+      domain.includes('ft.com') || domain.includes('independent.co.uk') ||
+      domain.includes('cbc.ca') || domain.includes('theglobeandmail.com') ||
+      domain.includes('thestar.com') || domain.includes('abc.net.au') ||
+      domain.includes('smh.com.au') || domain.includes('theage.com.au') ||
+      domain.includes('dw.com') || domain.includes('france24.com') ||
+      domain.includes('elpais.com') || domain.includes('lemonde.fr') ||
       domain.includes('c-span.org') || domain.includes('pbs.org')) {
-    return 92;
+    baseScore = 88;
+    sourceType = 'news';
+    if (domain.includes('bbc.') || domain.includes('theguardian.') || 
+        domain.includes('ft.com') || domain.includes('independent.co.uk')) region = 'UK';
+    else if (domain.includes('cbc.ca') || domain.includes('theglobeandmail.') || 
+             domain.includes('thestar.')) region = 'CA';
+    else if (domain.includes('abc.net.au') || domain.includes('smh.com.au') || 
+             domain.includes('theage.com.au')) region = 'AU';
+    else if (domain.includes('dw.com') || domain.includes('france24.') || 
+             domain.includes('elpais.') || domain.includes('lemonde.')) region = 'EU';
+    else region = 'US';
   }
   
-  // Tier 3: Established news with strong editorial standards (85-89%)
-  if (domain.includes('nytimes.com') || domain.includes('guardian.com') || 
-      domain.includes('washingtonpost.com') || domain.includes('wsj.com') ||
-      domain.includes('economist.com') || domain.includes('atlantic.com')) {
-    return 87;
+  // Tier 4: International Academic sources (80-84)
+  else if (domain.includes('.edu') || domain.includes('scholar.google') ||
+      domain.includes('ncbi.nlm.nih.gov') || domain.includes('nature.com') ||
+      domain.includes('sciencedirect.com') || domain.includes('.ac.uk') ||
+      domain.includes('.edu.au') || domain.includes('.ac.jp') ||
+      domain.includes('.edu.cn') || domain.includes('.ac.in') ||
+      domain.includes('.ac.za') || domain.includes('science.org') ||
+      domain.includes('brookings.edu') || domain.includes('pewresearch.org')) {
+    baseScore = 84;
+    sourceType = 'academic';
+    if (domain.includes('.ac.uk')) region = 'UK';
+    else if (domain.includes('.edu.au')) region = 'AU';
+    else if (domain.includes('.ac.jp')) region = 'Global';
+    else if (domain.includes('.edu.cn')) region = 'Global';
+    else if (domain.includes('.ac.in')) region = 'Global';
+    else if (domain.includes('.ac.za')) region = 'Global';
+    else region = 'US';
   }
   
-  // Tier 4: Academic and research institutions (80-84%)
-  if (domain.includes('.edu') || domain.includes('nature.com') || 
-      domain.includes('science.org') || domain.includes('brookings.edu') ||
-      domain.includes('pewresearch.org')) {
-    return 82;
+  // Tier 5: Reputable media (75-87)
+  else if (domain.includes('nytimes.com') || domain.includes('washingtonpost.com') ||
+      domain.includes('wsj.com') || domain.includes('economist.com') ||
+      domain.includes('atlantic.com')) {
+    baseScore = 87;
+    sourceType = 'news';
+    region = 'US';
   }
   
-  // Tier 5: Cable news and major media (75-79%)
-  if (domain.includes('cnn.com') || domain.includes('foxnews.com') || 
-      domain.includes('msnbc.com') || domain.includes('cbsnews.com') ||
-      domain.includes('abcnews.go.com') || domain.includes('nbcnews.com')) {
-    return 77;
+  // Tier 6: Cable news and major media (65-77)
+  else if (domain.includes('cnn.com') || domain.includes('nbcnews.com') ||
+      domain.includes('cbsnews.com') || domain.includes('abcnews.go.com') ||
+      domain.includes('foxnews.com') || domain.includes('msnbc.com')) {
+    baseScore = 77;
+    sourceType = 'news';
+    region = 'US';
   }
   
-  // Tier 6: General reference and specialized sources (60-74%)
-  if (domain.includes('wikipedia.org') || domain.includes('britannica.com') ||
+  // Tier 7: General reference (60-68)
+  else if (domain.includes('wikipedia.org') || domain.includes('britannica.com') ||
       domain.includes('healthline.com') || domain.includes('mayoclinic.org')) {
-    return 68;
+    baseScore = 68;
+    sourceType = 'general';
+    region = 'Global';
   }
   
-  // Penalty for low-quality indicators
-  if (domain.includes('blog') || domain.includes('forum') || 
-      domain.includes('social') || domain.includes('reddit') ||
-      domain.includes('facebook') || domain.includes('twitter') ||
-      domain.includes('tiktok') || domain.includes('instagram')) {
-    return 30;
+  // Tier 8: Social media and others (30)
+  else if (domain.includes('twitter.com') || domain.includes('facebook.com') ||
+      domain.includes('reddit.com') || domain.includes('youtube.com') ||
+      domain.includes('instagram.com') || domain.includes('tiktok.com') ||
+      domain.includes('blog') || domain.includes('forum')) {
+    baseScore = 30;
+    sourceType = 'social-media';
+    region = 'Global';
   }
   
-  return 60; // Improved default reliability
+  // Get adjusted score from database using dynamic reputation
+  try {
+    const { data, error } = await supabaseClient.rpc('get_adjusted_source_score', {
+      _domain: extractedDomain,
+      _base_score: baseScore
+    });
+    
+    if (error) {
+      console.error('Error getting adjusted score:', error);
+      return { baseScore, adjustedScore: baseScore, domain: extractedDomain, region, sourceType };
+    }
+    
+    return {
+      baseScore,
+      adjustedScore: data || baseScore,
+      domain: extractedDomain,
+      region,
+      sourceType
+    };
+  } catch (err) {
+    console.error('Error calling get_adjusted_source_score:', err);
+    return { baseScore, adjustedScore: baseScore, domain: extractedDomain, region, sourceType };
+  }
 }
 
+// Enhanced ML-powered category detection
+interface CategoryMatch {
+  category: string;
+  displayName: string;
+  confidence: number;
+  matchedKeywords: string[];
+  matchedPatterns: string[];
+  criteria: any;
+  weights: any;
+  minSources: number;
+  maxSourceAgeDays: number | null;
+  requiredSourceTypes: string[];
+}
+
+async function detectContentCategory(
+  content: string,
+  supabaseClient: any
+): Promise<CategoryMatch[]> {
+  const lower = content.toLowerCase();
+  const matches: CategoryMatch[] = [];
+  
+  try {
+    // Get all active categories from database
+    const { data: categories, error } = await supabaseClient
+      .from('verification_categories')
+      .select('*')
+      .eq('is_active', true);
+    
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+    
+    for (const category of categories || []) {
+      let score = 0;
+      const matchedKeywords: string[] = [];
+      const matchedPatterns: string[] = [];
+      
+      // Check keywords
+      const keywords = category.keywords as string[];
+      for (const keyword of keywords) {
+        if (lower.includes(keyword.toLowerCase())) {
+          matchedKeywords.push(keyword);
+          score += 10;
+        }
+      }
+      
+      // Check patterns (regex)
+      const patterns = category.detection_patterns as string[];
+      for (const pattern of patterns) {
+        try {
+          const regex = new RegExp(pattern, 'i');
+          if (regex.test(content)) {
+            matchedPatterns.push(pattern);
+            score += 15;
+          }
+        } catch (err) {
+          console.error('Invalid regex pattern:', pattern, err);
+        }
+      }
+      
+      // Calculate confidence (0-100)
+      const confidence = Math.min(100, score);
+      
+      if (confidence > 20) {
+        matches.push({
+          category: category.name,
+          displayName: category.display_name,
+          confidence,
+          matchedKeywords,
+          matchedPatterns,
+          criteria: category.verification_criteria,
+          weights: category.confidence_weights,
+          minSources: category.min_sources || 3,
+          maxSourceAgeDays: category.max_source_age_days,
+          requiredSourceTypes: category.required_source_types || []
+        });
+      }
+    }
+    
+    // Sort by confidence descending
+    matches.sort((a, b) => b.confidence - a.confidence);
+    
+    return matches;
+  } catch (err) {
+    console.error('Error in detectContentCategory:', err);
+    return [];
+  }
+}
+
+// Legacy simple categorization (fallback)
 function categorizeContent(content: string): string {
   const lower = String(content || '').toLowerCase();
   

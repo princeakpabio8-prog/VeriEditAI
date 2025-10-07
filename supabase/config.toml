@@ -89,3 +89,6 @@ verify_jwt = false
 
 [functions.verify-extension]
 verify_jwt = false
+
+[functions.share-page]
+verify_jwt = false

@@ -81,9 +81,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Billing
                 </Link>
-                <Link to="/license" className="text-muted-foreground hover:text-foreground transition-colors">
-                  License
-                </Link>
                 <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
                   Profile
                 </Link>
@@ -218,13 +215,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </Link>
-                <Link
-                  to="/license"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  License
                 </Link>
                 <Link
                   to="/about"

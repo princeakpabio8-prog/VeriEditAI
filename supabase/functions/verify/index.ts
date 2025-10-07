@@ -178,7 +178,7 @@ serve(async (req) => {
             trust_score: result.confidence,
             result_summary: result.summary,
             category: result.category,
-            status: result.status,
+            status: 'completed', // Map to DB-safe status
             processing_time_ms: processingTime,
             score_breakdown: {
               source_consensus: result.source_consensus,
@@ -196,25 +196,27 @@ serve(async (req) => {
 
           // Save sources
           if (result.sources && result.sources.length > 0) {
-            const sourcesToInsert = result.sources.map(source => {
-              let domain = null;
-              try {
-                domain = new URL(source.url).hostname;
-              } catch (err) {
-                console.warn(`Failed to extract domain from URL: ${source.url}`);
-              }
-              
-              return {
-                verification_id: verificationId,
-                url: source.url,
-                title: source.title,
-                content_snippet: source.snippet || source.content_snippet || '',
-                full_content: source.full_content || '',
-                reliability_score: source.reliability_score || 60,
-                domain: domain,
-                source_type: source.source_type || 'news'
-              };
-            });
+            const sourcesToInsert = (result.sources || [])
+              .filter((s) => typeof s.url === 'string' && s.url.startsWith('http'))
+              .map((source) => {
+                let domain = null;
+                try {
+                  domain = new URL(source.url).hostname;
+                } catch (err) {
+                  console.warn(`Failed to extract domain from URL: ${source.url}`);
+                }
+                const reliability = Math.max(0, Math.min(100, Number(source.reliability_score ?? 60)));
+                return {
+                  verification_id: verificationId,
+                  url: source.url,
+                  title: source.title ?? null,
+                  content_snippet: source.snippet || (source as any).content_snippet || '',
+                  full_content: (source as any).full_content || '',
+                  reliability_score: reliability,
+                  domain,
+                  source_type: (source as any).source_type || 'news'
+                };
+              });
 
             const { error: sourcesError } = await supabase
               .from('sources')

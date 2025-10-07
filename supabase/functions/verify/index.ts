@@ -604,18 +604,19 @@ async function calculateTavilyConfidenceWithCategory(
   
   console.log(`📊 Using confidence weights:`, weights);
   
-  return calculateTavilyConfidence(answer, results, originalContent, weights, category);
+  return calculateTavilyConfidence(answer, results, originalContent, weights, category, supabaseClient);
 }
 
 // Enhanced multi-factor confidence calculation with fact category bonuses
 // Returns both the confidence score and detailed breakdown
-function calculateTavilyConfidence(
+async function calculateTavilyConfidence(
   answer: string, 
   results: any[], 
   originalContent: string = '',
   customWeights: any = null,
-  category: CategoryMatch | null = null
-): number {
+  category: CategoryMatch | null = null,
+  supabaseClient: any = null
+): Promise<number> {
   // Use custom weights or defaults
   const weights = customWeights || {
     source_quality: 0.30,
@@ -695,6 +696,16 @@ function calculateTavilyConfidence(
     const sourceQualitySum = results.reduce((sum: number, r: any) => sum + (r.reliability_score || 60), 0);
     const avgSourceQuality = results.length > 0 ? sourceQualitySum / results.length : 60;
     sourceScore = Math.round(avgSourceQuality * 0.9);
+  } else if (supabaseClient) {
+    // Use dynamic scoring with supabase client
+    const scoredResults = await Promise.all(
+      results.map(async (r: any) => {
+        const scoreData = await calculateReliabilityScore(r.url || '', supabaseClient);
+        return scoreData.adjustedScore;
+      })
+    );
+    const avgReliability = scoredResults.length > 0 ? scoredResults.reduce((a, b) => a + b, 0) / scoredResults.length : 60;
+    sourceScore = Math.round(avgReliability * 0.9);
   } else {
     // Fallback: calculate synchronously with base scores only
     const syncScores = results.map(r => {
@@ -770,8 +781,8 @@ function calculateTavilyConfidence(
   });
   
   // Check for large variance in source reliability = disagreement
-  if (results.length >= 3) {
-    const reliabilities = results.map(r => calculateReliabilityScore(r.url));
+  if (results.length >= 3 && results[0].reliability_score !== undefined) {
+    const reliabilities = results.map(r => r.reliability_score || 60);
     const max = Math.max(...reliabilities);
     const min = Math.min(...reliabilities);
     if (max - min > 30) contradictionPenalty += 10;

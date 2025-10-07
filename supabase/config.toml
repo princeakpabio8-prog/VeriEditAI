@@ -86,3 +86,6 @@ verify_jwt = true
 
 [functions.get-public-verification]
 verify_jwt = false
+
+[functions.verify-extension]
+verify_jwt = false

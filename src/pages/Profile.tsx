@@ -12,6 +12,7 @@ import { User, Settings, CreditCard, BarChart3 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ApiKeyManager } from '@/components/api-key-manager';
 
 interface Profile {
   full_name: string;
@@ -196,6 +197,9 @@ const Profile = () => {
                 </form>
               </CardContent>
             </Card>
+
+            {/* API Keys */}
+            <ApiKeyManager />
 
             {/* Account Settings */}
             <Card className="bg-gradient-card border-border/50">

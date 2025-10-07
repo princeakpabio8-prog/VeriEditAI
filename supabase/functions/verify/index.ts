@@ -529,8 +529,14 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   const safeAnswer = String(answer ?? '');
   const safeContent = String(originalContent ?? '').toLowerCase();
   
+  // Detect fact type for scoring adjustments
+  const factType = detectFactType(safeContent, safeAnswer);
+  const isEstablishedFact = factType === 'established-fact';
+  
+  console.log(`🎯 Fact type detected: ${factType}${isEstablishedFact ? ' (applying universal fact bonuses)' : ''}`);
+  
   // Content Analysis Weight (30%) - Evidence-based scoring
-  let contentScore = 50;
+  let contentScore = isEstablishedFact ? 60 : 50; // Start higher for established facts
   
   // NEGATION DETECTION - Check if answer contradicts the claim
   const lowerAnswer = safeAnswer.toLowerCase();
@@ -597,18 +603,24 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   let recencyScore = 50;
   const currentYear = new Date().getFullYear();
   
-  results.forEach(r => {
-    const publishedDate = r.published_date || r.date;
-    if (publishedDate) {
-      const publishYear = new Date(publishedDate).getFullYear();
-      const age = currentYear - publishYear;
-      
-      if (age === 0) recencyScore += 20; // This year
-      else if (age === 1) recencyScore += 10; // Last year
-      else if (age <= 3) recencyScore += 5; // Recent
-      else if (age > 5) recencyScore -= 10; // Outdated
-    }
-  });
+  // Established facts don't require recent sources
+  if (!isEstablishedFact) {
+    results.forEach(r => {
+      const publishedDate = r.published_date || r.date;
+      if (publishedDate) {
+        const publishYear = new Date(publishedDate).getFullYear();
+        const age = currentYear - publishYear;
+        
+        if (age === 0) recencyScore += 20; // This year
+        else if (age === 1) recencyScore += 10; // Last year
+        else if (age <= 3) recencyScore += 5; // Recent
+        else if (age > 5) recencyScore -= 10; // Outdated
+      }
+    });
+  } else {
+    // For established facts, old sources are acceptable
+    recencyScore = 80; // Don't penalize established facts for old sources
+  }
   
   recencyScore = Math.min(Math.max(recencyScore, 30), 100);
   
@@ -650,8 +662,16 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
   
   // Answer Quality Weight (10%) - Moderate scoring for completeness
   let answerQuality = 50;
-  if (safeAnswer.length > 150) answerQuality += 10; // Detailed
-  if (safeAnswer.length < 50) answerQuality -= 10; // Too brief
+  
+  // Established facts don't need lengthy explanations
+  if (isEstablishedFact) {
+    if (safeAnswer.length > 80) answerQuality += 10; // Simple facts need simple answers
+    if (safeAnswer.length > 200) answerQuality += 5; // Still reward detail
+  } else {
+    if (safeAnswer.length > 150) answerQuality += 10; // Detailed
+    if (safeAnswer.length < 50) answerQuality -= 10; // Too brief
+  }
+  
   answerQuality = Math.min(Math.max(answerQuality, 30), 100);
   
   // If debunking detected, reduce positive contributions from sources and consensus
@@ -677,10 +697,77 @@ function calculateTavilyConfidence(answer: string, results: any[], originalConte
     finalConfidence = Math.min(finalConfidence, 30);
   }
   
+  // Universal fact bonus - boost well-established facts with strong consensus
+  if (isEstablishedFact && effectiveConsensusScore >= 90 && effectiveSourceScore >= 75) {
+    finalConfidence = Math.min(finalConfidence + 15, 98); // +15 bonus for universally accepted facts
+    console.log(`✨ Universal fact bonus applied: +15 points`);
+  }
+  
+  // Minimum confidence for high-quality established facts
+  if (isEstablishedFact && effectiveConsensusScore === 100 && effectiveSourceScore >= 80) {
+    finalConfidence = Math.max(finalConfidence, 85); // Ensure minimum 85% for perfect consensus + good sources
+  }
+  
   // Log detailed scores for debugging
   console.log(`📊 Score breakdown: content=${contentScore}, source=${effectiveSourceScore}, consensus=${effectiveConsensusScore}, recency=${recencyScore}, quality=${answerQuality}, debunking=${isDebunking}, final=${finalConfidence}`);
   
   return Math.min(Math.max(finalConfidence, 5), 98); // Range 5-98%
+}
+
+// Detect fact type to adjust scoring appropriately
+function detectFactType(content: string, answer: string): 'established-fact' | 'current-event' | 'disputed-claim' | 'opinion' {
+  const lowerContent = content.toLowerCase();
+  const lowerAnswer = answer.toLowerCase();
+  
+  // Opinion indicators
+  if (lowerContent.match(/\b(i think|i believe|in my opinion|should|best|worst)\b/)) {
+    return 'opinion';
+  }
+  
+  // Disputed claim indicators
+  if (lowerAnswer.match(/\b(disputed|conflicting|controversy|debate|unclear|uncertain)\b/)) {
+    return 'disputed-claim';
+  }
+  
+  // Current event indicators (needs recent sources)
+  if (lowerContent.match(/\b(today|yesterday|this week|this month|recently|latest|breaking|now)\b/) ||
+      lowerContent.match(/\b(202[3-9]|current|ongoing)\b/)) {
+    return 'current-event';
+  }
+  
+  // Established fact patterns
+  const establishedPatterns = [
+    // Geographic facts
+    /\b(is in|located in|based in|situated in|found in)\b.*\b(country|city|state|region|continent)\b/i,
+    /\b(manchester united|real madrid|barcelona|arsenal|chelsea)\b.*\b(england|spain|uk|london)\b/i,
+    
+    // Institutional facts (companies, teams, organizations)
+    /\b(company|organization|team|club|university|institution)\b.*\b(headquartered|based|located|founded)\b/i,
+    /\b(football|soccer|basketball|sports)\b.*\b(team|club)\b/i,
+    
+    // Historical facts (with dates)
+    /\b(founded|established|created|born|died|built)\b.*\b(in |on )?(19|20)\d{2}\b/i,
+    /\b(19|20)\d{2}\b.*\b(founded|established|created|born|died|built)\b/i,
+    
+    // Scientific constants
+    /\b(speed of light|gravity|water boils|freezing point|speed of sound)\b/i,
+    /\b(earth|sun|moon|planet)\b.*\b(orbit|rotation|distance|diameter)\b/i,
+    
+    // Mathematical facts
+    /\b(pi equals|pi is|square root|pythagorean)\b/i,
+    
+    // Common knowledge
+    /\b(capital of|president of|prime minister of|currency of)\b/i
+  ];
+  
+  for (const pattern of establishedPatterns) {
+    if (pattern.test(lowerContent)) {
+      return 'established-fact';
+    }
+  }
+  
+  // Default to current-event (strict requirements)
+  return 'current-event';
 }
 
 // Enhanced source reliability scoring with government verification priority

@@ -174,7 +174,7 @@ serve(async (req) => {
           .insert({
             user_id: user_id,
             content: safeContent,
-            content_type: contentType,
+            content_type: 'text', // Always use 'text' for text-based verifications
             trust_score: result.confidence,
             result_summary: result.summary,
             category: result.category,
@@ -196,16 +196,25 @@ serve(async (req) => {
 
           // Save sources
           if (result.sources && result.sources.length > 0) {
-            const sourcesToInsert = result.sources.map(source => ({
-              verification_id: verificationId,
-              url: source.url,
-              title: source.title,
-              content_snippet: source.snippet || source.content_snippet || '',
-              full_content: source.full_content || '',
-              reliability_score: source.reliability_score || 60,
-              domain: new URL(source.url).hostname,
-              source_type: source.source_type || 'news'
-            }));
+            const sourcesToInsert = result.sources.map(source => {
+              let domain = null;
+              try {
+                domain = new URL(source.url).hostname;
+              } catch (err) {
+                console.warn(`Failed to extract domain from URL: ${source.url}`);
+              }
+              
+              return {
+                verification_id: verificationId,
+                url: source.url,
+                title: source.title,
+                content_snippet: source.snippet || source.content_snippet || '',
+                full_content: source.full_content || '',
+                reliability_score: source.reliability_score || 60,
+                domain: domain,
+                source_type: source.source_type || 'news'
+              };
+            });
 
             const { error: sourcesError } = await supabase
               .from('sources')

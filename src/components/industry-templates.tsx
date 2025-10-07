@@ -7,13 +7,14 @@ import {
   Stethoscope, Pill, Activity, GraduationCap, BookOpen, School,
   Gavel, Scale, FileCheck, Umbrella, ClipboardCheck, 
   Newspaper, Camera, Radio, Landmark, Flag, Plane, FileSearch, MapPin,
-  Package, PackageCheck, Ship
+  Package, PackageCheck, Ship,
+  Vote, MessageSquare, DollarSign, ScrollText
 } from 'lucide-react';
 
 interface TemplateConfig {
   id: string;
   name: string;
-  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs';
+  industry: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs' | 'politics';
   icon: React.ReactNode;
   description: string;
   verificationFocus: string[];
@@ -282,12 +283,49 @@ const templates: TemplateConfig[] = [
     description: 'Verify duty calculations and tariff classifications',
     verificationFocus: ['Duty accuracy', 'Tariff validation', 'Value verification'],
     suggestedContent: 'Upload duty assessment forms, valuation documents, or tariff schedules'
+  },
+  // Politics & Democracy Templates
+  {
+    id: 'politics-campaign-promise',
+    name: 'Campaign Promise Verification',
+    industry: 'politics',
+    icon: <Vote className="h-5 w-5" />,
+    description: 'Track and verify political campaign promises against actions',
+    verificationFocus: ['Promise authenticity', 'Action tracking', 'Timeline verification', 'Source credibility'],
+    suggestedContent: 'Upload campaign speeches, policy platforms, legislative records, or news reports'
+  },
+  {
+    id: 'politics-fact-check',
+    name: 'Political Statement Fact-Check',
+    industry: 'politics',
+    icon: <MessageSquare className="h-5 w-5" />,
+    description: 'Fact-check political statements, speeches, and claims',
+    verificationFocus: ['Statement accuracy', 'Context verification', 'Source validation', 'Claim substantiation'],
+    suggestedContent: 'Upload political speeches, debate transcripts, press releases, or social media posts'
+  },
+  {
+    id: 'politics-financial-disclosure',
+    name: 'Financial Disclosure Verification',
+    industry: 'politics',
+    icon: <DollarSign className="h-5 w-5" />,
+    description: 'Verify political financial disclosures and campaign finance reports',
+    verificationFocus: ['Disclosure accuracy', 'Donation verification', 'Conflict of interest detection', 'Compliance validation'],
+    suggestedContent: 'Upload financial disclosure forms, campaign finance reports, or donor records'
+  },
+  {
+    id: 'politics-legislative-record',
+    name: 'Legislative Record Validation',
+    industry: 'politics',
+    icon: <ScrollText className="h-5 w-5" />,
+    description: 'Verify voting records and legislative actions',
+    verificationFocus: ['Voting record accuracy', 'Bill sponsorship verification', 'Legislative history validation', 'Position consistency check'],
+    suggestedContent: 'Upload congressional records, voting history, bill texts, or committee reports'
   }
 ];
 
 interface IndustryTemplatesProps {
   onSelectTemplate: (template: TemplateConfig) => void;
-  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs' | 'all';
+  selectedIndustry?: 'bank' | 'ngo' | 'healthcare' | 'education' | 'legal' | 'insurance' | 'media' | 'government' | 'immigration' | 'customs' | 'politics' | 'all';
 }
 
 export const IndustryTemplates: React.FC<IndustryTemplatesProps> = ({ 

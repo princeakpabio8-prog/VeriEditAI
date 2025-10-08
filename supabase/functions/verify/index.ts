@@ -30,7 +30,7 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  console.log('🚀 Starting verification process...');
+  console.log('🚀 [v2025-10-08-3] Starting verification process...');
 
   try {
     const body = await req.json();

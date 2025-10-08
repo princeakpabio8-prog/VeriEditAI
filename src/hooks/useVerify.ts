@@ -56,7 +56,23 @@ export function useVerify() {
   const inFlightKeys = useRef<Set<string>>(new Set());
 
   const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any): Promise<VerifyResult | null> => {
-    const safeContent = (content ?? '').toString();
+    let safeContent = (content ?? '').toString();
+    
+    // Pre-compact text content to prevent Tavily query length errors (400 char limit)
+    if (verificationData?.contentType !== 'image' && verificationData?.contentType !== 'document') {
+      // Strip URLs and "Source:" lines, then trim to ~280 chars for safety margin
+      safeContent = safeContent
+        .split('\n')
+        .filter(line => !line.match(/^https?:\/\//) && !line.match(/^Source:/i))
+        .join('\n')
+        .trim();
+      
+      if (safeContent.length > 280) {
+        safeContent = safeContent.substring(0, 280).trim();
+        console.log('📏 Content pre-compacted to 280 chars for Tavily compatibility');
+      }
+    }
+    
     const key = `${(userId ?? '').toString()}::${safeContent}`;
     const startTime = Date.now();
 
@@ -195,7 +211,18 @@ export function useVerify() {
 
           if (fnError) {
             errorTracker.captureError(new Error(fnError.message || 'Unknown API error'));
-            throw new Error(fnError.message || `API Error: ${fnError.details || 'Unknown error'}`);
+            
+            // Surface specific API errors to users
+            let userFacingError = fnError.message || 'API Error';
+            if (fnError.message?.includes('Query is too long')) {
+              userFacingError = '🚫 Query Too Long\n\nPlease shorten your content and try again.';
+            } else if (fnError.message?.includes('429') || fnError.message?.includes('Rate limit')) {
+              userFacingError = '⏳ Rate Limited\n\nToo many requests. Please wait a moment and try again.';
+            } else if (fnError.message?.includes('402') || fnError.message?.includes('Payment')) {
+              userFacingError = '💳 Payment Required\n\nAPI credits exhausted. Please contact support.';
+            }
+            
+            throw new Error(userFacingError);
           }
 
           if (!data) {

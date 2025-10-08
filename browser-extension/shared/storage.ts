@@ -56,3 +56,11 @@ export async function saveApiKey(apiKey: string): Promise<void> {
 export async function clearCache(): Promise<void> {
   await chrome.storage.local.set({ verifications: [] });
 }
+
+export async function getStorage(keys: string[]): Promise<any> {
+  return await chrome.storage.local.get(keys);
+}
+
+export async function setStorage(data: any): Promise<void> {
+  await chrome.storage.local.set(data);
+}

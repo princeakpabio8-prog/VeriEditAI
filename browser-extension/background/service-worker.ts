@@ -1,5 +1,6 @@
 import { getApiKey, getCachedVerification, setCachedVerification } from '../shared/storage';
 import { MessageRequest, MessageResponse, VerificationResult } from '../shared/types';
+import { checkAndAwardAchievements, getVerificationCount } from '../shared/achievements';
 
 // Create context menu
 chrome.runtime.onInstalled.addListener(() => {
@@ -85,6 +86,10 @@ async function handleVerification(content: string): Promise<VerificationResult> 
   
   // Update badge with trust score
   updateBadge(result.trustScore);
+  
+  // Check and award achievements
+  const verificationCount = await getVerificationCount();
+  await checkAndAwardAchievements(verificationCount);
   
   return result;
 }

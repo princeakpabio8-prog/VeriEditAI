@@ -16,7 +16,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: resolve(__dirname, "popup/popup.html"),
-        "popup-script": resolve(__dirname, "popup/popup.tsx"),
         "service-worker": resolve(__dirname, "background/service-worker.ts"),
         "content-script": resolve(__dirname, "content/content-script.ts"),
       },
@@ -27,12 +26,6 @@ export default defineConfig({
           }
           if (chunkInfo.name === "content-script") {
             return "content/[name].js";
-          }
-          if (chunkInfo.name === "popup-script") {
-            return "popup/popup.js";
-          }
-          if (chunkInfo.name === "popup") {
-            return "popup/[name].js";
           }
           return "[name].js";
         },

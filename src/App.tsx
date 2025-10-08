@@ -26,6 +26,7 @@ import Privacy from "./pages/Privacy";
 import LighthouseRoom from "./pages/LighthouseRoom";
 import LighthouseRoomView from "./pages/LighthouseRoomView";
 import SignalFeed from "./pages/SignalFeed";
+import ThreadView from "./pages/ThreadView";
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,7 @@ const App = () => (
             <Route path="/share/:shareToken" element={<ShareVerification />} />
             <Route path="/lighthouse" element={<LighthouseRoom />} />
             <Route path="/lighthouse/:roomId" element={<ProtectedRoute><LighthouseRoomView /></ProtectedRoute>} />
+            <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
             <Route path="/lighthouse/signals" element={<SignalFeed />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

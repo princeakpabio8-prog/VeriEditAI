@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { VerificationUpload } from '@/components/verification-upload';
 import { VerificationResult } from '@/components/verification-result';
@@ -43,6 +43,28 @@ export default function Verify() {
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
+
+  // Handle pending verification from news discovery or other sources
+  useEffect(() => {
+    if (user) {
+      const pendingVerification = sessionStorage.getItem('pendingVerification');
+      if (pendingVerification) {
+        try {
+          const data = JSON.parse(pendingVerification);
+          sessionStorage.removeItem('pendingVerification');
+          
+          // Auto-start verification with a small delay for UI readiness
+          setTimeout(() => {
+            handleVerificationStart(data);
+          }, 300);
+        } catch (error) {
+          console.error('Error parsing pending verification:', error);
+          sessionStorage.removeItem('pendingVerification');
+          toast.error('Failed to load verification data');
+        }
+      }
+    }
+  }, [user]);
 
   const handleTemplateSelection = (template: TemplateConfig) => {
     setVerificationState({ 

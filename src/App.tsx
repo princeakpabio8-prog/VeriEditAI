@@ -23,6 +23,9 @@ import ShareVerification from "./pages/ShareVerification";
 import Extensions from "./pages/Extensions";
 import Referrals from "./pages/Referrals";
 import Privacy from "./pages/Privacy";
+import LighthouseRoom from "./pages/LighthouseRoom";
+import LighthouseRoomView from "./pages/LighthouseRoomView";
+import SignalFeed from "./pages/SignalFeed";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +105,9 @@ const App = () => (
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* Public route for shared verifications - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />
+            <Route path="/lighthouse" element={<LighthouseRoom />} />
+            <Route path="/lighthouse/:roomId" element={<ProtectedRoute><LighthouseRoomView /></ProtectedRoute>} />
+            <Route path="/lighthouse/signals" element={<SignalFeed />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

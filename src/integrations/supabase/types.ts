@@ -167,6 +167,54 @@ export type Database = {
         }
         Relationships: []
       }
+      lighthouse_rooms: {
+        Row: {
+          category: Database["public"]["Enums"]["room_category"]
+          created_at: string
+          creator_id: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          member_count: number
+          metadata: Json | null
+          name: string
+          room_type: Database["public"]["Enums"]["room_type"]
+          thread_count: number
+          trust_rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["room_category"]
+          created_at?: string
+          creator_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          member_count?: number
+          metadata?: Json | null
+          name: string
+          room_type?: Database["public"]["Enums"]["room_type"]
+          thread_count?: number
+          trust_rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["room_category"]
+          created_at?: string
+          creator_id?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          member_count?: number
+          metadata?: Json | null
+          name?: string
+          room_type?: Database["public"]["Enums"]["room_type"]
+          thread_count?: number
+          trust_rating?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_logs: {
         Row: {
           created_at: string
@@ -385,6 +433,151 @@ export type Database = {
         }
         Relationships: []
       }
+      room_memberships: {
+        Row: {
+          id: string
+          joined_at: string
+          last_active_at: string | null
+          role: string | null
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          last_active_at?: string | null
+          role?: string | null
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          last_active_at?: string | null
+          role?: string | null
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_memberships_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "lighthouse_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_threads: {
+        Row: {
+          author_id: string
+          comment_count: number
+          content: string
+          created_at: string
+          id: string
+          is_auto_verified: boolean | null
+          metadata: Json | null
+          room_id: string
+          status: Database["public"]["Enums"]["thread_status"]
+          title: string
+          trust_score: number | null
+          updated_at: string
+          upvote_count: number
+          verification_id: string | null
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          comment_count?: number
+          content: string
+          created_at?: string
+          id?: string
+          is_auto_verified?: boolean | null
+          metadata?: Json | null
+          room_id: string
+          status?: Database["public"]["Enums"]["thread_status"]
+          title: string
+          trust_score?: number | null
+          updated_at?: string
+          upvote_count?: number
+          verification_id?: string | null
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          comment_count?: number
+          content?: string
+          created_at?: string
+          id?: string
+          is_auto_verified?: boolean | null
+          metadata?: Json | null
+          room_id?: string
+          status?: Database["public"]["Enums"]["thread_status"]
+          title?: string
+          trust_score?: number | null
+          updated_at?: string
+          upvote_count?: number
+          verification_id?: string | null
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_threads_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "lighthouse_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_threads_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signal_feed: {
+        Row: {
+          created_at: string
+          engagement_score: number
+          expires_at: string | null
+          featured_at: string | null
+          id: string
+          thread_id: string
+          trending_rank: number | null
+          trust_score: number
+        }
+        Insert: {
+          created_at?: string
+          engagement_score?: number
+          expires_at?: string | null
+          featured_at?: string | null
+          id?: string
+          thread_id: string
+          trending_rank?: number | null
+          trust_score: number
+        }
+        Update: {
+          created_at?: string
+          engagement_score?: number
+          expires_at?: string | null
+          featured_at?: string | null
+          id?: string
+          thread_id?: string
+          trending_rank?: number | null
+          trust_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signal_feed_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "room_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_reputation: {
         Row: {
           accuracy_rate: number | null
@@ -583,6 +776,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      thread_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_verified_contributor: boolean | null
+          parent_comment_id: string | null
+          thread_id: string
+          updated_at: string
+          upvote_count: number
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_verified_contributor?: boolean | null
+          parent_comment_id?: string | null
+          thread_id: string
+          updated_at?: string
+          upvote_count?: number
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_verified_contributor?: boolean | null
+          parent_comment_id?: string | null
+          thread_id?: string
+          updated_at?: string
+          upvote_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "thread_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "thread_comments_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "room_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_badges: {
+        Row: {
+          badge_name: string
+          badge_tier: Database["public"]["Enums"]["badge_tier"]
+          description: string | null
+          earned_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          badge_name: string
+          badge_tier?: Database["public"]["Enums"]["badge_tier"]
+          description?: string | null
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          badge_name?: string
+          badge_tier?: Database["public"]["Enums"]["badge_tier"]
+          description?: string | null
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -903,10 +1177,25 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      badge_tier:
+        | "bronze"
+        | "silver"
+        | "gold"
+        | "platinum"
+        | "lighthouse_keeper"
       license_status: "active" | "expired" | "suspended" | "revoked"
       license_type: "trial" | "basic" | "professional" | "enterprise"
       payment_status: "pending" | "successful" | "failed"
       plan_type: "free" | "pro" | "enterprise"
+      room_category:
+        | "politics"
+        | "health"
+        | "climate"
+        | "technology"
+        | "media"
+        | "general"
+      room_type: "public" | "private" | "workspace"
+      thread_status: "active" | "verified" | "disputed" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1035,10 +1324,21 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      badge_tier: ["bronze", "silver", "gold", "platinum", "lighthouse_keeper"],
       license_status: ["active", "expired", "suspended", "revoked"],
       license_type: ["trial", "basic", "professional", "enterprise"],
       payment_status: ["pending", "successful", "failed"],
       plan_type: ["free", "pro", "enterprise"],
+      room_category: [
+        "politics",
+        "health",
+        "climate",
+        "technology",
+        "media",
+        "general",
+      ],
+      room_type: ["public", "private", "workspace"],
+      thread_status: ["active", "verified", "disputed", "archived"],
     },
   },
 } as const

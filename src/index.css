@@ -53,6 +53,12 @@ All colors MUST be HSL.
     /* Lighthouse Theme */
     --lighthouse-beam: 195 100% 50%;
     --lighthouse-glow: 195 100% 50% / 0.3;
+    
+    /* Lighthouse Room - Oceanic palette */
+    --lighthouse-deep: 205 45% 12%;
+    --lighthouse-ocean: 205 35% 18%;
+    --lighthouse-wave: 205 30% 25%;
+    --lighthouse-signal: 180 100% 50%;
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

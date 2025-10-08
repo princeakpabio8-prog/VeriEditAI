@@ -141,7 +141,7 @@ export const LicenseStatus: React.FC<LicenseStatusProps> = ({
         {license.max_usage && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span>Usage this period</span>
+              <span>Plan Usage</span>
               <span className={isNearLimit() ? 'text-destructive font-medium' : ''}>
                 {license.current_usage}/{license.max_usage}
               </span>
@@ -155,6 +155,21 @@ export const LicenseStatus: React.FC<LicenseStatusProps> = ({
                 You're approaching your usage limit
               </p>
             )}
+          </div>
+        )}
+
+        {/* Bonus Verifications */}
+        {license.features?.bonus_verifications !== undefined && typeof license.features.bonus_verifications === 'number' && license.features.bonus_verifications > 0 && (
+          <div className="space-y-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+            <div className="flex justify-between text-sm">
+              <span className="text-primary font-medium">🎁 Bonus Verifications</span>
+              <span className="text-primary font-bold">
+                +{license.features.bonus_verifications}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Earned from referrals! These are used first.
+            </p>
           </div>
         )}
 

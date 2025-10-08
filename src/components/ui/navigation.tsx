@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,6 +71,10 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
               <>
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
+                </Link>
+                <Link to="/referrals" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Gift className="h-4 w-4" />
+                  Referrals
                 </Link>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About

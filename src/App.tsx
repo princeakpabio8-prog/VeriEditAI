@@ -21,6 +21,7 @@ import Demo from "./pages/Demo";
 import AdminDashboard from "./pages/AdminDashboard";
 import ShareVerification from "./pages/ShareVerification";
 import Extensions from "./pages/Extensions";
+import Referrals from "./pages/Referrals";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,11 @@ const App = () => (
             />
             <Route path="/about" element={<About />} />
             <Route path="/extensions" element={<Extensions />} />
+            <Route path="/referrals" element={
+              <ProtectedRoute>
+                <Referrals />
+              </ProtectedRoute>
+            } />
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* Public route for shared verifications - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />

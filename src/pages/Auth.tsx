@@ -1,24 +1,33 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Shield, ArrowLeft, Gift } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { passwordSchema } from '@/lib/validation';
 
 const Auth = () => {
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState<'signin' | 'signup' | 'reset' | ''>('');
   const [resetMode, setResetMode] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+    }
+  }, [searchParams]);
   
   const { signIn, signUp, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -94,7 +103,9 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await signUp(email, password);
+    // Include referral code in user metadata
+    const metadata = referralCode ? { referral_code: referralCode } : undefined;
+    const { error } = await signUp(email, password, metadata);
     
     if (error) {
       toast({
@@ -252,6 +263,15 @@ const Auth = () => {
               
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
+                  {referralCode && (
+                    <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-primary" />
+                      <p className="text-sm text-primary">
+                        🎉 You'll get 5 bonus verifications with this referral!
+                      </p>
+                    </div>
+                  )}
+                  
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
@@ -288,6 +308,19 @@ const Auth = () => {
                       required
                     />
                   </div>
+                  
+                  {!referralCode && (
+                    <div className="space-y-2">
+                      <Label htmlFor="referral-code">Referral Code (Optional)</Label>
+                      <Input
+                        id="referral-code"
+                        type="text"
+                        placeholder="Enter referral code"
+                        value={referralCode}
+                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                      />
+                    </div>
+                  )}
                   
                   <Button type="submit" className="w-full" disabled={loading === 'signup'}>
                     {loading === 'signup' ? "Creating account..." : "Create Account"}

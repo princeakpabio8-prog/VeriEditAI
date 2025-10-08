@@ -48,10 +48,7 @@ export default function ShareVerification() {
     try {
       setLoading(true);
       const { data: response, error } = await supabase.functions.invoke(
-        'get-public-verification',
-        {
-          body: { shareToken },
-        }
+        `get-public-verification?shareToken=${shareToken}`
       );
 
       if (error) throw error;

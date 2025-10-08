@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { NewsDiscovery } from '@/components/news-discovery';
 
 interface Verification {
   id: string;
@@ -224,8 +225,9 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="discover">Discover</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="executive">Executive</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
@@ -328,6 +330,10 @@ const Dashboard = () => {
                 </Dialog>
               </FeatureGuard>
             </div>
+          </TabsContent>
+
+          <TabsContent value="discover">
+            <NewsDiscovery />
           </TabsContent>
 
         <TabsContent value="analytics">

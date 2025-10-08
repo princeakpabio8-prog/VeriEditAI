@@ -4,6 +4,7 @@ import path from "path";
 import { resolve } from "path";
 
 export default defineConfig({
+  root: __dirname,
   plugins: [react()],
   resolve: {
     alias: {
@@ -11,7 +12,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "dist/extension",
+    outDir: path.resolve(__dirname, "../dist/extension"),
     emptyOutDir: true,
     rollupOptions: {
       input: {
@@ -26,6 +27,9 @@ export default defineConfig({
           }
           if (chunkInfo.name === "content-script") {
             return "content/[name].js";
+          }
+          if (chunkInfo.name === "popup") {
+            return "popup/[name].js";
           }
           return "[name].js";
         },

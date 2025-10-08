@@ -550,21 +550,59 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       status = 'false';
     }
     
-    // Create comprehensive summary with full answer (no truncation)
-    let summary = answer 
-      ? `**🔍 TAVILY SEARCH VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nSources: ${sourcesWithScores.length}\n\n${answer}`
-      : `**🔍 SEARCH-BASED VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase()}\nAnalyzed ${searchResults.length} sources for: "${safeContent.substring(0, 100)}..."`;
+    // Create concise verdict summary
+    let verdict = '';
+    if (confidence >= 80) verdict = 'Highly credible claim';
+    else if (confidence >= 70) verdict = 'Likely accurate claim';
+    else if (confidence >= 55) verdict = 'Inconclusive - mixed evidence';
+    else if (confidence >= 40) verdict = 'Disputed claim';
+    else verdict = 'Likely false claim';
     
-    // Prepend refutation warning if detected
-    if (isRefuted) {
-      summary = `⚠️ **Refutation detected: The claim appears to be false.**\n\n${summary}`;
+    if (isRefuted) verdict = 'Claim refuted by evidence';
+    
+    const summary = `${verdict} (${confidence}% confidence). ${answer ? answer.split('.')[0] + '.' : `Analyzed ${searchResults.length} sources.`}`;
+    
+    // Build structured analysis_points
+    const analysis_points = [];
+    
+    // Why this score
+    const topSources = sourcesWithScores.slice(0, 3);
+    const avgReliability = topSources.length > 0 
+      ? Math.round(topSources.reduce((sum, s) => sum + s.reliability_score, 0) / topSources.length)
+      : 0;
+    
+    analysis_points.push(`**Why this confidence score**: Based on ${sourcesWithScores.length} sources with average reliability of ${avgReliability}%`);
+    
+    // Sources overview
+    if (topSources.length > 0) {
+      const domains = topSources.map(s => s.domain || new URL(s.url).hostname.replace('www.', '')).join(', ');
+      analysis_points.push(`**Sources checked**: ${domains}`);
+    }
+    
+    // Supporting evidence
+    if (confidence >= 70 && answer) {
+      const supportPoints = answer.split('.').slice(1, 3).filter(s => s.trim().length > 10);
+      if (supportPoints.length > 0) {
+        analysis_points.push(`**Supporting evidence**: ${supportPoints[0].trim()}`);
+      }
+    }
+    
+    // Contradicting evidence (if any)
+    if (isRefuted || confidence < 60) {
+      analysis_points.push(`**Contradicting evidence**: Multiple sources dispute this claim or provide counterevidence`);
+    }
+    
+    // Category context
+    if (primaryCategory) {
+      analysis_points.push(`**Category**: ${primaryCategory.displayName} - verified using specialized ${primaryCategory.category} criteria`);
     }
     
     return {
       confidence,
       status,
       summary,
-      analysis: `Tavily Search Analysis:\n\n${answer || `Based on ${searchResults.length} sources found, this claim has been evaluated for accuracy using real-time web search and reliable news sources.`}\n\nSearch completed with ${sourcesWithScores.length} relevant sources found.${primaryCategory ? `\n\nCategory: ${primaryCategory.displayName} (${primaryCategory.confidence}% match)` : ''}`,
+      analysis: answer || `Based on ${searchResults.length} sources found, this claim has been evaluated for accuracy using real-time web search and reliable news sources.`,
+      analysis_points,
       sources: sourcesWithScores,
       source_consensus: confidence,
       verification_method: ['Tavily Search', 'Real-time Web Search', 'Source Analysis', primaryCategory ? 'Category-Specific Verification' : ''].filter(Boolean),

@@ -29,6 +29,7 @@ interface VerificationResultProps {
   status: string;
   summary: string;
   analysis?: string;
+  analysis_points?: string[]; // New: structured analysis bullets
   sources: Source[];
   sourceConsensus?: number;
   methods?: string[];
@@ -45,6 +46,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   status,
   summary,
   analysis,
+  analysis_points,
   sources,
   sourceConsensus,
   methods,
@@ -211,7 +213,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         </Card>
       </motion.div>
 
-      {analysis && analysis !== summary && (
+      {(analysis_points && analysis_points.length > 0) || (analysis && analysis !== summary) ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -226,21 +228,38 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                 <div>
                   <CardTitle className="text-xl">Detailed Analysis</CardTitle>
                   <CardDescription>
-                    In-depth AI-generated verification insights
+                    {analysis_points ? 'Key findings from AI verification' : 'In-depth AI-generated verification insights'}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm max-w-none">
-                <div className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg border border-border/30">
-                  {analysis}
+              {analysis_points && analysis_points.length > 0 ? (
+                <ul className="space-y-3">
+                  {analysis_points.map((point, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 2 + (index * 0.1) }}
+                      className="flex gap-3 items-start text-sm"
+                    >
+                      <span className="text-primary mt-1">•</span>
+                      <span className="text-muted-foreground leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') }}/>
+                    </motion.li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="prose prose-sm max-w-none">
+                  <div className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap bg-muted/30 p-4 rounded-lg border border-border/30">
+                    {analysis}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
-      )}
+      ) : null}
 
       {/* Transparency Report Card */}
       <motion.div

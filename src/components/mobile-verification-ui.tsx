@@ -662,12 +662,40 @@ export function MobileVerificationUI({
                   </div>
 
                   {/* Summary Preview */}
-                  <div className={cn(
-                    "text-sm text-muted-foreground transition-all duration-300",
-                    isExpanded ? "" : "line-clamp-3"
-                  )}>
+                  <div className="text-sm text-muted-foreground">
                     {result.summary}
                   </div>
+
+                  {/* Analysis Points */}
+                  {isExpanded && result.analysis_points && result.analysis_points.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-2 pt-2 border-t border-border/30"
+                    >
+                      <h4 className="text-xs font-semibold text-foreground">Key Findings:</h4>
+                      <ul className="space-y-2">
+                        {result.analysis_points.map((point: string, idx: number) => (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="flex gap-2 items-start text-xs"
+                          >
+                            <span className="text-primary mt-0.5">•</span>
+                            <span 
+                              className="text-muted-foreground flex-1"
+                              dangerouslySetInnerHTML={{ 
+                                __html: point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') 
+                              }}
+                            />
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
 
                   {/* Expand/Collapse */}
                   <Button
@@ -682,7 +710,7 @@ export function MobileVerificationUI({
                       </>
                     ) : (
                       <>
-                        Show Full Report <ChevronDown className="h-3 w-3 ml-1" />
+                        Show Details <ChevronDown className="h-3 w-3 ml-1" />
                       </>
                     )}
                   </Button>

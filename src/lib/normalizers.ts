@@ -8,6 +8,7 @@ export interface NormalizedVerificationResult {
   status: string;
   summary: string;
   analysis: string;
+  analysis_points?: string[]; // New: structured analysis bullets
   category: string;
   sources: Array<{
     title: string;
@@ -100,11 +101,17 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
     ? raw.verificationId 
     : null;
 
+  // Handle analysis_points (new structured format)
+  const analysis_points = Array.isArray(raw.analysis_points) 
+    ? raw.analysis_points.filter((p: any) => typeof p === 'string')
+    : undefined;
+
   return {
     confidence,
     status,
     summary,
     analysis,
+    analysis_points,
     category,
     sources,
     methods,

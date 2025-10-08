@@ -120,16 +120,61 @@ serve(async (req) => {
 
     const processingTime = Date.now() - startTime;
 
-    // Build standardized verification result
+    // Build standardized verification result with clear summary and analysis points
     const confidence = calculateImageConfidence(imageResult);
     const status = getStatusFromConfidence(confidence);
-    const topLabels = (imageResult.labels || []).slice(0, 3).map(l => l.description).join(', ');
+    const topLabels = (imageResult.labels || []).slice(0, 5);
+    const ocrLength = imageResult.ocrText?.length || 0;
+    const quality = imageResult.contentAnalysis.imageQuality;
+    const manipRisk = imageResult.contentAnalysis.manipulationRisk;
+
+    // Generate clear, concise summary
+    let summary = `Image analyzed with ${confidence}% confidence. `;
+    if (quality === 'high') summary += 'High-quality image with clear details.';
+    else if (quality === 'medium') summary += 'Medium-quality image.';
+    else if (quality === 'low') summary += 'Lower-quality image detected.';
+    
+    if (ocrLength > 50) summary += ` Contains ${ocrLength} characters of text.`;
+
+    // Build analysis_points with structured bullet data
+    const analysis_points = [];
+    
+    // Quality assessment
+    analysis_points.push(`**Image Quality**: ${quality.charAt(0).toUpperCase() + quality.slice(1)} (confidence based on detection clarity and label accuracy)`);
+    
+    // Labels/Content detected
+    if (topLabels.length > 0) {
+      const labelText = topLabels.map(l => `${l.description} (${Math.round(l.score * 100)}%)`).join(', ');
+      analysis_points.push(`**Content Detected**: ${labelText}`);
+    }
+    
+    // OCR/Text extraction
+    if (ocrLength > 0) {
+      analysis_points.push(`**Text Extracted**: ${ocrLength} characters found via OCR`);
+    } else {
+      analysis_points.push(`**Text Extracted**: No text detected in image`);
+    }
+    
+    // Safety/Manipulation
+    const safetyIssues = [];
+    if (imageResult.safeSearch.adult && ['LIKELY', 'VERY_LIKELY'].includes(imageResult.safeSearch.adult)) safetyIssues.push('adult content');
+    if (imageResult.safeSearch.violence && ['LIKELY', 'VERY_LIKELY'].includes(imageResult.safeSearch.violence)) safetyIssues.push('violence');
+    if (imageResult.safeSearch.racy && ['LIKELY', 'VERY_LIKELY'].includes(imageResult.safeSearch.racy)) safetyIssues.push('racy content');
+    
+    if (safetyIssues.length > 0) {
+      analysis_points.push(`**Safety Flags**: Detected ${safetyIssues.join(', ')}`);
+    } else {
+      analysis_points.push(`**Safety Check**: Passed - no inappropriate content detected`);
+    }
+    
+    analysis_points.push(`**Manipulation Risk**: ${manipRisk.charAt(0).toUpperCase() + manipRisk.slice(1)} risk of digital alteration`);
 
     const result = {
       confidence,
       status,
-      summary: `Image analysis via Google Vision. Quality: ${imageResult.contentAnalysis.imageQuality}. Labels: ${topLabels || 'None'}.`,
-      analysis: `OCR length: ${imageResult.ocrText?.length || 0}. Manipulation risk: ${imageResult.contentAnalysis.manipulationRisk}. SafeSearch: adult=${imageResult.safeSearch.adult}, violence=${imageResult.safeSearch.violence}, racy=${imageResult.safeSearch.racy}.`,
+      summary,
+      analysis: analysis_points.join('\n'),
+      analysis_points, // Structured array for frontend
       sources: [],
       source_consensus: confidence,
       verification_method: ['Google Vision AI', 'Image Analysis'],

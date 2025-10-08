@@ -22,6 +22,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ShareVerification from "./pages/ShareVerification";
 import Extensions from "./pages/Extensions";
 import Referrals from "./pages/Referrals";
+import Privacy from "./pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
             />
             <Route path="/about" element={<About />} />
             <Route path="/extensions" element={<Extensions />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/referrals" element={
               <ProtectedRoute>
                 <Referrals />

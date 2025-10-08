@@ -468,7 +468,14 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     });
 
     if (!response.ok) {
-      throw new Error(`Tavily API error: ${response.status} ${response.statusText}`);
+      const errorBody = await response.text();
+      console.error('🚨 Tavily API Error Details:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      throw new Error(`Tavily API error: ${response.status} ${response.statusText} - ${errorBody}`);
     }
 
     const data = await response.json();
@@ -627,7 +634,11 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     };
 
   } catch (error) {
-    console.error('🚨 Tavily API failed, returning fallback result:', error);
+    console.error('🚨 Tavily API failed, returning fallback result:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     // Return fallback result instead of throwing
     return {
       confidence: 20,

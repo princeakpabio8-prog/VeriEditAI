@@ -90,9 +90,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
                   Extensions
                 </Link>
-                <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Billing
-                </Link>
                 {isAdmin && (
                   <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                     Admin

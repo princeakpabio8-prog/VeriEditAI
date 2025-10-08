@@ -16,9 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const category = url.searchParams.get('category') || 'general';
-    const limit = url.searchParams.get('pageSize') || '20';
+    const { category = 'general', pageSize = 20 } = await req.json();
+    const limit = String(pageSize);
 
     const cacheKey = `${category}-${limit}`;
     const cached = cache.get(cacheKey);

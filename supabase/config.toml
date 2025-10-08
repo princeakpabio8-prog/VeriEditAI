@@ -94,4 +94,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.fetch-news]
-verify_jwt = true
+verify_jwt = false

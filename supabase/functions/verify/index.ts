@@ -669,19 +669,26 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     );
     
     if (isGenericResponse) {
-      console.warn('⚠️ Generic response detected from Tavily. Attempting fallback analysis.');
-      return {
-        confidence: 20,
-        status: 'inconclusive',
-        summary: `**⚡ VERIFICATION INCOMPLETE**\n\nConfidence: 20%\nStatus: INCONCLUSIVE\n\nThe search returned generic information instead of analyzing your specific content. This often happens when the claim cannot be verified through available sources.`,
-        analysis: 'Unable to obtain specific verification for this content. Search services returned generic information.',
-        sources: [],
-        source_consensus: 20,
-        verification_method: ['Generic Response Detected'],
-        category: categorizeContent(safeContent),
-        created_at: new Date().toISOString(),
-        processing_time: Date.now() - startTime
-      };
+      console.warn('⚠️ Generic response detected from Tavily. Falling back to Perplexity...');
+      try {
+        const perplexityResult = await verifyWithPerplexity(String(content), template);
+        console.log('✅ Perplexity fallback succeeded with confidence:', perplexityResult.confidence);
+        return perplexityResult;
+      } catch (perplexityError) {
+        console.error('❌ Perplexity fallback also failed:', perplexityError);
+        return {
+          confidence: 55,
+          status: 'INCONCLUSIVE',
+          summary: `**⚡ VERIFICATION INCOMPLETE**\n\nConfidence: 55%\nStatus: INCONCLUSIVE\n\nBoth primary and fallback verification sources returned generic information. This content may require manual fact-checking.`,
+          analysis: 'Unable to obtain specific verification through automated sources. Both Tavily and Perplexity returned insufficient information.',
+          sources: [],
+          source_consensus: 55,
+          verification_method: ['Tavily Generic Response', 'Perplexity Fallback Failed'],
+          category: categorizeContent(safeContent),
+          created_at: new Date().toISOString(),
+          processing_time: Date.now() - startTime
+        };
+      }
     }
     
     // Process sources from search results with full content and dynamic scoring

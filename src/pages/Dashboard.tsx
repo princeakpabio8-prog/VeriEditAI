@@ -24,6 +24,7 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewsDiscovery } from '@/components/news-discovery';
+import { useSearchParams } from 'react-router-dom';
 
 interface Verification {
   id: string;
@@ -47,6 +48,8 @@ const Dashboard = () => {
   const { addToQueue, queue, startQueue, getStats } = useVerificationQueue();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
     if (user) {
@@ -224,7 +227,7 @@ const Dashboard = () => {
         </div>
 
         {/* Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="discover">Discover</TabsTrigger>

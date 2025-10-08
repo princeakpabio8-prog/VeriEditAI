@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,6 +72,10 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
+                <Link to="/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Newspaper className="h-4 w-4" />
+                  Discover
+                </Link>
                 <Link to="/referrals" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Gift className="h-4 w-4" />
                   Referrals
@@ -84,9 +88,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 </Link>
                 <Link to="/billing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Billing
-                </Link>
-                <Link to="/profile" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Profile
                 </Link>
                 {isAdmin && (
                   <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -221,6 +222,28 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   Dashboard
                 </Link>
                 <Link
+                  to="/dashboard?tab=discover"
+                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Newspaper className="h-4 w-4" />
+                  Discover News
+                </Link>
+                <Link
+                  to="/referrals"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Referrals
+                </Link>
+                <Link
+                  to="/billing"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Billing
+                </Link>
+                <Link
                   to="/about"
                   className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
@@ -233,13 +256,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Extensions
-                </Link>
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Profile
                 </Link>
               </>
             ) : (

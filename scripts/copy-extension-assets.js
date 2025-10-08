@@ -21,7 +21,13 @@ copyFileSync(manifestSource, manifestDest);
 
 console.log('✓ Extension assets copied successfully');
 console.log('✓ Extension built at: dist/extension/');
-console.log('\nNext steps:');
-console.log('1. Add extension icons to dist/extension/assets/ (icon-16.png, icon-48.png, icon-128.png)');
-console.log('2. Create ZIP file: cd dist/extension && zip -r veriedit-ai-extension.zip .');
-console.log('3. Submit to Chrome Web Store');
+console.log('\n📦 Build Complete! Next steps:');
+console.log('1. Resize browser-extension/assets/icon-master.png to:');
+console.log('   - icon-16.png (16x16)');
+console.log('   - icon-48.png (48x48)');  
+console.log('   - icon-128.png (128x128)');
+console.log('   Save all 3 to: dist/extension/assets/');
+console.log('2. Test: Load dist/extension in chrome://extensions/');
+console.log('3. Package: cd dist/extension && tar -a -c -f ../../veriedit-ai-extension.zip *');
+console.log('4. Submit to Chrome Web Store');
+console.log('\n💡 Resize tool: https://www.iloveimg.com/resize-image or any image editor');

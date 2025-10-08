@@ -836,9 +836,10 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
         source_consensus: 20,
         verification_method: ['Fallback Analysis - All APIs Failed'],
         category: categorizeContent(String(content)),
-      created_at: new Date().toISOString(),
-      processing_time: Date.now() - startTime
-    };
+        created_at: new Date().toISOString(),
+        processing_time: Date.now() - startTime
+      };
+    }
   }
 }
 

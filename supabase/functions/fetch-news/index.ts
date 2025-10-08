@@ -18,9 +18,9 @@ serve(async (req) => {
   try {
     const url = new URL(req.url);
     const category = url.searchParams.get('category') || 'general';
-    const pageSize = url.searchParams.get('pageSize') || '20';
+    const limit = url.searchParams.get('pageSize') || '20';
 
-    const cacheKey = `${category}-${pageSize}`;
+    const cacheKey = `${category}-${limit}`;
     const cached = cache.get(cacheKey);
 
     // Return cached data if valid
@@ -31,34 +31,51 @@ serve(async (req) => {
       });
     }
 
-    const newsApiKey = Deno.env.get('NEWSAPI_KEY');
-    if (!newsApiKey) {
-      throw new Error('NEWSAPI_KEY not configured');
-    }
-
-    // Fetch from NewsAPI
-    const newsApiUrl = `https://newsapi.org/v2/top-headlines?category=${category}&language=en&pageSize=${pageSize}&apiKey=${newsApiKey}`;
+    // MediaStack API key (hardcoded for simplicity)
+    const mediaStackKey = '0f3107e38a6eb82f8f2da365a704d4b2';
     
-    console.log('Fetching news from NewsAPI:', category);
-    const response = await fetch(newsApiUrl);
+    // Map category names to MediaStack categories
+    const categoryMap: Record<string, string> = {
+      'general': 'general',
+      'technology': 'technology',
+      'health': 'health',
+      'business': 'business',
+      'science': 'science',
+      'sports': 'sports',
+    };
+    
+    const mappedCategory = categoryMap[category] || 'general';
+
+    // Fetch from MediaStack API (using HTTP for free tier)
+    const mediaStackUrl = `http://api.mediastack.com/v1/news?access_key=${mediaStackKey}&categories=${mappedCategory}&countries=us&languages=en&limit=${limit}`;
+    
+    console.log('Fetching news from MediaStack:', mappedCategory);
+    const response = await fetch(mediaStackUrl);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('NewsAPI error:', errorText);
-      throw new Error(`NewsAPI request failed: ${response.status}`);
+      console.error('MediaStack error:', errorText);
+      throw new Error(`MediaStack request failed: ${response.status}`);
     }
 
     const data = await response.json();
 
-    // Filter out removed/null articles
-    const articles = (data.articles || []).filter((article: any) => 
-      article && article.title && article.title !== '[Removed]'
-    );
+    // Transform MediaStack response to match our expected format
+    const articles = (data.data || [])
+      .filter((article: any) => article && article.title)
+      .map((article: any) => ({
+        title: article.title,
+        description: article.description,
+        url: article.url,
+        urlToImage: article.image, // MediaStack uses 'image' field
+        source: { name: article.source || 'Unknown' },
+        publishedAt: article.published_at, // MediaStack uses 'published_at'
+      }));
 
     const result = {
       articles,
-      totalResults: data.totalResults || articles.length,
-      category,
+      totalResults: data.pagination?.total || articles.length,
+      category: mappedCategory,
     };
 
     // Cache the result

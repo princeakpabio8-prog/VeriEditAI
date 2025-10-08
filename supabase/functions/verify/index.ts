@@ -404,6 +404,157 @@ async function handleOpinion(content: string): Promise<VerificationResult> {
   };
 }
 
+// Retry wrapper for Tavily API calls with exponential backoff
+async function callTavilyWithRetry(requestBody: any, maxRetries = 2): Promise<any> {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`🔄 Tavily API attempt ${attempt + 1}/${maxRetries + 1}`);
+      
+      const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+      
+      if (response.ok) {
+        console.log('✅ Tavily API call successful');
+        return await response.json();
+      }
+      
+      // Log detailed error information
+      const errorBody = await response.text();
+      console.error(`🚨 Tavily API Error (Attempt ${attempt + 1}/${maxRetries + 1}):`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      // If rate limited (429) or server error (5xx), retry with exponential backoff
+      if ((response.status === 429 || response.status >= 500) && attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+        console.log(`⏳ Rate limited or server error. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      // For other errors (like 400), throw immediately without retry
+      throw new Error(`Tavily API error: ${response.status} ${response.statusText} - ${errorBody}`);
+      
+    } catch (error) {
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries) {
+        throw error;
+      }
+      // Otherwise, continue to next retry
+      console.log(`⚠️ Attempt ${attempt + 1} failed, will retry...`);
+    }
+  }
+  throw new Error('Tavily API: All retry attempts exhausted');
+}
+
+// Perplexity API fallback verification
+async function verifyWithPerplexity(content: string, template?: any): Promise<VerificationResult> {
+  const startTime = Date.now();
+  const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
+  
+  if (!apiKey) {
+    console.error('❌ PERPLEXITY_API_KEY not configured');
+    throw new Error('Perplexity API key not configured');
+  }
+  
+  console.log('🔮 Using Perplexity API for verification...');
+  
+  try {
+    const safeContent = String(content).substring(0, 2000);
+    
+    // Build focused prompt
+    let prompt = `Analyze and fact-check this claim: "${safeContent}"\n\n`;
+    prompt += 'Provide:\n1. A confidence score (0-100)\n2. Verification status (verified/likely_accurate/inconclusive/likely_false/false)\n';
+    prompt += '3. Brief analysis with evidence\n4. List credible sources\n';
+    
+    if (template?.industry === 'bank') {
+      prompt += '\nFocus on financial fraud detection and banking security.';
+    }
+    
+    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-sonar-large-128k-online',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a professional fact-checker. Provide accurate, evidence-based verification with specific sources.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 1500,
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('🚨 Perplexity API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorBody
+      });
+      throw new Error(`Perplexity API error: ${response.status} - ${errorBody}`);
+    }
+    
+    const data = await response.json();
+    const analysis = data.choices?.[0]?.message?.content || '';
+    
+    console.log('📊 Perplexity response received');
+    
+    // Parse confidence and status from response
+    let confidence = 50;
+    let status = 'inconclusive';
+    
+    // Try to extract confidence score
+    const confidenceMatch = analysis.match(/confidence[:\s]+(\d+)/i);
+    if (confidenceMatch) {
+      confidence = parseInt(confidenceMatch[1]);
+    }
+    
+    // Try to extract status
+    if (analysis.toLowerCase().includes('verified') || analysis.toLowerCase().includes('true')) {
+      status = confidence >= 80 ? 'verified' : 'likely_accurate';
+    } else if (analysis.toLowerCase().includes('false')) {
+      status = confidence >= 80 ? 'false' : 'likely_false';
+    }
+    
+    return {
+      confidence,
+      status,
+      summary: `**🔮 PERPLEXITY VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase().replace('_', ' ')}\n\n${analysis.substring(0, 300)}...`,
+      analysis,
+      sources: [], // Perplexity doesn't return structured sources
+      source_consensus: confidence,
+      verification_method: ['Perplexity AI'],
+      category: categorizeContent(safeContent),
+      created_at: new Date().toISOString(),
+      processing_time: Date.now() - startTime
+    };
+    
+  } catch (error) {
+    console.error('🚨 Perplexity verification failed:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    throw error;
+  }
+}
+
 async function verifyWithTavily(content: string, apiKey: string, template?: any): Promise<VerificationResult> {
   const startTime = Date.now();
   
@@ -449,36 +600,18 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       query = `${template.industry === 'bank' ? 'Financial fraud detection' : 'NGO fact-checking'}: Analyze this specific claim focusing on ${focusAreas}. Content: "${safeContent}". Provide detailed evidence, not generic information.`;
     }
 
-    console.log('🔍 Sending request to Tavily Search API...');
+    console.log('🔍 Sending request to Tavily Search API with retry logic...');
     
-    const response = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        api_key: apiKey,
-        query: query,
-        search_depth: "advanced",
-        include_answer: true,
-        include_raw_content: true,
-        max_results: 8,
-        include_domains: ["reuters.com", "bbc.com", "cnn.com", "npr.org", "apnews.com", "factcheck.org", "snopes.com", "politifact.com", "nytimes.com"]
-      }),
+    // Use retry wrapper for Tavily API call
+    const data = await callTavilyWithRetry({
+      api_key: apiKey,
+      query: query,
+      search_depth: "advanced",
+      include_answer: true,
+      include_raw_content: true,
+      max_results: 8,
+      include_domains: ["reuters.com", "bbc.com", "cnn.com", "npr.org", "apnews.com", "factcheck.org", "snopes.com", "politifact.com", "nytimes.com"]
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error('🚨 Tavily API Error Details:', {
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-      throw new Error(`Tavily API error: ${response.status} ${response.statusText} - ${errorBody}`);
-    }
-
-    const data = await response.json();
     console.log('🔍 Tavily search results received');
     
     const answer = data.answer || '';
@@ -633,22 +766,33 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       })
     };
 
-  } catch (error) {
-    console.error('🚨 Tavily API failed, returning fallback result:', {
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
+  } catch (tavilyError) {
+    console.error('🚨 Tavily API failed, attempting Perplexity fallback:', {
+      errorMessage: tavilyError instanceof Error ? tavilyError.message : String(tavilyError),
+      errorStack: tavilyError instanceof Error ? tavilyError.stack : undefined,
       timestamp: new Date().toISOString()
     });
-    // Return fallback result instead of throwing
-    return {
-      confidence: 20,
-      status: 'inconclusive',
-      summary: `**⚡ SEARCH VERIFICATION UNAVAILABLE**\n\nConfidence: 20%\nStatus: INCONCLUSIVE\n\nSearch services are temporarily unavailable. Using basic content analysis.`,
-      analysis: `Search API temporarily unavailable. Content analyzed: ${String(content).length} characters. Unable to cross-reference with external sources at this time.`,
-      sources: [],
-      source_consensus: 20,
-      verification_method: ['Fallback Analysis'],
-      category: categorizeContent(String(content)),
+    
+    // Try Perplexity as fallback
+    try {
+      console.log('🔄 Falling back to Perplexity API...');
+      return await verifyWithPerplexity(content, template);
+    } catch (perplexityError) {
+      console.error('🚨 Perplexity fallback also failed:', {
+        errorMessage: perplexityError instanceof Error ? perplexityError.message : String(perplexityError),
+        timestamp: new Date().toISOString()
+      });
+      
+      // Return basic fallback result if both APIs fail
+      return {
+        confidence: 20,
+        status: 'inconclusive',
+        summary: `**⚡ VERIFICATION SERVICES UNAVAILABLE**\n\nConfidence: 20%\nStatus: INCONCLUSIVE\n\nBoth primary and backup verification services are temporarily unavailable. Using basic content analysis.`,
+        analysis: `All verification APIs temporarily unavailable. Content analyzed: ${String(content).length} characters. Unable to cross-reference with external sources at this time. Please try again later.`,
+        sources: [],
+        source_consensus: 20,
+        verification_method: ['Fallback Analysis - All APIs Failed'],
+        category: categorizeContent(String(content)),
       created_at: new Date().toISOString(),
       processing_time: Date.now() - startTime
     };

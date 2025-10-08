@@ -56,6 +56,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   content = "",
   industry,
 }) => {
+  const { user } = useAuth();
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   const [shareModalOpen, setShareModalOpen] = React.useState(false);
   
@@ -571,7 +572,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           <CardContent>
             <TrustScoreFeedback
               verificationId={verificationId || 'temp'}
-              userId={useAuth().user?.id}
+              userId={user?.id}
             />
           </CardContent>
         </Card>

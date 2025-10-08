@@ -74,6 +74,12 @@ export default function Verify() {
     toast.success(`${template.name} template selected - auto-populating content`);
   };
 
+  useEffect(() => {
+    if (verificationState.stage === 'completed') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [verificationState.stage]);
+
   const handleVerificationStart = async (data: any) => {
     if (!user) {
       toast.error('Please sign in to verify content');

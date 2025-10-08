@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,12 @@ export function MobileVerificationUI({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (result) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [result]);
 
   const validateFile = (file: File) => {
     const maxSize = 10 * 1024 * 1024; // 10MB - aligned with backend

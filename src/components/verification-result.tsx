@@ -59,6 +59,10 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   const { user } = useAuth();
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   const [shareModalOpen, setShareModalOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
   
   // Normalize status to prevent toLowerCase errors
   const normalizedStatus = safeLower(status);

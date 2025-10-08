@@ -404,6 +404,56 @@ async function handleOpinion(content: string): Promise<VerificationResult> {
   };
 }
 
+// Helper: Build a compact query for Tavily API (max 380 chars)
+function buildCompactTavilyQuery(content: string, category?: string, template?: any): string {
+  // Remove source lines and URLs
+  let cleaned = content
+    .replace(/Source:\s*https?:\/\/[^\s]+/gi, '')
+    .replace(/https?:\/\/[^\s]+/gi, '')
+    .replace(/\[[^\]]+\]/g, '') // Remove reference markers like [1], [Image 1 of 8]
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // Extract headline/first sentence (up to 200 chars)
+  let snippet = cleaned.substring(0, 200);
+  if (cleaned.length > 200) {
+    const lastPeriod = snippet.lastIndexOf('.');
+    if (lastPeriod > 50) snippet = snippet.substring(0, lastPeriod + 1);
+  }
+  
+  // Add context hint
+  let hint = 'Verify this claim: ';
+  if (template?.name) {
+    hint = `${template.industry || 'general'} verification: `;
+  } else if (category && category !== 'general') {
+    hint = `${category} fact-check: `;
+  }
+  
+  // Compose query with strict limit
+  const maxLength = 380;
+  let query = `${hint}"${snippet}"`;
+  
+  if (query.length > maxLength) {
+    const available = maxLength - hint.length - 4; // -4 for quotes and ellipsis
+    snippet = snippet.substring(0, available) + '...';
+    query = `${hint}"${snippet}"`;
+  }
+  
+  console.log(`📏 Tavily query length: ${query.length} chars (max: 400)`);
+  return query;
+}
+
+// Extract domain from content if URL exists
+function extractSourceDomain(content: string): string | null {
+  const urlMatch = content.match(/https?:\/\/([^\s\/]+)/i);
+  if (urlMatch) {
+    const domain = urlMatch[1].replace(/^www\./, '');
+    console.log(`🌐 Source domain detected: ${domain}`);
+    return domain;
+  }
+  return null;
+}
+
 // Retry wrapper for Tavily API calls with exponential backoff
 async function callTavilyWithRetry(requestBody: any, maxRetries = 2): Promise<any> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -577,33 +627,17 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       console.log(`🔍 Min sources required: ${primaryCategory.minSources}, Max age: ${primaryCategory.maxSourceAgeDays ? `${primaryCategory.maxSourceAgeDays} days` : 'unlimited'}`);
     }
     
-    // Customize query based on template OR category
-    let query = `Analyze this specific claim in detail with evidence: "${safeContent}". Provide: 1) What exactly is being claimed, 2) Evidence for/against with sources, 3) Final verdict with reasoning. Be specific to THIS claim, not general information about fact-checking.`;
+    // Build compact query for Tavily (max 380 chars to stay under 400 limit)
+    const categoryName = primaryCategory?.category || 'general';
+    const query = buildCompactTavilyQuery(safeContent, categoryName, template);
     
-    if (primaryCategory) {
-      // Adjust query based on category
-      const categoryHints: Record<string, string> = {
-        'scientific': 'Focus on peer-reviewed research, studies, and scientific consensus.',
-        'financial': 'Verify with official market data, financial reports, and regulatory sources.',
-        'legal': 'Check court records, legal precedents, and official regulatory documents.',
-        'historical': 'Verify with academic sources, historical records, and primary documents.',
-        'geopolitical': 'Check official government statements, international organization reports.',
-        'social-media-viral': 'Verify original source, check for manipulation, context, and satire detection.',
-        'sports': 'Verify with official league statistics and sports authorities.',
-        'statistical': 'Check survey methodology, sample size, margin of error, and data sources.'
-      };
-      
-      const hint = categoryHints[primaryCategory.category] || '';
-      query = `${primaryCategory.displayName} claim verification: "${safeContent}". ${hint} Provide specific evidence and sources.`;
-    } else if (template) {
-      const focusAreas = template.verificationFocus?.join(', ') || '';
-      query = `${template.industry === 'bank' ? 'Financial fraud detection' : 'NGO fact-checking'}: Analyze this specific claim focusing on ${focusAreas}. Content: "${safeContent}". Provide detailed evidence, not generic information.`;
-    }
-
+    // Extract source domain if URL exists in content
+    const sourceDomain = extractSourceDomain(safeContent);
+    
     console.log('🔍 Sending request to Tavily Search API with retry logic...');
     
-    // Use retry wrapper for Tavily API call
-    const data = await callTavilyWithRetry({
+    // Build request with optional domain filtering
+    const tavilyRequest: any = {
       api_key: apiKey,
       query: query,
       search_depth: "advanced",
@@ -611,7 +645,16 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       include_raw_content: true,
       max_results: 8,
       include_domains: ["reuters.com", "bbc.com", "cnn.com", "npr.org", "apnews.com", "factcheck.org", "snopes.com", "politifact.com", "nytimes.com"]
-    });
+    };
+    
+    // If we detected a source domain, prioritize it
+    if (sourceDomain) {
+      console.log(`🎯 Prioritizing source domain: ${sourceDomain}`);
+      tavilyRequest.include_domains = [sourceDomain, ...tavilyRequest.include_domains];
+    }
+    
+    // Use retry wrapper for Tavily API call
+    const data = await callTavilyWithRetry(tavilyRequest);
     console.log('🔍 Tavily search results received');
     
     const answer = data.answer || '';

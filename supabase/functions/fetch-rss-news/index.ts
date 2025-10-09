@@ -162,6 +162,34 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
           imageUrl = imgMatch[1];
         }
       }
+      // Extract from description HTML
+      else if (description) {
+        const imgMatch = description.match(/<img[^>]+src="([^">]+)"/i);
+        if (imgMatch) {
+          imageUrl = imgMatch[1];
+        }
+      }
+      
+      // Try to fetch Open Graph image as fallback
+      if (!imageUrl && link) {
+        try {
+          const pageResponse = await fetch(link, {
+            headers: { 'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0' },
+            signal: AbortSignal.timeout(5000),
+          });
+          
+          if (pageResponse.ok) {
+            const html = await pageResponse.text();
+            const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
+                                 html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i);
+            if (ogImageMatch) {
+              imageUrl = ogImageMatch[1];
+            }
+          }
+        } catch (error) {
+          console.log(`Could not fetch OG image for ${link}:`, error.message);
+        }
+      }
 
       if (!title || !link) {
         console.log(`Skipping item from ${source.name}: missing title or link`);

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
+import { XMLParser } from "https://esm.sh/fast-xml-parser@4.3.5";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,11 +68,6 @@ function categorizeArticle(title: string, summary: string): string {
   return "General";
 }
 
-function getTextContent(element: any, tagName: string): string {
-  const el = element.querySelector(tagName);
-  return el?.textContent?.trim() || "";
-}
-
 async function fetchFeed(source: typeof RSS_SOURCES[0]) {
   try {
     console.log(`Fetching ${source.name} from ${source.url}`);
@@ -81,7 +76,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
       headers: {
         'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0',
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000), // Increased timeout
     });
 
     if (!response.ok) {
@@ -89,47 +84,91 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
     }
 
     const xmlText = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, "text/xml");
-
-    if (!doc) {
-      throw new Error("Failed to parse XML");
-    }
-
+    
+    // Parse XML with fast-xml-parser
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "@_",
+      textNodeName: "#text",
+      parseAttributeValue: true,
+      trimValues: true,
+    });
+    
+    const result = parser.parse(xmlText);
+    
     // Handle both RSS and Atom feeds
-    const items = doc.querySelectorAll("item, entry");
-    console.log(`Successfully fetched ${items.length} items from ${source.name}`);
+    let items = [];
+    
+    // RSS 2.0 format
+    if (result.rss?.channel?.item) {
+      items = Array.isArray(result.rss.channel.item) 
+        ? result.rss.channel.item 
+        : [result.rss.channel.item];
+    }
+    // Atom format
+    else if (result.feed?.entry) {
+      items = Array.isArray(result.feed.entry) 
+        ? result.feed.entry 
+        : [result.feed.entry];
+    }
+    
+    console.log(`Parsed ${items.length} items from ${source.name}`);
     
     const articles = [];
     
     for (const item of items) {
-      // RSS format
-      const title = getTextContent(item, "title");
-      const link = getTextContent(item, "link") || item.querySelector("link")?.getAttribute("href") || "";
-      const description = getTextContent(item, "description") || getTextContent(item, "summary") || getTextContent(item, "content");
-      const content = getTextContent(item, "content:encoded") || getTextContent(item, "content") || description;
-      const pubDate = getTextContent(item, "pubDate") || getTextContent(item, "published") || getTextContent(item, "updated");
-      const author = getTextContent(item, "dc:creator") || getTextContent(item, "author") || getTextContent(item, "creator");
-      const guid = getTextContent(item, "guid") || link;
+      // Extract data - handle both RSS and Atom formats
+      const title = item.title?.["#text"] || item.title || "";
+      
+      // Link extraction - handle different formats
+      let link = "";
+      if (typeof item.link === "string") {
+        link = item.link;
+      } else if (item.link?.["@_href"]) {
+        link = item.link["@_href"];
+      } else if (Array.isArray(item.link)) {
+        const htmlLink = item.link.find((l: any) => l["@_type"] === "text/html" || l["@_rel"] === "alternate");
+        link = htmlLink?.["@_href"] || item.link[0]?.["@_href"] || "";
+      }
+      
+      const description = item.description?.["#text"] || item.description || 
+                         item.summary?.["#text"] || item.summary || 
+                         item.content?.["#text"] || item.content || "";
+      
+      const content = item["content:encoded"]?.["#text"] || item["content:encoded"] ||
+                     item.content?.["#text"] || item.content || 
+                     description;
+      
+      const pubDate = item.pubDate || item.published || item.updated || new Date().toISOString();
+      
+      const author = item["dc:creator"] || item.creator || 
+                    item.author?.name || item.author || "";
+      
+      const guid = item.guid?.["#text"] || item.guid || item.id || link;
 
-      if (!title || !link) continue;
+      // Skip if missing critical fields
+      if (!title || !link) {
+        console.log(`Skipping item from ${source.name}: missing title or link`);
+        continue;
+      }
 
       articles.push({
-        title,
-        link,
+        title: title.substring(0, 500),
+        link: link,
         summary: description.substring(0, 1000),
         full_content: content,
         source: source.name,
         source_url: source.source_url,
-        published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        published_at: new Date(pubDate).toISOString(),
         category: categorizeArticle(title, description),
         metadata: {
-          author,
-          guid,
+          author: author || null,
+          guid: guid || null,
         },
       });
     }
     
+    console.log(`Extracted ${articles.length} valid articles from ${source.name}`);
     return articles;
   } catch (error) {
     console.error(`Error fetching ${source.name}:`, error.message);

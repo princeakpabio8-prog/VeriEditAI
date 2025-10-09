@@ -525,8 +525,28 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="discover">
-            <LighthouseFeed />
+          <TabsContent value="discover" className="space-y-8">
+            {/* News Discovery Section */}
+            <div className="space-y-4">
+              <NewsDiscovery />
+            </div>
+            
+            {/* Visual Separator */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  or browse verified stories
+                </span>
+              </div>
+            </div>
+            
+            {/* Lighthouse Feed Section */}
+            <div className="space-y-4">
+              <LighthouseFeed />
+            </div>
           </TabsContent>
 
         <TabsContent value="analytics">

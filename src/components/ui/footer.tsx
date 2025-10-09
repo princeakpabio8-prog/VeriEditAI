@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">VeriEdit AI</h3>
@@ -13,9 +13,15 @@ const Footer = () => {
               Trust Infrastructure for the AI Era. Advanced AI-powered fact verification 
               and content authenticity solutions.
             </p>
-            <p className="text-xs text-muted-foreground">
-              Founded by Prince Akpabio Esien
-            </p>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <p><strong className="text-foreground">VeriEdit AI Technologies Ltd</strong></p>
+              <p>Founded by Prince Akpabio Esien</p>
+              <p>
+                <a href="tel:+2348080189816" className="hover:text-foreground transition-colors">
+                  +234 808 018 9816
+                </a>
+              </p>
+            </div>
           </div>
 
           {/* Navigation Links */}
@@ -76,13 +82,29 @@ const Footer = () => {
               </a>
             </div>
           </div>
+
+          {/* Legal Links */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-foreground">Legal</h4>
+            <div className="space-y-2 text-sm">
+              <Link to="/privacy" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Terms & Conditions
+              </Link>
+              <Link to="/refund-policy" className="block text-muted-foreground hover:text-foreground transition-colors">
+                Refund Policy
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Bottom Section */}
         <div className="mt-8 pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2024 VeriEdit AI. All rights reserved. Built with trust infrastructure technology.
+              © 2024 VeriEdit AI Technologies Ltd. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
               Founder & CEO: Prince Akpabio Esien

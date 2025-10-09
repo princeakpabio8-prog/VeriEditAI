@@ -23,6 +23,8 @@ import ShareVerification from "./pages/ShareVerification";
 import Extensions from "./pages/Extensions";
 import Referrals from "./pages/Referrals";
 import Privacy from "./pages/Privacy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import RefundPolicy from "./pages/RefundPolicy";
 import LighthouseRoom from "./pages/LighthouseRoom";
 import LighthouseRoomView from "./pages/LighthouseRoomView";
 import SignalFeed from "./pages/SignalFeed";
@@ -99,6 +101,8 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/extensions" element={<Extensions />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="/referrals" element={
               <ProtectedRoute>
                 <Referrals />

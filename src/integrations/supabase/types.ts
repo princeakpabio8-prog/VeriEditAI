@@ -683,14 +683,19 @@ export type Database = {
           created_at: string
           domain: string
           editorial_quality: number | null
+          factual_reporting_score: number | null
           failed_verifications: number
+          funding_sources: Json | null
           id: string
           last_verified_at: string | null
           metadata: Json | null
+          owner_entity: string | null
           political_bias: number | null
+          political_leaning_score: number | null
           region: string | null
           source_type: string | null
           successful_verifications: number
+          transparency_rating: string | null
           updated_at: string
           verification_count: number
         }
@@ -700,14 +705,19 @@ export type Database = {
           created_at?: string
           domain: string
           editorial_quality?: number | null
+          factual_reporting_score?: number | null
           failed_verifications?: number
+          funding_sources?: Json | null
           id?: string
           last_verified_at?: string | null
           metadata?: Json | null
+          owner_entity?: string | null
           political_bias?: number | null
+          political_leaning_score?: number | null
           region?: string | null
           source_type?: string | null
           successful_verifications?: number
+          transparency_rating?: string | null
           updated_at?: string
           verification_count?: number
         }
@@ -717,14 +727,19 @@ export type Database = {
           created_at?: string
           domain?: string
           editorial_quality?: number | null
+          factual_reporting_score?: number | null
           failed_verifications?: number
+          funding_sources?: Json | null
           id?: string
           last_verified_at?: string | null
           metadata?: Json | null
+          owner_entity?: string | null
           political_bias?: number | null
+          political_leaning_score?: number | null
           region?: string | null
           source_type?: string | null
           successful_verifications?: number
+          transparency_rating?: string | null
           updated_at?: string
           verification_count?: number
         }
@@ -1221,60 +1236,131 @@ export type Database = {
           },
         ]
       }
+      verification_shares: {
+        Row: {
+          avg_view_duration_seconds: number | null
+          created_at: string
+          geographic_spread: Json | null
+          id: string
+          share_count: number | null
+          shared_to_platform: string
+          unique_viewers: number | null
+          updated_at: string
+          verification_id: string
+        }
+        Insert: {
+          avg_view_duration_seconds?: number | null
+          created_at?: string
+          geographic_spread?: Json | null
+          id?: string
+          share_count?: number | null
+          shared_to_platform: string
+          unique_viewers?: number | null
+          updated_at?: string
+          verification_id: string
+        }
+        Update: {
+          avg_view_duration_seconds?: number | null
+          created_at?: string
+          geographic_spread?: Json | null
+          id?: string
+          share_count?: number | null
+          shared_to_platform?: string
+          unique_viewers?: number | null
+          updated_at?: string
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_shares_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verifications: {
         Row: {
           category: string | null
           category_confidence: number | null
+          claim_type: string | null
           content: string
           content_type: string
           created_at: string
           detected_categories: Json | null
+          detected_entities: Json | null
+          device_type: string | null
           file_name: string | null
           file_size: number | null
           id: string
           processing_time_ms: number | null
           result_summary: string | null
           score_breakdown: Json | null
+          sentiment_label: string | null
+          sentiment_score: number | null
+          session_id: string | null
           status: string
+          time_to_verify_ms: number | null
           trust_score: number | null
           updated_at: string
+          user_confidence_override: boolean | null
           user_id: string
+          verification_source: string | null
         }
         Insert: {
           category?: string | null
           category_confidence?: number | null
+          claim_type?: string | null
           content: string
           content_type: string
           created_at?: string
           detected_categories?: Json | null
+          detected_entities?: Json | null
+          device_type?: string | null
           file_name?: string | null
           file_size?: number | null
           id?: string
           processing_time_ms?: number | null
           result_summary?: string | null
           score_breakdown?: Json | null
+          sentiment_label?: string | null
+          sentiment_score?: number | null
+          session_id?: string | null
           status?: string
+          time_to_verify_ms?: number | null
           trust_score?: number | null
           updated_at?: string
+          user_confidence_override?: boolean | null
           user_id: string
+          verification_source?: string | null
         }
         Update: {
           category?: string | null
           category_confidence?: number | null
+          claim_type?: string | null
           content?: string
           content_type?: string
           created_at?: string
           detected_categories?: Json | null
+          detected_entities?: Json | null
+          device_type?: string | null
           file_name?: string | null
           file_size?: number | null
           id?: string
           processing_time_ms?: number | null
           result_summary?: string | null
           score_breakdown?: Json | null
+          sentiment_label?: string | null
+          sentiment_score?: number | null
+          session_id?: string | null
           status?: string
+          time_to_verify_ms?: number | null
           trust_score?: number | null
           updated_at?: string
+          user_confidence_override?: boolean | null
           user_id?: string
+          verification_source?: string | null
         }
         Relationships: []
       }

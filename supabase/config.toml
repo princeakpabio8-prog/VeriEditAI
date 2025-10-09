@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.aggregate-trust-data]
 verify_jwt = false
+
+[functions.analyze-content]
+verify_jwt = true

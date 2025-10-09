@@ -236,11 +236,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+
   try {
     const body = await req.json();
     const safeContent = String(body?.content ?? '');
     const safeCategory = String(body?.category ?? 'general').toLowerCase();
     const userId = body?.userId;
+    const deviceType = body?.deviceType || 'desktop';
+    const verificationSource = body?.verificationSource || 'web';
+    const sessionId = body?.sessionId;
     
     console.log('Starting enhanced multi-AI verification...');
 
@@ -312,6 +317,8 @@ serve(async (req) => {
                   consensus >= 65 ? 'verified' :
                   consensus >= 45 ? 'inconclusive' : 'disputed';
     
+    const timeToVerify = Date.now() - startTime;
+    
     return new Response(JSON.stringify({
       confidence: consensus,
       status,
@@ -321,7 +328,13 @@ serve(async (req) => {
       sources: allSources,
       verification_method: successfulResults.map(r => r.source),
       category: safeCategory,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      behavioral_data: {
+        device_type: deviceType,
+        verification_source: verificationSource,
+        session_id: sessionId,
+        time_to_verify_ms: timeToVerify
+      }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

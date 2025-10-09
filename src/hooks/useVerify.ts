@@ -160,9 +160,20 @@ export function useVerify() {
         try {
           const apiTimer = performanceMonitor.startTiming('tavily_api_call');
           
+          // Detect device type
+          const deviceType = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+            ? (/tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'mobile')
+            : 'desktop';
+          
           // Check if this is an image or document verification
           let functionName = 'verify';
-          let requestBody: any = { content: safeContent, user_id: (userId ?? '').toString() };
+          let requestBody: any = { 
+            content: safeContent, 
+            user_id: (userId ?? '').toString(),
+            deviceType,
+            verificationSource: verificationData?.source || 'web',
+            sessionId: verificationData?.sessionId || crypto.randomUUID()
+          };
           
           if (verificationData?.contentType === 'image') {
             functionName = 'image-verify';
@@ -275,6 +286,16 @@ export function useVerify() {
           if (!bypassCache) {
             verificationCache.set(safeContent, userId, normalizedData);
             enhancedVerificationCache.set(safeContent, userId, normalizedData);
+          }
+
+          // Trigger background content analysis for sentiment & entities (fire and forget)
+          if (verificationData?.contentType !== 'image' && safeContent.length > 20) {
+            supabase.functions.invoke('analyze-content', {
+              body: {
+                content: safeContent,
+                verificationId: data.verification_id
+              }
+            }).catch(err => console.log('Background analysis queued:', err.message));
           }
 
           showVerificationSuccess(normalizedData?.confidence ?? 0, processingTime);

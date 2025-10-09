@@ -85,11 +85,44 @@ serve(async (req) => {
 
     // Check content type
     const contentType = response.headers.get('content-type') || '';
+    
+    // Handle PDF files
+    if (contentType.includes('application/pdf')) {
+      console.log(`📄 Processing PDF file from: ${url}`);
+      
+      const arrayBuffer = await response.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      
+      // Check file size (max 10MB)
+      if (bytes.length > 10 * 1024 * 1024) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'PDF file is too large (maximum 10MB)' }),
+          { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Convert to base64 for transport
+      const base64 = btoa(String.fromCharCode(...bytes));
+      
+      console.log(`✅ Successfully downloaded PDF (${bytes.length} bytes)`);
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          contentType: 'pdf',
+          data: base64,
+          url: url,
+          size: bytes.length
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     if (!contentType.includes('text/html') && !contentType.includes('text/plain')) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: `Unsupported content type: ${contentType}. Only HTML and text pages are supported.` 
+          error: `Unsupported content type: ${contentType}. Only HTML, text, and PDF files are supported.` 
         }),
         { status: 415, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

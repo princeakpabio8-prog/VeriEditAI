@@ -244,6 +244,50 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
         return;
       }
 
+      // Handle PDF files
+      if (data.contentType === 'pdf') {
+        toast({
+          title: "Processing PDF...",
+          description: "Extracting text from PDF document",
+        });
+
+        // Convert base64 back to File object
+        const pdfData = atob(data.data);
+        const bytes = new Uint8Array(pdfData.length);
+        for (let i = 0; i < pdfData.length; i++) {
+          bytes[i] = pdfData.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const file = new File([blob], 'document.pdf', { type: 'application/pdf' });
+        
+        // Use existing PDF parsing logic
+        const { parseDocument } = await import('@/lib/document-parser');
+        const parsed = await parseDocument(file);
+        
+        if (!parsed.metadata.extractionSuccess) {
+          toast({
+            title: "PDF Processing Failed",
+            description: "Unable to extract text from PDF. It may be scanned images or corrupted.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        onVerificationStart?.({
+          content: parsed.text,
+          contentType: 'document',
+          type: 'document',
+          fileName: 'document.pdf',
+          fileSize: data.size,
+          metadata: {
+            originalUrl: urlContent,
+            fetchedFromUrl: true,
+            documentMetadata: parsed.metadata
+          }
+        });
+        return;
+      }
+
       // Pass the fetched text content to verification with original URL in metadata
       onVerificationStart?.({
         content: data.text,

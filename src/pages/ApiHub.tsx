@@ -9,12 +9,20 @@ import { ApiPlayground } from "@/components/api-playground";
 import { Code, BookOpen, Zap, ExternalLink, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Navigation } from "@/components/ui/navigation";
 
 export default function ApiHub() {
   const { user } = useAuth();
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation 
+        isAuthenticated={!!user} 
+        user={user ? { 
+          name: user.email?.split('@')[0] || 'User', 
+          email: user.email || '' 
+        } : undefined} 
+      />
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Hero Section */}
         <div className="mb-12">

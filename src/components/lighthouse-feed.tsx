@@ -138,6 +138,7 @@ export function LighthouseFeed() {
         body: {
           content: `${article.title}\n\n${article.summary}\n\nSource: ${article.link}`,
           content_type: "text",
+          user_id: user.id,
           metadata: {
             source: "lighthouse_feed",
             news_feed_id: article.id,
@@ -149,12 +150,18 @@ export function LighthouseFeed() {
 
       if (error) throw error;
 
+      console.log("Verification result:", data);
+
+      // The verify function returns 'confidence' not 'trustScore'
+      const trustScore = data.confidence || 0;
+      const verificationId = data.verificationId;
+
       // Update news_feed with verification results
       const { error: updateError } = await supabase
         .from("news_feed")
         .update({
-          trust_score: data.trustScore,
-          verification_id: data.verificationId,
+          trust_score: trustScore,
+          verification_id: verificationId,
           is_verified: true,
         })
         .eq("id", article.id);
@@ -163,7 +170,7 @@ export function LighthouseFeed() {
 
       toast({
         title: "Article Verified",
-        description: `Trust Score: ${data.trustScore}/100`,
+        description: `Trust Score: ${trustScore}/100`,
       });
 
       await fetchArticles();

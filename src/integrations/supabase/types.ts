@@ -1475,6 +1475,48 @@ export type Database = {
         Args: { _base_score: number; _domain: string }
         Returns: number
       }
+      get_admin_api_usage_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_days: number
+          api_key_name: string
+          failed_requests: number
+          last_used: string
+          successful_requests: number
+          total_requests: number
+          user_id: string
+        }[]
+      }
+      get_admin_popular_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_response_time_ms: number
+          endpoint: string
+          error_count: number
+          request_count: number
+          success_count: number
+        }[]
+      }
+      get_admin_revenue_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avg_transaction: number
+          month: string
+          payment_count: number
+          plan: Database["public"]["Enums"]["plan_type"]
+          total_revenue: number
+        }[]
+      }
+      get_payment_logs_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          event_type: string
+          id: string
+          status: string
+          status_description: string
+        }[]
+      }
       get_payment_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json

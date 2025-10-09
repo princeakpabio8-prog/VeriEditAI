@@ -23,7 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { NewsDiscovery } from '@/components/news-discovery';
+
 import { useSearchParams } from 'react-router-dom';
 import { LighthouseFeed } from '@/components/lighthouse-feed';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -527,33 +527,11 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent key="discover" value="discover" className="space-y-8">
+          <TabsContent key="discover" value="discover" className="space-y-6">
             <ErrorBoundary>
-              {/* News Discovery Section */}
-              <div className="space-y-4">
-                <VerificationErrorBoundary>
-                  <NewsDiscovery />
-                </VerificationErrorBoundary>
-              </div>
-              
-              {/* Visual Separator */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    or browse verified stories
-                  </span>
-                </div>
-              </div>
-              
-              {/* Lighthouse Feed Section */}
-              <div className="space-y-4">
-                <VerificationErrorBoundary>
-                  <LighthouseFeed />
-                </VerificationErrorBoundary>
-              </div>
+              <VerificationErrorBoundary>
+                <LighthouseFeed />
+              </VerificationErrorBoundary>
             </ErrorBoundary>
           </TabsContent>
 

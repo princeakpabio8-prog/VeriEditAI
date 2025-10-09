@@ -62,6 +62,7 @@ export function LighthouseFeed() {
   const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [verifyingArticleId, setVerifyingArticleId] = useState<string | null>(null);
+  const [verificationResults, setVerificationResults] = useState<{ [key: string]: number }>({});
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -150,6 +151,9 @@ export function LighthouseFeed() {
       const trustScore = data.confidence || 0;
       const verificationId = data.verificationId;
 
+      // Store the score for animated display
+      setVerificationResults(prev => ({ ...prev, [article.id]: trustScore }));
+
       // Update news_feed with verification results
       const { error: updateError } = await supabase
         .from("news_feed")
@@ -163,9 +167,18 @@ export function LighthouseFeed() {
       if (updateError) throw updateError;
 
       toast({
-        title: "✅ Article Verified",
-        description: `Trust Score: ${trustScore}/100`,
+        title: "Verification Complete",
+        description: `Trust score: ${trustScore}/100`,
       });
+
+      // Keep animation visible for 2.5 seconds, then clear
+      setTimeout(() => {
+        setVerifyingArticleId(null);
+        setVerificationResults(prev => {
+          const { [article.id]: _, ...rest } = prev;
+          return rest;
+        });
+      }, 2500);
 
       await fetchArticles();
     } catch (error) {
@@ -175,8 +188,11 @@ export function LighthouseFeed() {
         description: "Could not verify article. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setVerifyingArticleId(null);
+      setVerificationResults(prev => {
+        const { [article.id]: _, ...rest } = prev;
+        return rest;
+      });
     }
   };
 
@@ -448,7 +464,7 @@ export function LighthouseFeed() {
                         {!article.is_verified && verifyingArticleId === article.id ? (
                           <div className="flex-1 flex items-center justify-center py-4">
                             <TrustScoreDisplay 
-                              score={0}
+                              score={verificationResults[article.id] || 0}
                               size="sm"
                               showAnimation={true}
                               showLabel={false}

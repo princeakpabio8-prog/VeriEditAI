@@ -1393,6 +1393,38 @@ export type Database = {
       }
     }
     Views: {
+      admin_api_usage_stats: {
+        Row: {
+          active_days: number | null
+          api_key_name: string | null
+          failed_requests: number | null
+          last_used: string | null
+          successful_requests: number | null
+          total_requests: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      admin_popular_analytics: {
+        Row: {
+          avg_response_time_ms: number | null
+          endpoint: string | null
+          error_count: number | null
+          request_count: number | null
+          success_count: number | null
+        }
+        Relationships: []
+      }
+      admin_revenue_stats: {
+        Row: {
+          avg_transaction: number | null
+          month: string | null
+          payment_count: number | null
+          plan: Database["public"]["Enums"]["plan_type"] | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
       payment_logs_summary: {
         Row: {
           created_at: string | null

@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Search, Users, UserCheck, Calendar, TrendingUp } from "lucide-react";
 import { useAdminData } from "@/hooks/useAdminData";
 import { exportToCSV } from "@/lib/export-utils";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminDataLicensingWidget } from "@/components/admin-data-licensing-widget";
+import { TrustBriefsViewer } from "@/components/trust-briefs-viewer";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -120,91 +123,110 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Subscriber List */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <CardTitle>All Subscribers</CardTitle>
-                <CardDescription>View and manage your subscriber list</CardDescription>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                <div className="relative flex-1 md:flex-initial">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by email or plan..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-full md:w-64"
-                  />
+        {/* Tabs for different sections */}
+        <Tabs defaultValue="subscribers" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
+            <TabsTrigger value="licensing">Data Licensing</TabsTrigger>
+            <TabsTrigger value="briefs">Trust Briefs</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="subscribers" className="space-y-6">
+            {/* Subscriber List */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <CardTitle>All Subscribers</CardTitle>
+                    <CardDescription>View and manage your subscriber list</CardDescription>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:flex-initial">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by email or plan..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 w-full md:w-64"
+                      />
+                    </div>
+                    <Button onClick={handleExport} variant="outline" disabled={isLoading}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export CSV
+                    </Button>
+                  </div>
                 </div>
-                <Button onClick={handleExport} variant="outline" disabled={isLoading}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Monthly Usage</TableHead>
-                      <TableHead>Subscription End</TableHead>
-                      <TableHead>Joined</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSubscribers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
-                          No subscribers found
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredSubscribers.map((subscriber) => (
-                        <TableRow key={subscriber.id}>
-                          <TableCell className="font-medium">{subscriber.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={subscriber.subscription_tier === 'free' ? 'secondary' : 'default'}>
-                              {subscriber.subscription_tier || 'free'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={subscriber.subscribed ? 'default' : 'outline'}>
-                              {subscriber.subscribed ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{subscriber.monthly_usage || 0}</TableCell>
-                          <TableCell>
-                            {subscriber.subscription_end 
-                              ? format(new Date(subscriber.subscription_end), 'MMM d, yyyy')
-                              : 'N/A'
-                            }
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(new Date(subscriber.created_at), 'MMM d, yyyy')}
-                          </TableCell>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Plan</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Monthly Usage</TableHead>
+                          <TableHead>Subscription End</TableHead>
+                          <TableHead>Joined</TableHead>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredSubscribers.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                              No subscribers found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredSubscribers.map((subscriber) => (
+                            <TableRow key={subscriber.id}>
+                              <TableCell className="font-medium">{subscriber.email}</TableCell>
+                              <TableCell>
+                                <Badge variant={subscriber.subscription_tier === 'free' ? 'secondary' : 'default'}>
+                                  {subscriber.subscription_tier || 'free'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={subscriber.subscribed ? 'default' : 'outline'}>
+                                  {subscriber.subscribed ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{subscriber.monthly_usage || 0}</TableCell>
+                              <TableCell>
+                                {subscriber.subscription_end 
+                                  ? format(new Date(subscriber.subscription_end), 'MMM d, yyyy')
+                                  : 'N/A'
+                                }
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {format(new Date(subscriber.created_at), 'MMM d, yyyy')}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="licensing" className="space-y-6">
+            <AdminDataLicensingWidget />
+          </TabsContent>
+
+          <TabsContent value="briefs" className="space-y-6">
+            <TrustBriefsViewer />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Radio,
   RefreshCw,
   Search,
@@ -19,7 +25,6 @@ import {
   AlertCircle,
   ChevronDown,
   Sparkles,
-  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -503,55 +508,6 @@ export function LighthouseFeed() {
                           </Button>
                         )}
 
-                        {/* Executive Summary Popup */}
-                        <AnimatePresence>
-                          {showSummaryFor === article.id && verificationSummaries[article.id] && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                              transition={{ duration: 0.3 }}
-                              className="absolute -inset-4 z-10 flex items-center justify-center"
-                            >
-                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative flex flex-col max-h-[70vh] min-h-0">
-                                <button
-                                  onClick={() => {
-                                    setShowSummaryFor(null);
-                                    setVerificationResults(prev => {
-                                      const { [article.id]: _, ...rest } = prev;
-                                      return rest;
-                                    });
-                                    setVerificationSummaries(prev => {
-                                      const { [article.id]: _, ...rest } = prev;
-                                      return rest;
-                                    });
-                                  }}
-                                  className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors z-10"
-                                  aria-label="Close summary"
-                                >
-                                  <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
-                                </button>
-                                <div className="flex items-start gap-3 pr-6 mb-3">
-                                  <div className="flex-shrink-0 mt-1">
-                                    {verificationResults[article.id] >= 70 ? (
-                                      <CheckCircle className="w-6 h-6 text-green-500" />
-                                    ) : verificationResults[article.id] >= 40 ? (
-                                      <AlertCircle className="w-6 h-6 text-yellow-500" />
-                                    ) : (
-                                      <AlertCircle className="w-6 h-6 text-red-500" />
-                                    )}
-                                  </div>
-                                  <h4 className="font-semibold text-sm text-foreground">Executive Summary</h4>
-                                </div>
-                                <ScrollArea className="h-[50vh] pr-2">
-                                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
-                                    {verificationSummaries[article.id]}
-                                  </p>
-                                </ScrollArea>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </div>
                     </CardContent>
                   </Card>
@@ -581,7 +537,6 @@ export function LighthouseFeed() {
       </div>
 
       {/* Share Modal */}
-      {/* Share Modal */}
       {shareArticle && shareArticle.verification_id && (
         <ShareModal
           isOpen={!!shareArticle}
@@ -589,6 +544,44 @@ export function LighthouseFeed() {
           verificationId={shareArticle.verification_id}
         />
       )}
+
+      {/* Executive Summary Dialog */}
+      <Dialog 
+        open={showSummaryFor !== null} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowSummaryFor(null);
+            setVerificationResults({});
+            setVerificationSummaries({});
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] md:max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              {showSummaryFor && verificationResults[showSummaryFor] !== undefined && (
+                <div className="flex-shrink-0">
+                  {verificationResults[showSummaryFor] >= 70 ? (
+                    <CheckCircle className="w-6 h-6 text-green-500" />
+                  ) : verificationResults[showSummaryFor] >= 40 ? (
+                    <AlertCircle className="w-6 h-6 text-yellow-500" />
+                  ) : (
+                    <AlertCircle className="w-6 h-6 text-red-500" />
+                  )}
+                </div>
+              )}
+              <DialogTitle>Executive Summary</DialogTitle>
+            </div>
+          </DialogHeader>
+          <ScrollArea className="max-h-[70vh] md:max-h-[60vh] pr-4">
+            {showSummaryFor && verificationSummaries[showSummaryFor] && (
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
+                {verificationSummaries[showSummaryFor]}
+              </p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

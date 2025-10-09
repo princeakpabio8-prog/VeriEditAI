@@ -41,6 +41,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
   const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
   const [progressIntervals, setProgressIntervals] = useState<NodeJS.Timeout[]>([]);
   const verificationDoneRef = useRef(false);
+  const hasStartedRef = useRef(false);
 
   const totalProgress = steps.reduce((acc, step) => acc + step.progress, 0) / steps.length;
 
@@ -190,6 +191,17 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
       setIsProcessing(false);
     }
   }, [result, loading, isProcessing]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      progressIntervals.forEach(interval => clearInterval(interval));
+      setProgressIntervals([]);
+      setIsProcessing(false);
+      hasStartedRef.current = false;
+      verificationDoneRef.current = false;
+    };
+  }, [progressIntervals]);
 
   return {
     steps,

@@ -26,6 +26,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { NewsDiscovery } from '@/components/news-discovery';
 import { useSearchParams } from 'react-router-dom';
 import { LighthouseFeed } from '@/components/lighthouse-feed';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { VerificationErrorBoundary } from '@/components/verification-error-boundary';
 
 // Trust Intelligence Tab Component
 const TrustIntelTab = () => {
@@ -525,36 +527,50 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="discover" className="space-y-8">
-            {/* News Discovery Section */}
-            <div className="space-y-4">
-              <NewsDiscovery />
-            </div>
-            
-            {/* Visual Separator */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
+          <TabsContent key="discover" value="discover" className="space-y-8">
+            <ErrorBoundary>
+              {/* News Discovery Section */}
+              <div className="space-y-4">
+                <VerificationErrorBoundary>
+                  <NewsDiscovery />
+                </VerificationErrorBoundary>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  or browse verified stories
-                </span>
+              
+              {/* Visual Separator */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    or browse verified stories
+                  </span>
+                </div>
               </div>
-            </div>
-            
-            {/* Lighthouse Feed Section */}
-            <div className="space-y-4">
-              <LighthouseFeed />
-            </div>
+              
+              {/* Lighthouse Feed Section */}
+              <div className="space-y-4">
+                <VerificationErrorBoundary>
+                  <LighthouseFeed />
+                </VerificationErrorBoundary>
+              </div>
+            </ErrorBoundary>
           </TabsContent>
 
-        <TabsContent value="analytics">
-          <VerificationAnalytics />
+        <TabsContent key="analytics" value="analytics">
+          <ErrorBoundary>
+            <VerificationErrorBoundary>
+              <VerificationAnalytics />
+            </VerificationErrorBoundary>
+          </ErrorBoundary>
         </TabsContent>
 
-        <TabsContent value="executive">
-          <EnhancedAnalyticsDashboard />
+        <TabsContent key="executive" value="executive">
+          <ErrorBoundary>
+            <VerificationErrorBoundary>
+              <EnhancedAnalyticsDashboard />
+            </VerificationErrorBoundary>
+          </ErrorBoundary>
         </TabsContent>
 
           <TabsContent value="bulk">

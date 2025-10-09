@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { verificationCache } from '@/lib/verification-cache';
 import { enhancedVerificationCache } from '@/lib/enhanced-verification-cache';
@@ -409,6 +409,16 @@ export function useVerify() {
       setLoading(false);
     }
   }, [showCacheHit, showVerificationError, showVerificationSuccess]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      inFlightKeys.current.clear();
+      setLoading(false);
+      setError(null);
+      setResult(null);
+    };
+  }, []);
 
   return {
     verify,

@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ChevronDown,
   Sparkles,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -173,20 +174,8 @@ export function LighthouseFeed() {
       // Keep animation visible for 2.5 seconds
       setTimeout(() => {
         setVerifyingArticleId(null);
-        // Show summary popup for 4 seconds
+        // Show summary popup (stays until manually closed)
         setShowSummaryFor(article.id);
-        
-        setTimeout(() => {
-          setShowSummaryFor(null);
-          setVerificationResults(prev => {
-            const { [article.id]: _, ...rest } = prev;
-            return rest;
-          });
-          setVerificationSummaries(prev => {
-            const { [article.id]: _, ...rest } = prev;
-            return rest;
-          });
-        }, 4000);
       }, 2500);
 
       await fetchArticles();
@@ -523,8 +512,25 @@ export function LighthouseFeed() {
                               transition={{ duration: 0.3 }}
                               className="absolute -inset-4 z-10 flex items-center justify-center"
                             >
-                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md">
-                                <div className="flex items-start gap-3">
+                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative">
+                                <button
+                                  onClick={() => {
+                                    setShowSummaryFor(null);
+                                    setVerificationResults(prev => {
+                                      const { [article.id]: _, ...rest } = prev;
+                                      return rest;
+                                    });
+                                    setVerificationSummaries(prev => {
+                                      const { [article.id]: _, ...rest } = prev;
+                                      return rest;
+                                    });
+                                  }}
+                                  className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors"
+                                  aria-label="Close summary"
+                                >
+                                  <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                                </button>
+                                <div className="flex items-start gap-3 pr-6">
                                   <div className="flex-shrink-0 mt-1">
                                     {verificationResults[article.id] >= 70 ? (
                                       <CheckCircle className="w-6 h-6 text-green-500" />

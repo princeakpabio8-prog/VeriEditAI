@@ -198,7 +198,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
     }
   };
 
-  const handleVerifyUrl = () => {
+  const handleVerifyUrl = async () => {
     setValidationErrors([]);
     
     // Rate limiting check
@@ -216,14 +216,44 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
     }
 
     try {
+      // Validate URL format first
       const validatedData = validateAndSanitize({
         content: urlContent,
         contentType: 'url'
       });
 
+      // Show fetching toast
+      toast({
+        title: "Fetching content from URL...",
+        description: "Please wait while we retrieve the page content",
+      });
+
+      // Fetch URL content using edge function
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('fetch-url-content', {
+        body: { url: urlContent }
+      });
+
+      if (error || !data?.success) {
+        const errorMessage = data?.error || error?.message || 'Failed to fetch URL content';
+        toast({
+          title: "Unable to fetch URL",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Pass the fetched text content to verification with original URL in metadata
       onVerificationStart?.({
-        ...validatedData,
-        type: validatedData.contentType
+        content: data.text,
+        contentType: 'text',
+        type: 'text',
+        metadata: {
+          originalUrl: urlContent,
+          contentLength: data.length,
+          fetchedFromUrl: true
+        }
       });
     } catch (error: any) {
       const errorMessage = error.message || 'Validation failed';

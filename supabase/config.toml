@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.send-webhook-notifications]
 verify_jwt = false
+
+[functions.fetch-url-content]
+verify_jwt = false

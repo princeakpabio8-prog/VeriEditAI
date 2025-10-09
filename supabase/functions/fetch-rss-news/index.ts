@@ -76,7 +76,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
       headers: {
         'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0',
       },
-      signal: AbortSignal.timeout(15000), // Increased timeout
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {
@@ -85,7 +85,6 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
 
     const xmlText = await response.text();
     
-    // Parse XML with fast-xml-parser
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_",
@@ -96,17 +95,13 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
     
     const result = parser.parse(xmlText);
     
-    // Handle both RSS and Atom feeds
     let items = [];
     
-    // RSS 2.0 format
     if (result.rss?.channel?.item) {
       items = Array.isArray(result.rss.channel.item) 
         ? result.rss.channel.item 
         : [result.rss.channel.item];
-    }
-    // Atom format
-    else if (result.feed?.entry) {
+    } else if (result.feed?.entry) {
       items = Array.isArray(result.feed.entry) 
         ? result.feed.entry 
         : [result.feed.entry];
@@ -117,10 +112,8 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
     const articles = [];
     
     for (const item of items) {
-      // Extract data - handle both RSS and Atom formats
       const title = item.title?.["#text"] || item.title || "";
       
-      // Link extraction - handle different formats
       let link = "";
       if (typeof item.link === "string") {
         link = item.link;
@@ -140,13 +133,36 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
                      description;
       
       const pubDate = item.pubDate || item.published || item.updated || new Date().toISOString();
-      
-      const author = item["dc:creator"] || item.creator || 
-                    item.author?.name || item.author || "";
-      
+      const author = item["dc:creator"] || item.creator || item.author?.name || item.author || "";
       const guid = item.guid?.["#text"] || item.guid || item.id || link;
 
-      // Skip if missing critical fields
+      // Extract image URL from various RSS formats
+      let imageUrl = null;
+      
+      // Check media:thumbnail
+      if (item["media:thumbnail"]?.["@_url"]) {
+        imageUrl = item["media:thumbnail"]["@_url"];
+      }
+      // Check media:content
+      else if (item["media:content"]?.["@_url"]) {
+        imageUrl = item["media:content"]["@_url"];
+      }
+      // Check enclosure (podcast/media attachments)
+      else if (item.enclosure?.["@_url"] && item.enclosure?.["@_type"]?.startsWith("image")) {
+        imageUrl = item.enclosure["@_url"];
+      }
+      // Check for image tag
+      else if (item.image?.url || item.image) {
+        imageUrl = typeof item.image === "string" ? item.image : item.image.url;
+      }
+      // Extract from content HTML (common in RSS feeds)
+      else if (content) {
+        const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i);
+        if (imgMatch) {
+          imageUrl = imgMatch[1];
+        }
+      }
+
       if (!title || !link) {
         console.log(`Skipping item from ${source.name}: missing title or link`);
         continue;
@@ -161,6 +177,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
         source_url: source.source_url,
         published_at: new Date(pubDate).toISOString(),
         category: categorizeArticle(title, description),
+        image_url: imageUrl,
         metadata: {
           author: author || null,
           guid: guid || null,
@@ -221,12 +238,13 @@ serve(async (req) => {
           {
             title: article.title,
             link: article.link,
-            summary: article.summary.substring(0, 1000), // Limit summary length
+            summary: article.summary.substring(0, 1000),
             full_content: article.full_content,
             source: article.source,
             source_url: article.source_url,
             category: article.category,
             published_at: article.published_at,
+            image_url: article.image_url,
             metadata: article.metadata,
           },
           { onConflict: "link", ignoreDuplicates: true }

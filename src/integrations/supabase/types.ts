@@ -222,6 +222,7 @@ export type Database = {
           fetched_at: string | null
           full_content: string | null
           id: string
+          image_url: string | null
           is_verified: boolean | null
           link: string
           metadata: Json | null
@@ -240,6 +241,7 @@ export type Database = {
           fetched_at?: string | null
           full_content?: string | null
           id?: string
+          image_url?: string | null
           is_verified?: boolean | null
           link: string
           metadata?: Json | null
@@ -258,6 +260,7 @@ export type Database = {
           fetched_at?: string | null
           full_content?: string | null
           id?: string
+          image_url?: string | null
           is_verified?: boolean | null
           link?: string
           metadata?: Json | null

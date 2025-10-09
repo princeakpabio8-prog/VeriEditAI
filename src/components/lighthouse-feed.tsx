@@ -42,6 +42,7 @@ interface NewsArticle {
   trust_score: number | null;
   verification_id: string | null;
   is_verified: boolean;
+  image_url: string | null;
   metadata: any;
 }
 
@@ -359,7 +360,29 @@ export function LighthouseFeed() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className="h-full flex flex-col hover:shadow-lg transition-shadow group">
+                  <Card className="h-full flex flex-col hover:shadow-lg transition-shadow group overflow-hidden">
+                    {/* Article Image */}
+                    {article.image_url && (
+                      <div className="relative h-48 w-full overflow-hidden bg-muted">
+                        <img
+                          src={article.image_url}
+                          alt={article.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        {article.is_verified && article.trust_score && article.trust_score > 80 && (
+                          <div className="absolute top-2 right-2">
+                            <Badge className="bg-green-600/90 backdrop-blur-sm hover:bg-green-700">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <CardHeader className="space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <Badge variant="secondary" className="shrink-0">
@@ -397,7 +420,7 @@ export function LighthouseFeed() {
                                 <span className="font-semibold" style={{ color: getTrustScoreColor(article.trust_score) }}>
                                   {article.trust_score}/100
                                 </span>
-                                {article.trust_score && article.trust_score > 80 && (
+                                {article.trust_score && article.trust_score > 80 && !article.image_url && (
                                   <Badge className="bg-green-600 hover:bg-green-700">
                                     <CheckCircle className="h-3 w-3 mr-1" />
                                     Verified

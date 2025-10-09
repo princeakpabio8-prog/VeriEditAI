@@ -63,6 +63,8 @@ export function LighthouseFeed() {
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
   const [verifyingArticleId, setVerifyingArticleId] = useState<string | null>(null);
   const [verificationResults, setVerificationResults] = useState<{ [key: string]: number }>({});
+  const [verificationSummaries, setVerificationSummaries] = useState<{ [key: string]: string }>({});
+  const [showSummaryFor, setShowSummaryFor] = useState<string | null>(null);
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -150,9 +152,11 @@ export function LighthouseFeed() {
 
       const trustScore = data.confidence || 0;
       const verificationId = data.verificationId;
+      const summary = data.summary || "Verification complete.";
 
-      // Store the score for animated display
+      // Store the score and summary for animated display
       setVerificationResults(prev => ({ ...prev, [article.id]: trustScore }));
+      setVerificationSummaries(prev => ({ ...prev, [article.id]: summary }));
 
       // Update news_feed with verification results
       const { error: updateError } = await supabase
@@ -166,18 +170,23 @@ export function LighthouseFeed() {
 
       if (updateError) throw updateError;
 
-      toast({
-        title: "Verification Complete",
-        description: `Trust score: ${trustScore}/100`,
-      });
-
-      // Keep animation visible for 2.5 seconds, then clear
+      // Keep animation visible for 2.5 seconds
       setTimeout(() => {
         setVerifyingArticleId(null);
-        setVerificationResults(prev => {
-          const { [article.id]: _, ...rest } = prev;
-          return rest;
-        });
+        // Show summary popup for 4 seconds
+        setShowSummaryFor(article.id);
+        
+        setTimeout(() => {
+          setShowSummaryFor(null);
+          setVerificationResults(prev => {
+            const { [article.id]: _, ...rest } = prev;
+            return rest;
+          });
+          setVerificationSummaries(prev => {
+            const { [article.id]: _, ...rest } = prev;
+            return rest;
+          });
+        }, 4000);
       }, 2500);
 
       await fetchArticles();
@@ -190,6 +199,10 @@ export function LighthouseFeed() {
       });
       setVerifyingArticleId(null);
       setVerificationResults(prev => {
+        const { [article.id]: _, ...rest } = prev;
+        return rest;
+      });
+      setVerificationSummaries(prev => {
         const { [article.id]: _, ...rest } = prev;
         return rest;
       });
@@ -460,7 +473,7 @@ export function LighthouseFeed() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 relative">
                         {!article.is_verified && verifyingArticleId === article.id ? (
                           <div className="flex-1 flex items-center justify-center py-4">
                             <TrustScoreDisplay 
@@ -499,6 +512,39 @@ export function LighthouseFeed() {
                             <Share2 className="h-3 w-3" />
                           </Button>
                         )}
+
+                        {/* Executive Summary Popup */}
+                        <AnimatePresence>
+                          {showSummaryFor === article.id && verificationSummaries[article.id] && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                              transition={{ duration: 0.3 }}
+                              className="absolute -inset-4 z-10 flex items-center justify-center"
+                            >
+                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 mt-1">
+                                    {verificationResults[article.id] >= 70 ? (
+                                      <CheckCircle className="w-6 h-6 text-green-500" />
+                                    ) : verificationResults[article.id] >= 40 ? (
+                                      <AlertCircle className="w-6 h-6 text-yellow-500" />
+                                    ) : (
+                                      <AlertCircle className="w-6 h-6 text-red-500" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-sm mb-2 text-foreground">Executive Summary</h4>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {verificationSummaries[article.id]}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </CardContent>
                   </Card>

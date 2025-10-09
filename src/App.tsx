@@ -30,7 +30,6 @@ import LighthouseRoomView from "./pages/LighthouseRoomView";
 import SignalFeed from "./pages/SignalFeed";
 import ThreadView from "./pages/ThreadView";
 import { LighthouseFeed } from "./components/lighthouse-feed";
-import TrustIntelligence from "./pages/TrustIntelligence";
 
 const queryClient = new QueryClient();
 
@@ -117,11 +116,6 @@ const App = () => (
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
             <Route path="/lighthouse/signals" element={<SignalFeed />} />
             <Route path="/lighthouse/feed" element={<LighthouseFeed />} />
-            <Route path="/trust-intelligence" element={
-              <ProtectedRoute>
-                <TrustIntelligence />
-              </ProtectedRoute>
-            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

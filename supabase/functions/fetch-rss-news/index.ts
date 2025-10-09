@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import Parser from "https://esm.sh/rss-parser@3.13.0";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,35 +68,69 @@ function categorizeArticle(title: string, summary: string): string {
   return "General";
 }
 
-async function fetchFeed(source: typeof RSS_SOURCES[0]) {
-  const parser = new Parser({
-    timeout: 10000,
-    headers: {
-      'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0',
-    },
-  });
+function getTextContent(element: any, tagName: string): string {
+  const el = element.querySelector(tagName);
+  return el?.textContent?.trim() || "";
+}
 
+async function fetchFeed(source: typeof RSS_SOURCES[0]) {
   try {
-    const feed = await parser.parseURL(source.url);
-    console.log(`Successfully fetched ${feed.items?.length || 0} items from ${source.name}`);
+    console.log(`Fetching ${source.name} from ${source.url}`);
     
-    return feed.items?.map(item => ({
-      title: item.title || "Untitled",
-      link: item.link || "",
-      summary: item.contentSnippet || item.content || item.description || "",
-      full_content: item.content || item.description || "",
-      source: source.name,
-      source_url: source.source_url,
-      published_at: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
-      category: categorizeArticle(
-        item.title || "",
-        item.contentSnippet || item.description || ""
-      ),
-      metadata: {
-        author: item.creator || item.author,
-        guid: item.guid,
+    const response = await fetch(source.url, {
+      headers: {
+        'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0',
       },
-    })) || [];
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const xmlText = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, "text/xml");
+
+    if (!doc) {
+      throw new Error("Failed to parse XML");
+    }
+
+    // Handle both RSS and Atom feeds
+    const items = doc.querySelectorAll("item, entry");
+    console.log(`Successfully fetched ${items.length} items from ${source.name}`);
+    
+    const articles = [];
+    
+    for (const item of items) {
+      // RSS format
+      const title = getTextContent(item, "title");
+      const link = getTextContent(item, "link") || item.querySelector("link")?.getAttribute("href") || "";
+      const description = getTextContent(item, "description") || getTextContent(item, "summary") || getTextContent(item, "content");
+      const content = getTextContent(item, "content:encoded") || getTextContent(item, "content") || description;
+      const pubDate = getTextContent(item, "pubDate") || getTextContent(item, "published") || getTextContent(item, "updated");
+      const author = getTextContent(item, "dc:creator") || getTextContent(item, "author") || getTextContent(item, "creator");
+      const guid = getTextContent(item, "guid") || link;
+
+      if (!title || !link) continue;
+
+      articles.push({
+        title,
+        link,
+        summary: description.substring(0, 1000),
+        full_content: content,
+        source: source.name,
+        source_url: source.source_url,
+        published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        category: categorizeArticle(title, description),
+        metadata: {
+          author,
+          guid,
+        },
+      });
+    }
+    
+    return articles;
   } catch (error) {
     console.error(`Error fetching ${source.name}:`, error.message);
     return [];

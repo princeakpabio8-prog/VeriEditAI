@@ -90,11 +90,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/api" className="text-muted-foreground hover:text-foreground transition-colors">
                   API
                 </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Admin
-                  </Link>
-                )}
               </>
             ) : (
               <>

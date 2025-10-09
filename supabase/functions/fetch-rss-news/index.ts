@@ -107,6 +107,37 @@ const RSS_SOURCES = [
     url: "https://businessday.ng/feed/",
     source_url: "https://businessday.ng",
   },
+  // Entertainment Sources
+  {
+    name: "BBC Entertainment & Arts",
+    url: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
+    source_url: "https://www.bbc.com/news/entertainment_and_arts",
+  },
+  {
+    name: "Variety",
+    url: "https://variety.com/feed/",
+    source_url: "https://variety.com",
+  },
+  {
+    name: "The Hollywood Reporter",
+    url: "https://www.hollywoodreporter.com/feed/",
+    source_url: "https://www.hollywoodreporter.com",
+  },
+  {
+    name: "Entertainment Weekly",
+    url: "https://ew.com/feed/",
+    source_url: "https://ew.com",
+  },
+  {
+    name: "Billboard",
+    url: "https://www.billboard.com/feed/",
+    source_url: "https://www.billboard.com",
+  },
+  {
+    name: "Rolling Stone",
+    url: "https://www.rollingstone.com/feed/",
+    source_url: "https://www.rollingstone.com",
+  },
 ];
 
 // Categorization keywords
@@ -117,6 +148,7 @@ const CATEGORIES = {
   Business: ["business", "economy", "market", "finance", "trade", "stock", "investment", "company"],
   Science: ["science", "research", "study", "discovery", "climate", "environment", "nasa", "space"],
   Sports: ["sports", "football", "soccer", "cricket", "tournament", "championship", "league", "olympics"],
+  Entertainment: ["entertainment", "movie", "film", "tv", "television", "music", "celebrity", "actor", "actress", "album", "concert", "grammy", "oscar", "emmy", "hollywood", "streaming", "netflix", "spotify", "billboard", "variety"],
 };
 
 function categorizeArticle(title: string, summary: string): string {

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { TrustScoreDisplay } from '@/components/trust-score-display';
-import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2 } from 'lucide-react';
+import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2, Globe, TrendingUp, Award } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseStatus } from '@/components/license-status';
@@ -26,6 +26,194 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { NewsDiscovery } from '@/components/news-discovery';
 import { useSearchParams } from 'react-router-dom';
 import { LighthouseFeed } from '@/components/lighthouse-feed';
+
+// Trust Intelligence Tab Component
+const TrustIntelTab = () => {
+  const [globalIndex, setGlobalIndex] = useState<number | null>(null);
+  const [regionalData, setRegionalData] = useState<any[]>([]);
+  const [topSources, setTopSources] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTrustData();
+  }, []);
+
+  const fetchTrustData = async () => {
+    try {
+      // Fetch trust analytics
+      const { data: analytics, error } = await supabase
+        .from('trust_analytics')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      if (analytics && analytics.length > 0) {
+        // Calculate global trust index
+        const avgScore = analytics.reduce((sum, item) => sum + item.average_trust_score, 0) / analytics.length;
+        setGlobalIndex(Math.round(avgScore));
+
+        // Group by region
+        const regionMap = new Map();
+        analytics.forEach(item => {
+          if (!regionMap.has(item.region)) {
+            regionMap.set(item.region, { count: 0, totalScore: 0 });
+          }
+          const current = regionMap.get(item.region);
+          current.count += item.verification_count;
+          current.totalScore += item.average_trust_score * item.verification_count;
+        });
+
+        const regions = Array.from(regionMap.entries())
+          .map(([region, data]) => ({
+            region,
+            avgScore: Math.round(data.totalScore / data.count),
+            count: data.count
+          }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+
+        setRegionalData(regions);
+
+        // Get top sources by domain
+        const domainMap = new Map();
+        analytics.forEach(item => {
+          if (item.domain) {
+            if (!domainMap.has(item.domain)) {
+              domainMap.set(item.domain, { count: 0, totalScore: 0 });
+            }
+            const current = domainMap.get(item.domain);
+            current.count += item.verification_count;
+            current.totalScore += item.average_trust_score * item.verification_count;
+          }
+        });
+
+        const sources = Array.from(domainMap.entries())
+          .map(([domain, data]) => ({
+            domain,
+            avgScore: Math.round(data.totalScore / data.count),
+            count: data.count
+          }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 10);
+
+        setTopSources(sources);
+      }
+    } catch (error) {
+      console.error('Error fetching trust data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Global Trust Index */}
+      <Card className="bg-gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Global Trust Index
+          </CardTitle>
+          <CardDescription>Average verification trust score</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-5xl font-bold text-primary mb-2">
+            {globalIndex !== null ? globalIndex : '-'}
+          </div>
+          <Badge variant="secondary" className="gap-1">
+            <TrendingUp className="h-3 w-3" />
+            Live Data
+          </Badge>
+        </CardContent>
+      </Card>
+
+      {/* Regional Breakdown */}
+      <Card className="bg-gradient-card border-border/50">
+        <CardHeader>
+          <CardTitle>Regional Breakdown</CardTitle>
+          <CardDescription>Top 5 regions by verification volume</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Region</TableHead>
+                <TableHead>Score</TableHead>
+                <TableHead>Count</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {regionalData.length > 0 ? regionalData.map((item) => (
+                <TableRow key={item.region}>
+                  <TableCell className="font-medium">{item.region}</TableCell>
+                  <TableCell>
+                    <Badge variant={item.avgScore >= 70 ? 'default' : 'secondary'}>
+                      {item.avgScore}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{item.count}</TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center text-muted-foreground">
+                    No data available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Source Credibility Ranking */}
+      <Card className="bg-gradient-card border-border/50 md:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-primary" />
+            Source Credibility Ranking
+          </CardTitle>
+          <CardDescription>Top 10 most verified domains</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Rank</TableHead>
+                <TableHead>Domain</TableHead>
+                <TableHead>Trust Score</TableHead>
+                <TableHead>Verifications</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {topSources.length > 0 ? topSources.map((source, idx) => (
+                <TableRow key={source.domain}>
+                  <TableCell className="font-bold text-primary">#{idx + 1}</TableCell>
+                  <TableCell className="font-medium">{source.domain}</TableCell>
+                  <TableCell>
+                    <TrustScoreDisplay score={source.avgScore} size="sm" showLabel={false} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{source.count}</TableCell>
+                </TableRow>
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    No source data available
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 
 interface Verification {
   id: string;
@@ -229,13 +417,14 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="discover">Discover</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="executive">Executive</TabsTrigger>
           <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
           <TabsTrigger value="export">Export Data</TabsTrigger>
+          <TabsTrigger value="trust-intel">Trust Intel</TabsTrigger>
         </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -358,6 +547,10 @@ const Dashboard = () => {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Export features available after verifications are completed.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="trust-intel" className="space-y-6">
+            <TrustIntelTab />
           </TabsContent>
         </Tabs>
 

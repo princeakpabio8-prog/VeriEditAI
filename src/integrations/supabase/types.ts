@@ -215,6 +215,71 @@ export type Database = {
         }
         Relationships: []
       }
+      news_feed: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          fetched_at: string | null
+          full_content: string | null
+          id: string
+          is_verified: boolean | null
+          link: string
+          metadata: Json | null
+          published_at: string
+          source: string
+          source_url: string
+          summary: string | null
+          title: string
+          trust_score: number | null
+          updated_at: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          fetched_at?: string | null
+          full_content?: string | null
+          id?: string
+          is_verified?: boolean | null
+          link: string
+          metadata?: Json | null
+          published_at: string
+          source: string
+          source_url: string
+          summary?: string | null
+          title: string
+          trust_score?: number | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          fetched_at?: string | null
+          full_content?: string | null
+          id?: string
+          is_verified?: boolean | null
+          link?: string
+          metadata?: Json | null
+          published_at?: string
+          source?: string
+          source_url?: string
+          summary?: string | null
+          title?: string
+          trust_score?: number | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_feed_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           created_at: string

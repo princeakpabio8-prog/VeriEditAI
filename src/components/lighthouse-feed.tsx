@@ -544,7 +544,7 @@ export function LighthouseFeed() {
                                   <h4 className="font-semibold text-sm text-foreground">Executive Summary</h4>
                                 </div>
                                 <ScrollArea className="h-[50vh] pr-2">
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                  <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap break-words">
                                     {verificationSummaries[article.id]}
                                   </p>
                                 </ScrollArea>

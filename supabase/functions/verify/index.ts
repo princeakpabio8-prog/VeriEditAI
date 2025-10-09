@@ -373,10 +373,12 @@ function detectContentType(content: string): 'factual' | 'fiction' | 'opinion' {
 async function handleFiction(content: string): Promise<VerificationResult> {
   console.log('📚 Processing fictional content...');
   
+  const cleanContent = String(content).replace(/<[^>]+>/g, '').trim();
+  
   return {
     confidence: 95,
     status: 'verified',
-    summary: `**📚 FICTIONAL CONTENT DETECTED**\n\nConfidence: 95%\nStatus: VERIFIED\n\nThis appears to be about fictional content (books, movies, games, etc.). Fiction is neither true nor false - it's creative storytelling.\n\nContent: "${content.substring(0, 150)}..."`,
+    summary: `**📚 FICTIONAL CONTENT DETECTED**\n\nConfidence: 95%\nStatus: VERIFIED\n\nThis appears to be about fictional content (books, movies, games, etc.). Fiction is neither true nor false - it's creative storytelling.\n\nContent:\n${cleanContent}`,
     analysis: 'This content references fictional works or creative storytelling. Fiction is a form of artistic expression and is not subject to factual verification. Characters, events, and worlds in fiction are part of imaginative narratives.',
     sources: [],
     source_consensus: 95,
@@ -390,10 +392,12 @@ async function handleFiction(content: string): Promise<VerificationResult> {
 async function handleOpinion(content: string): Promise<VerificationResult> {
   console.log('💭 Processing opinion content...');
   
+  const cleanContent = String(content).replace(/<[^>]+>/g, '').trim();
+  
   return {
     confidence: 50,
     status: 'inconclusive',
-    summary: `**💭 OPINION DETECTED**\n\nConfidence: 50%\nStatus: INCONCLUSIVE\n\nThis appears to be a subjective opinion or personal belief. Opinions cannot be fact-checked as true or false.\n\nContent: "${content.substring(0, 150)}..."`,
+    summary: `**💭 OPINION DETECTED**\n\nConfidence: 50%\nStatus: INCONCLUSIVE\n\nThis appears to be a subjective opinion or personal belief. Opinions cannot be fact-checked as true or false.\n\nContent:\n${cleanContent}`,
     analysis: 'This content expresses a personal opinion or subjective judgment, which is not subject to objective verification. Opinions are personal viewpoints that may vary from person to person and are neither factually true nor false.',
     sources: [],
     source_consensus: 50,
@@ -585,7 +589,7 @@ async function verifyWithPerplexity(content: string, template?: any): Promise<Ve
     return {
       confidence,
       status,
-      summary: `**🔮 PERPLEXITY VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase().replace('_', ' ')}\n\n${analysis.substring(0, 300)}...`,
+      summary: `**🔮 PERPLEXITY VERIFICATION**\n\nConfidence: ${confidence}%\nStatus: ${status.toUpperCase().replace('_', ' ')}\n\n${analysis}`,
       analysis,
       sources: [], // Perplexity doesn't return structured sources
       source_consensus: confidence,

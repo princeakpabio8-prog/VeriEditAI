@@ -25,6 +25,7 @@ import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { NewsDiscovery } from '@/components/news-discovery';
 import { useSearchParams } from 'react-router-dom';
+import { LighthouseFeed } from '@/components/lighthouse-feed';
 
 interface Verification {
   id: string;
@@ -336,7 +337,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="discover">
-            <NewsDiscovery />
+            <LighthouseFeed />
           </TabsContent>
 
         <TabsContent value="analytics">

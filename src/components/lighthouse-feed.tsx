@@ -17,6 +17,7 @@ import {
   CheckCircle,
   AlertCircle,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -29,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ShareModal } from "@/components/share-modal";
+import { NewsVerificationDialog } from "@/components/news-verification-dialog";
 
 interface NewsArticle {
   id: string;
@@ -59,7 +61,7 @@ export function LighthouseFeed() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
-  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verifyingArticle, setVerifyingArticle] = useState<NewsArticle | null>(null);
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -131,31 +133,13 @@ export function LighthouseFeed() {
       return;
     }
 
+    setVerifyingArticle(article);
+  };
+
+  const handleVerificationComplete = async (verificationId: string, trustScore: number) => {
+    if (!verifyingArticle) return;
+
     try {
-      setVerifyingId(article.id);
-
-      const { data, error } = await supabase.functions.invoke("verify", {
-        body: {
-          content: `${article.title}\n\n${article.summary}\n\nSource: ${article.link}`,
-          content_type: "text",
-          user_id: user.id,
-          metadata: {
-            source: "lighthouse_feed",
-            news_feed_id: article.id,
-            news_source: article.source,
-            published_at: article.published_at,
-          },
-        },
-      });
-
-      if (error) throw error;
-
-      console.log("Verification result:", data);
-
-      // The verify function returns 'confidence' not 'trustScore'
-      const trustScore = data.confidence || 0;
-      const verificationId = data.verificationId;
-
       // Update news_feed with verification results
       const { error: updateError } = await supabase
         .from("news_feed")
@@ -164,25 +148,23 @@ export function LighthouseFeed() {
           verification_id: verificationId,
           is_verified: true,
         })
-        .eq("id", article.id);
+        .eq("id", verifyingArticle.id);
 
       if (updateError) throw updateError;
 
       toast({
-        title: "Article Verified",
+        title: "✅ Article Verified",
         description: `Trust Score: ${trustScore}/100`,
       });
 
       await fetchArticles();
     } catch (error) {
-      console.error("Error verifying article:", error);
+      console.error("Error updating article:", error);
       toast({
-        title: "Verification Failed",
-        description: "Could not verify this article",
+        title: "Update Failed",
+        description: "Verification succeeded but failed to update article",
         variant: "destructive",
       });
-    } finally {
-      setVerifyingId(null);
     }
   };
 
@@ -455,20 +437,10 @@ export function LighthouseFeed() {
                           <Button
                             size="sm"
                             onClick={() => handleVerify(article)}
-                            disabled={verifyingId === article.id}
-                            className="flex-1"
+                            className="flex-1 gap-2"
                           >
-                            {verifyingId === article.id ? (
-                              <>
-                                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                                Verifying...
-                              </>
-                            ) : (
-                              <>
-                                <AlertCircle className="h-3 w-3 mr-1" />
-                                Verify Now
-                              </>
-                            )}
+                            <Sparkles className="h-3 w-3" />
+                            Verify Now
                           </Button>
                         )}
                         <Button
@@ -523,6 +495,17 @@ export function LighthouseFeed() {
           isOpen={!!shareArticle}
           onClose={() => setShareArticle(null)}
           verificationId={shareArticle.verification_id}
+        />
+      )}
+
+      {/* Verification Dialog */}
+      {verifyingArticle && user && (
+        <NewsVerificationDialog
+          open={!!verifyingArticle}
+          onOpenChange={(open) => !open && setVerifyingArticle(null)}
+          article={verifyingArticle}
+          userId={user.id}
+          onVerificationComplete={handleVerificationComplete}
         />
       )}
     </div>

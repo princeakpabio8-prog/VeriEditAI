@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ShareModal } from "@/components/share-modal";
-import { NewsVerificationDialog } from "@/components/news-verification-dialog";
+import { TrustScoreDisplay } from "@/components/trust-score-display";
 
 interface NewsArticle {
   id: string;
@@ -61,7 +61,7 @@ export function LighthouseFeed() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
-  const [verifyingArticle, setVerifyingArticle] = useState<NewsArticle | null>(null);
+  const [verifyingArticleId, setVerifyingArticleId] = useState<string | null>(null);
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -133,13 +133,23 @@ export function LighthouseFeed() {
       return;
     }
 
-    setVerifyingArticle(article);
-  };
-
-  const handleVerificationComplete = async (verificationId: string, trustScore: number) => {
-    if (!verifyingArticle) return;
+    setVerifyingArticleId(article.id);
 
     try {
+      const { data, error } = await supabase.functions.invoke("verify", {
+        body: { 
+          content: `${article.title}\n\n${article.summary}`,
+          contentType: "text",
+          source_url: article.link,
+          user_id: user.id
+        },
+      });
+
+      if (error) throw error;
+
+      const trustScore = data.confidence || 0;
+      const verificationId = data.verificationId;
+
       // Update news_feed with verification results
       const { error: updateError } = await supabase
         .from("news_feed")
@@ -148,7 +158,7 @@ export function LighthouseFeed() {
           verification_id: verificationId,
           is_verified: true,
         })
-        .eq("id", verifyingArticle.id);
+        .eq("id", article.id);
 
       if (updateError) throw updateError;
 
@@ -159,12 +169,14 @@ export function LighthouseFeed() {
 
       await fetchArticles();
     } catch (error) {
-      console.error("Error updating article:", error);
+      console.error("Error verifying article:", error);
       toast({
-        title: "Update Failed",
-        description: "Verification succeeded but failed to update article",
+        title: "Verification Failed",
+        description: "Could not verify article. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setVerifyingArticleId(null);
     }
   };
 
@@ -433,16 +445,26 @@ export function LighthouseFeed() {
 
                       {/* Actions */}
                       <div className="flex gap-2">
-                        {!article.is_verified && (
+                        {!article.is_verified && verifyingArticleId === article.id ? (
+                          <div className="flex-1 flex items-center justify-center py-4">
+                            <TrustScoreDisplay 
+                              score={0}
+                              size="sm"
+                              showAnimation={true}
+                              showLabel={false}
+                            />
+                          </div>
+                        ) : !article.is_verified ? (
                           <Button
                             size="sm"
                             onClick={() => handleVerify(article)}
                             className="flex-1 gap-2"
+                            disabled={verifyingArticleId !== null}
                           >
                             <Sparkles className="h-3 w-3" />
                             Verify Now
                           </Button>
-                        )}
+                        ) : null}
                         <Button
                           size="sm"
                           variant="outline"
@@ -490,22 +512,12 @@ export function LighthouseFeed() {
       </div>
 
       {/* Share Modal */}
+      {/* Share Modal */}
       {shareArticle && shareArticle.verification_id && (
         <ShareModal
           isOpen={!!shareArticle}
           onClose={() => setShareArticle(null)}
           verificationId={shareArticle.verification_id}
-        />
-      )}
-
-      {/* Verification Dialog */}
-      {verifyingArticle && user && (
-        <NewsVerificationDialog
-          open={!!verifyingArticle}
-          onOpenChange={(open) => !open && setVerifyingArticle(null)}
-          article={verifyingArticle}
-          userId={user.id}
-          onVerificationComplete={handleVerificationComplete}
         />
       )}
     </div>

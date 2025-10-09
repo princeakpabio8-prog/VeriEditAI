@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Radio,
   RefreshCw,
@@ -512,7 +513,7 @@ export function LighthouseFeed() {
                               transition={{ duration: 0.3 }}
                               className="absolute -inset-4 z-10 flex items-center justify-center"
                             >
-                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative">
+                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative flex flex-col max-h-[70vh]">
                                 <button
                                   onClick={() => {
                                     setShowSummaryFor(null);
@@ -525,12 +526,12 @@ export function LighthouseFeed() {
                                       return rest;
                                     });
                                   }}
-                                  className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors"
+                                  className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted/50 transition-colors z-10"
                                   aria-label="Close summary"
                                 >
                                   <X className="w-4 h-4 text-muted-foreground hover:text-foreground" />
                                 </button>
-                                <div className="flex items-start gap-3 pr-6">
+                                <div className="flex items-start gap-3 pr-6 mb-3">
                                   <div className="flex-shrink-0 mt-1">
                                     {verificationResults[article.id] >= 70 ? (
                                       <CheckCircle className="w-6 h-6 text-green-500" />
@@ -540,13 +541,13 @@ export function LighthouseFeed() {
                                       <AlertCircle className="w-6 h-6 text-red-500" />
                                     )}
                                   </div>
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold text-sm mb-2 text-foreground">Executive Summary</h4>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                      {verificationSummaries[article.id]}
-                                    </p>
-                                  </div>
+                                  <h4 className="font-semibold text-sm text-foreground">Executive Summary</h4>
                                 </div>
+                                <ScrollArea className="flex-1 pr-2">
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {verificationSummaries[article.id]}
+                                  </p>
+                                </ScrollArea>
                               </div>
                             </motion.div>
                           )}

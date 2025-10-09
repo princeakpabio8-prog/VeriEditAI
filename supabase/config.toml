@@ -104,3 +104,15 @@ verify_jwt = false
 
 [functions.analyze-content]
 verify_jwt = true
+
+[functions.get-trust-analytics]
+verify_jwt = false
+
+[functions.get-source-reputation]
+verify_jwt = false
+
+[functions.get-global-trust-index]
+verify_jwt = false
+
+[functions.batch-verify-and-track]
+verify_jwt = false

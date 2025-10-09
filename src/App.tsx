@@ -29,6 +29,7 @@ import LighthouseRoom from "./pages/LighthouseRoom";
 import LighthouseRoomView from "./pages/LighthouseRoomView";
 import SignalFeed from "./pages/SignalFeed";
 import ThreadView from "./pages/ThreadView";
+import ApiDocs from "./pages/ApiDocs";
 import { LighthouseFeed } from "./components/lighthouse-feed";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
             <Route path="/lighthouse/signals" element={<SignalFeed />} />
             <Route path="/lighthouse/feed" element={<LighthouseFeed />} />
+            <Route path="/api-docs" element={<ApiDocs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

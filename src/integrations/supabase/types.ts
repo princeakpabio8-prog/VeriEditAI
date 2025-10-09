@@ -80,6 +80,33 @@ export type Database = {
         }
         Relationships: []
       }
+      api_usage_logs: {
+        Row: {
+          api_key_hash: string
+          created_at: string
+          endpoint: string
+          id: string
+          metadata: Json | null
+          status_code: number
+        }
+        Insert: {
+          api_key_hash: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          metadata?: Json | null
+          status_code: number
+        }
+        Update: {
+          api_key_hash?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          metadata?: Json | null
+          status_code?: number
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           category: string | null

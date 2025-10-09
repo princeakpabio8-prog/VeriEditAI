@@ -65,6 +65,48 @@ const RSS_SOURCES = [
     url: "https://www.completesports.com/feed/",
     source_url: "https://www.completesports.com",
   },
+  // Health Sources
+  {
+    name: "WHO News",
+    url: "https://www.who.int/rss-feeds/news-english.xml",
+    source_url: "https://www.who.int",
+  },
+  {
+    name: "Medical News Today",
+    url: "https://www.medicalnewstoday.com/rss",
+    source_url: "https://www.medicalnewstoday.com",
+  },
+  {
+    name: "WebMD Health News",
+    url: "https://www.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC",
+    source_url: "https://www.webmd.com",
+  },
+  {
+    name: "Reuters Health",
+    url: "https://feeds.reuters.com/reuters/healthNews",
+    source_url: "https://www.reuters.com/health",
+  },
+  // Business Sources
+  {
+    name: "Bloomberg",
+    url: "https://feeds.bloomberg.com/markets/news.rss",
+    source_url: "https://www.bloomberg.com",
+  },
+  {
+    name: "Reuters Business",
+    url: "https://feeds.reuters.com/reuters/businessNews",
+    source_url: "https://www.reuters.com/business",
+  },
+  {
+    name: "Financial Times",
+    url: "https://www.ft.com/?format=rss",
+    source_url: "https://www.ft.com",
+  },
+  {
+    name: "Business Day NG",
+    url: "https://businessday.ng/feed/",
+    source_url: "https://businessday.ng",
+  },
 ];
 
 // Categorization keywords

@@ -10,6 +10,9 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let recordsProcessed = 0;
+
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -134,6 +137,7 @@ Deno.serve(async (req) => {
         .insert(analyticsRecords);
 
       if (insertError) throw insertError;
+      recordsProcessed = analyticsRecords.length;
     }
 
     // Calculate global trust index
@@ -211,6 +215,19 @@ Deno.serve(async (req) => {
 
     if (snapshotError) throw snapshotError;
 
+    // Log successful execution
+    const executionTime = Date.now() - startTime;
+    await supabaseClient.from('aggregation_logs').insert({
+      execution_status: 'success',
+      records_processed: recordsProcessed,
+      execution_time_ms: executionTime,
+      metadata: {
+        analytics_records: analyticsRecords.length,
+        global_trust_index: globalTrustIndex,
+        high_credibility_percentage: highCredibilityPercentage,
+      },
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -218,7 +235,8 @@ Deno.serve(async (req) => {
         global_trust_index: globalTrustIndex,
         high_credibility_percentage: highCredibilityPercentage,
         misinformation_spike_regions: misinformationSpikeRegions,
-        trending_low_topics: trendingLowTopics
+        trending_low_topics: trendingLowTopics,
+        execution_time_ms: executionTime,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -227,6 +245,24 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Aggregation error:', error);
+    
+    // Log failed execution
+    const executionTime = Date.now() - startTime;
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      await supabaseClient.from('aggregation_logs').insert({
+        execution_status: 'failed',
+        records_processed: recordsProcessed,
+        execution_time_ms: executionTime,
+        error_message: error.message,
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+
     return new Response(
       JSON.stringify({ error: error.message }),
       {

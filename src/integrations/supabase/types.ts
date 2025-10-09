@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      aggregation_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          execution_status: string
+          execution_time_ms: number | null
+          id: string
+          metadata: Json | null
+          records_processed: number | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          execution_status: string
+          execution_time_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          records_processed?: number | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          execution_status?: string
+          execution_time_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          records_processed?: number | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string

@@ -151,7 +151,22 @@ const CATEGORIES = {
   Entertainment: ["entertainment", "movie", "film", "tv", "television", "music", "celebrity", "actor", "actress", "album", "concert", "grammy", "oscar", "emmy", "hollywood", "streaming", "netflix", "spotify", "billboard", "variety"],
 };
 
-function categorizeArticle(title: string, summary: string): string {
+function categorizeArticle(title: string, summary: string, source: string): string {
+  // Define entertainment sources for priority categorization
+  const entertainmentSources = [
+    "BBC Entertainment & Arts",
+    "Variety", 
+    "The Hollywood Reporter",
+    "Entertainment Weekly",
+    "Billboard",
+    "Rolling Stone"
+  ];
+  
+  // Priority categorization by source
+  if (entertainmentSources.includes(source)) {
+    return "Entertainment";
+  }
+  
   const text = `${title} ${summary}`.toLowerCase();
   
   for (const [category, keywords] of Object.entries(CATEGORIES)) {
@@ -299,7 +314,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
         source: source.name,
         source_url: source.source_url,
         published_at: new Date(pubDate).toISOString(),
-        category: categorizeArticle(title, description),
+        category: categorizeArticle(title, description, source.name),
         image_url: imageUrl,
         metadata: {
           author: author || null,

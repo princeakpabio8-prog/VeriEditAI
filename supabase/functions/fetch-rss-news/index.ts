@@ -44,6 +44,27 @@ const RSS_SOURCES = [
     url: "https://www.channelstv.com/feed/",
     source_url: "https://www.channelstv.com",
   },
+  // Sports Sources
+  {
+    name: "BBC Sport",
+    url: "https://feeds.bbci.co.uk/sport/rss.xml",
+    source_url: "https://www.bbc.com/sport",
+  },
+  {
+    name: "ESPN",
+    url: "https://www.espn.com/espn/rss/news",
+    source_url: "https://www.espn.com",
+  },
+  {
+    name: "Sky Sports",
+    url: "https://www.skysports.com/rss/12040",
+    source_url: "https://www.skysports.com",
+  },
+  {
+    name: "Complete Sports NG",
+    url: "https://www.completesports.com/feed/",
+    source_url: "https://www.completesports.com",
+  },
 ];
 
 // Categorization keywords

@@ -896,6 +896,123 @@ export type Database = {
           },
         ]
       }
+      trust_analytics: {
+        Row: {
+          analysis_period_end: string
+          analysis_period_start: string
+          average_trust_score: number
+          created_at: string | null
+          credibility_tier: string | null
+          domain: string | null
+          id: string
+          metadata: Json | null
+          region: string
+          source: string
+          topic: string
+          trending_direction: string | null
+          updated_at: string | null
+          verification_count: number
+          week_over_week_change: number | null
+        }
+        Insert: {
+          analysis_period_end: string
+          analysis_period_start: string
+          average_trust_score: number
+          created_at?: string | null
+          credibility_tier?: string | null
+          domain?: string | null
+          id?: string
+          metadata?: Json | null
+          region: string
+          source: string
+          topic: string
+          trending_direction?: string | null
+          updated_at?: string | null
+          verification_count?: number
+          week_over_week_change?: number | null
+        }
+        Update: {
+          analysis_period_end?: string
+          analysis_period_start?: string
+          average_trust_score?: number
+          created_at?: string | null
+          credibility_tier?: string | null
+          domain?: string | null
+          id?: string
+          metadata?: Json | null
+          region?: string
+          source?: string
+          topic?: string
+          trending_direction?: string | null
+          updated_at?: string | null
+          verification_count?: number
+          week_over_week_change?: number | null
+        }
+        Relationships: []
+      }
+      trust_briefs: {
+        Row: {
+          brief_content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          brief_content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          brief_content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
+      trust_index_snapshots: {
+        Row: {
+          created_at: string | null
+          global_trust_index: number
+          high_credibility_percentage: number | null
+          id: string
+          metadata: Json | null
+          misinformation_spike_regions: string[] | null
+          snapshot_date: string
+          total_verifications: number
+          trending_low_topics: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          global_trust_index: number
+          high_credibility_percentage?: number | null
+          id?: string
+          metadata?: Json | null
+          misinformation_spike_regions?: string[] | null
+          snapshot_date: string
+          total_verifications: number
+          trending_low_topics?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          global_trust_index?: number
+          high_credibility_percentage?: number | null
+          id?: string
+          metadata?: Json | null
+          misinformation_spike_regions?: string[] | null
+          snapshot_date?: string
+          total_verifications?: number
+          trending_low_topics?: string[] | null
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_name: string

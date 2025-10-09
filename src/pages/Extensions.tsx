@@ -285,13 +285,16 @@ const Extensions = () => {
             {user ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Generate your API key from your profile page and paste it in the extension settings.
+                  Visit the API Hub to generate your API key and get started in seconds.
                 </p>
-                <Button asChild>
-                  <Link to="/profile">
-                    Go to Profile & Generate API Key
-                  </Link>
-                </Button>
+                <div className="flex gap-2">
+                  <Button asChild>
+                    <Link to="/api">
+                      <Key className="h-4 w-4 mr-2" />
+                      Go to API Hub
+                    </Link>
+                  </Button>
+                </div>
               </>
             ) : (
               <>

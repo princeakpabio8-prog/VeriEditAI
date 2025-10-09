@@ -1,14 +1,36 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Activity, TrendingUp, Clock, AlertCircle } from "lucide-react";
+import { Activity, TrendingUp, Clock, AlertCircle, AlertTriangle } from "lucide-react";
 import { format, subDays } from "date-fns";
 
 export function ApiUsageDashboard() {
   const { user } = useAuth();
+
+  // Fetch user's license to get actual rate limits
+  const { data: license } = useQuery({
+    queryKey: ['user-license', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('licenses')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const { data: apiKeys } = useQuery({
     queryKey: ['api-keys', user?.id],
@@ -72,15 +94,33 @@ export function ApiUsageDashboard() {
     enabled: !!user?.id && !!apiKeys?.length,
   });
 
-  // Rate limit (example: 100/day for free tier)
-  const dailyLimit = 100;
+  // Determine daily limit based on license type
+  const getDailyLimit = () => {
+    if (!license) return 100; // Default free tier
+    
+    switch (license.license_type) {
+      case 'trial':
+        return 100;
+      case 'professional':
+        return 10000;
+      case 'enterprise':
+        return null; // Unlimited
+      default:
+        return 100;
+    }
+  };
+
+  const dailyLimit = getDailyLimit();
+  const isUnlimited = dailyLimit === null;
+  
   const todayUsage = usageStats?.last7Days?.filter(log => {
     const logDate = new Date(log.created_at);
     const today = new Date();
     return logDate.toDateString() === today.toDateString();
   }).length || 0;
   
-  const usagePercent = (todayUsage / dailyLimit) * 100;
+  const usagePercent = isUnlimited ? 0 : (todayUsage / dailyLimit) * 100;
+  const isNearingLimit = !isUnlimited && usagePercent >= 80;
 
   if (!apiKeys?.length) {
     return (
@@ -154,19 +194,36 @@ export function ApiUsageDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Today's Usage</CardTitle>
-            <Badge variant={usagePercent > 80 ? "destructive" : "outline"}>
-              {todayUsage} / {dailyLimit}
+            <Badge variant={isNearingLimit ? "destructive" : "outline"}>
+              {todayUsage} {isUnlimited ? '(Unlimited)' : `/ ${dailyLimit}`}
             </Badge>
           </div>
           <CardDescription>
             Daily API request quota ({format(new Date(), 'MMM d, yyyy')})
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Progress value={usagePercent} className="h-3" />
-          <p className="text-xs text-muted-foreground">
-            {dailyLimit - todayUsage} requests remaining today
-          </p>
+        <CardContent className="space-y-3">
+          {isNearingLimit && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You've used {usagePercent.toFixed(0)}% of your daily limit
+              </AlertDescription>
+            </Alert>
+          )}
+          {!isUnlimited && (
+            <div className="space-y-2">
+              <Progress value={usagePercent} className="h-3" />
+              <p className="text-xs text-muted-foreground">
+                {dailyLimit - todayUsage} requests remaining today
+              </p>
+            </div>
+          )}
+          {isUnlimited && (
+            <p className="text-sm text-muted-foreground">
+              ♾️ Unlimited API requests with your Enterprise plan
+            </p>
+          )}
         </CardContent>
       </Card>
 

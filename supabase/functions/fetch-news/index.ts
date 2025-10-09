@@ -30,10 +30,14 @@ serve(async (req) => {
       });
     }
 
-    // MediaStack API key (hardcoded for simplicity)
-    const mediaStackKey = '0f3107e38a6eb82f8f2da365a704d4b2';
+    // Get NewsAPI key from environment
+    const newsApiKey = Deno.env.get('NEWSAPI_KEY');
     
-    // Map category names to MediaStack categories
+    if (!newsApiKey) {
+      throw new Error('NEWSAPI_KEY not configured');
+    }
+    
+    // Map category names to NewsAPI categories
     const categoryMap: Record<string, string> = {
       'general': 'general',
       'technology': 'technology',
@@ -45,35 +49,35 @@ serve(async (req) => {
     
     const mappedCategory = categoryMap[category] || 'general';
 
-    // Fetch from MediaStack API (using HTTP for free tier)
-    const mediaStackUrl = `http://api.mediastack.com/v1/news?access_key=${mediaStackKey}&categories=${mappedCategory}&countries=us&languages=en&limit=${limit}`;
+    // Fetch from NewsAPI
+    const newsApiUrl = `https://newsapi.org/v2/top-headlines?category=${mappedCategory}&country=us&pageSize=${limit}&apiKey=${newsApiKey}`;
     
-    console.log('Fetching news from MediaStack:', mappedCategory);
-    const response = await fetch(mediaStackUrl);
+    console.log('Fetching news from NewsAPI:', mappedCategory);
+    const response = await fetch(newsApiUrl);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('MediaStack error:', errorText);
-      throw new Error(`MediaStack request failed: ${response.status}`);
+      console.error('NewsAPI error:', errorText);
+      throw new Error(`NewsAPI request failed: ${response.status}`);
     }
 
     const data = await response.json();
 
-    // Transform MediaStack response to match our expected format
-    const articles = (data.data || [])
-      .filter((article: any) => article && article.title)
+    // Transform NewsAPI response to match our expected format
+    const articles = (data.articles || [])
+      .filter((article: any) => article && article.title && article.title !== '[Removed]')
       .map((article: any) => ({
         title: article.title,
         description: article.description,
         url: article.url,
-        urlToImage: article.image, // MediaStack uses 'image' field
-        source: { name: article.source || 'Unknown' },
-        publishedAt: article.published_at, // MediaStack uses 'published_at'
+        urlToImage: article.urlToImage,
+        source: { name: article.source?.name || 'Unknown' },
+        publishedAt: article.publishedAt,
       }));
 
     const result = {
       articles,
-      totalResults: data.pagination?.total || articles.length,
+      totalResults: data.totalResults || articles.length,
       category: mappedCategory,
     };
 

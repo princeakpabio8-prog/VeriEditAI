@@ -87,9 +87,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>
-                <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Extensions
-                </Link>
                 <Link to="/api" className="text-muted-foreground hover:text-foreground transition-colors">
                   API
                 </Link>
@@ -161,6 +158,14 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Profile & Settings
+                    </Link>
+                    <Link
+                      to="/extensions"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Puzzle className="h-4 w-4 mr-2" />
+                      Extensions
                     </Link>
                     {isAdmin && (
                       <Link
@@ -255,13 +260,6 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   About
                 </Link>
                 <Link
-                  to="/extensions"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Extensions
-                </Link>
-                <Link
                   to="/api"
                   className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
@@ -300,6 +298,14 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <div className="px-4 py-2 text-sm text-muted-foreground">
                   {user?.email}
                 </div>
+                <Link
+                  to="/extensions"
+                  className="flex items-center px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Puzzle className="h-4 w-4 mr-2" />
+                  Extensions
+                </Link>
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);

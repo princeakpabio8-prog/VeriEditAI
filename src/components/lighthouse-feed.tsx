@@ -513,7 +513,7 @@ export function LighthouseFeed() {
                               transition={{ duration: 0.3 }}
                               className="absolute -inset-4 z-10 flex items-center justify-center"
                             >
-                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative flex flex-col max-h-[70vh]">
+                              <div className="bg-background/98 backdrop-blur-md border-2 border-primary/30 rounded-xl p-6 shadow-2xl max-w-md relative flex flex-col max-h-[70vh] min-h-0">
                                 <button
                                   onClick={() => {
                                     setShowSummaryFor(null);
@@ -543,7 +543,7 @@ export function LighthouseFeed() {
                                   </div>
                                   <h4 className="font-semibold text-sm text-foreground">Executive Summary</h4>
                                 </div>
-                                <ScrollArea className="flex-1 pr-2">
+                                <ScrollArea className="h-[50vh] pr-2">
                                   <p className="text-sm text-muted-foreground leading-relaxed">
                                     {verificationSummaries[article.id]}
                                   </p>

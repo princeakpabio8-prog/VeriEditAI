@@ -22,6 +22,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ShareVerification from "./pages/ShareVerification";
 import Extensions from "./pages/Extensions";
 import Referrals from "./pages/Referrals";
+import ApiHub from "./pages/ApiHub";
 import Privacy from "./pages/Privacy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import RefundPolicy from "./pages/RefundPolicy";
@@ -101,6 +102,7 @@ const App = () => (
             />
             <Route path="/about" element={<About />} />
             <Route path="/extensions" element={<Extensions />} />
+            <Route path="/api" element={<ProtectedRoute><ApiHub /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />

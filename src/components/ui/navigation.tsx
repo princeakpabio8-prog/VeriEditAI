@@ -90,6 +90,9 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                 <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
                   Extensions
                 </Link>
+                <Link to="/api" className="text-muted-foreground hover:text-foreground transition-colors">
+                  API
+                </Link>
                 {isAdmin && (
                   <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors">
                     Admin
@@ -257,6 +260,13 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Extensions
+                </Link>
+                <Link
+                  to="/api"
+                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  API
                 </Link>
               </>
             ) : (

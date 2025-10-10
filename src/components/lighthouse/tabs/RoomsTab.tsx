@@ -22,7 +22,6 @@ export function RoomsTab() {
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-
   const { rooms, loading } = useLighthouseRooms(selectedCategory);
 
   return (
@@ -59,18 +58,24 @@ export function RoomsTab() {
 
         <TabsContent value={selectedCategory} className="mt-6">
           {loading ? (
-            <div className="flex justify-center py-12">
+            <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--lighthouse-beam))]"></div>
             </div>
           ) : rooms.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">No rooms found in this category.</p>
+              <Radio className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">No rooms found</h3>
+              <p className="text-muted-foreground mb-4">
+                {selectedCategory === 'all' 
+                  ? 'Be the first to create a verification room!'
+                  : `No ${selectedCategory} rooms yet. Create one to get started!`}
+              </p>
               <Button 
-                onClick={() => setShowCreateDialog(true)}
-                variant="outline"
-                className="mt-4"
+                onClick={() => user ? setShowCreateDialog(true) : navigate('/auth')}
+                className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))]"
               >
-                Create the first room
+                <Plus className="w-4 h-4 mr-2" />
+                Create First Room
               </Button>
             </div>
           ) : (

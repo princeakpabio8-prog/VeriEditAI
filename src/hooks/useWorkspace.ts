@@ -18,24 +18,27 @@ export function useWorkspace() {
   }, [user]);
 
   const ensureWorkspace = async () => {
+    if (!user) return;
+
     try {
       setLoading(true);
       
       // Call the database function to ensure workspace exists
-      const { data, error } = await supabase.rpc('ensure_user_workspace');
-      
+      const { data, error } = await supabase
+        .rpc('ensure_user_workspace');
+
       if (error) {
         console.error('Error ensuring workspace:', error);
         return;
       }
-      
+
       setWorkspaceId(data);
     } catch (error) {
-      console.error('Error in workspace setup:', error);
+      console.error('Error in ensureWorkspace:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  return { workspaceId, loading, ensureWorkspace };
+  return { workspaceId, loading, refetch: ensureWorkspace };
 }

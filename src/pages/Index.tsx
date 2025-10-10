@@ -28,10 +28,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation 
-        isAuthenticated={!!user} 
-        user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} 
-      />
+      <Navigation />
       
       <main>
         <HeroSection />

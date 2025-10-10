@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background">
-        <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || "User", email: user.email || "" } : undefined} />
+        <Navigation />
         <div className="pt-24 px-4 max-w-7xl mx-auto">
           <Card>
             <CardHeader>
@@ -56,7 +56,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || "User", email: user.email || "" } : undefined} />
+      <Navigation />
       
       <div className="pt-24 px-4 pb-12 max-w-7xl mx-auto">
         <div className="mb-8">

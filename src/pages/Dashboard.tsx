@@ -389,7 +389,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+      <Navigation />
         <div className="flex items-center justify-center h-[60vh]">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -399,7 +399,7 @@ const Dashboard = () => {
 
   const content = (
     <div className="min-h-screen bg-background">
-      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8">
         {/* Welcome Section */}

@@ -7,20 +7,15 @@ import { UserFeedback } from '@/components/user-feedback';
 import { motion } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 
-interface NavigationProps {
-  isAuthenticated?: boolean;
-  user?: {
-    name: string;
-    email: string;
-  };
-}
-
-export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) => {
+export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
+  
+  // Derive auth state from hook
+  const isAuthenticated = !!authUser;
 
   // Check if user is admin
   useEffect(() => {
@@ -117,7 +112,7 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
                   className="flex items-center space-x-2"
                 >
                   <User className="h-4 w-4" />
-                  <span>{user?.name || "Profile"}</span>
+                  <span>{authUser?.email?.split('@')[0] || "Profile"}</span>
                 </Button>
                 
                 {isProfileOpen && (
@@ -291,7 +286,7 @@ export const Navigation = ({ isAuthenticated = false, user }: NavigationProps) =
             {isAuthenticated ? (
               <div className="border-t border-border pt-4 mt-4">
                 <div className="px-4 py-2 text-sm text-muted-foreground">
-                  {user?.email}
+                  {authUser?.email}
                 </div>
                 <Link
                   to="/extensions"

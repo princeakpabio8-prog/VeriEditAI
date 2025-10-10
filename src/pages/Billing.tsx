@@ -108,10 +108,7 @@ const Billing = () => {
 
   const content = (
     <div className="min-h-screen bg-background">
-      <Navigation 
-        isAuthenticated={!!user} 
-        user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} 
-      />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8 mt-16">
         <div className="max-w-6xl mx-auto">

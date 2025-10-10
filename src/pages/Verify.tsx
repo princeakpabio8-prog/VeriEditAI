@@ -172,7 +172,7 @@ export default function Verify() {
     return (
       <MobileOptimizedUI>
         <div className="min-h-screen bg-background">
-          <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+          <Navigation />
           
           <main className="container mx-auto px-4 py-8">
             <div className="mb-8">
@@ -199,7 +199,7 @@ export default function Verify() {
   // Desktop UI
   return (
     <div className="min-h-screen bg-background">
-      <Navigation isAuthenticated={!!user} user={user ? { name: user.email?.split('@')[0] || 'User', email: user.email || '' } : undefined} />
+      <Navigation />
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8 text-center">

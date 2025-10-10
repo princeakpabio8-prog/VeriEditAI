@@ -16,13 +16,7 @@ export default function ApiHub() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation 
-        isAuthenticated={!!user} 
-        user={user ? { 
-          name: user.email?.split('@')[0] || 'User', 
-          email: user.email || '' 
-        } : undefined} 
-      />
+      <Navigation />
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Hero Section */}
         <div className="mb-12">

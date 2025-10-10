@@ -107,6 +107,33 @@ export type Database = {
         }
         Relationships: []
       }
+      embedding_cache: {
+        Row: {
+          access_count: number | null
+          content_hash: string
+          created_at: string | null
+          embedding: string
+          id: string
+          last_accessed_at: string | null
+        }
+        Insert: {
+          access_count?: number | null
+          content_hash: string
+          created_at?: string | null
+          embedding: string
+          id?: string
+          last_accessed_at?: string | null
+        }
+        Update: {
+          access_count?: number | null
+          content_hash?: string
+          created_at?: string | null
+          embedding?: string
+          id?: string
+          last_accessed_at?: string | null
+        }
+        Relationships: []
+      }
       feedback: {
         Row: {
           category: string | null
@@ -137,6 +164,39 @@ export type Database = {
           rating?: number | null
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      fraud_patterns: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          embedding: string
+          id: string
+          metadata: Json | null
+          severity: string | null
+          source: string | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          embedding: string
+          id?: string
+          metadata?: Json | null
+          severity?: string | null
+          source?: string | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          embedding?: string
+          id?: string
+          metadata?: Json | null
+          severity?: string | null
+          source?: string | null
         }
         Relationships: []
       }
@@ -1309,6 +1369,7 @@ export type Database = {
       }
       verifications: {
         Row: {
+          azure_embedding: string | null
           category: string | null
           category_confidence: number | null
           claim_type: string | null
@@ -1336,6 +1397,7 @@ export type Database = {
           verification_source: string | null
         }
         Insert: {
+          azure_embedding?: string | null
           category?: string | null
           category_confidence?: number | null
           claim_type?: string | null
@@ -1363,6 +1425,7 @@ export type Database = {
           verification_source?: string | null
         }
         Update: {
+          azure_embedding?: string | null
           category?: string | null
           category_confidence?: number | null
           claim_type?: string | null
@@ -1451,6 +1514,10 @@ export type Database = {
       }
     }
     Functions: {
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
@@ -1535,6 +1602,22 @@ export type Database = {
           plan: Database["public"]["Enums"]["plan_type"]
         }[]
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       handle_failed_payment: {
         Args: { failure_reason?: string; payment_id: string; user_uuid: string }
         Returns: boolean
@@ -1555,13 +1638,61 @@ export type Database = {
         }
         Returns: boolean
       }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
       increment_license_usage: {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
       }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
       reset_monthly_usage_for_free_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
       upgrade_user_subscription: {
         Args: {
@@ -1575,6 +1706,30 @@ export type Database = {
       validate_license: {
         Args: { user_uuid: string }
         Returns: Json
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {

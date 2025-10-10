@@ -125,3 +125,9 @@ verify_jwt = false
 
 [functions.fetch-url-content]
 verify_jwt = false
+
+[functions.azure-generate-embedding]
+verify_jwt = false
+
+[functions.verify-with-azure-ai]
+verify_jwt = false

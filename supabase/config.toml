@@ -131,3 +131,12 @@ verify_jwt = false
 
 [functions.verify-with-azure-ai]
 verify_jwt = false
+
+[functions.discover-org-claims]
+verify_jwt = false
+
+[functions.verify-org-claim]
+verify_jwt = false
+
+[functions.submit-partnership-request]
+verify_jwt = true

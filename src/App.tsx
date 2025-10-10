@@ -32,6 +32,9 @@ import SignalFeed from "./pages/SignalFeed";
 import ThreadView from "./pages/ThreadView";
 import ApiDocs from "./pages/ApiDocs";
 import { LighthouseFeed } from "./components/lighthouse-feed";
+import { PartnershipDiscovery } from "./components/partnership/PartnershipDiscovery";
+import { OrganizationsList } from "./components/partnership/OrganizationsList";
+import { OrganizationProfile } from "./components/partnership/OrganizationProfile";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +122,9 @@ const App = () => (
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
             <Route path="/lighthouse/signals" element={<SignalFeed />} />
             <Route path="/lighthouse/feed" element={<LighthouseFeed />} />
+            <Route path="/lighthouse/partnerships" element={<PartnershipDiscovery />} />
+            <Route path="/lighthouse/organizations" element={<OrganizationsList />} />
+            <Route path="/lighthouse/organizations/:orgId" element={<OrganizationProfile />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

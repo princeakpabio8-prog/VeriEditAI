@@ -400,6 +400,164 @@ export type Database = {
           },
         ]
       }
+      organization_claims: {
+        Row: {
+          claim_text: string
+          confidence_level: string | null
+          created_at: string | null
+          discovered_at: string | null
+          id: string
+          metadata: Json | null
+          organization_id: string
+          published_at: string | null
+          source_type: string
+          source_url: string
+          trust_score: number | null
+          verification_id: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          claim_text: string
+          confidence_level?: string | null
+          created_at?: string | null
+          discovered_at?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          published_at?: string | null
+          source_type: string
+          source_url: string
+          trust_score?: number | null
+          verification_id?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          claim_text?: string
+          confidence_level?: string | null
+          created_at?: string | null
+          discovered_at?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          published_at?: string | null
+          source_type?: string
+          source_url?: string
+          trust_score?: number | null
+          verification_id?: string | null
+          verification_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_claims_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_claims_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          avg_trust_score: number | null
+          contact_email: string | null
+          created_at: string | null
+          description: string | null
+          domain: string | null
+          id: string
+          industry: string
+          logo_url: string | null
+          metadata: Json | null
+          name: string
+          total_verifications: number | null
+          updated_at: string | null
+          verified_partner: boolean | null
+          website: string | null
+        }
+        Insert: {
+          avg_trust_score?: number | null
+          contact_email?: string | null
+          created_at?: string | null
+          description?: string | null
+          domain?: string | null
+          id?: string
+          industry: string
+          logo_url?: string | null
+          metadata?: Json | null
+          name: string
+          total_verifications?: number | null
+          updated_at?: string | null
+          verified_partner?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          avg_trust_score?: number | null
+          contact_email?: string | null
+          created_at?: string | null
+          description?: string | null
+          domain?: string | null
+          id?: string
+          industry?: string
+          logo_url?: string | null
+          metadata?: Json | null
+          name?: string
+          total_verifications?: number | null
+          updated_at?: string | null
+          verified_partner?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      partnership_requests: {
+        Row: {
+          contact_email: string
+          contact_name: string
+          contact_website: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          organization_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_email: string
+          contact_name: string
+          contact_website?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          organization_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_email?: string
+          contact_name?: string
+          contact_website?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          organization_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partnership_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           created_at: string

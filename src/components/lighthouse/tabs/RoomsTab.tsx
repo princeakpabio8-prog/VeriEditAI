@@ -22,7 +22,7 @@ export function RoomsTab() {
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const { rooms, loading } = useLighthouseRooms(selectedCategory);
+  const { rooms, loading } = useLighthouseRooms(selectedCategory, 'public');
 
   return (
     <div className="space-y-6">

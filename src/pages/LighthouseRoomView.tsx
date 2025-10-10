@@ -5,16 +5,19 @@ import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, MessageSquare, Star, Plus, ArrowLeft } from 'lucide-react';
+import { Users, MessageSquare, Star, Plus, ArrowLeft, Briefcase } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLighthouseThreads } from '@/hooks/useLighthouseThreads';
 import { LighthouseThreadList } from '@/components/lighthouse/LighthouseThreadList';
 import { CreateThreadDialog } from '@/components/lighthouse/CreateThreadDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LighthouseRoomView() {
   const { roomId } = useParams();
+  const { user } = useAuth();
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isWorkspace, setIsWorkspace] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   const { threads, loading: threadsLoading, createThread } = useLighthouseThreads(roomId || '');
@@ -33,6 +36,7 @@ export default function LighthouseRoomView() {
 
         if (error) throw error;
         setRoom(data);
+        setIsWorkspace(data?.room_type === 'workspace' && data?.creator_id === user?.id);
       } catch (error) {
         console.error('Error fetching room:', error);
       } finally {
@@ -41,7 +45,7 @@ export default function LighthouseRoomView() {
     };
 
     fetchRoom();
-  }, [roomId]);
+  }, [roomId, user]);
 
   if (loading) {
     return (
@@ -111,12 +115,28 @@ export default function LighthouseRoomView() {
 
           {/* Room header */}
           <div className="space-y-4">
+            {isWorkspace && (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-[hsl(var(--lighthouse-ocean))]/30 border border-[hsl(var(--lighthouse-beam))]/30">
+                <Briefcase className="h-5 w-5 text-[hsl(var(--lighthouse-beam))]" />
+                <span className="text-sm font-medium text-[hsl(var(--lighthouse-beam))]">
+                  Personal Workspace
+                </span>
+              </div>
+            )}
+            
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <Badge className={getCategoryColor(room.category)} variant="secondary">
-                  {room.category}
-                </Badge>
-                <h1 className="text-4xl font-bold mt-2 mb-3">{room.name}</h1>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className={getCategoryColor(room.category)} variant="secondary">
+                    {room.category}
+                  </Badge>
+                  {isWorkspace && (
+                    <Badge variant="outline" className="border-[hsl(var(--lighthouse-beam))]">
+                      Workspace
+                    </Badge>
+                  )}
+                </div>
+                <h1 className="text-4xl font-bold mb-3">{room.name}</h1>
                 {room.description && (
                   <p className="text-lg text-muted-foreground">{room.description}</p>
                 )}

@@ -717,6 +717,42 @@ export type Database = {
         }
         Relationships: []
       }
+      public_engagement: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          platform: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          platform?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          platform?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       public_verifications: {
         Row: {
           created_at: string
@@ -1729,6 +1765,19 @@ export type Database = {
         }
         Relationships: []
       }
+      engagement_analytics: {
+        Row: {
+          content_id: string | null
+          content_type: string | null
+          last_engagement_at: string | null
+          total_clicks: number | null
+          total_shares: number | null
+          total_upvotes: number | null
+          total_views: number | null
+          unique_platforms: number | null
+        }
+        Relationships: []
+      }
       payment_logs_summary: {
         Row: {
           created_at: string | null
@@ -1926,6 +1975,10 @@ export type Database = {
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
         Returns: string
+      }
+      refresh_engagement_analytics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       reset_monthly_usage_for_free_users: {
         Args: Record<PropertyKey, never>

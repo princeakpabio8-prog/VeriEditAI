@@ -159,6 +159,34 @@ serve(async (req) => {
       console.log(`⚠️ Fraud Alert: ${fraudAnalysis.patterns.length} patterns detected`);
     }
 
+    // Generate Azure embedding for semantic analysis
+    let azureEmbedding = null;
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      
+      console.log('🧠 Generating Azure embedding...');
+      const embeddingResponse = await fetch(
+        `${supabaseUrl}/functions/v1/azure-generate-embedding`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ content: safeContent }),
+        }
+      );
+
+      const embeddingData = await embeddingResponse.json();
+      if (embeddingData.success) {
+        azureEmbedding = embeddingData.embeddings[0];
+        console.log(`✅ Generated embedding (${embeddingData.dimensions} dimensions)`);
+      }
+    } catch (embErr) {
+      console.warn('⚠️ Failed to generate embedding:', embErr);
+    }
+
     // Save verification to database
     let verificationId = null;
     if (user_id) {
@@ -168,7 +196,7 @@ serve(async (req) => {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Save verification
+        // Save verification with embedding
         const { data: verification, error: dbError } = await supabase
           .from('verifications')
           .insert({
@@ -180,6 +208,7 @@ serve(async (req) => {
             category: result.category,
             status: 'completed', // Map to DB-safe status
             processing_time_ms: processingTime,
+            azure_embedding: azureEmbedding,
             score_breakdown: {
               source_consensus: result.source_consensus,
               verification_method: result.verification_method

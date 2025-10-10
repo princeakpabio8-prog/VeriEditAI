@@ -10,6 +10,7 @@ interface CachedVerification {
   sources: any[];
   methods: string[];
   category: string;
+  embedding?: number[];
 }
 
 class EnhancedVerificationCache {
@@ -63,7 +64,7 @@ class EnhancedVerificationCache {
     return cached.result;
   }
 
-  set(content: string, userId: string, result: any): void {
+  async set(content: string, userId: string, result: any): Promise<void> {
     const key = this.generateKey(content, userId);
     
     // Ensure cache doesn't exceed max size
@@ -76,6 +77,9 @@ class EnhancedVerificationCache {
       }
     }
 
+    // Try to get embedding from result metadata
+    let embedding = result.metadata?.embedding || null;
+    
     const cached: CachedVerification = {
       content: content.substring(0, 1000), // Store truncated content
       result,
@@ -84,7 +88,8 @@ class EnhancedVerificationCache {
       confidence: result.confidence || 0,
       sources: result.sources || [],
       methods: result.verification_method || [],
-      category: result.category || 'general'
+      category: result.category || 'general',
+      embedding
     };
 
     this.cache.set(key, cached);
@@ -119,13 +124,45 @@ class EnhancedVerificationCache {
     };
   }
 
-  // Find similar verifications
-  findSimilar(content: string, userId: string, threshold = 0.7): CachedVerification[] {
+  // Cosine similarity for embeddings
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (!vecA || !vecB || vecA.length !== vecB.length) return 0;
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  // Find similar verifications using semantic similarity when available
+  findSimilar(content: string, userId: string, threshold = 0.7, embedding?: number[]): CachedVerification[] {
+    const entries = Array.from(this.cache.values()).filter(cached => cached.userId === userId);
+    
+    // If we have embeddings, use semantic similarity
+    if (embedding) {
+      return entries
+        .filter(cached => cached.embedding)
+        .map(cached => ({
+          ...cached,
+          similarity: this.cosineSimilarity(embedding, cached.embedding!)
+        }))
+        .filter((cached: any) => cached.similarity >= threshold)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
+        .slice(0, 5) as any;
+    }
+    
+    // Fallback to word-based similarity
     const normalizedContent = (content ?? '').toString().toLowerCase().trim();
     const words = normalizedContent.split(/\s+/).filter(w => w.length > 3);
     
-    return Array.from(this.cache.values())
-      .filter(cached => cached.userId === userId)
+    return entries
       .map(cached => {
         const cachedWords = (cached.content ?? '').toString().toLowerCase().split(/\s+/).filter(w => w.length > 3);
         const commonWords = words.filter(word => cachedWords.includes(word));

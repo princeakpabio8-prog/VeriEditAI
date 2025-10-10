@@ -30,6 +30,26 @@ const RSS_SOURCES = [
     source_url: "https://www.aljazeera.com",
   },
   {
+    name: "CNN",
+    url: "http://rss.cnn.com/rss/edition.rss",
+    source_url: "https://www.cnn.com",
+  },
+  {
+    name: "The New York Times",
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+    source_url: "https://www.nytimes.com",
+  },
+  {
+    name: "NPR",
+    url: "https://feeds.npr.org/1001/rss.xml",
+    source_url: "https://www.npr.org",
+  },
+  {
+    name: "The Economist",
+    url: "https://www.economist.com/latest/rss.xml",
+    source_url: "https://www.economist.com",
+  },
+  {
     name: "The Guardian",
     url: "https://www.theguardian.com/world/rss",
     source_url: "https://www.theguardian.com",

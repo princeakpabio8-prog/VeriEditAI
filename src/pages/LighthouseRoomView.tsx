@@ -5,7 +5,7 @@ import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, MessageSquare, Star, Plus } from 'lucide-react';
+import { Users, MessageSquare, Star, Plus, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLighthouseThreads } from '@/hooks/useLighthouseThreads';
 import { LighthouseThreadList } from '@/components/lighthouse/LighthouseThreadList';
@@ -91,13 +91,22 @@ export default function LighthouseRoomView() {
       <Navigation />
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link to="/lighthouse" className="hover:text-foreground">
-              Lighthouse Room
-            </Link>
-            <span>›</span>
-            <span className="text-foreground">{room.name}</span>
+          {/* Navigation */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to="/lighthouse" className="hover:text-foreground">
+                Lighthouse Hub
+              </Link>
+              <span>›</span>
+              <span className="text-foreground">{room.name}</span>
+            </div>
+            
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/lighthouse" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Hub
+              </Link>
+            </Button>
           </div>
 
           {/* Room header */}

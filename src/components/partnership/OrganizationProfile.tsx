@@ -2,6 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, TrendingUp, Shield, ExternalLink, Sparkles, ArrowLeft } from "lucide-react";
+import { useEffect } from 'react';
+import { DynamicMeta } from '@/components/DynamicMeta';
+import { generateOrganizationSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
+import { trackPageView } from '@/lib/public-analytics';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +26,13 @@ export const OrganizationProfile = () => {
   const { orgId } = useParams();
   const navigate = useNavigate();
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
+
+  // Track page view
+  useEffect(() => {
+    if (orgId) {
+      trackPageView('organization', orgId);
+    }
+  }, [orgId]);
 
   const { data: organization, isLoading } = useQuery({
     queryKey: ['organization', orgId],
@@ -50,6 +61,27 @@ export const OrganizationProfile = () => {
       return data;
     },
   });
+  
+  // Inject structured data for SEO
+  useEffect(() => {
+    if (organization && orgId) {
+      const structuredData = generateOrganizationSchema({
+        name: organization.name,
+        description: organization.description || undefined,
+        url: organization.website || undefined,
+        logo: organization.logo_url || undefined,
+        trustScore: organization.avg_trust_score || undefined,
+        verifiedPartner: organization.verified_partner || false,
+      });
+      injectStructuredData(structuredData, `org-${orgId}-structured-data`);
+    }
+    
+    return () => {
+      if (orgId) {
+        removeStructuredData(`org-${orgId}-structured-data`);
+      }
+    };
+  }, [organization, orgId]);
 
   if (isLoading) {
     return (
@@ -63,6 +95,10 @@ export const OrganizationProfile = () => {
       </div>
     );
   }
+
+  // Prepare meta description
+  const metaDescription = organization?.description?.slice(0, 155) || `${organization?.name} - Trust Score: ${organization?.avg_trust_score || 'N/A'}/100 | Verified by VeriEdit AI`;
+  const metaTitle = organization?.name || 'Organization Profile';
 
   if (!organization) {
     return (
@@ -88,6 +124,14 @@ export const OrganizationProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      <DynamicMeta
+        title={metaTitle}
+        description={metaDescription}
+        url={window.location.href}
+        type="website"
+        trustScore={organization.avg_trust_score || undefined}
+        image={organization.logo_url || undefined}
+      />
       {/* Hero Section with Lighthouse Theme */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 border-b">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />

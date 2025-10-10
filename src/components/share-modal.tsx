@@ -9,6 +9,7 @@ import { Copy, Check, Share2, Eye, X, QrCode, Facebook, Twitter, Linkedin } from
 import { useToast } from '@/hooks/use-toast';
 import QRCodeLib from 'qrcode';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { createShareableURL, trackShare } from '@/lib/public-analytics';
 
 interface ShareModalProps {
   verificationId: string;

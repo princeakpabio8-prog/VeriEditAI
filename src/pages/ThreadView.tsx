@@ -8,10 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { LighthouseBeamIndicator } from '@/components/lighthouse/LighthouseBeamIndicator';
-import { ArrowLeft, MessageSquare, ThumbsUp, Shield, ExternalLink } from 'lucide-react';
+import { ArrowLeft, MessageSquare, ThumbsUp, Shield, ExternalLink, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { ThreadComments } from '@/components/lighthouse/ThreadComments';
+import { DynamicMeta } from '@/components/DynamicMeta';
+import { generateClaimReviewSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
+import { trackPageView, createShareableURL } from '@/lib/public-analytics';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
@@ -28,19 +31,33 @@ export default function ThreadView() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        
+        // Track page view
+        if (threadId) {
+          trackPageView('thread', threadId);
+        }
 
         // Fetch thread with author info
         const { data: threadData, error: threadError } = await supabase
           .from('room_threads')
-          .select(`
-            *,
-            profiles!room_threads_author_id_fkey(full_name)
-          `)
+          .select('*')
           .eq('id', threadId)
           .single();
-
+        
         if (threadError) throw threadError;
-        setThread(threadData);
+        
+        // Fetch author profile separately
+        let authorName = null;
+        if (threadData) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('user_id', threadData.author_id)
+            .single();
+          authorName = profileData?.full_name;
+        }
+
+        setThread({ ...threadData, author_name: authorName });
         setUpvoteCount(threadData.upvote_count || 0);
 
         // Fetch room info
@@ -77,6 +94,18 @@ export default function ThreadView() {
             .single();
 
           setVerification(verificationData);
+        }
+        
+        // Inject structured data for SEO
+        if (threadData && threadData.is_auto_verified && threadData.trust_score !== null) {
+          const structuredData = generateClaimReviewSchema({
+            claimText: threadData.title,
+            trustScore: threadData.trust_score,
+            author: authorName || undefined,
+            datePublished: threadData.created_at,
+            url: window.location.href,
+          });
+          injectStructuredData(structuredData, `thread-${threadId}-structured-data`);
         }
       } catch (error) {
         console.error('Error fetching thread:', error);
@@ -118,6 +147,9 @@ export default function ThreadView() {
 
     return () => {
       supabase.removeChannel(votesChannel);
+      if (threadId) {
+        removeStructuredData(`thread-${threadId}-structured-data`);
+      }
     };
   }, [roomId, threadId]);
 
@@ -166,6 +198,35 @@ export default function ThreadView() {
     }
   };
 
+  const handleShare = async (platform: string) => {
+    const shareUrl = createShareableURL(window.location.href, platform);
+    const shareText = `✅ Verified by VeriEdit AI | Trust Score: ${thread?.trust_score || 'N/A'}/100\n\n${thread?.title}\n\n`;
+    
+    let url = '';
+    switch (platform) {
+      case 'twitter':
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'linkedin':
+        url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'facebook':
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+        break;
+      case 'copy':
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: "Link copied!",
+          description: "Share link copied to clipboard",
+        });
+        return;
+    }
+    
+    if (url) {
+      window.open(url, '_blank', 'width=600,height=400');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -198,8 +259,21 @@ export default function ThreadView() {
     );
   }
 
+  // Prepare meta description
+  const metaDescription = thread?.content?.slice(0, 155) + (thread?.content?.length > 155 ? '...' : '');
+  const metaTitle = thread?.title || 'Verified Thread';
+
   return (
     <div className="min-h-screen bg-background">
+      <DynamicMeta
+        title={metaTitle}
+        description={metaDescription}
+        url={window.location.href}
+        type="article"
+        trustScore={thread?.trust_score || undefined}
+        author={thread?.author_name || undefined}
+        publishedTime={thread?.created_at}
+      />
       <Navigation />
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -232,7 +306,7 @@ export default function ThreadView() {
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-4">{thread.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>by {thread.profiles?.full_name || 'Anonymous'}</span>
+                  <span>by {thread.author_name || 'Anonymous'}</span>
                   <span>•</span>
                   <span>
                     {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
@@ -280,6 +354,39 @@ export default function ThreadView() {
                 <MessageSquare className="h-4 w-4" />
                 {thread.comment_count} Comments
               </Button>
+              
+              <div className="relative group">
+                <Button variant="outline" className="gap-2">
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
+                <div className="absolute right-0 mt-2 w-48 bg-background border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <button
+                    onClick={() => handleShare('twitter')}
+                    className="w-full px-4 py-2 text-left hover:bg-accent rounded-t-lg"
+                  >
+                    Share on Twitter
+                  </button>
+                  <button
+                    onClick={() => handleShare('linkedin')}
+                    className="w-full px-4 py-2 text-left hover:bg-accent"
+                  >
+                    Share on LinkedIn
+                  </button>
+                  <button
+                    onClick={() => handleShare('facebook')}
+                    className="w-full px-4 py-2 text-left hover:bg-accent"
+                  >
+                    Share on Facebook
+                  </button>
+                  <button
+                    onClick={() => handleShare('copy')}
+                    className="w-full px-4 py-2 text-left hover:bg-accent rounded-b-lg"
+                  >
+                    Copy Link
+                  </button>
+                </div>
+              </div>
             </div>
           </Card>
 

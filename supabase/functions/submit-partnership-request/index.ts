@@ -1,11 +1,15 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { z } from "https://deno.land/x/zod@v3.21.4/mod.ts";
+import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Initialize Resend for email notifications
+const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 
 // Input validation schema
 const partnershipSchema = z.object({
@@ -88,17 +92,27 @@ View Profile: ${supabaseUrl}/lighthouse/organizations/${org.id}
 Sent from VeriEdit Verification Partnership System
     `;
 
-    console.log('📬 Email to send to hello@verieditai.com:');
-    console.log(emailContent);
+    console.log('📬 Sending email to hello@verieditai.com...');
 
-    // TODO: Integrate with Resend to send actual email
-    // const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-    // await resend.emails.send({
-    //   from: 'partnerships@verieditai.com',
-    //   to: 'hello@verieditai.com',
-    //   subject: `New Partnership Request from ${org.name}`,
-    //   text: emailContent,
-    // });
+    // Send email notification via Resend
+    try {
+      const { error: emailError } = await resend.emails.send({
+        from: 'VeriEdit Partnerships <partnerships@verieditai.com>',
+        to: ['hello@verieditai.com'],
+        subject: `New Partnership Request from ${org.name}`,
+        text: emailContent,
+      });
+
+      if (emailError) {
+        console.error('⚠️ Email failed to send:', emailError);
+        // Don't throw - partnership request is saved, email is secondary
+      } else {
+        console.log('✅ Email sent successfully to hello@verieditai.com');
+      }
+    } catch (emailErr) {
+      console.error('⚠️ Email sending exception:', emailErr);
+      // Continue - the partnership request is already saved
+    }
 
     return new Response(
       JSON.stringify({

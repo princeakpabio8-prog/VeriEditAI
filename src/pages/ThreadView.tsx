@@ -10,14 +10,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { LighthouseBeamIndicator } from '@/components/lighthouse/LighthouseBeamIndicator';
 import { ArrowLeft, MessageSquare, ThumbsUp, Shield, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [thread, setThread] = useState<any>(null);
   const [room, setRoom] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
+  const [upvoteCount, setUpvoteCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,6 +40,7 @@ export default function ThreadView() {
 
         if (threadError) throw threadError;
         setThread(threadData);
+        setUpvoteCount(threadData.upvote_count || 0);
 
         // Fetch room info
         const { data: roomData, error: roomError } = await supabase
@@ -46,6 +51,21 @@ export default function ThreadView() {
 
         if (roomError) throw roomError;
         setRoom(roomData);
+
+        // Fetch user's vote
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: voteData } = await supabase
+            .from('thread_votes')
+            .select('vote_type')
+            .eq('thread_id', threadId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (voteData) {
+            setUserVote(voteData.vote_type as 'up' | 'down');
+          }
+        }
 
         // Fetch verification if exists
         if (threadData.verification_id) {
@@ -68,6 +88,51 @@ export default function ThreadView() {
       fetchData();
     }
   }, [roomId, threadId]);
+
+  const handleUpvote = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to upvote threads",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (userVote === 'up') {
+        // Remove upvote
+        await supabase
+          .from('thread_votes')
+          .delete()
+          .eq('thread_id', threadId)
+          .eq('user_id', user.id);
+        
+        setUserVote(null);
+        setUpvoteCount(prev => prev - 1);
+      } else {
+        // Add or update to upvote
+        await supabase
+          .from('thread_votes')
+          .upsert({
+            thread_id: threadId,
+            user_id: user.id,
+            vote_type: 'up'
+          });
+        
+        setUserVote('up');
+        setUpvoteCount(prev => prev + (userVote === 'down' ? 2 : 1));
+      }
+    } catch (error) {
+      console.error('Error voting:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update vote",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -159,11 +224,15 @@ export default function ThreadView() {
               <p className="whitespace-pre-wrap">{thread.content}</p>
             </div>
 
-            {/* Placeholder interactions */}
+            {/* Interactive upvotes */}
             <div className="flex items-center gap-4 pt-6 border-t">
-              <Button variant="outline" disabled className="gap-2">
+              <Button 
+                variant={userVote === 'up' ? 'default' : 'outline'} 
+                onClick={handleUpvote}
+                className="gap-2"
+              >
                 <ThumbsUp className="h-4 w-4" />
-                {thread.upvote_count}
+                {upvoteCount}
               </Button>
               <Button variant="outline" disabled className="gap-2">
                 <MessageSquare className="h-4 w-4" />

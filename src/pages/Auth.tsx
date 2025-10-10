@@ -16,6 +16,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState<'signin' | 'signup' | 'reset' | ''>('');
   const [resetMode, setResetMode] = useState(false);
@@ -105,9 +106,12 @@ const Auth = () => {
       return;
     }
 
-    // Include referral code in user metadata
-    const metadata = referralCode ? { referral_code: referralCode } : undefined;
-    const { error } = await signUp(email, password, metadata);
+    // Include referral code and full name in user metadata
+    const metadata: any = {};
+    if (referralCode) metadata.referral_code = referralCode;
+    if (fullName) metadata.full_name = fullName;
+    
+    const { error } = await signUp(email, password, Object.keys(metadata).length > 0 ? metadata : undefined);
     
     if (error) {
       toast({
@@ -274,6 +278,17 @@ const Auth = () => {
                     </div>
                   )}
                   
+                  <div className="space-y-2">
+                    <Label htmlFor="full-name">Full Name (Optional)</Label>
+                    <Input
+                      id="full-name"
+                      type="text"
+                      placeholder="John Doe"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input

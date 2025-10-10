@@ -1219,6 +1219,38 @@ export type Database = {
           },
         ]
       }
+      thread_votes: {
+        Row: {
+          created_at: string
+          id: string
+          thread_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          thread_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          thread_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_votes_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "room_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trust_analytics: {
         Row: {
           analysis_period_end: string

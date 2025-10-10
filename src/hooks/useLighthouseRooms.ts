@@ -13,13 +13,13 @@ interface LighthouseRoom {
   created_at: string;
 }
 
-export function useLighthouseRooms(category?: string) {
+export function useLighthouseRooms(category?: string, roomType: 'public' | 'workspace' | 'all' = 'all') {
   const [rooms, setRooms] = useState<LighthouseRoom[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchRooms();
-  }, [category]);
+  }, [category, roomType]);
 
   const fetchRooms = async () => {
     try {
@@ -32,6 +32,10 @@ export function useLighthouseRooms(category?: string) {
 
       if (category && category !== 'all') {
         query = query.eq('category', category as any);
+      }
+
+      if (roomType !== 'all') {
+        query = query.eq('room_type', roomType);
       }
 
       const { data, error } = await query;

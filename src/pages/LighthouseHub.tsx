@@ -23,9 +23,10 @@ export default function LighthouseHub() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'rooms';
 
-  // Auto-navigate to workspace for authenticated users (unless they explicitly chose a tab)
+  // Auto-navigate to workspace for authenticated users (unless they're browsing or chose a tab)
   useEffect(() => {
-    if (user && workspaceId && !workspaceLoading && !searchParams.has('tab')) {
+    const isBrowsing = searchParams.get('browse') === 'true';
+    if (user && workspaceId && !workspaceLoading && !searchParams.has('tab') && !isBrowsing) {
       navigate(`/lighthouse/${workspaceId}`);
     }
   }, [user, workspaceId, workspaceLoading, navigate, searchParams]);

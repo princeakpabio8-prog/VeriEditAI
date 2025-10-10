@@ -102,7 +102,7 @@ export default function LighthouseRoomView() {
             </div>
             
             <Button variant="outline" size="sm" asChild>
-              <Link to="/lighthouse" className="gap-2">
+              <Link to="/lighthouse?browse=true" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Hub
               </Link>

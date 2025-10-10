@@ -1872,6 +1872,19 @@ export type Database = {
           total_revenue: number
         }[]
       }
+      get_engagement_analytics: {
+        Args: { p_content_id?: string; p_content_type?: string }
+        Returns: {
+          content_id: string
+          content_type: string
+          last_engagement_at: string
+          total_clicks: number
+          total_shares: number
+          total_upvotes: number
+          total_views: number
+          unique_platforms: number
+        }[]
+      }
       get_payment_logs_summary: {
         Args: Record<PropertyKey, never>
         Returns: {

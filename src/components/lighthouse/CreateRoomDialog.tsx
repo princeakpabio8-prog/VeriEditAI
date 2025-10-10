@@ -55,6 +55,20 @@ export function CreateRoomDialog({ open, onOpenChange }: CreateRoomDialogProps) 
 
       if (error) throw error;
 
+      // CRITICAL: Add creator as owner member
+      const { error: memberError } = await supabase
+        .from('room_memberships')
+        .insert({
+          room_id: data.id,
+          user_id: user.id,
+          role: 'owner'
+        });
+
+      if (memberError) {
+        console.error('Failed to add creator as member:', memberError);
+        // Don't throw - room was created successfully
+      }
+
       toast({
         title: 'Room created',
         description: 'Your Lighthouse Room is ready',

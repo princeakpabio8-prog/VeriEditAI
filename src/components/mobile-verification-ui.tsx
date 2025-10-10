@@ -694,7 +694,10 @@ export function MobileVerificationUI({
                             <span 
                               className="text-muted-foreground flex-1"
                               dangerouslySetInnerHTML={{ 
-                                __html: point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') 
+                                __html: DOMPurify.sanitize(
+                                  point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>'),
+                                  { ALLOWED_TAGS: ['strong'], ALLOWED_ATTR: ['class'] }
+                                )
                               }}
                             />
                           </motion.li>

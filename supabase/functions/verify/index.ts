@@ -38,11 +38,37 @@ serve(async (req) => {
     const safeContent = String(body?.content ?? '');
     const template = body?.template; // Template metadata from frontend
 
+    // Input validation
     if (safeContent.trim().length === 0) {
       console.error('❌ No content provided');
       return new Response(
         JSON.stringify({ error: 'Content required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Content length validation to prevent DoS and excessive API costs
+    const MAX_CONTENT_LENGTH = 10000; // 10K characters
+    const MAX_CONTENT_BYTES = 50000;  // 50KB
+
+    if (safeContent.length > MAX_CONTENT_LENGTH) {
+      console.error(`❌ Content too long: ${safeContent.length} characters`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Content exceeds maximum length',
+          max_length: MAX_CONTENT_LENGTH,
+          provided_length: safeContent.length
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const contentBytes = new TextEncoder().encode(safeContent).length;
+    if (contentBytes > MAX_CONTENT_BYTES) {
+      console.error(`❌ Content too large: ${contentBytes} bytes`);
+      return new Response(
+        JSON.stringify({ error: 'Content size exceeds limit' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

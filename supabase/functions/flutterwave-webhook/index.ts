@@ -206,6 +206,25 @@ async function processWebhookEvent(
 
   console.log("Processing event:", { eventType, tx_ref, status });
 
+  // SECURITY: Replay attack prevention - check if this webhook was already processed
+  const webhookId = `${eventType}:${tx_ref}:${flw_id}`;
+  
+  const { data: existingLog, error: checkError } = await supabase
+    .from('payment_logs')
+    .select('id')
+    .eq('event_type', eventType)
+    .eq('tx_ref', tx_ref)
+    .eq('status', 'processed')
+    .maybeSingle();
+
+  if (existingLog) {
+    console.log(`⚠️ Duplicate webhook detected (${webhookId}), ignoring to prevent replay attack`);
+    return { 
+      success: true, 
+      message: 'Webhook already processed - replay attack prevented' 
+    };
+  }
+
   // Handle successful payment events
   if (eventType === "charge.completed" && status === "successful") {
     return await handleSuccessfulPayment(supabase, {

@@ -250,7 +250,15 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                       className="flex gap-3 items-start text-sm"
                     >
                       <span className="text-primary mt-1">•</span>
-                      <span className="text-muted-foreground leading-relaxed flex-1" dangerouslySetInnerHTML={{ __html: point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>') }}/>
+                      <span 
+                        className="text-muted-foreground leading-relaxed flex-1" 
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(
+                            point.replace(/\*\*(.*?)\*\*/g, '<strong class="text-foreground">$1</strong>'),
+                            { ALLOWED_TAGS: ['strong'], ALLOWED_ATTR: ['class'] }
+                          ) 
+                        }}
+                      />
                     </motion.li>
                   ))}
                 </ul>

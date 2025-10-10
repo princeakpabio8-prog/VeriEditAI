@@ -1,7 +1,7 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, TrendingUp, Shield, ExternalLink, Sparkles } from "lucide-react";
+import { Building2, TrendingUp, Shield, ExternalLink, Sparkles, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,18 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { PartnershipRequestDialog } from "./PartnershipRequestDialog";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 export const OrganizationProfile = () => {
   const { orgId } = useParams();
+  const navigate = useNavigate();
   const [showPartnerDialog, setShowPartnerDialog] = useState(false);
 
   const { data: organization, isLoading } = useQuery({
@@ -83,7 +92,37 @@ export const OrganizationProfile = () => {
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 border-b">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
         
-        <div className="container mx-auto px-4 py-16 relative">
+        <div className="container mx-auto px-4 py-8 relative">
+          {/* Navigation */}
+          <div className="mb-6 flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/lighthouse?tab=organizations&browse=true')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Organizations
+            </Button>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/lighthouse?browse=true">Lighthouse Hub</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/lighthouse?tab=organizations&browse=true">Organizations</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{organization.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 pb-16 relative">
           <div className="flex items-start gap-8">
             <div className={`w-24 h-24 rounded-2xl ${getTrustBgColor(organization.avg_trust_score)} flex items-center justify-center border border-border`}>
               {organization.logo_url ? (
@@ -267,6 +306,24 @@ export const OrganizationProfile = () => {
             )}
           </div>
         </div>
+
+        {/* Browse More Organizations CTA */}
+        <Card className="border-border/50 bg-card/50 backdrop-blur">
+          <CardContent className="p-8 text-center">
+            <h3 className="text-xl font-semibold mb-2">Discover More Organizations</h3>
+            <p className="text-muted-foreground mb-4">
+              Explore other verified organizations in the VeriEdit trust network
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/lighthouse?tab=organizations&browse=true')}
+              className="gap-2"
+            >
+              Browse Organizations
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <PartnershipRequestDialog

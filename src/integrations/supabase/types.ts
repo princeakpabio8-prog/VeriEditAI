@@ -1688,6 +1688,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      ensure_user_workspace: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_license_key: {
         Args: Record<PropertyKey, never>
         Returns: string

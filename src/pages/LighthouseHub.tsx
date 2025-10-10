@@ -1,9 +1,11 @@
-import { useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Radio, Newspaper, Handshake, Building2, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Radio, Newspaper, Handshake, Building2, TrendingUp, Briefcase } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { RoomsTab } from '@/components/lighthouse/tabs/RoomsTab';
@@ -11,10 +13,22 @@ import { FeedTab } from '@/components/lighthouse/tabs/FeedTab';
 import { PartnershipsTab } from '@/components/lighthouse/tabs/PartnershipsTab';
 import { OrganizationsTab } from '@/components/lighthouse/tabs/OrganizationsTab';
 import { SignalsTab } from '@/components/lighthouse/tabs/SignalsTab';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/hooks/useWorkspace';
 
 export default function LighthouseHub() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { workspaceId, loading: workspaceLoading } = useWorkspace();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'rooms';
+
+  // Auto-navigate to workspace for authenticated users (unless they explicitly chose a tab)
+  useEffect(() => {
+    if (user && workspaceId && !workspaceLoading && !searchParams.has('tab')) {
+      navigate(`/lighthouse/${workspaceId}`);
+    }
+  }, [user, workspaceId, workspaceLoading, navigate, searchParams]);
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -64,6 +78,17 @@ export default function LighthouseHub() {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Your central hub for truth verification and collaboration. Signal over noise.
             </p>
+
+            {user && workspaceId && !workspaceLoading && (
+              <Button
+                onClick={() => navigate(`/lighthouse/${workspaceId}`)}
+                size="lg"
+                className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))] mt-4"
+              >
+                <Briefcase className="w-5 h-5 mr-2" />
+                Go to My Workspace
+              </Button>
+            )}
           </div>
 
           {/* Stats Cards */}

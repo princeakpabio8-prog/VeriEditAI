@@ -6,6 +6,7 @@ import { Radio, Shield, TrendingUp, Users, Plus } from 'lucide-react';
 import { CreateRoomDialog } from '@/components/lighthouse/CreateRoomDialog';
 import { RoomCard } from '@/components/lighthouse/RoomCard';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLighthouseRooms } from '@/hooks/useLighthouseRooms';
 
 const ROOM_CATEGORIES = [
   { value: 'all', label: 'All Rooms', icon: Radio },
@@ -21,6 +22,8 @@ export function RoomsTab() {
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const { rooms, loading } = useLighthouseRooms(selectedCategory);
 
   return (
     <div className="space-y-6">
@@ -55,35 +58,37 @@ export function RoomsTab() {
         </TabsList>
 
         <TabsContent value={selectedCategory} className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <RoomCard
-              id="sample-1"
-              name="Climate Data Verification"
-              description="Collaborative fact-checking of climate change claims and data"
-              category="climate"
-              memberCount={234}
-              threadCount={45}
-              trustRating={0.92}
-            />
-            <RoomCard
-              id="sample-2"
-              name="Election 2024 Watch"
-              description="Real-time verification of election-related claims"
-              category="politics"
-              memberCount={567}
-              threadCount={128}
-              trustRating={0.88}
-            />
-            <RoomCard
-              id="sample-3"
-              name="Medical Misinformation"
-              description="Debunking false health claims with peer review"
-              category="health"
-              memberCount={412}
-              threadCount={89}
-              trustRating={0.95}
-            />
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--lighthouse-beam))]"></div>
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No rooms found in this category.</p>
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                variant="outline"
+                className="mt-4"
+              >
+                Create the first room
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {rooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  id={room.id}
+                  name={room.name}
+                  description={room.description || ''}
+                  category={room.category}
+                  memberCount={room.member_count}
+                  threadCount={room.thread_count}
+                  trustRating={room.trust_rating || 0}
+                />
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

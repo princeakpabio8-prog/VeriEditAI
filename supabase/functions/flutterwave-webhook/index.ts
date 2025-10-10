@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, verif-hash",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, clientid, verif-hash",
 };
 
 interface FlutterwaveEvent {
@@ -88,9 +88,10 @@ serve(async (req) => {
       });
     }
 
-    const flutterwaveSecret = Deno.env.get("FLUTTERWAVE_SECRET_KEY");
-    if (!flutterwaveSecret) {
-      console.error("Flutterwave secret key not configured");
+    // V4: Use client secret for webhook signature verification
+    const clientSecret = Deno.env.get("FLUTTERWAVE_CLIENT_SECRET");
+    if (!clientSecret) {
+      console.error("Flutterwave V4 client secret not configured");
       await updateLog(supabaseService, logId, "failed", "Server configuration error");
       return new Response("Server configuration error", { 
         status: 500, 
@@ -98,8 +99,8 @@ serve(async (req) => {
       });
     }
 
-    // Verify webhook signature
-    const expectedSignature = await generateSignature(body, flutterwaveSecret);
+    // Verify webhook signature using V4 client secret
+    const expectedSignature = await generateSignature(body, clientSecret);
     if (signature !== expectedSignature) {
       console.error("Invalid signature:", { received: signature, expected: expectedSignature });
       await updateLog(supabaseService, logId, "invalid_signature", "Signature verification failed");

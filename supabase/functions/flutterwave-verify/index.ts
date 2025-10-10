@@ -26,13 +26,21 @@ serve(async (req) => {
 
     const { tx_ref, flw_ref } = await req.json();
 
-    // Verify payment with Flutterwave
+    // Verify payment with Flutterwave V4 API
+    const clientId = Deno.env.get("FLUTTERWAVE_CLIENT_ID");
+    const clientSecret = Deno.env.get("FLUTTERWAVE_CLIENT_SECRET");
+    
+    if (!clientId || !clientSecret) {
+      throw new Error("Flutterwave V4 credentials not configured");
+    }
+
     const flutterwaveResponse = await fetch(
       `https://api.flutterwave.com/v3/transactions/${flw_ref}/verify`,
       {
         method: "GET",
         headers: {
-          "Authorization": `Bearer ${Deno.env.get("FLUTTERWAVE_SECRET_KEY")}`,
+          "ClientId": clientId,
+          "Authorization": `Bearer ${clientSecret}`,
           "Content-Type": "application/json",
         },
       }

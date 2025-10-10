@@ -11,6 +11,7 @@ import { LighthouseBeamIndicator } from '@/components/lighthouse/LighthouseBeamI
 import { ArrowLeft, MessageSquare, ThumbsUp, Shield, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { ThreadComments } from '@/components/lighthouse/ThreadComments';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
@@ -296,13 +297,8 @@ export default function ThreadView() {
             </Card>
           )}
 
-          {/* Placeholder: Comments section */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Comments</h2>
-            <p className="text-muted-foreground text-center py-8">
-              Comments coming soon in Phase 3
-            </p>
-          </Card>
+          {/* Comments section */}
+          <ThreadComments threadId={threadId!} />
         </div>
       </div>
       <Footer />

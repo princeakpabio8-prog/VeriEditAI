@@ -120,6 +120,16 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to comment",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validate input
     try {
       commentSchema.parse({ content: newComment });
@@ -131,16 +141,6 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
           variant: "destructive",
         });
       }
-      return;
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to comment",
-        variant: "destructive",
-      });
       return;
     }
 

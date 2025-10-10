@@ -160,10 +160,19 @@ export default function LighthouseRoomView() {
               </div>
             </div>
 
-            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Thread
-            </Button>
+            {user ? (
+              <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                New Thread
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/auth">
+                  <Plus className="h-4 w-4" />
+                  Sign in to create thread
+                </Link>
+              </Button>
+            )}
           </div>
 
           {/* Threads list */}

@@ -114,8 +114,8 @@ const App = () => (
             {/* Public route for shared verifications - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />
             <Route path="/lighthouse" element={<LighthouseHub />} />
-            <Route path="/lighthouse/:roomId" element={<ProtectedRoute><LighthouseRoomView /></ProtectedRoute>} />
-            <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
+            <Route path="/lighthouse/:roomId" element={<LighthouseRoomView />} />
+            <Route path="/lighthouse/:roomId/thread/:threadId" element={<ThreadView />} />
             <Route path="/lighthouse/organizations/:orgId" element={<OrganizationProfile />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

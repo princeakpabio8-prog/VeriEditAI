@@ -283,6 +283,18 @@ export default function ThreadView() {
             </div>
           </Card>
 
+          {/* Public viewing notice for anonymous users */}
+          {!userVote && (
+            <Card className="p-4 bg-[hsl(var(--lighthouse-ocean))]/20 border-[hsl(var(--lighthouse-beam))]/30">
+              <p className="text-sm text-muted-foreground text-center">
+                <Link to="/auth" className="text-[hsl(var(--lighthouse-beam))] hover:underline font-medium">
+                  Sign in
+                </Link>
+                {' '}to upvote, comment, and join the discussion
+              </p>
+            </Card>
+          )}
+
           {/* Verification results */}
           {verification && (
             <Card className="p-6">

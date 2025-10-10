@@ -97,7 +97,7 @@ Sent from VeriEdit Verification Partnership System
     // Send email notification via Resend
     try {
       const { error: emailError } = await resend.emails.send({
-        from: 'VeriEdit Partnerships <partnerships@verieditai.com>',
+        from: 'VeriEdit Partnerships <onboarding@resend.dev>',
         to: ['hello@verieditai.com'],
         subject: `New Partnership Request from ${org.name}`,
         text: emailContent,

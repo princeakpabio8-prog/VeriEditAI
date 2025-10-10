@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import DOMPurify from 'dompurify';
 import { LoadingSkeleton } from "./loading-skeleton";
 import { TrustScoreFeedback } from "./trust-score-feedback";
 import { validateAndSanitize } from "@/lib/validation";

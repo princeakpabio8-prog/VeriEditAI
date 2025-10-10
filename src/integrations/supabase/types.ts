@@ -630,6 +630,39 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_access_logs: {
+        Row: {
+          access_reason: string | null
+          access_type: string
+          accessed_at: string | null
+          accessed_user_id: string
+          accessor_user_id: string | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          access_reason?: string | null
+          access_type: string
+          accessed_at?: string | null
+          accessed_user_id: string
+          accessor_user_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          access_reason?: string | null
+          access_type?: string
+          accessed_at?: string | null
+          accessed_user_id?: string
+          accessor_user_id?: string | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bonus_verifications: number | null
@@ -1612,6 +1645,30 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_idempotency: {
+        Row: {
+          created_at: string | null
+          id: string
+          idempotency_key: string
+          processed_at: string | null
+          webhook_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          idempotency_key: string
+          processed_at?: string | null
+          webhook_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          idempotency_key?: string
+          processed_at?: string | null
+          webhook_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_api_usage_stats: {
@@ -1679,6 +1736,10 @@ export type Database = {
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
+      }
+      cleanup_old_webhook_idempotency: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       clear_user_verifications: {
         Args: { user_uuid: string }

@@ -8,6 +8,7 @@ import { VerificationExport } from './verification-export';
 import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ShareModal } from './share-modal';
 import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { safeLower } from "@/lib/utils";

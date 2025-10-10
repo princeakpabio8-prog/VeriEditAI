@@ -49,6 +49,33 @@ const RSS_SOURCES = [
     url: "https://www.economist.com/latest/rss.xml",
     source_url: "https://www.economist.com",
   },
+  // Nigerian Fact-Checking Organizations
+  {
+    name: "Dubawa",
+    url: "https://dubawa.org/feed/",
+    source_url: "https://dubawa.org",
+  },
+  {
+    name: "Africa Check Nigeria",
+    url: "https://africacheck.org/feed",
+    source_url: "https://africacheck.org",
+  },
+  {
+    name: "Premium Times Centre for Investigative Journalism",
+    url: "https://www.premiumtimesng.com/feed",
+    source_url: "https://www.ptcij.org",
+  },
+  // Global Fact-Checking Organizations
+  {
+    name: "Full Fact",
+    url: "https://fullfact.org/feed/",
+    source_url: "https://fullfact.org",
+  },
+  {
+    name: "Snopes",
+    url: "https://www.snopes.com/feed/",
+    source_url: "https://www.snopes.com",
+  },
   {
     name: "The Guardian",
     url: "https://www.theguardian.com/world/rss",

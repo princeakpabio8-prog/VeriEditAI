@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Building2, Search, Shield, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Search, Shield, TrendingUp, FileText } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
@@ -146,6 +147,19 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
                       {org.total_verifications} verifications
                     </span>
                   </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/lighthouse/organizations/${org.id}`);
+                    }}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Verification Report
+                  </Button>
                 </CardContent>
               </Card>
             ))

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 
-export const OrganizationsList = () => {
+export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
@@ -43,7 +43,7 @@ export const OrganizationsList = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={embedded ? "" : "min-h-screen bg-background"}>
       <div className="container mx-auto px-4 py-12 space-y-8">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold">Verified Organizations</h1>

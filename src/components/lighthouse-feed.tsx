@@ -60,7 +60,7 @@ type FilterOption = "all" | "verified" | "unverified";
 
 const CATEGORIES = ["All", "Politics", "Technology", "Health", "Business", "Science", "Sports", "General"];
 
-export function LighthouseFeed() {
+export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -250,7 +250,7 @@ export function LighthouseFeed() {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className={embedded ? "" : "min-h-screen bg-gradient-to-br from-background via-background to-primary/5"}>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

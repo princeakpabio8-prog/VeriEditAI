@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-export const PartnershipDiscovery = () => {
+export const PartnershipDiscovery = ({ embedded = false }: { embedded?: boolean }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [scanning, setScanning] = useState(false);
@@ -89,7 +89,7 @@ export const PartnershipDiscovery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className={embedded ? "" : "min-h-screen bg-gradient-to-b from-background via-background to-muted/20"}>
       {/* Header with Lighthouse Theme */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 border-b">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50 animate-pulse" />

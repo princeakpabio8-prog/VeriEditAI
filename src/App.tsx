@@ -26,14 +26,10 @@ import ApiHub from "./pages/ApiHub";
 import Privacy from "./pages/Privacy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import RefundPolicy from "./pages/RefundPolicy";
-import LighthouseRoom from "./pages/LighthouseRoom";
+import LighthouseHub from "./pages/LighthouseHub";
 import LighthouseRoomView from "./pages/LighthouseRoomView";
-import SignalFeed from "./pages/SignalFeed";
 import ThreadView from "./pages/ThreadView";
 import ApiDocs from "./pages/ApiDocs";
-import { LighthouseFeed } from "./components/lighthouse-feed";
-import { PartnershipDiscovery } from "./components/partnership/PartnershipDiscovery";
-import { OrganizationsList } from "./components/partnership/OrganizationsList";
 import { OrganizationProfile } from "./components/partnership/OrganizationProfile";
 
 const queryClient = new QueryClient();
@@ -117,13 +113,9 @@ const App = () => (
             <Route path="/payment-callback" element={<PaymentCallback />} />
             {/* Public route for shared verifications - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />
-            <Route path="/lighthouse" element={<LighthouseRoom />} />
+            <Route path="/lighthouse" element={<LighthouseHub />} />
             <Route path="/lighthouse/:roomId" element={<ProtectedRoute><LighthouseRoomView /></ProtectedRoute>} />
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ProtectedRoute><ThreadView /></ProtectedRoute>} />
-            <Route path="/lighthouse/signals" element={<SignalFeed />} />
-            <Route path="/lighthouse/feed" element={<LighthouseFeed />} />
-            <Route path="/lighthouse/partnerships" element={<PartnershipDiscovery />} />
-            <Route path="/lighthouse/organizations" element={<OrganizationsList />} />
             <Route path="/lighthouse/organizations/:orgId" element={<OrganizationProfile />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

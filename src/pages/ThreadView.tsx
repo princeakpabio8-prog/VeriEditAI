@@ -88,6 +88,37 @@ export default function ThreadView() {
     if (roomId && threadId) {
       fetchData();
     }
+
+    // Priority 1: Subscribe to real-time upvote updates
+    const votesChannel = supabase
+      .channel(`thread_votes:${threadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'thread_votes',
+          filter: `thread_id=eq.${threadId}`
+        },
+        () => {
+          // Refetch upvote count when votes change
+          supabase
+            .from('room_threads')
+            .select('upvote_count')
+            .eq('id', threadId)
+            .single()
+            .then(({ data }) => {
+              if (data) {
+                setUpvoteCount(data.upvote_count || 0);
+              }
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(votesChannel);
+    };
   }, [roomId, threadId]);
 
   const handleUpvote = async () => {
@@ -235,7 +266,17 @@ export default function ThreadView() {
                 <ThumbsUp className="h-4 w-4" />
                 {upvoteCount}
               </Button>
-              <Button variant="outline" disabled className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('comments-section')?.scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                  });
+                }}
+                className="gap-2"
+              >
                 <MessageSquare className="h-4 w-4" />
                 {thread.comment_count} Comments
               </Button>
@@ -298,7 +339,9 @@ export default function ThreadView() {
           )}
 
           {/* Comments section */}
-          <ThreadComments threadId={threadId!} />
+          <div id="comments-section">
+            <ThreadComments threadId={threadId!} />
+          </div>
         </div>
       </div>
       <Footer />

@@ -1174,33 +1174,27 @@ export type Database = {
           content: string
           created_at: string
           id: string
-          is_verified_contributor: boolean | null
           parent_comment_id: string | null
           thread_id: string
           updated_at: string
-          upvote_count: number
         }
         Insert: {
           author_id: string
           content: string
           created_at?: string
           id?: string
-          is_verified_contributor?: boolean | null
           parent_comment_id?: string | null
           thread_id: string
           updated_at?: string
-          upvote_count?: number
         }
         Update: {
           author_id?: string
           content?: string
           created_at?: string
           id?: string
-          is_verified_contributor?: boolean | null
           parent_comment_id?: string | null
           thread_id?: string
           updated_at?: string
-          upvote_count?: number
         }
         Relationships: [
           {

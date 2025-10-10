@@ -130,6 +130,11 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
                     <p className="text-sm text-muted-foreground truncate">
                       {org.domain}
                     </p>
+                    {org.description && (
+                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                        {org.description}
+                      </p>
+                    )}
                   </div>
 
                   <Progress value={org.avg_trust_score} className="h-1" />

@@ -1,0 +1,133 @@
+-- Add recognized media organizations and institutions
+INSERT INTO organizations (
+  name,
+  domain,
+  industry,
+  description,
+  website,
+  verified_partner,
+  avg_trust_score,
+  total_verifications,
+  created_at,
+  updated_at
+) VALUES
+  (
+    'BBC',
+    'bbc.com',
+    'Media & Broadcasting',
+    'British public service broadcaster, one of the world''s most trusted news sources',
+    'https://www.bbc.com',
+    true,
+    90,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'World Health Organization',
+    'who.int',
+    'Healthcare',
+    'United Nations agency for international public health',
+    'https://www.who.int',
+    true,
+    92,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'CNN',
+    'cnn.com',
+    'Media & Broadcasting',
+    'American news-based television channel and website, major international news network',
+    'https://www.cnn.com',
+    true,
+    85,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'Reuters',
+    'reuters.com',
+    'Media & News Agency',
+    'International news organization, one of the world''s largest news agencies',
+    'https://www.reuters.com',
+    true,
+    93,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'Associated Press',
+    'apnews.com',
+    'Media & News Agency',
+    'American non-profit news agency, highly factual reporting',
+    'https://apnews.com',
+    true,
+    94,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'Al Jazeera',
+    'aljazeera.com',
+    'Media & Broadcasting',
+    'Qatar-based international news organization',
+    'https://www.aljazeera.com',
+    true,
+    82,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'The New York Times',
+    'nytimes.com',
+    'Media & Publishing',
+    'American newspaper with worldwide influence and readership',
+    'https://www.nytimes.com',
+    true,
+    87,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'Financial Times',
+    'ft.com',
+    'Media & Business News',
+    'British daily newspaper focused on business and economic news',
+    'https://www.ft.com',
+    true,
+    89,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'NPR',
+    'npr.org',
+    'Media & Broadcasting',
+    'American public radio organization',
+    'https://www.npr.org',
+    true,
+    88,
+    0,
+    now(),
+    now()
+  ),
+  (
+    'The Economist',
+    'economist.com',
+    'Media & Business News',
+    'British weekly newspaper focusing on international affairs and business',
+    'https://www.economist.com',
+    true,
+    86,
+    0,
+    now(),
+    now()
+  );

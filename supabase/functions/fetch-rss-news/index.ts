@@ -7,7 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// RSS Feed Sources
 const RSS_SOURCES = [
   {
     name: "BBC World",
@@ -199,7 +198,6 @@ const CATEGORIES = {
 };
 
 function categorizeArticle(title: string, summary: string, source: string): string {
-  // Define entertainment sources for priority categorization
   const entertainmentSources = [
     "BBC Entertainment & Arts",
     "Variety", 
@@ -209,7 +207,6 @@ function categorizeArticle(title: string, summary: string, source: string): stri
     "Rolling Stone"
   ];
   
-  // Priority categorization by source
   if (entertainmentSources.includes(source)) {
     return "Entertainment";
   }
@@ -223,6 +220,140 @@ function categorizeArticle(title: string, summary: string, source: string): stri
   }
   
   return "General";
+}
+
+// Utility to resolve relative URLs
+function resolveUrl(baseUrl: string, rawUrl: string): string {
+  if (!rawUrl) return '';
+  
+  // Already absolute
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    return rawUrl.replace(/^http:/, 'https:'); // Prefer https
+  }
+  
+  // Protocol-relative
+  if (rawUrl.startsWith('//')) {
+    return `https:${rawUrl}`;
+  }
+  
+  try {
+    const base = new URL(baseUrl);
+    
+    // Absolute path
+    if (rawUrl.startsWith('/')) {
+      return `${base.protocol}//${base.host}${rawUrl}`;
+    }
+    
+    // Relative path
+    const basePath = base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1);
+    return `${base.protocol}//${base.host}${basePath}${rawUrl}`;
+  } catch {
+    return '';
+  }
+}
+
+// Extract best image from media:thumbnail (handle array/object)
+function getFromMediaThumbnail(item: any, baseUrl: string): string | null {
+  const thumbnail = item["media:thumbnail"];
+  if (!thumbnail) return null;
+  
+  if (Array.isArray(thumbnail)) {
+    // Pick largest by width
+    const best = thumbnail.reduce((prev: any, curr: any) => {
+      const prevWidth = parseInt(prev["@_width"]) || 0;
+      const currWidth = parseInt(curr["@_width"]) || 0;
+      return currWidth > prevWidth ? curr : prev;
+    }, thumbnail[0]);
+    return resolveUrl(baseUrl, best["@_url"]);
+  }
+  
+  return resolveUrl(baseUrl, thumbnail["@_url"]);
+}
+
+// Extract best image from media:content (prefer image/*, pick largest)
+function getFromMediaContent(item: any, baseUrl: string): string | null {
+  const content = item["media:content"];
+  if (!content) return null;
+  
+  if (Array.isArray(content)) {
+    const images = content.filter((c: any) => c["@_type"]?.startsWith("image/"));
+    if (images.length === 0) return null;
+    
+    const best = images.reduce((prev: any, curr: any) => {
+      const prevWidth = parseInt(prev["@_width"]) || 0;
+      const currWidth = parseInt(curr["@_width"]) || 0;
+      return currWidth > prevWidth ? curr : prev;
+    }, images[0]);
+    return resolveUrl(baseUrl, best["@_url"]);
+  }
+  
+  if (content["@_type"]?.startsWith("image/")) {
+    return resolveUrl(baseUrl, content["@_url"]);
+  }
+  
+  return null;
+}
+
+// Extract from media:group (nested thumbnail/content)
+function getFromMediaGroup(item: any, baseUrl: string): string | null {
+  const group = item["media:group"];
+  if (!group) return null;
+  
+  // Try thumbnail first
+  let url = getFromMediaThumbnail(group, baseUrl);
+  if (url) return url;
+  
+  // Try content
+  return getFromMediaContent(group, baseUrl);
+}
+
+// Extract from enclosure (only if type is image/*)
+function getFromEnclosure(item: any, baseUrl: string): string | null {
+  const enclosure = item.enclosure;
+  if (!enclosure) return null;
+  
+  if (Array.isArray(enclosure)) {
+    const imageEnc = enclosure.find((e: any) => e["@_type"]?.startsWith("image/"));
+    return imageEnc ? resolveUrl(baseUrl, imageEnc["@_url"]) : null;
+  }
+  
+  if (enclosure["@_type"]?.startsWith("image/")) {
+    return resolveUrl(baseUrl, enclosure["@_url"]);
+  }
+  
+  return null;
+}
+
+// Extract from HTML content (support srcset, data-src, single quotes)
+function getFromHtml(html: string, baseUrl: string): string | null {
+  if (!html) return null;
+  
+  // Try srcset first (pick largest)
+  const srcsetMatch = html.match(/srcset=["']([^"']+)["']/i);
+  if (srcsetMatch) {
+    const srcset = srcsetMatch[1].split(',').map(s => s.trim());
+    const largest = srcset.reduce((prev, curr) => {
+      const prevWidth = parseInt(prev.match(/\s(\d+)w/)?.[1] || '0');
+      const currWidth = parseInt(curr.match(/\s(\d+)w/)?.[1] || '0');
+      return currWidth > prevWidth ? curr : prev;
+    }, srcset[0]);
+    const url = largest.split(/\s/)[0];
+    return resolveUrl(baseUrl, url);
+  }
+  
+  // Try regular src with double quotes
+  let imgMatch = html.match(/<img[^>]+src="([^">]+)"/i);
+  if (imgMatch) return resolveUrl(baseUrl, imgMatch[1]);
+  
+  // Try single quotes
+  imgMatch = html.match(/<img[^>]+src='([^'>]+)'/i);
+  if (imgMatch) return resolveUrl(baseUrl, imgMatch[1]);
+  
+  // Try data-src (lazy loading)
+  imgMatch = html.match(/<img[^>]+data-src="([^">]+)"/i);
+  if (imgMatch) return resolveUrl(baseUrl, imgMatch[1]);
+  
+  return null;
 }
 
 async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
@@ -264,7 +395,6 @@ async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
         : [result.feed.entry];
     }
     
-    // Limit items to prevent memory overflow
     items = items.slice(0, itemLimit);
     
     console.log(`Parsing ${items.length} recent items from ${source.name}`);
@@ -296,38 +426,22 @@ async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
       const author = item["dc:creator"] || item.creator || item.author?.name || item.author || "";
       const guid = item.guid?.["#text"] || item.guid || item.id || link;
 
-      // Extract image URL from various RSS formats (native only, no OG fetching)
+      // Extract image URL with improved extraction (RSS only, OG enrichment happens later)
       let imageUrl = null;
       
-      // Check media:thumbnail
-      if (item["media:thumbnail"]?.["@_url"]) {
-        imageUrl = item["media:thumbnail"]["@_url"];
-      }
-      // Check media:content
-      else if (item["media:content"]?.["@_url"]) {
-        imageUrl = item["media:content"]["@_url"];
-      }
-      // Check enclosure (podcast/media attachments)
-      else if (item.enclosure?.["@_url"] && item.enclosure?.["@_type"]?.startsWith("image")) {
-        imageUrl = item.enclosure["@_url"];
-      }
+      imageUrl = getFromMediaThumbnail(item, link) ||
+                 getFromMediaContent(item, link) ||
+                 getFromMediaGroup(item, link) ||
+                 getFromEnclosure(item, link);
+      
       // Check for image tag
-      else if (item.image?.url || item.image) {
-        imageUrl = typeof item.image === "string" ? item.image : item.image.url;
+      if (!imageUrl && (item.image?.url || item.image)) {
+        imageUrl = resolveUrl(link, typeof item.image === "string" ? item.image : item.image.url);
       }
-      // Extract from content HTML (common in RSS feeds)
-      else if (content) {
-        const imgMatch = content.match(/<img[^>]+src="([^">]+)"/i);
-        if (imgMatch) {
-          imageUrl = imgMatch[1];
-        }
-      }
-      // Extract from description HTML
-      else if (description) {
-        const imgMatch = description.match(/<img[^>]+src="([^">]+)"/i);
-        if (imgMatch) {
-          imageUrl = imgMatch[1];
-        }
+      
+      // Extract from HTML content/description
+      if (!imageUrl) {
+        imageUrl = getFromHtml(content, link) || getFromHtml(description, link);
       }
 
       if (!title || !link) {
@@ -377,7 +491,6 @@ serve(async (req) => {
     console.log("🚀 Starting RSS feed fetch with batch processing...");
     console.log(`📊 Total sources: ${RSS_SOURCES.length}`);
     
-    // Process sources in batches to avoid memory overflow
     const BATCH_SIZE = 6;
     const batches = [];
     for (let i = 0; i < RSS_SOURCES.length; i += BATCH_SIZE) {
@@ -391,12 +504,10 @@ serve(async (req) => {
     let totalFetched = 0;
     const errors: string[] = [];
     
-    // Process each batch sequentially to control memory
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
       console.log(`\n🔄 Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} sources)...`);
       
-      // Fetch feeds in parallel within this batch
       const batchResults = await Promise.allSettled(
         batch.map(source => fetchFeed(source, 25))
       );
@@ -408,7 +519,6 @@ serve(async (req) => {
       console.log(`📰 Batch ${batchIndex + 1} fetched ${batchArticles.length} articles`);
       totalFetched += batchArticles.length;
       
-      // Insert this batch's articles immediately (stream to DB)
       let batchInserted = 0;
       let batchSkipped = 0;
       
@@ -452,7 +562,6 @@ serve(async (req) => {
       
       console.log(`✅ Batch ${batchIndex + 1} complete: ${batchInserted} inserted, ${batchSkipped} skipped`);
       
-      // Clear batch from memory
       batchArticles.length = 0;
     }
 
@@ -469,7 +578,7 @@ serve(async (req) => {
 
     console.log("\n🎉 RSS fetch complete:", stats);
 
-    // Trigger image enrichment in the background (fire-and-forget)
+    // Trigger image enrichment in the background
     const enrichImages = async () => {
       try {
         console.log('🖼️ Triggering background image enrichment...');
@@ -484,7 +593,6 @@ serve(async (req) => {
       }
     };
 
-    // Start enrichment but don't wait for it
     enrichImages();
 
     return new Response(JSON.stringify(stats), {
@@ -500,8 +608,8 @@ serve(async (req) => {
         timestamp: new Date().toISOString(),
       }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   }

@@ -65,6 +65,7 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [enriching, setEnriching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState<SortOption>("latest");
@@ -76,6 +77,11 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  const getProxiedImageUrl = (imageUrl: string | null): string | null => {
+    if (!imageUrl) return null;
+    return `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  };
 
   useEffect(() => {
     fetchArticles();
@@ -432,11 +438,11 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                     {article.image_url && (
                       <div className="relative h-48 w-full overflow-hidden bg-muted">
                         <img
-                          src={article.image_url}
+                          src={getProxiedImageUrl(article.image_url) || article.image_url}
                           alt={article.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.src = article.image_url || '';
                           }}
                         />
                         {article.is_verified && article.trust_score && article.trust_score > 80 && (

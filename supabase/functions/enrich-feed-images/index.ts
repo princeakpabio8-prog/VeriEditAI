@@ -5,15 +5,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface OGMetadata {
-  image?: string;
-  title?: string;
+// Resolve relative URLs to absolute
+function resolveUrl(baseUrl: string, rawUrl: string): string {
+  if (!rawUrl) return '';
+  
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    return rawUrl.replace(/^http:/, 'https:');
+  }
+  
+  if (rawUrl.startsWith('//')) {
+    return `https:${rawUrl}`;
+  }
+  
+  try {
+    const base = new URL(baseUrl);
+    
+    if (rawUrl.startsWith('/')) {
+      return `${base.protocol}//${base.host}${rawUrl}`;
+    }
+    
+    const basePath = base.pathname.substring(0, base.pathname.lastIndexOf('/') + 1);
+    return `${base.protocol}//${base.host}${basePath}${rawUrl}`;
+  } catch {
+    return '';
+  }
 }
 
-async function fetchOGImage(url: string): Promise<string | null> {
+async function fetchPageImage(url: string): Promise<string | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeout = setTimeout(() => controller.abort(), 5000);
     
     const response = await fetch(url, {
       signal: controller.signal,
@@ -28,31 +49,106 @@ async function fetchOGImage(url: string): Promise<string | null> {
     
     const html = await response.text();
     
-    // Extract OG image or Twitter card image
-    const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
-                         html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+    // 1. Try OG/Twitter meta tags (multiple variants)
+    const ogPatterns = [
+      /<meta\s+property=["']og:image:secure_url["']\s+content=["']([^"']+)["']/i,
+      /<meta\s+property=["']og:image:url["']\s+content=["']([^"']+)["']/i,
+      /<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i,
+      /<meta\s+name=["']twitter:image:src["']\s+content=["']([^"']+)["']/i,
+      /<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i,
+    ];
     
-    if (ogImageMatch && ogImageMatch[1]) {
-      let imageUrl = ogImageMatch[1];
-      
-      // Handle relative URLs
-      if (imageUrl.startsWith('/')) {
-        const urlObj = new URL(url);
-        imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
+    for (const pattern of ogPatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        return resolveUrl(url, match[1]);
       }
-      
-      return imageUrl;
+    }
+    
+    // 2. Try JSON-LD structured data
+    const jsonLdMatch = html.match(/<script\s+type=["']application\/ld\+json["'][^>]*>(.*?)<\/script>/is);
+    if (jsonLdMatch) {
+      try {
+        const jsonLd = JSON.parse(jsonLdMatch[1]);
+        const extractImage = (obj: any): string | null => {
+          if (!obj) return null;
+          
+          // Handle arrays
+          if (Array.isArray(obj)) {
+            for (const item of obj) {
+              const img = extractImage(item);
+              if (img) return img;
+            }
+            return null;
+          }
+          
+          // Handle image field
+          if (obj.image) {
+            if (typeof obj.image === 'string') {
+              return resolveUrl(url, obj.image);
+            }
+            if (obj.image.url) {
+              return resolveUrl(url, obj.image.url);
+            }
+            if (Array.isArray(obj.image)) {
+              const firstImg = obj.image[0];
+              if (typeof firstImg === 'string') {
+                return resolveUrl(url, firstImg);
+              }
+              if (firstImg?.url) {
+                return resolveUrl(url, firstImg.url);
+              }
+            }
+          }
+          
+          return null;
+        };
+        
+        const imageUrl = extractImage(jsonLd);
+        if (imageUrl) return imageUrl;
+      } catch {
+        // JSON-LD parsing failed, continue
+      }
+    }
+    
+    // 3. Fallback: Parse largest <img> tag on page (hero images)
+    const imgMatches = html.match(/<img[^>]+>/gi);
+    if (imgMatches && imgMatches.length > 0) {
+      // Find largest srcset or first img
+      for (const imgTag of imgMatches) {
+        // Try srcset first
+        const srcsetMatch = imgTag.match(/srcset=["']([^"']+)["']/i);
+        if (srcsetMatch) {
+          const srcset = srcsetMatch[1].split(',').map(s => s.trim());
+          const largest = srcset.reduce((prev, curr) => {
+            const prevWidth = parseInt(prev.match(/\s(\d+)w/)?.[1] || '0');
+            const currWidth = parseInt(curr.match(/\s(\d+)w/)?.[1] || '0');
+            return currWidth > prevWidth ? curr : prev;
+          }, srcset[0]);
+          const imgUrl = largest.split(/\s/)[0];
+          return resolveUrl(url, imgUrl);
+        }
+        
+        // Try regular src
+        const srcMatch = imgTag.match(/src=["']([^"']+)["']/i);
+        if (srcMatch && srcMatch[1]) {
+          const imgUrl = srcMatch[1];
+          // Skip tiny images (icons, logos)
+          if (!imgUrl.includes('icon') && !imgUrl.includes('logo') && !imgUrl.includes('avatar')) {
+            return resolveUrl(url, imgUrl);
+          }
+        }
+      }
     }
     
     return null;
   } catch (error) {
-    console.error(`Failed to fetch OG image for ${url}:`, error.message);
+    console.error(`Failed to fetch page image for ${url}:`, error.message);
     return null;
   }
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -65,7 +161,6 @@ Deno.serve(async (req) => {
 
     console.log('🖼️ Starting image enrichment process...');
 
-    // Get articles without images, prioritizing sources with worst coverage
     const { data: articlesWithoutImages, error: fetchError } = await supabase
       .from('news_feed')
       .select('id, link, source')
@@ -91,7 +186,6 @@ Deno.serve(async (req) => {
 
     console.log(`📊 Found ${articlesWithoutImages.length} articles without images`);
 
-    // Group by source to see coverage
     const sourceCounts = articlesWithoutImages.reduce((acc, article) => {
       acc[article.source] = (acc[article.source] || 0) + 1;
       return acc;
@@ -101,16 +195,15 @@ Deno.serve(async (req) => {
 
     let enrichedCount = 0;
     const batchSize = 10;
-    const delayBetweenBatches = 500; // ms
+    const delayBetweenBatches = 500;
 
-    // Process in small batches
     for (let i = 0; i < articlesWithoutImages.length; i += batchSize) {
       const batch = articlesWithoutImages.slice(i, i + batchSize);
       console.log(`\n🔄 Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(articlesWithoutImages.length / batchSize)} (${batch.length} articles)`);
 
       const enrichmentPromises = batch.map(async (article) => {
         try {
-          const imageUrl = await fetchOGImage(article.link);
+          const imageUrl = await fetchPageImage(article.link);
           
           if (imageUrl) {
             const { error: updateError } = await supabase
@@ -138,7 +231,6 @@ Deno.serve(async (req) => {
 
       console.log(`✅ Batch complete: ${batchEnriched}/${batch.length} enriched`);
 
-      // Delay between batches to avoid memory spikes
       if (i + batchSize < articlesWithoutImages.length) {
         await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
       }

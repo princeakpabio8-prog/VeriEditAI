@@ -146,3 +146,9 @@ verify_jwt = true
 
 [functions.detect-refutation]
 verify_jwt = false
+
+[functions.enrich-feed-images]
+verify_jwt = false
+
+[functions.image-proxy]
+verify_jwt = false

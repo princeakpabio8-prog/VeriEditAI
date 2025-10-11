@@ -225,7 +225,7 @@ function categorizeArticle(title: string, summary: string, source: string): stri
   return "General";
 }
 
-async function fetchFeed(source: typeof RSS_SOURCES[0]) {
+async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
   try {
     console.log(`Fetching ${source.name} from ${source.url}`);
     
@@ -264,7 +264,10 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
         : [result.feed.entry];
     }
     
-    console.log(`Parsed ${items.length} items from ${source.name}`);
+    // Limit items to prevent memory overflow
+    items = items.slice(0, itemLimit);
+    
+    console.log(`Parsing ${items.length} recent items from ${source.name}`);
     
     const articles = [];
     
@@ -293,7 +296,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
       const author = item["dc:creator"] || item.creator || item.author?.name || item.author || "";
       const guid = item.guid?.["#text"] || item.guid || item.id || link;
 
-      // Extract image URL from various RSS formats
+      // Extract image URL from various RSS formats (native only, no OG fetching)
       let imageUrl = null;
       
       // Check media:thumbnail
@@ -326,30 +329,8 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
           imageUrl = imgMatch[1];
         }
       }
-      
-      // Try to fetch Open Graph image as fallback
-      if (!imageUrl && link) {
-        try {
-          const pageResponse = await fetch(link, {
-            headers: { 'User-Agent': 'VeriEdit-Lighthouse-Feed/1.0' },
-            signal: AbortSignal.timeout(5000),
-          });
-          
-          if (pageResponse.ok) {
-            const html = await pageResponse.text();
-            const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
-                                 html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i);
-            if (ogImageMatch) {
-              imageUrl = ogImageMatch[1];
-            }
-          }
-        } catch (error) {
-          console.log(`Could not fetch OG image for ${link}:`, error.message);
-        }
-      }
 
       if (!title || !link) {
-        console.log(`Skipping item from ${source.name}: missing title or link`);
         continue;
       }
 
@@ -370,10 +351,10 @@ async function fetchFeed(source: typeof RSS_SOURCES[0]) {
       });
     }
     
-    console.log(`Extracted ${articles.length} valid articles from ${source.name}`);
+    console.log(`✅ Extracted ${articles.length} valid articles from ${source.name}`);
     return articles;
   } catch (error) {
-    console.error(`Error fetching ${source.name}:`, error.message);
+    console.error(`❌ Error fetching ${source.name}:`, error.message);
     return [];
   }
 }
@@ -393,77 +374,107 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("Starting RSS feed fetch...");
+    console.log("🚀 Starting RSS feed fetch with batch processing...");
+    console.log(`📊 Total sources: ${RSS_SOURCES.length}`);
     
-    // Fetch all sources in parallel
-    const results = await Promise.allSettled(
-      RSS_SOURCES.map(source => fetchFeed(source))
-    );
-
-    const articles = results
-      .filter((result): result is PromiseFulfilledResult<any[]> => result.status === "fulfilled")
-      .flatMap(result => result.value);
-
-    console.log(`Total articles fetched: ${articles.length}`);
-
-    // Insert articles into database (avoiding duplicates by link)
-    let insertedCount = 0;
-    let skippedCount = 0;
+    // Process sources in batches to avoid memory overflow
+    const BATCH_SIZE = 6;
+    const batches = [];
+    for (let i = 0; i < RSS_SOURCES.length; i += BATCH_SIZE) {
+      batches.push(RSS_SOURCES.slice(i, i + BATCH_SIZE));
+    }
+    
+    console.log(`📦 Processing ${batches.length} batches of ${BATCH_SIZE} sources each`);
+    
+    let totalInserted = 0;
+    let totalSkipped = 0;
+    let totalFetched = 0;
     const errors: string[] = [];
-
-    for (const article of articles) {
-      if (!article.link) {
-        skippedCount++;
-        continue;
-      }
-
-      const { error } = await supabase
-        .from("news_feed")
-        .upsert(
-          {
-            title: article.title,
-            link: article.link,
-            summary: article.summary.substring(0, 1000),
-            full_content: article.full_content,
-            source: article.source,
-            source_url: article.source_url,
-            category: article.category,
-            published_at: article.published_at,
-            image_url: article.image_url,
-            metadata: article.metadata,
-          },
-          { onConflict: "link", ignoreDuplicates: true }
-        );
-
-      if (error) {
-        if (!error.message.includes("duplicate")) {
-          errors.push(`${article.source}: ${error.message}`);
-        } else {
-          skippedCount++;
+    
+    // Process each batch sequentially to control memory
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`\n🔄 Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} sources)...`);
+      
+      // Fetch feeds in parallel within this batch
+      const batchResults = await Promise.allSettled(
+        batch.map(source => fetchFeed(source, 25))
+      );
+      
+      const batchArticles = batchResults
+        .filter((result): result is PromiseFulfilledResult<any[]> => result.status === "fulfilled")
+        .flatMap(result => result.value);
+      
+      console.log(`📰 Batch ${batchIndex + 1} fetched ${batchArticles.length} articles`);
+      totalFetched += batchArticles.length;
+      
+      // Insert this batch's articles immediately (stream to DB)
+      let batchInserted = 0;
+      let batchSkipped = 0;
+      
+      for (const article of batchArticles) {
+        if (!article.link) {
+          batchSkipped++;
+          continue;
         }
-      } else {
-        insertedCount++;
+
+        const { error } = await supabase
+          .from("news_feed")
+          .upsert(
+            {
+              title: article.title,
+              link: article.link,
+              summary: article.summary.substring(0, 1000),
+              full_content: article.full_content,
+              source: article.source,
+              source_url: article.source_url,
+              category: article.category,
+              published_at: article.published_at,
+              image_url: article.image_url,
+              metadata: article.metadata,
+            },
+            { onConflict: "link", ignoreDuplicates: true }
+          );
+
+        if (error) {
+          if (!error.message.includes("duplicate")) {
+            errors.push(`${article.source}: ${error.message}`);
+          } else {
+            batchSkipped++;
+          }
+        } else {
+          batchInserted++;
+        }
       }
+      
+      totalInserted += batchInserted;
+      totalSkipped += batchSkipped;
+      
+      console.log(`✅ Batch ${batchIndex + 1} complete: ${batchInserted} inserted, ${batchSkipped} skipped`);
+      
+      // Clear batch from memory
+      batchArticles.length = 0;
     }
 
     const stats = {
       success: true,
-      total_fetched: articles.length,
-      inserted: insertedCount,
-      skipped: skippedCount,
+      total_fetched: totalFetched,
+      inserted: totalInserted,
+      skipped: totalSkipped,
       sources_processed: RSS_SOURCES.length,
-      errors: errors.length > 0 ? errors : undefined,
+      batches_processed: batches.length,
+      errors: errors.length > 0 ? errors.slice(0, 10) : undefined,
       timestamp: new Date().toISOString(),
     };
 
-    console.log("RSS fetch complete:", stats);
+    console.log("\n🎉 RSS fetch complete:", stats);
 
     return new Response(JSON.stringify(stats), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("Error in fetch-rss-news:", error);
+    console.error("❌ Error in fetch-rss-news:", error);
     return new Response(
       JSON.stringify({
         success: false,

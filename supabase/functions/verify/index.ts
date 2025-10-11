@@ -1113,10 +1113,16 @@ async function calculateTavilyConfidence(
     contentScore -= 15;
   }
   
-  // Disputed/conflicting/debunked (major penalty)
-  if (lowerAnswer.includes('disputed') || lowerAnswer.includes('conflicting') || 
-      lowerAnswer.includes('controversy') || lowerAnswer.includes('debunked') ||
-      lowerAnswer.includes('the truth is') || lowerAnswer.includes('in fact')) {
+  // Disputed/conflicting/debunked indicators (major penalty)
+  const isDebunking =
+    lowerAnswer.includes('disputed') ||
+    lowerAnswer.includes('conflicting') ||
+    lowerAnswer.includes('controversy') ||
+    lowerAnswer.includes('debunked') ||
+    lowerAnswer.includes('the truth is') ||
+    lowerAnswer.includes('in fact');
+
+  if (isDebunking) {
     contentScore -= 25;
   }
   

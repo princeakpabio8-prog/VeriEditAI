@@ -25,30 +25,42 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated");
 
     const { tx_ref, flw_ref } = await req.json();
+    
+    console.log("📥 Payment verification request:", { tx_ref, flw_ref });
 
-    // Verify payment with Flutterwave V4 API
-    const clientId = Deno.env.get("FLUTTERWAVE_CLIENT_ID");
+    // Verify payment with Flutterwave V3 API
     const clientSecret = Deno.env.get("FLUTTERWAVE_CLIENT_SECRET");
     
-    if (!clientId || !clientSecret) {
-      throw new Error("Flutterwave V4 credentials not configured");
+    if (!clientSecret) {
+      console.error("❌ FLUTTERWAVE_CLIENT_SECRET not configured");
+      throw new Error("Flutterwave credentials not configured");
     }
 
+    console.log("🔍 Verifying payment with Flutterwave API...");
     const flutterwaveResponse = await fetch(
       `https://api.flutterwave.com/v3/transactions/${flw_ref}/verify`,
       {
         method: "GET",
         headers: {
-          "ClientId": clientId,
           "Authorization": `Bearer ${clientSecret}`,
           "Content-Type": "application/json",
         },
       }
     );
+    
+    console.log("📡 Flutterwave API response status:", flutterwaveResponse.status);
 
     const verificationData = await flutterwaveResponse.json();
     
+    console.log("✅ Flutterwave verification data:", {
+      status: verificationData.status,
+      data_status: verificationData.data?.status,
+      tx_ref: verificationData.data?.tx_ref,
+      flw_ref: verificationData.data?.flw_ref
+    });
+    
     if (verificationData.status !== "success" || verificationData.data.status !== "successful") {
+      console.error("❌ Payment verification failed:", verificationData);
       throw new Error("Payment verification failed");
     }
 
@@ -80,14 +92,17 @@ serve(async (req) => {
       .single();
 
     if (paymentError) {
-      console.error("Payment update error:", paymentError);
+      console.error("❌ Payment update error:", paymentError);
       throw new Error("Failed to update payment record");
     }
+    
+    console.log("✅ Payment record updated:", { payment_id: payment.id, plan: payment.plan });
 
     // Calculate expiry date (1 month from now)
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
+    console.log("🔄 Upgrading user subscription...");
     // Upgrade user subscription
     const { data: upgradeResult, error: upgradeError } = await supabaseService
       .rpc("upgrade_user_subscription", {
@@ -98,9 +113,11 @@ serve(async (req) => {
       });
 
     if (upgradeError) {
-      console.error("Subscription upgrade error:", upgradeError);
+      console.error("❌ Subscription upgrade error:", upgradeError);
       throw new Error("Failed to upgrade subscription");
     }
+    
+    console.log("🎉 Subscription upgraded successfully!");
 
     return new Response(JSON.stringify({ 
       success: true, 

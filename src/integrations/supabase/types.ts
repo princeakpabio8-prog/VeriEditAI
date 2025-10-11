@@ -901,6 +901,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ritual_witnesses: {
+        Row: {
+          created_at: string | null
+          id: string
+          thread_id: string
+          witness_note: string | null
+          witness_user_id: string
+          witnessed_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          thread_id: string
+          witness_note?: string | null
+          witness_user_id: string
+          witnessed_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          thread_id?: string
+          witness_note?: string | null
+          witness_user_id?: string
+          witnessed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ritual_witnesses_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "room_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_memberships: {
         Row: {
           id: string

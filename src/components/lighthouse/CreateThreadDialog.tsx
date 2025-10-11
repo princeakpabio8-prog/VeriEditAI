@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Flame } from 'lucide-react';
+import { VerificationRitual } from './VerificationRitual';
 
 interface CreateThreadDialogProps {
   open: boolean;
@@ -18,7 +19,9 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [autoVerify, setAutoVerify] = useState(false);
+  const [useRitual, setUseRitual] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showRitual, setShowRitual] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +31,14 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
       return;
     }
 
+    // If ritual mode is enabled and auto-verify is on, show ritual
+    if (useRitual && autoVerify) {
+      onOpenChange(false);
+      setShowRitual(true);
+      return;
+    }
+
+    // Standard thread creation
     try {
       setLoading(true);
       await onCreateThread(title.trim(), content.trim(), autoVerify);
@@ -37,12 +48,33 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
       setTitle('');
       setContent('');
       setAutoVerify(false);
+      setUseRitual(true);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating thread:', error);
       toast.error('Failed to create thread');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRitualComplete = async (ritualData: any) => {
+    try {
+      await onCreateThread(
+        ritualData.title,
+        ritualData.content,
+        ritualData.autoVerify
+      );
+      
+      // Reset form
+      setTitle('');
+      setContent('');
+      setAutoVerify(false);
+      setUseRitual(true);
+    } catch (error) {
+      console.error('Error creating thread:', error);
+      toast.error('Failed to create thread');
+      throw error;
     }
   };
 
@@ -88,19 +120,39 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="auto-verify"
-              checked={autoVerify}
-              onCheckedChange={(checked) => setAutoVerify(checked as boolean)}
-              disabled={loading}
-            />
-            <Label
-              htmlFor="auto-verify"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Auto-verify this claim with VeriEdit AI
-            </Label>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="auto-verify"
+                checked={autoVerify}
+                onCheckedChange={(checked) => setAutoVerify(checked as boolean)}
+                disabled={loading}
+              />
+              <Label
+                htmlFor="auto-verify"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Auto-verify this claim with VeriEdit AI
+              </Label>
+            </div>
+
+            {autoVerify && (
+              <div className="flex items-center space-x-2 ml-6">
+                <Checkbox
+                  id="use-ritual"
+                  checked={useRitual}
+                  onCheckedChange={(checked) => setUseRitual(checked as boolean)}
+                  disabled={loading}
+                />
+                <Label
+                  htmlFor="use-ritual"
+                  className="text-sm font-normal cursor-pointer flex items-center gap-2"
+                >
+                  <Flame className="h-4 w-4 text-[hsl(var(--truth-flame))]" />
+                  Perform verification ritual (recommended)
+                </Label>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-3">
@@ -118,6 +170,11 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
+              ) : useRitual && autoVerify ? (
+                <>
+                  <Flame className="mr-2 h-4 w-4" />
+                  Begin Ritual
+                </>
               ) : (
                 'Create Thread'
               )}
@@ -125,6 +182,18 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
           </div>
         </form>
       </DialogContent>
+
+      <VerificationRitual
+        open={showRitual}
+        onOpenChange={(open) => {
+          setShowRitual(open);
+          if (!open) {
+            // Reset and reopen create dialog if ritual was cancelled
+            onOpenChange(true);
+          }
+        }}
+        onComplete={handleRitualComplete}
+      />
     </Dialog>
   );
 }

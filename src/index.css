@@ -59,6 +59,13 @@ All colors MUST be HSL.
     --lighthouse-ocean: 205 35% 18%;
     --lighthouse-wave: 205 30% 25%;
     --lighthouse-signal: 180 100% 50%;
+    
+    /* Truth Garden colors */
+    --truth-flame: 35 100% 60%;
+    --truth-ember: 25 100% 50%;
+    --truth-bloom: 140 60% 50%;
+    --truth-wither: 0 0% 40%;
+    --ritual-sacred: 270 70% 30%;
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

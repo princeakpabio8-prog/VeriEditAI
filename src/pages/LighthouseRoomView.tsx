@@ -5,11 +5,13 @@ import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, MessageSquare, Star, Plus, ArrowLeft, Briefcase } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, MessageSquare, Star, Plus, ArrowLeft, Briefcase, Trees } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLighthouseThreads } from '@/hooks/useLighthouseThreads';
 import { LighthouseThreadList } from '@/components/lighthouse/LighthouseThreadList';
 import { CreateThreadDialog } from '@/components/lighthouse/CreateThreadDialog';
+import { TruthGarden } from '@/components/lighthouse/TruthGarden';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function LighthouseRoomView() {
@@ -175,11 +177,40 @@ export default function LighthouseRoomView() {
             )}
           </div>
 
-          {/* Threads list */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-semibold">Discussions</h2>
-            <LighthouseThreadList threads={threads} loading={threadsLoading} />
-          </div>
+          {/* Tabs: Discussions & Garden */}
+          <Tabs defaultValue="discussions" className="space-y-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="discussions" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                Discussions
+              </TabsTrigger>
+              <TabsTrigger value="garden" className="gap-2">
+                <Trees className="h-4 w-4" />
+                Truth Garden
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="discussions" className="space-y-4">
+              <h2 className="text-2xl font-semibold">Discussions</h2>
+              <LighthouseThreadList threads={threads} loading={threadsLoading} />
+            </TabsContent>
+            
+            <TabsContent value="garden" className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Truth Garden</h2>
+                  <Badge variant="outline" className="gap-1">
+                    <Trees className="h-3 w-3" />
+                    3D Visualization
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  Each verified thread grows as a tree. Watch your forest of truth flourish as trust builds.
+                </p>
+              </div>
+              <TruthGarden roomId={roomId || ''} threads={threads as any} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
       <Footer />

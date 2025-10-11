@@ -942,12 +942,15 @@ export type Database = {
           comment_count: number
           content: string
           created_at: string
+          garden_position_x: number | null
+          garden_position_z: number | null
           id: string
           is_auto_verified: boolean | null
           metadata: Json | null
           room_id: string
           status: Database["public"]["Enums"]["thread_status"]
           title: string
+          tree_growth_stage: number | null
           trust_score: number | null
           updated_at: string
           upvote_count: number
@@ -959,12 +962,15 @@ export type Database = {
           comment_count?: number
           content: string
           created_at?: string
+          garden_position_x?: number | null
+          garden_position_z?: number | null
           id?: string
           is_auto_verified?: boolean | null
           metadata?: Json | null
           room_id: string
           status?: Database["public"]["Enums"]["thread_status"]
           title: string
+          tree_growth_stage?: number | null
           trust_score?: number | null
           updated_at?: string
           upvote_count?: number
@@ -976,12 +982,15 @@ export type Database = {
           comment_count?: number
           content?: string
           created_at?: string
+          garden_position_x?: number | null
+          garden_position_z?: number | null
           id?: string
           is_auto_verified?: boolean | null
           metadata?: Json | null
           room_id?: string
           status?: Database["public"]["Enums"]["thread_status"]
           title?: string
+          tree_growth_stage?: number | null
           trust_score?: number | null
           updated_at?: string
           upvote_count?: number

@@ -78,6 +78,9 @@ verify_jwt = false
 [functions.flutterwave-verify]
 verify_jwt = true
 
+[functions.flutterwave-config]
+verify_jwt = false
+
 [functions.flutterwave-webhook]
 verify_jwt = false
 

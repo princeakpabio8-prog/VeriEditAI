@@ -73,9 +73,38 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const [flutterwaveReady, setFlutterwaveReady] = useState(false);
+  const [flutterwavePublicKey, setFlutterwavePublicKey] = useState<string>("");
+  const [paymentMode, setPaymentMode] = useState<"test" | "live">("test");
 
   // Preload and warm up Flutterwave script to reduce perceived latency
   useEffect(() => {
+    // Load Flutterwave public key from edge function
+    const loadConfig = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('flutterwave-config');
+        
+        if (error) throw error;
+
+        if (data?.success && data.public_key) {
+          setFlutterwavePublicKey(data.public_key);
+          setPaymentMode(data.mode || "test");
+          console.log("✅ Flutterwave config loaded:", {
+            mode: data.mode,
+            keyPreview: data.public_key.substring(0, 15) + "..."
+          });
+        } else {
+          throw new Error("No public key returned");
+        }
+      } catch (error) {
+        console.error("❌ Failed to load Flutterwave config:", error);
+        toast({
+          title: "Configuration Error",
+          description: "Payment system not configured. Please contact support.",
+          variant: "destructive",
+        });
+      }
+    };
+
     // Add preconnect hints
     const preconnect = document.createElement('link');
     preconnect.rel = 'preconnect';
@@ -104,6 +133,8 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     } else {
       setFlutterwaveReady(true);
     }
+
+    loadConfig();
 
     return () => {
       // Keep script cached; no cleanup to preserve speed between navigations
@@ -198,11 +229,13 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
 
       // Build config object for FlutterwaveCheckout
       const flutterwaveConfig = {
-        public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
+        public_key: flutterwavePublicKey,
         tx_ref: txRef,
         amount: plan.price,
         currency: plan.currency,
-        payment_options: "card,ussd,banktransfer,crypto",
+        payment_options: paymentMode === "test" 
+          ? "card,ussd,banktransfer" 
+          : "card,ussd,banktransfer,crypto",
         customer: {
           email: user.email || '',
           phone_number: '',
@@ -369,7 +402,12 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     }`}
                     size="lg"
                     onClick={() => handleFlutterPayment(plan)}
-                    disabled={loading === plan.id || !flutterwaveReady}
+                    disabled={
+                      loading === plan.id || 
+                      !flutterwaveReady ||
+                      !flutterwavePublicKey ||
+                      flutterwavePublicKey.includes("SANDBOXDEMOKEY-X")
+                    }
                   >
                     {loading === plan.id ? (
                       <motion.div

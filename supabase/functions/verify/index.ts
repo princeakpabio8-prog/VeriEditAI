@@ -180,6 +180,30 @@ serve(async (req) => {
     }
 
     console.log(`✅ Verification complete in ${processingTime}ms`);
+    
+    // Send grant verification email if category is ngo-grant
+    if (category === 'ngo-grant' && verificationId && user_id) {
+      try {
+        console.log('📧 Triggering grant verification email...');
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        
+        // Fire and forget - don't block verification response
+        fetch(`${supabaseUrl}/functions/v1/send-grant-verification-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({
+            verification_id: verificationId,
+            send_admin_alert: true,
+          }),
+        }).catch(err => console.error('Email trigger failed:', err));
+      } catch (emailErr) {
+        console.warn('⚠️ Failed to trigger email:', emailErr);
+      }
+    }
     console.log(`📊 Confidence: ${result.confidence}% | Status: ${result.status}`);
     if (fraudAnalysis.hasFraudIndicators) {
       console.log(`⚠️ Fraud Alert: ${fraudAnalysis.patterns.length} patterns detected`);

@@ -200,6 +200,59 @@ export type Database = {
         }
         Relationships: []
       }
+      grant_applications: {
+        Row: {
+          created_at: string | null
+          email_notifications_enabled: boolean | null
+          funding_amount: number | null
+          grant_type: string | null
+          id: string
+          metadata: Json | null
+          organization_name: string | null
+          status: string | null
+          submission_deadline: string | null
+          updated_at: string | null
+          user_id: string
+          verification_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          funding_amount?: number | null
+          grant_type?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_name?: string | null
+          status?: string | null
+          submission_deadline?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          funding_amount?: number | null
+          grant_type?: string | null
+          id?: string
+          metadata?: Json | null
+          organization_name?: string | null
+          status?: string | null
+          submission_deadline?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_applications_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_verifications: {
         Row: {
           content_analysis: Json | null
@@ -668,6 +721,7 @@ export type Database = {
           bonus_verifications: number | null
           company: string | null
           created_at: string
+          email_preferences: Json | null
           full_name: string | null
           id: string
           monthly_usage: number | null
@@ -685,6 +739,7 @@ export type Database = {
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string
+          email_preferences?: Json | null
           full_name?: string | null
           id?: string
           monthly_usage?: number | null
@@ -702,6 +757,7 @@ export type Database = {
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string
+          email_preferences?: Json | null
           full_name?: string | null
           id?: string
           monthly_usage?: number | null

@@ -152,3 +152,15 @@ verify_jwt = false
 
 [functions.image-proxy]
 verify_jwt = false
+
+[functions.send-grant-verification-email]
+verify_jwt = false
+
+[functions.send-grant-digest]
+verify_jwt = false
+
+[functions.notify-grant-deadline]
+verify_jwt = false
+
+[functions.send-ngo-partnership-invite]
+verify_jwt = false

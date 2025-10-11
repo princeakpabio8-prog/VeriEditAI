@@ -1079,6 +1079,7 @@ async function calculateTavilyConfidence(
     content_analysis: 0.30
   };
   const safeAnswer = String(answer ?? '');
+  const lowerAnswer = safeAnswer.toLowerCase();
   const safeContent = String(originalContent ?? '').toLowerCase();
   
   // Detect fact type for scoring adjustments

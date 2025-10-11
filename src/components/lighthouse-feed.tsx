@@ -25,6 +25,7 @@ import {
   AlertCircle,
   ChevronDown,
   Sparkles,
+  ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -126,6 +127,36 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
       toast({
         title: "Refresh Failed",
         description: "Could not fetch latest news",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleEnrichImages = async () => {
+    try {
+      setRefreshing(true);
+      toast({
+        title: "Enriching Images",
+        description: "Fetching high-quality images for articles...",
+      });
+
+      const { data, error } = await supabase.functions.invoke("enrich-feed-images");
+
+      if (error) throw error;
+
+      toast({
+        title: "Images Enriched",
+        description: `Enhanced ${data?.enriched || 0} of ${data?.total_processed || 0} articles with images`,
+      });
+
+      await fetchArticles();
+    } catch (error) {
+      console.error("Error enriching images:", error);
+      toast({
+        title: "Enrichment Failed",
+        description: "Could not enrich article images",
         variant: "destructive",
       });
     } finally {
@@ -280,15 +311,26 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                 <p className="text-sm text-muted-foreground">Verified Global Stories</p>
               </div>
             </div>
-            <Button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleEnrichImages}
+                disabled={refreshing}
+                variant="outline"
+                className="gap-2"
+              >
+                <ImageIcon className={`h-4 w-4 ${refreshing ? "animate-pulse" : ""}`} />
+                Enrich Images
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}

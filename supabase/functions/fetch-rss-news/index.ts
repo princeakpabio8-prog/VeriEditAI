@@ -469,6 +469,24 @@ serve(async (req) => {
 
     console.log("\n🎉 RSS fetch complete:", stats);
 
+    // Trigger image enrichment in the background (fire-and-forget)
+    const enrichImages = async () => {
+      try {
+        console.log('🖼️ Triggering background image enrichment...');
+        const enrichResponse = await supabase.functions.invoke('enrich-feed-images');
+        if (enrichResponse.error) {
+          console.error('❌ Image enrichment error:', enrichResponse.error);
+        } else {
+          console.log('✅ Image enrichment complete:', enrichResponse.data);
+        }
+      } catch (error) {
+        console.error('❌ Failed to trigger image enrichment:', error);
+      }
+    };
+
+    // Start enrichment but don't wait for it
+    enrichImages();
+
     return new Response(JSON.stringify(stats), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -19,6 +19,7 @@ export default function PaymentCallback() {
     const verifyPayment = async () => {
       const txRef = searchParams.get('tx_ref');
       const transactionId = searchParams.get('transaction_id');
+      const flwRef = searchParams.get('flw_ref');
       const statusParam = searchParams.get('status');
 
       if (!txRef || !user) {
@@ -29,11 +30,11 @@ export default function PaymentCallback() {
 
       try {
         if (statusParam === 'successful') {
-          // Call our verification function
+          // Call our verification function (accept both transaction_id and flw_ref param names)
           const { data, error } = await supabase.functions.invoke('flutterwave-verify', {
             body: { 
               tx_ref: txRef, 
-              flw_ref: transactionId 
+              flw_ref: flwRef || transactionId 
             }
           });
 

@@ -73,18 +73,17 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Update payment record
+    // Update payment record with valid columns
+    console.log("📝 Updating payment record...");
     const { data: payment, error: paymentError } = await supabaseService
       .from("payments")
       .update({
-        flw_ref: paymentData.flw_ref,
+        flw_id: paymentData.flw_ref,
         status: "successful",
-        payment_method: paymentData.payment_type,
         metadata: {
           flutterwave_data: paymentData,
           verified_at: new Date().toISOString()
-        },
-        updated_at: new Date().toISOString()
+        }
       })
       .eq("tx_ref", tx_ref)
       .eq("user_id", user.id)

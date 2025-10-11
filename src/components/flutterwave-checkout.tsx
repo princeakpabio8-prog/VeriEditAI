@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { closePaymentModal } from 'flutterwave-react-v3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +63,12 @@ interface FlutterwaveCheckoutProps {
   onSuccess?: () => void;
 }
 
+declare global {
+  interface Window {
+    FlutterwaveCheckout?: (config: any) => void;
+  }
+}
+
 export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
@@ -103,6 +109,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
       // Keep script cached; no cleanup to preserve speed between navigations
     };
   }, []);
+
   const createPaymentRecord = async (plan: Plan, txRef: string) => {
     const { error } = await supabase
       .from('payments')
@@ -135,74 +142,20 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     }
   };
 
-  const config = (plan: Plan, txRef: string) => ({
-    public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
-    PBFPubKey: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
-    tx_ref: txRef,
-    amount: plan.price,
-    currency: plan.currency,
-    payment_options: "card,ussd,banktransfer,crypto",
-    customer: {
-      email: user?.email || '',
-      phone_number: '',
-      name: user?.email?.split('@')[0] || 'VeriEdit User'
-    },
-    customizations: {
-      title: `VeriEdit AI - ${plan.name} Plan`,
-      description: `Subscribe to ${plan.name} plan - ${plan.billing === 'yearly' ? 'Annual' : 'Monthly'} billing`,
-      logo: "https://verieditai.com/logo.png"
-    },
-    redirect_url: `${window.location.origin}/payment-callback`,
-    meta: {
-      plan_id: plan.id,
-      user_id: user?.id,
-      billing_cycle: plan.billing || 'monthly'
-    },
-    callback: async (response: any) => {
-      console.log('Payment response:', response);
-      closePaymentModal();
-      
-      if (response.status === "successful") {
-        try {
-          const verificationResult = await verifyPayment(txRef, response.flw_ref);
-          
-          if (verificationResult.success) {
-            toast({
-              title: "Payment Successful!",
-              description: `You've successfully upgraded to ${plan.name} plan`,
-            });
-            onSuccess?.();
-          } else {
-            throw new Error('Payment verification failed');
-          }
-        } catch (error) {
-          console.error('Payment processing error:', error);
-          toast({
-            title: "Payment Processing Error",
-            description: "There was an issue processing your payment. Please contact support.",
-            variant: "destructive"
-          });
-        }
-      } else {
-        toast({
-          title: "Payment Failed",
-          description: "Your payment was not successful. Please try again.",
-          variant: "destructive"
-        });
-      }
-      setLoading(null);
-    },
-    onClose: () => {
-      console.log('Payment modal closed');
-      setLoading(null);
-    }
-  });
-
   const handleFlutterPayment = async (plan: Plan) => {
     if (!user) {
       toast({
-        title: "Authentication Required", 
+        title: "Authentication Required",
         description: "Please log in to upgrade your plan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!flutterwaveReady || !window.FlutterwaveCheckout) {
+      toast({
+        title: "Payment System Loading",
+        description: "Please wait a moment and try again",
         variant: "destructive"
       });
       return;
@@ -226,7 +179,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
         const lastPayment = existingPayments[0];
         const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         const paymentTime = new Date(lastPayment.created_at);
-        
+
         if (paymentTime > fiveMinutesAgo) {
           toast({
             title: "Payment in Progress",
@@ -239,20 +192,76 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
       }
 
       const txRef = `${user.id}_${Date.now()}`;
-      
+
       // Create payment record first
       await createPaymentRecord(plan, txRef);
-      
-      // Initialize payment with config
-      const flutterwaveConfig = config(plan, txRef);
-      
-      // Use the hook correctly - it returns a function that opens the modal
-      const handlePayment = useFlutterwave(flutterwaveConfig);
-      handlePayment({
-        callback: flutterwaveConfig.callback,
-        onClose: flutterwaveConfig.onClose
-      });
-      
+
+      // Build config object for FlutterwaveCheckout
+      const flutterwaveConfig = {
+        public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "FLWPUBK_TEST-SANDBOXDEMOKEY-X",
+        tx_ref: txRef,
+        amount: plan.price,
+        currency: plan.currency,
+        payment_options: "card,ussd,banktransfer,crypto",
+        customer: {
+          email: user.email || '',
+          phone_number: '',
+          name: user.email?.split('@')[0] || 'VeriEdit User'
+        },
+        customizations: {
+          title: `VeriEdit AI - ${plan.name} Plan`,
+          description: `Subscribe to ${plan.name} plan - ${plan.billing === 'yearly' ? 'Annual' : 'Monthly'} billing`,
+          logo: "https://verieditai.com/logo.png"
+        },
+        redirect_url: `${window.location.origin}/payment-callback`,
+        meta: {
+          plan_id: plan.id,
+          user_id: user.id,
+          billing_cycle: plan.billing || 'monthly'
+        },
+        callback: async (response: any) => {
+          console.log('Payment response:', response);
+          closePaymentModal();
+
+          if (response.status === "successful") {
+            try {
+              const verificationResult = await verifyPayment(txRef, response.flw_ref || response.transaction_id);
+
+              if (verificationResult.success) {
+                toast({
+                  title: "Payment Successful!",
+                  description: `You've successfully upgraded to ${plan.name} plan`,
+                });
+                onSuccess?.();
+              } else {
+                throw new Error('Payment verification failed');
+              }
+            } catch (error) {
+              console.error('Payment processing error:', error);
+              toast({
+                title: "Payment Processing Error",
+                description: "There was an issue processing your payment. Please contact support.",
+                variant: "destructive"
+              });
+            }
+          } else {
+            toast({
+              title: "Payment Failed",
+              description: "Your payment was not successful. Please try again.",
+              variant: "destructive"
+            });
+          }
+          setLoading(null);
+        },
+        onclose: () => {
+          console.log('Payment modal closed');
+          setLoading(null);
+        }
+      };
+
+      // Open modal using global FlutterwaveCheckout
+      window.FlutterwaveCheckout(flutterwaveConfig);
+
     } catch (error) {
       console.error('Failed to initialize payment:', error);
       toast({
@@ -278,13 +287,13 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
             className="group"
           >
             <Card className={`relative overflow-hidden transition-all duration-300 ${
-              plan.popular 
-                ? 'border-2 border-gradient-to-r from-blue-500 to-teal-500 shadow-xl shadow-blue-500/25' 
+              plan.popular
+                ? 'border-2 border-gradient-to-r from-blue-500 to-teal-500 shadow-xl shadow-blue-500/25'
                 : 'border border-border/50 hover:border-primary/50'
             } bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm hover:shadow-lg`}>
-              
+
               {plan.popular && (
-                <motion.div 
+                <motion.div
                   className="absolute -top-2 left-1/2 transform -translate-x-1/2"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -298,22 +307,22 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
               )}
 
               <CardHeader className="text-center pb-6">
-                <motion.div 
+                <motion.div
                   className="mx-auto mb-6 w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
                   whileHover={{ rotate: 5 }}
                 >
                   <Icon className="w-8 h-8 text-primary" />
                 </motion.div>
-                
+
                 <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                   {plan.name}
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
                   {plan.description}
                 </CardDescription>
-                
+
                 <div className="mt-6">
-                  <motion.div 
+                  <motion.div
                     className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent"
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
@@ -331,12 +340,12 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                   )}
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-6">
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
-                    <motion.li 
-                      key={index} 
+                    <motion.li
+                      key={index}
                       className="flex items-center text-sm"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -347,12 +356,12 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     </motion.li>
                   ))}
                 </ul>
-                
+
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <Button 
+                  <Button
                     className={`w-full relative overflow-hidden transition-all duration-300 ${
                       plan.popular
                         ? 'bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white shadow-lg shadow-blue-500/25'
@@ -363,7 +372,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     disabled={loading === plan.id || !flutterwaveReady}
                   >
                     {loading === plan.id ? (
-                      <motion.div 
+                      <motion.div
                         className="flex items-center"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -374,7 +383,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     ) : (
                       <>
                         {!flutterwaveReady ? (
-                          <motion.div 
+                          <motion.div
                             className="flex items-center justify-center"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

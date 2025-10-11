@@ -61,9 +61,13 @@ const Billing = () => {
     }
   };
 
-  const handleUpgradeSuccess = () => {
-    fetchUsageStats();
-    fetchSubscriptionStatus();
+  const handleUpgradeSuccess = async () => {
+    // Force refresh data to reflect new subscription immediately
+    await Promise.all([
+      fetchUsageStats(),
+      fetchSubscriptionStatus()
+    ]);
+    
     toast({
       title: "Upgrade Successful!",
       description: "Your subscription has been upgraded successfully. Welcome to VeriEdit AI Pro!",

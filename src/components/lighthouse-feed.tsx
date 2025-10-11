@@ -263,9 +263,10 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
       if (selectedCategory !== "All" && article.category !== selectedCategory) {
         return false;
       }
-      // Search filter
-      if (searchQuery && !article.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-          !article.summary.toLowerCase().includes(searchQuery.toLowerCase())) {
+      // Search filter (null-safe)
+      if (searchQuery && 
+          !(article.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) &&
+          !(article.summary?.toLowerCase() || '').includes(searchQuery.toLowerCase())) {
         return false;
       }
       // Verification filter

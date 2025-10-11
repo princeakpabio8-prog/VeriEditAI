@@ -30,8 +30,8 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
   const industries = Array.from(new Set(organizations?.map(org => org.industry) || []));
 
   const filteredOrganizations = organizations?.filter(org => {
-    const matchesSearch = org.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         org.domain?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (org.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         (org.domain?.toLowerCase() || '').includes(searchQuery.toLowerCase());
     const matchesIndustry = !selectedIndustry || org.industry === selectedIndustry;
     return matchesSearch && matchesIndustry;
   });

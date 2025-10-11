@@ -301,7 +301,8 @@ export function MobileVerificationUI({
   };
 
   const getStatusColor = (status: string | undefined) => {
-    const safeStatus = typeof status === 'string' ? status : undefined;
+    // Enhanced null-safety and type checking
+    const safeStatus = typeof status === 'string' && status ? status.toLowerCase() : undefined;
     if (!safeStatus) return 'bg-gray-500/10 text-gray-700 border-gray-200';
     
     switch (safeStatus) {
@@ -315,7 +316,8 @@ export function MobileVerificationUI({
   };
 
   const getStatusIcon = (status: string | undefined) => {
-    const safeStatus = typeof status === 'string' ? status : undefined;
+    // Enhanced null-safety and type checking
+    const safeStatus = typeof status === 'string' && status ? status.toLowerCase() : undefined;
     if (!safeStatus) return <Info className="h-4 w-4" />;
     
     switch (safeStatus) {

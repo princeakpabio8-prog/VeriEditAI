@@ -24,8 +24,8 @@ export interface ParsedDocument {
  * Main document parsing function - routes to appropriate parser based on file type
  */
 export async function parseDocument(file: File): Promise<ParsedDocument> {
-  const fileType = file.type.toLowerCase();
-  const fileName = file.name.toLowerCase();
+  const fileType = (file.type || '').toLowerCase();
+  const fileName = (file.name || 'unknown').toLowerCase();
 
   try {
     // PDF files

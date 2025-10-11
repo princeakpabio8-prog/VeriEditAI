@@ -37,8 +37,8 @@ const AdminDashboard = () => {
   }
 
   const filteredSubscribers = subscribers?.filter(sub => 
-    sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    sub.subscription_tier?.toLowerCase().includes(searchQuery.toLowerCase())
+    (sub.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    (sub.subscription_tier?.toLowerCase() || '').includes(searchQuery.toLowerCase())
   ) || [];
 
   const stats = {

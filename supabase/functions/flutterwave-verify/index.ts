@@ -37,16 +37,19 @@ serve(async (req) => {
     }
 
     console.log("🔍 Verifying payment with Flutterwave API...");
-    const flutterwaveResponse = await fetch(
-      `https://api.flutterwave.com/v3/transactions/${flw_ref}/verify`,
-      {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${clientSecret}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+
+    // Support both transaction_id-based and tx_ref-based verification
+    const verifyUrl = flw_ref
+      ? `https://api.flutterwave.com/v3/transactions/${flw_ref}/verify`
+      : `https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${encodeURIComponent(tx_ref)}`;
+
+    const flutterwaveResponse = await fetch(verifyUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${clientSecret}`,
+        "Content-Type": "application/json",
+      },
+    });
     
     console.log("📡 Flutterwave API response status:", flutterwaveResponse.status);
 
@@ -56,10 +59,11 @@ serve(async (req) => {
       status: verificationData.status,
       data_status: verificationData.data?.status,
       tx_ref: verificationData.data?.tx_ref,
-      flw_ref: verificationData.data?.flw_ref
+      flw_ref: verificationData.data?.flw_ref || flw_ref,
+      id: verificationData.data?.id
     });
     
-    if (verificationData.status !== "success" || verificationData.data.status !== "successful") {
+    if (verificationData.status !== "success" || verificationData.data?.status !== "successful") {
       console.error("❌ Payment verification failed:", verificationData);
       throw new Error("Payment verification failed");
     }

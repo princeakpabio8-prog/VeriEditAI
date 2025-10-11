@@ -128,7 +128,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
     }
   };
 
-  const verifyPayment = async (txRef: string, flwRef: string) => {
+  const verifyPayment = async (txRef: string, flwRef?: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('flutterwave-verify', {
         body: { tx_ref: txRef, flw_ref: flwRef }

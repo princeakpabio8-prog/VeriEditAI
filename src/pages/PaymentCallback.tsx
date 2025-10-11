@@ -29,36 +29,30 @@ export default function PaymentCallback() {
       }
 
       try {
-        if (statusParam === 'successful') {
-          // Call our verification function (accept both transaction_id and flw_ref param names)
-          const { data, error } = await supabase.functions.invoke('flutterwave-verify', {
-            body: { 
-              tx_ref: txRef, 
-              flw_ref: flwRef || transactionId 
-            }
-          });
-
-          if (error) throw error;
-
-          if (data.success) {
-            setStatus('success');
-            setMessage(`Payment successful! Your ${data.plan} subscription is now active.`);
-            
-            toast({
-              title: "Payment Successful!",
-              description: `Welcome to VeriEdit AI ${data.plan}! Your subscription is now active.`,
-            });
-            
-            // Redirect to dashboard after 3 seconds
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 3000);
-          } else {
-            throw new Error(data.error || 'Payment verification failed');
+        // Always attempt verification (supports tx_ref-only flow too)
+        const { data, error } = await supabase.functions.invoke('flutterwave-verify', {
+          body: { 
+            tx_ref: txRef, 
+            flw_ref: flwRef || transactionId || undefined
           }
+        });
+
+        if (error) throw error;
+
+        if (data.success) {
+          setStatus('success');
+          setMessage(`Payment successful! Your ${data.plan} subscription is now active.`);
+          
+          toast({
+            title: "Payment Successful!",
+            description: `Welcome to VeriEdit AI ${data.plan}! Your subscription is now active.`,
+          });
+          
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 3000);
         } else {
-          setStatus('error');
-          setMessage('Payment was not completed successfully');
+          throw new Error(data.error || 'Payment verification failed');
         }
       } catch (error) {
         console.error('Payment verification error:', error);

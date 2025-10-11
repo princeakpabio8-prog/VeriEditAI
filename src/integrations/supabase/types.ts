@@ -1847,6 +1847,10 @@ export type Database = {
         Args: { _base_score: number; _domain: string }
         Returns: number
       }
+      get_adjusted_source_scores_batch: {
+        Args: { _base_scores: number[]; _domains: string[] }
+        Returns: Json
+      }
       get_admin_api_usage_stats: {
         Args: Record<PropertyKey, never>
         Returns: {

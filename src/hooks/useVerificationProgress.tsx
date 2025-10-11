@@ -70,10 +70,9 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
         return;
       }
 
-      const stepDurations = [150, 500, 350, 200, 120]; // milliseconds (faster)
-      const duration = stepDurations[stepIndex] || 500;
+      // No artificial delays - update progress based on actual verification events
       let progress = 0;
-      const increment = 100 / (duration / 50); // Update every 50ms
+      const increment = 2; // Smooth increments
 
       // Mark step as processing
       setSteps(prev => prev.map((step, idx) => 
@@ -81,21 +80,21 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
       ));
 
       const interval = setInterval(() => {
-        // If verification already finished, fast-forward this step
-        if (verificationDoneRef.current && progress < 100) {
+        // If verification already finished, complete this step immediately
+        if (verificationDoneRef.current) {
           progress = 100;
         } else {
-          progress += increment;
+          progress = Math.min(progress + increment, 95); // Cap at 95% until actual completion
         }
         
         setSteps(prev => prev.map((step, idx) => 
           idx === stepIndex ? { ...step, progress: Math.min(100, progress) } : step
         ));
 
-        // Update time remaining during AI analysis step
-        if (stepIndex === 1 && startTime) {
+        // Update time remaining
+        if (startTime) {
           const elapsed = Date.now() - startTime.getTime();
-          const totalEstimated = 3000; // ~3 seconds total
+          const totalEstimated = 2500; // Updated estimate: ~2.5 seconds
           const remaining = Math.max(0, totalEstimated - elapsed);
           setEstimatedTimeRemaining(remaining);
         }
@@ -108,8 +107,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
             idx === stepIndex ? { 
               ...step, 
               status: 'completed' as const,
-              progress: 100,
-              duration 
+              progress: 100
             } : step
           ));
 
@@ -125,10 +123,7 @@ export const useVerificationProgress = (): UseVerificationProgressReturn => {
     for (let i = 0; i < steps.length; i++) {
       setCurrentStep(i);
       await processStep(i);
-      
-      // Small delay between steps for smooth transition (skip if verification already finished)
-      const delay = verificationDoneRef.current ? 0 : 200;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      // No artificial delays between steps
     }
   }, [steps.length, processStep]);
 

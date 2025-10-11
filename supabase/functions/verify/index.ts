@@ -187,32 +187,40 @@ serve(async (req) => {
 
     // Generate Azure embedding for semantic analysis
     let azureEmbedding = null;
-    try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      
-      console.log('🧠 Generating Azure embedding...');
-      const embeddingResponse = await fetch(
-        `${supabaseUrl}/functions/v1/azure-generate-embedding`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`,
-          },
-          body: JSON.stringify({ content: safeContent }),
+    // Parallelize embedding generation (will be awaited later)
+    const embeddingPromise = (async () => {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        
+        console.log('🧠 Generating Azure embedding...');
+        const embeddingResponse = await fetch(
+          `${supabaseUrl}/functions/v1/azure-generate-embedding`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({ content: safeContent }),
+          }
+        );
+
+        const embeddingData = await embeddingResponse.json();
+        if (embeddingData.success) {
+          console.log(`✅ Generated embedding (${embeddingData.dimensions} dimensions)`);
+          return embeddingData.embeddings[0];
         }
-      );
-
-      const embeddingData = await embeddingResponse.json();
-      if (embeddingData.success) {
-        azureEmbedding = embeddingData.embeddings[0];
-        console.log(`✅ Generated embedding (${embeddingData.dimensions} dimensions)`);
+        return null;
+      } catch (embErr) {
+        console.warn('⚠️ Failed to generate embedding:', embErr);
+        return null;
       }
-    } catch (embErr) {
-      console.warn('⚠️ Failed to generate embedding:', embErr);
-    }
+    })();
 
+    // Await embedding generation (parallelized earlier)
+    azureEmbedding = await embeddingPromise;
+    
     // Save verification to database
     let verificationId = null;
     if (user_id) {
@@ -750,23 +758,49 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       }
     }
     
-    // Process sources from search results with full content and dynamic scoring
-    const sourcesWithScores = await Promise.all(
-      searchResults.map(async (result: any) => {
-        const scoreData = await calculateReliabilityScore(result.url || '', supabase);
-        return {
-          title: result.title || 'Unknown Source',
-          url: result.url || '',
-          content_snippet: result.content ? result.content.substring(0, 200) + '...' : '',
-          full_content: result.content || '',
-          reliability_score: scoreData.adjustedScore,
-          base_reliability_score: scoreData.baseScore,
-          domain: scoreData.domain,
-          source_region: scoreData.region,
-          source_type: scoreData.sourceType
-        };
-      })
-    );
+    // Batch process sources with single database call for reliability scores
+    console.log(`⚡ Batch processing ${searchResults.length} sources...`);
+    const sourceUrls = searchResults.map((r: any) => r.url || '');
+    const baseScoreData = sourceUrls.map((url: string) => calculateBaseReliabilityScore(url));
+    
+    const domains = baseScoreData.map(d => d.domain);
+    const baseScores = baseScoreData.map(d => d.baseScore);
+    
+    // Single batch database call for all adjusted scores
+    const { data: batchScores, error: batchError } = await supabase.rpc('get_adjusted_source_scores_batch', {
+      _domains: domains,
+      _base_scores: baseScores
+    });
+    
+    if (batchError) {
+      console.error('❌ Batch score fetch failed:', batchError);
+    }
+    
+    const scoresMap = new Map();
+    if (batchScores && Array.isArray(batchScores)) {
+      batchScores.forEach((score: any) => {
+        scoresMap.set(score.domain, score.adjusted_score);
+      });
+    }
+    
+    const sourcesWithScores = searchResults.map((result: any, idx: number) => {
+      const baseData = baseScoreData[idx];
+      const adjustedScore = scoresMap.get(baseData.domain) || baseData.baseScore;
+      
+      return {
+        title: result.title || 'Unknown Source',
+        url: result.url || '',
+        content_snippet: result.content ? result.content.substring(0, 200) + '...' : '',
+        full_content: result.content || '',
+        reliability_score: adjustedScore,
+        base_reliability_score: baseData.baseScore,
+        domain: baseData.domain,
+        source_region: baseData.region,
+        source_type: baseData.sourceType
+      };
+    });
+    
+    console.log(`✅ Batch processed ${sourcesWithScores.length} sources`);
 
     // Calculate confidence based on search results quality
     let confidence = await calculateTavilyConfidenceWithCategory(
@@ -788,69 +822,73 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       : 100;
     const sourceConsensus = Math.round(sourceAgreement);
 
-    // NEW: Semantic refutation detection using Lovable AI Gateway
+    // Parallelize refutation detection (runs alongside other operations)
+    const refutationPromise = (async () => {
+      try {
+        console.log('🧠 Performing semantic refutation analysis...');
+        
+        const refutationAnalysis = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/detect-refutation`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            claim: content,
+            answer: answer,
+            sources: {
+              count: sourcesWithScores.length,
+              avg_reliability: avgReliability
+            }
+          })
+        });
+
+        return await refutationAnalysis.json();
+      } catch (err) {
+        console.error('⚠️ Refutation detection failed:', err);
+        return { is_refutation: false, confidence: 0, refutation_type: 'none', reasoning: '' };
+      }
+    })();
+    
+    // Await refutation result
+    const refutationResult = await refutationPromise;
     let isRefuted = false;
     let refutationConfidence = 0;
     let refutationType = 'none';
     let refutationReasoning = '';
+    refutationReasoning = refutationResult.reasoning || '';
     
-    try {
-      console.log('🧠 Performing semantic refutation analysis...');
+    // Only treat as refutation if:
+    // 1. AI detected it as refutation
+    // 2. Confidence is high (>70%)
+    // 3. Type is "direct" (not partial)
+    // 4. Source consensus is weak (<60%) OR source reliability is low (<65%)
+    
+    if (refutationResult.is_refutation && 
+        refutationResult.confidence > 70 && 
+        refutationResult.refutation_type === 'direct') {
       
-      const refutationAnalysis = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/detect-refutation`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          claim: content,
-          answer: answer,
-          sources: {
-            count: sourcesWithScores.length,
-            avg_reliability: avgReliability
-          }
-        })
-      });
-
-      const refutationResult = await refutationAnalysis.json();
-      refutationReasoning = refutationResult.reasoning || '';
-      
-      // Only treat as refutation if:
-      // 1. AI detected it as refutation
-      // 2. Confidence is high (>70%)
-      // 3. Type is "direct" (not partial)
-      // 4. Source consensus is weak (<60%) OR source reliability is low (<65%)
-      
-      if (refutationResult.is_refutation && 
-          refutationResult.confidence > 70 && 
-          refutationResult.refutation_type === 'direct') {
+      // Additional safety check: if sources strongly agree (consensus >80%) and have high reliability,
+      // do NOT mark as refuted even if AI thinks so
+      if (avgReliability < 65 || sourceConsensus < 60) {
+        isRefuted = true;
+        refutationConfidence = refutationResult.confidence;
+        refutationType = refutationResult.refutation_type;
         
-        // Additional safety check: if sources strongly agree (consensus >80%) and have high reliability,
-        // do NOT mark as refuted even if AI thinks so
-        if (avgReliability < 65 || sourceConsensus < 60) {
-          isRefuted = true;
-          refutationConfidence = refutationResult.confidence;
-          refutationType = refutationResult.refutation_type;
-          
-          // Reduce confidence proportionally to refutation confidence
-          const reductionFactor = refutationConfidence / 100;
-          const originalConfidence = confidence;
-          confidence = Math.round(confidence * (1 - (reductionFactor * 0.7))); // Max 70% reduction
-          confidence = Math.max(confidence, 20); // Floor at 20% (not 30%)
-          
-          console.log(`🚨 REFUTATION DETECTED: ${refutationReasoning}`);
-          console.log(`📊 Refutation confidence: ${refutationConfidence}%, reducing trust score from ${originalConfidence}% to ${confidence}%`);
-        } else {
-          console.log(`✅ REFUTATION IGNORED: High source consensus (${sourceConsensus}%) and reliability (${avgReliability}%) override AI detection`);
-          console.log(`📝 AI reasoning (overridden): ${refutationReasoning}`);
-        }
+        // Reduce confidence proportionally to refutation confidence
+        const reductionFactor = refutationConfidence / 100;
+        const originalConfidence = confidence;
+        confidence = Math.round(confidence * (1 - (reductionFactor * 0.7))); // Max 70% reduction
+        confidence = Math.max(confidence, 20); // Floor at 20% (not 30%)
+        
+        console.log(`🚨 REFUTATION DETECTED: ${refutationReasoning}`);
+        console.log(`📊 Refutation confidence: ${refutationConfidence}%, reducing trust score from ${originalConfidence}% to ${confidence}%`);
       } else {
-        console.log(`✅ No refutation detected (AI confidence: ${refutationResult.confidence}%, type: ${refutationResult.refutation_type})`);
+        console.log(`✅ REFUTATION IGNORED: High source consensus (${sourceConsensus}%) and reliability (${avgReliability}%) override AI detection`);
+        console.log(`📝 AI reasoning (overridden): ${refutationReasoning}`);
       }
-    } catch (err) {
-      console.error('⚠️ Refutation detection failed, proceeding without it:', err);
-      // Fail gracefully - don't mark as refuted if analysis fails
+    } else {
+      console.log(`✅ No refutation detected (AI confidence: ${refutationResult.confidence}%, type: ${refutationResult.refutation_type})`);
     }
     
     let status = getStatusFromConfidence(confidence);
@@ -1392,15 +1430,14 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
   return 'current-event';
 }
 
-// Enhanced source reliability scoring with international support and dynamic adjustment
-async function calculateReliabilityScore(url: string, supabaseClient: any): Promise<{
+// Calculate base reliability score (no database call)
+function calculateBaseReliabilityScore(url: string): {
   baseScore: number;
-  adjustedScore: number;
   domain: string;
   region: string;
   sourceType: string;
-}> {
-  if (!url) return { baseScore: 50, adjustedScore: 50, domain: '', region: 'Global', sourceType: 'general' };
+} {
+  if (!url) return { baseScore: 50, domain: '', region: 'Global', sourceType: 'general' };
   
   const domain = String(url || '').toLowerCase();
   let extractedDomain = '';
@@ -1530,28 +1567,34 @@ async function calculateReliabilityScore(url: string, supabaseClient: any): Prom
     region = 'Global';
   }
   
-  // Get adjusted score from database using dynamic reputation
+  return { baseScore, domain: extractedDomain, region, sourceType };
+}
+
+// Legacy single-source function (kept for compatibility)
+async function calculateReliabilityScore(url: string, supabaseClient: any): Promise<{
+  baseScore: number;
+  adjustedScore: number;
+  domain: string;
+  region: string;
+  sourceType: string;
+}> {
+  const baseData = calculateBaseReliabilityScore(url);
+  
   try {
     const { data, error } = await supabaseClient.rpc('get_adjusted_source_score', {
-      _domain: extractedDomain,
-      _base_score: baseScore
+      _domain: baseData.domain,
+      _base_score: baseData.baseScore
     });
     
     if (error) {
       console.error('Error getting adjusted score:', error);
-      return { baseScore, adjustedScore: baseScore, domain: extractedDomain, region, sourceType };
+      return { ...baseData, adjustedScore: baseData.baseScore };
     }
     
-    return {
-      baseScore,
-      adjustedScore: data || baseScore,
-      domain: extractedDomain,
-      region,
-      sourceType
-    };
+    return { ...baseData, adjustedScore: data || baseData.baseScore };
   } catch (err) {
     console.error('Error calling get_adjusted_source_score:', err);
-    return { baseScore, adjustedScore: baseScore, domain: extractedDomain, region, sourceType };
+    return { ...baseData, adjustedScore: baseData.baseScore };
   }
 }
 

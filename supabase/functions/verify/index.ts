@@ -777,6 +777,17 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       supabase
     );
     
+    // Calculate average reliability ONCE (used in refutation logic and status determination)
+    const avgReliability = sourcesWithScores.length > 0 
+      ? Math.round(sourcesWithScores.reduce((sum, s) => sum + s.reliability_score, 0) / sourcesWithScores.length)
+      : 0;
+
+    // Calculate source consensus score BEFORE refutation logic (needed for override check)
+    const sourceAgreement = sourcesWithScores.length > 0
+      ? (sourcesWithScores.filter(s => s.reliability_score >= 70).length / sourcesWithScores.length) * 100
+      : 100;
+    const sourceConsensus = Math.round(sourceAgreement);
+
     // NEW: Semantic refutation detection using Lovable AI Gateway
     let isRefuted = false;
     let refutationConfidence = 0;
@@ -784,10 +795,6 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     let refutationReasoning = '';
     
     try {
-      const avgReliability = sourcesWithScores.length > 0 
-        ? Math.round(sourcesWithScores.reduce((sum, s) => sum + s.reliability_score, 0) / sourcesWithScores.length)
-        : 0;
-
       console.log('🧠 Performing semantic refutation analysis...');
       
       const refutationAnalysis = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/detect-refutation`, {
@@ -818,9 +825,6 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       if (refutationResult.is_refutation && 
           refutationResult.confidence > 70 && 
           refutationResult.refutation_type === 'direct') {
-        
-        // Calculate source consensus from the confidence calculation
-        const sourceConsensus = consensusScore || 100; // Use consensus from earlier calculation
         
         // Additional safety check: if sources strongly agree (consensus >80%) and have high reliability,
         // do NOT mark as refuted even if AI thinks so
@@ -856,9 +860,6 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     // 2. Low confidence (<40%)
     // 3. Refutation type is "direct"
     // 4. Source reliability is also low (<65%)
-    const avgReliability = sourcesWithScores.length > 0 
-      ? Math.round(sourcesWithScores.reduce((sum, s) => sum + s.reliability_score, 0) / sourcesWithScores.length)
-      : 0;
     
     if (isRefuted && 
         confidence < 40 && 
@@ -1089,24 +1090,8 @@ async function calculateTavilyConfidence(
   // Content Analysis Weight (30%) - Evidence-based scoring
   let contentScore = isEstablishedFact ? 75 : 50; // Higher baseline for established facts
   
-  // NEGATION DETECTION - Check if answer contradicts the claim
-  const lowerAnswer = safeAnswer.toLowerCase();
-  const contentWords = safeContent.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
-  
-  // Negation words that indicate the claim is false
-  const negationWords = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality', 'myth', 'misconception', 'debunked'];
-  const hasNegation = negationWords.some(neg => lowerAnswer.includes(neg));
-  
-  // Check if answer contains original claim keywords + negation
-  const claimKeywordsInAnswer = contentWords.filter(word => lowerAnswer.includes(word)).length;
-  
-  let isDebunking = false;
-  if (hasNegation && claimKeywordsInAnswer >= 2) {
-    // Answer is DEBUNKING the claim - major penalty
-    contentScore -= 60;
-    isDebunking = true;
-    console.log('🚨 CONTRADICTION DETECTED: Answer contradicts the original claim');
-  }
+  // NOTE: Refutation detection is now handled by semantic AI analysis in the main verification flow
+  // Old pattern-matching negation logic has been removed to prevent false positives
   
   // Evidence quality indicators (not keyword gaming)
   const hasSpecificDates = /\b(19|20)\d{2}\b/.test(safeAnswer);

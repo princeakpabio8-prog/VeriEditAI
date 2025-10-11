@@ -140,3 +140,6 @@ verify_jwt = false
 
 [functions.submit-partnership-request]
 verify_jwt = true
+
+[functions.detect-refutation]
+verify_jwt = false

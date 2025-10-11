@@ -777,26 +777,95 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       supabase
     );
     
-    // Double-check for refutation in the answer itself
-    const lowerAnswer = answer.toLowerCase();
-    const lowerContent = content.toLowerCase();
-    const contentKeywords = content.split(/\s+/).filter(w => w.length > 3).map(w => w.toLowerCase());
-    const negationInAnswer = ['not', 'no', 'false', 'incorrect', 'untrue', 'wrong', 'actually', 'in reality'].some(neg => lowerAnswer.includes(neg));
-    const keywordsInAnswer = contentKeywords.filter(word => lowerAnswer.includes(word)).length;
+    // NEW: Semantic refutation detection using Lovable AI Gateway
+    let isRefuted = false;
+    let refutationConfidence = 0;
+    let refutationType = 'none';
+    let refutationReasoning = '';
     
-    const isRefuted = negationInAnswer && keywordsInAnswer >= 2;
-    
-    if (isRefuted) {
-      // The answer is clearly refuting the claim - force low confidence and FALSE status
-      confidence = Math.min(confidence, 30);
-      console.log(`🚨 REFUTATION CONFIRMED: Answer refutes the claim. Capping confidence at 30%.`);
+    try {
+      const avgReliability = sourcesWithScores.length > 0 
+        ? Math.round(sourcesWithScores.reduce((sum, s) => sum + s.reliability_score, 0) / sourcesWithScores.length)
+        : 0;
+
+      console.log('🧠 Performing semantic refutation analysis...');
+      
+      const refutationAnalysis = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/detect-refutation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          claim: content,
+          answer: answer,
+          sources: {
+            count: sourcesWithScores.length,
+            avg_reliability: avgReliability
+          }
+        })
+      });
+
+      const refutationResult = await refutationAnalysis.json();
+      refutationReasoning = refutationResult.reasoning || '';
+      
+      // Only treat as refutation if:
+      // 1. AI detected it as refutation
+      // 2. Confidence is high (>70%)
+      // 3. Type is "direct" (not partial)
+      // 4. Source consensus is weak (<60%) OR source reliability is low (<65%)
+      
+      if (refutationResult.is_refutation && 
+          refutationResult.confidence > 70 && 
+          refutationResult.refutation_type === 'direct') {
+        
+        // Calculate source consensus from the confidence calculation
+        const sourceConsensus = consensusScore || 100; // Use consensus from earlier calculation
+        
+        // Additional safety check: if sources strongly agree (consensus >80%) and have high reliability,
+        // do NOT mark as refuted even if AI thinks so
+        if (avgReliability < 65 || sourceConsensus < 60) {
+          isRefuted = true;
+          refutationConfidence = refutationResult.confidence;
+          refutationType = refutationResult.refutation_type;
+          
+          // Reduce confidence proportionally to refutation confidence
+          const reductionFactor = refutationConfidence / 100;
+          const originalConfidence = confidence;
+          confidence = Math.round(confidence * (1 - (reductionFactor * 0.7))); // Max 70% reduction
+          confidence = Math.max(confidence, 20); // Floor at 20% (not 30%)
+          
+          console.log(`🚨 REFUTATION DETECTED: ${refutationReasoning}`);
+          console.log(`📊 Refutation confidence: ${refutationConfidence}%, reducing trust score from ${originalConfidence}% to ${confidence}%`);
+        } else {
+          console.log(`✅ REFUTATION IGNORED: High source consensus (${sourceConsensus}%) and reliability (${avgReliability}%) override AI detection`);
+          console.log(`📝 AI reasoning (overridden): ${refutationReasoning}`);
+        }
+      } else {
+        console.log(`✅ No refutation detected (AI confidence: ${refutationResult.confidence}%, type: ${refutationResult.refutation_type})`);
+      }
+    } catch (err) {
+      console.error('⚠️ Refutation detection failed, proceeding without it:', err);
+      // Fail gracefully - don't mark as refuted if analysis fails
     }
     
     let status = getStatusFromConfidence(confidence);
     
-    // Force FALSE status if refuted
-    if (isRefuted && confidence < 40) {
+    // Only force FALSE status if:
+    // 1. Confirmed refutation detected
+    // 2. Low confidence (<40%)
+    // 3. Refutation type is "direct"
+    // 4. Source reliability is also low (<65%)
+    const avgReliability = sourcesWithScores.length > 0 
+      ? Math.round(sourcesWithScores.reduce((sum, s) => sum + s.reliability_score, 0) / sourcesWithScores.length)
+      : 0;
+    
+    if (isRefuted && 
+        confidence < 40 && 
+        refutationType === 'direct' &&
+        avgReliability < 65) {
       status = 'false';
+      console.log(`❌ Status set to FALSE due to direct refutation with low confidence and weak sources`);
     }
     
     // Create concise verdict summary
@@ -807,7 +876,10 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     else if (confidence >= 40) verdict = 'Disputed claim';
     else verdict = 'Likely false claim';
     
-    if (isRefuted) verdict = 'Claim refuted by evidence';
+    // Only override verdict if refutation is strong
+    if (isRefuted && refutationConfidence > 80 && refutationType === 'direct') {
+      verdict = 'Claim refuted by evidence';
+    }
     
     const summary = `${verdict} (${confidence}% confidence). ${answer ? answer.split('.')[0] + '.' : `Analyzed ${searchResults.length} sources.`}`;
     
@@ -816,9 +888,6 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     
     // Why this score
     const topSources = sourcesWithScores.slice(0, 3);
-    const avgReliability = topSources.length > 0 
-      ? Math.round(topSources.reduce((sum, s) => sum + s.reliability_score, 0) / topSources.length)
-      : 0;
     
     analysis_points.push(`**Why this confidence score**: Based on ${sourcesWithScores.length} sources with average reliability of ${avgReliability}%`);
     
@@ -836,9 +905,11 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       }
     }
     
-    // Contradicting evidence (if any)
-    if (isRefuted || confidence < 60) {
-      analysis_points.push(`**Contradicting evidence**: Multiple sources dispute this claim or provide counterevidence`);
+    // Contradicting evidence (if any) - now with AI reasoning
+    if (isRefuted && refutationConfidence > 70) {
+      analysis_points.push(`**Contradicting evidence**: ${refutationReasoning || 'Multiple sources dispute this claim or provide counterevidence'}`);
+    } else if (confidence < 60 && !isRefuted) {
+      analysis_points.push(`**Weak evidence**: Sources provide insufficient or contradictory information`);
     }
     
     // Category context

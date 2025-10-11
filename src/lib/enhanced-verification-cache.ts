@@ -1,5 +1,6 @@
 // Enhanced Verification Cache with Performance Optimization
 // This improves verification speed by implementing intelligent caching
+import { lower, safeString } from './string';
 
 interface CachedVerification {
   content: string;
@@ -27,8 +28,8 @@ class EnhancedVerificationCache {
 
   private generateKey(content: string, userId: string): string {
     // Create content hash for consistent caching (null-safe)
-    const normalizedContent = (content ?? '').toString().toLowerCase().trim().slice(0, 500);
-    const safeUser = (userId ?? '').toString();
+    const normalizedContent = lower(content ?? '').trim().slice(0, 500);
+    const safeUser = safeString(userId);
     let hash = '';
     try {
       // Safely encode possibly non-ASCII content
@@ -159,12 +160,12 @@ class EnhancedVerificationCache {
     }
     
     // Fallback to word-based similarity
-    const normalizedContent = (content ?? '').toString().toLowerCase().trim();
+    const normalizedContent = lower(content ?? '').trim();
     const words = normalizedContent.split(/\s+/).filter(w => w.length > 3);
     
     return entries
       .map(cached => {
-        const cachedWords = (cached.content ?? '').toString().toLowerCase().split(/\s+/).filter(w => w.length > 3);
+        const cachedWords = lower(cached.content ?? '').split(/\s+/).filter(w => w.length > 3);
         const commonWords = words.filter(word => cachedWords.includes(word));
         const similarity = commonWords.length / Math.max(words.length, cachedWords.length);
         

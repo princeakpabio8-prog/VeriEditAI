@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { includesLower } from "@/lib/string";
 import {
   Dialog,
   DialogContent,
@@ -263,10 +264,10 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
       if (selectedCategory !== "All" && article.category !== selectedCategory) {
         return false;
       }
-      // Search filter (null-safe)
+      // Search filter (null-safe with includesLower)
       if (searchQuery && 
-          !(article.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) &&
-          !(article.summary?.toLowerCase() || '').includes(searchQuery.toLowerCase())) {
+          !includesLower(article.title, searchQuery) &&
+          !includesLower(article.summary, searchQuery)) {
         return false;
       }
       // Verification filter

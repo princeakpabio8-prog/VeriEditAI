@@ -13,6 +13,7 @@ import { LoadingSkeleton } from "./loading-skeleton";
 import { TrustScoreFeedback } from "./trust-score-feedback";
 import { validateAndSanitize } from "@/lib/validation";
 import { useAuth } from "@/contexts/AuthContext";
+import { lower } from "@/lib/string";
 import { parseDocument, isDocumentFile } from "@/lib/document-parser";
 import { 
   CheckCircle, 
@@ -180,7 +181,7 @@ export function MobileVerificationUI({
     }
 
     try {
-      const isImage = selectedFile.type.startsWith('image/');
+      const isImage = (selectedFile.type || '').startsWith('image/');
       console.log('Starting file verification:', selectedFile.name, 'isImage:', isImage);
 
       if (isImage) {
@@ -301,8 +302,8 @@ export function MobileVerificationUI({
   };
 
   const getStatusColor = (status: string | undefined) => {
-    // Enhanced null-safety and type checking
-    const safeStatus = typeof status === 'string' && status ? status.toLowerCase() : undefined;
+    // Enhanced null-safety using lower helper
+    const safeStatus = lower(status);
     if (!safeStatus) return 'bg-gray-500/10 text-gray-700 border-gray-200';
     
     switch (safeStatus) {
@@ -316,8 +317,8 @@ export function MobileVerificationUI({
   };
 
   const getStatusIcon = (status: string | undefined) => {
-    // Enhanced null-safety and type checking
-    const safeStatus = typeof status === 'string' && status ? status.toLowerCase() : undefined;
+    // Enhanced null-safety using lower helper
+    const safeStatus = lower(status);
     if (!safeStatus) return <Info className="h-4 w-4" />;
     
     switch (safeStatus) {

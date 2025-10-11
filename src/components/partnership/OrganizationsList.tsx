@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { includesLower } from "@/lib/string";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,8 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
   const industries = Array.from(new Set(organizations?.map(org => org.industry) || []));
 
   const filteredOrganizations = organizations?.filter(org => {
-    const matchesSearch = (org.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-                         (org.domain?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+    const matchesSearch = includesLower(org.name, searchQuery) ||
+                         includesLower(org.domain, searchQuery);
     const matchesIndustry = !selectedIndustry || org.industry === selectedIndustry;
     return matchesSearch && matchesIndustry;
   });

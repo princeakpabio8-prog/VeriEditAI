@@ -320,8 +320,8 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
       return;
     }
 
-    // Check if it's an image file
-    const isImage = selectedFile.type.startsWith('image/');
+    // Check if it's an image file (null-safe)
+    const isImage = (selectedFile.type || '').startsWith('image/');
     
     if (isImage) {
       // Handle image verification with Google Vision API

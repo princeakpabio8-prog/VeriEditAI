@@ -339,6 +339,26 @@ export function useVerify() {
       } catch (error) {
         // Ignore performance monitoring errors
       }
+      
+      // iOS Safari diagnostic for toLowerCase errors
+      const errMsg = (err as Error)?.message || '';
+      if (errMsg.includes('toLowerCase') || errMsg.includes('undefined is not an object')) {
+        console.error('🔴 iOS toLowerCase error detected:', {
+          error: errMsg,
+          resultStatus: typeof result?.status,
+          resultSummary: typeof result?.summary,
+          userAgent: navigator.userAgent,
+          isMobile: /iPhone|iPad|iPod/i.test(navigator.userAgent)
+        });
+        
+        const userFacingMsg = 'Verification data format error (iOS). Please try again.';
+        setError(userFacingMsg);
+        showVerificationError(userFacingMsg);
+        setLoading(false);
+        inFlightKeys.current.delete(key);
+        return null;
+      }
+      
       console.error('💥 Verification completely failed after all attempts:', err);
       
       // Track failed verification analytics

@@ -1,4 +1,5 @@
 // Accessibility utilities and enhancements
+import { lower } from './string';
 
 interface AccessibilityOptions {
   reducedMotion?: boolean;
@@ -313,7 +314,7 @@ class AccessibilityManager {
   private getElementDescription(element: HTMLElement): string {
     if (!element || !element.tagName) return 'unknown element';
     
-    const tagName = element.tagName.toLowerCase();
+    const tagName = lower(element?.tagName);
     const ariaLabel = element.getAttribute?.('aria-label');
     const title = element.getAttribute?.('title');
     const text = element.textContent?.trim();

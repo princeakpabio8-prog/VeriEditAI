@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Search, Users, UserCheck, Calendar, TrendingUp } from "lucide-react";
+import { includesLower } from "@/lib/string";
 import { useAdminData } from "@/hooks/useAdminData";
 import { exportToCSV } from "@/lib/export-utils";
 import { format } from "date-fns";
@@ -37,8 +38,8 @@ const AdminDashboard = () => {
   }
 
   const filteredSubscribers = subscribers?.filter(sub => 
-    (sub.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
-    (sub.subscription_tier?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+    includesLower(sub.email, searchQuery) ||
+    includesLower(sub.subscription_tier, searchQuery)
   ) || [];
 
   const stats = {

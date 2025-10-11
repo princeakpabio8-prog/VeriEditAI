@@ -1,4 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { lower } from './string';
 
 // Configure PDF.js worker using Vite-bundled worker (fixes CDN module import issues)
 // @ts-ignore - Vite handles this URL import
@@ -24,8 +25,8 @@ export interface ParsedDocument {
  * Main document parsing function - routes to appropriate parser based on file type
  */
 export async function parseDocument(file: File): Promise<ParsedDocument> {
-  const fileType = (file.type || '').toLowerCase();
-  const fileName = (file.name || 'unknown').toLowerCase();
+  const fileType = lower(file?.type);
+  const fileName = lower(file?.name || 'unknown');
 
   try {
     // PDF files
@@ -166,7 +167,7 @@ export function isDocumentFile(file: File): boolean {
     'text/plain',
   ];
 
-  const fileName = file.name.toLowerCase();
+  const fileName = lower(file?.name);
   const documentExtensions = ['.pdf', '.txt'];
 
   return (

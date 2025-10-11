@@ -7,6 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Safely converts a value to lowercase string, handling null/undefined gracefully
+ * @deprecated Use `lower` from '@/lib/string' instead
  */
 export function safeLower(value: any): string {
   if (value == null || value === undefined) {
@@ -18,7 +19,5 @@ export function safeLower(value: any): string {
   }
   
   // Convert to string first, then lowercase
-  const stringValue = String(value);
-  console.warn('safeLower: Converting non-string value to string:', { original: value, converted: stringValue });
-  return stringValue.toLowerCase();
+  return String(value).toLowerCase();
 }

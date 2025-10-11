@@ -1804,6 +1804,13 @@ export type Database = {
       }
     }
     Functions: {
+      backfill_source_regions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          breakdown: Json
+          updated_count: number
+        }[]
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown

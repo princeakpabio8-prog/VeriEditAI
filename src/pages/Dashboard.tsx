@@ -29,6 +29,14 @@ import { LighthouseFeed } from '@/components/lighthouse-feed';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { VerificationErrorBoundary } from '@/components/verification-error-boundary';
 
+// Helper function to display regions properly (maps Unknown/null to Global/International)
+const displayRegion = (region: string | null | undefined): string => {
+  if (!region || region === 'Unknown' || region === '') {
+    return 'Global/International';
+  }
+  return region;
+};
+
 // Trust Intelligence Tab Component
 const TrustIntelTab = () => {
   const [globalIndex, setGlobalIndex] = useState<number | null>(null);
@@ -153,7 +161,7 @@ const TrustIntelTab = () => {
             <TableBody>
               {regionalData.length > 0 ? regionalData.map((item) => (
                 <TableRow key={item.region}>
-                  <TableCell className="font-medium">{item.region}</TableCell>
+                  <TableCell className="font-medium">{displayRegion(item.region)}</TableCell>
                   <TableCell>
                     <Badge variant={item.avgScore >= 70 ? 'default' : 'secondary'}>
                       {item.avgScore}

@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       const trustScore = v.trust_score || 50;
       
       v.sources?.forEach((source: any) => {
-        const region = source.source_region || 'Unknown';
+        const region = source.source_region || 'International';
         const domain = source.domain || 'Unknown';
         const key = `${region}|${topic}|${domain}`;
 

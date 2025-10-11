@@ -181,8 +181,14 @@ serve(async (req) => {
 
     console.log(`✅ Verification complete in ${processingTime}ms`);
     
+    // Validate result structure
+    if (!result.category) {
+      console.warn('⚠️ Result missing category, defaulting to "general"');
+      result.category = 'general';
+    }
+    
     // Send grant verification email if category is ngo-grant
-    if (category === 'ngo-grant' && verificationId && user_id) {
+    if (result.category === 'ngo-grant' && verificationId && user_id) {
       try {
         console.log('📧 Triggering grant verification email...');
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

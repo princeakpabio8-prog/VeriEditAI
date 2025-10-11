@@ -1307,6 +1307,17 @@ async function calculateTavilyConfidence(
     finalConfidence = Math.min(finalConfidence + 5, 97);
   }
   
+  // Current event boost: well-documented recent events with perfect consensus deserve high confidence
+  const isCurrentEvent = factType === 'current-event';
+  if (isCurrentEvent && effectiveConsensusScore === 100 && effectiveSourceScore >= 75 && !isDebunking) {
+    // Perfect consensus + good sources + not debunked = highly credible current event
+    finalConfidence = Math.max(finalConfidence, 85); // Ensure minimum 85% for well-verified current events
+    if (effectiveSourceScore >= 85) {
+      finalConfidence = Math.max(finalConfidence, 88); // Exceptional sources push to 88%+
+    }
+    console.log(`🔥 Current event boost applied: consensus=${effectiveConsensusScore}%, sources=${effectiveSourceScore}%`);
+  }
+  
   // Log detailed scores for debugging
   console.log(`📊 Score breakdown: content=${contentScore}, source=${effectiveSourceScore}, consensus=${effectiveConsensusScore}, recency=${recencyScore}, quality=${answerQuality}, debunking=${isDebunking}, final=${finalConfidence}`);
   

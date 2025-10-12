@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import { ImageUploader } from './ImageUploader';
 import { ImageGallery } from './ImageGallery';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface Comment {
   id: string;
@@ -17,6 +18,7 @@ interface Comment {
   created_at: string;
   author_id: string;
   author_name: string | null;
+  author_avatar: string | null;
   image_urls?: string[];
 }
 
@@ -65,13 +67,14 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
           if (commentData) {
             const { data: profileData } = await supabase
               .from('profiles')
-              .select('full_name')
+              .select('full_name, avatar_url')
               .eq('user_id', commentData.author_id)
               .single();
 
             setComments(prev => [...prev, {
               ...commentData,
-              author_name: profileData?.full_name || null
+              author_name: profileData?.full_name || null,
+              author_avatar: profileData?.avatar_url || null
             }]);
           }
         }
@@ -95,20 +98,21 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
       if (error) throw error;
 
       if (commentsData && commentsData.length > 0) {
-        // Fetch author names for all comments
+        // Fetch author names and avatars for all comments
         const authorIds = [...new Set(commentsData.map(c => c.author_id))];
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('user_id, full_name')
+          .select('user_id, full_name, avatar_url')
           .in('user_id', authorIds);
 
         const profileMap = new Map(
-          profilesData?.map(p => [p.user_id, p.full_name]) || []
+          profilesData?.map(p => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }]) || []
         );
 
         const commentsWithAuthors = commentsData.map(comment => ({
           ...comment,
-          author_name: profileMap.get(comment.author_id) || null
+          author_name: profileMap.get(comment.author_id)?.full_name || null,
+          author_avatar: profileMap.get(comment.author_id)?.avatar_url || null
         }));
 
         setComments(commentsWithAuthors);
@@ -243,11 +247,11 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
         ) : (
           comments.map((comment) => (
             <div key={comment.id} className="flex gap-4">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>
-                  {(comment.author_name || 'A')[0].toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                avatarUrl={comment.author_avatar}
+                fullName={comment.author_name}
+                size="sm"
+              />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium">

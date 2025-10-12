@@ -16,6 +16,7 @@ import { DynamicMeta } from '@/components/DynamicMeta';
 import { generateClaimReviewSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
 import { trackPageView, createShareableURL } from '@/lib/public-analytics';
 import { ImageGallery } from '@/components/lighthouse/ImageGallery';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
@@ -27,6 +28,7 @@ export default function ThreadView() {
   const [loading, setLoading] = useState(true);
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
   const [upvoteCount, setUpvoteCount] = useState(0);
+  const [authorAvatar, setAuthorAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,10 +54,11 @@ export default function ThreadView() {
         if (threadData) {
           const { data: profileData } = await supabase
             .from('profiles')
-            .select('full_name')
+            .select('full_name, avatar_url')
             .eq('user_id', threadData.author_id)
             .single();
           authorName = profileData?.full_name;
+          setAuthorAvatar(profileData?.avatar_url || null);
         }
 
         setThread({ ...threadData, author_name: authorName });
@@ -306,7 +309,12 @@ export default function ThreadView() {
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-4">{thread.title}</h1>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <UserAvatar
+                    avatarUrl={authorAvatar}
+                    fullName={thread.author_name}
+                    size="sm"
+                  />
                   <span>by {thread.author_name || 'Anonymous'}</span>
                   <span>•</span>
                   <span>

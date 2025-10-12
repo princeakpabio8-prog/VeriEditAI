@@ -45,21 +45,22 @@ export function useLighthouseThreads(roomId: string) {
 
       // Fetch author profiles separately
       const authorIds = Array.from(new Set((threadsData || []).map((t: any) => t.author_id)));
-      let profilesMap = new Map<string, string | null>();
+      let profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
       
       if (authorIds.length > 0) {
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('user_id, full_name')
+          .select('user_id, full_name, avatar_url')
           .in('user_id', authorIds);
         
-        profilesMap = new Map((profilesData || []).map((p: any) => [p.user_id, p.full_name]));
+        profilesMap = new Map((profilesData || []).map((p: any) => [p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url }]));
       }
 
-      // Merge author names into threads
+      // Merge author names and avatars into threads
       const formattedThreads = (threadsData || []).map((thread: any) => ({
         ...thread,
-        author_name: profilesMap.get(thread.author_id) ?? null
+        author_name: profilesMap.get(thread.author_id)?.full_name ?? null,
+        author_avatar: profilesMap.get(thread.author_id)?.avatar_url ?? null
       }));
 
       setThreads(formattedThreads);

@@ -10,6 +10,9 @@ import { Loader2, Flame } from 'lucide-react';
 import { VerificationRitual } from './VerificationRitual';
 import { ImageUploader } from './ImageUploader';
 import { supabase } from '@/integrations/supabase/client';
+import { UserAvatar } from '@/components/ui/user-avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 interface CreateThreadDialogProps {
   open: boolean;
@@ -19,6 +22,7 @@ interface CreateThreadDialogProps {
 }
 
 export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThreadCreated }: CreateThreadDialogProps) {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [autoVerify, setAutoVerify] = useState(false);
@@ -28,6 +32,26 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
   const [createdThreadId, setCreatedThreadId] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageMetadata, setImageMetadata] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  // Fetch user profile when dialog opens
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!open || !user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setUserProfile(data);
+      }
+    };
+    
+    fetchProfile();
+  }, [open, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +157,14 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Thread</DialogTitle>
+          <DialogTitle className="flex items-center gap-3">
+            <UserAvatar
+              avatarUrl={userProfile?.avatar_url}
+              fullName={userProfile?.full_name}
+              size="sm"
+            />
+            Create New Thread
+          </DialogTitle>
           <DialogDescription>
             Start a new discussion in this room
           </DialogDescription>

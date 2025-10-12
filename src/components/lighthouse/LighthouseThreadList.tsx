@@ -4,6 +4,7 @@ import { MessageSquare, ThumbsUp, Shield } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface Thread {
   id: string;
@@ -11,6 +12,7 @@ interface Thread {
   title: string;
   content: string;
   author_name?: string | null;
+  author_avatar?: string | null;
   trust_score: number | null;
   is_auto_verified: boolean | null;
   comment_count: number;
@@ -77,7 +79,12 @@ export function LighthouseThreadList({ threads, loading }: LighthouseThreadListP
                 {thread.content.length > 200 && '...'}
               </p>
 
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <UserAvatar
+                  avatarUrl={thread.author_avatar}
+                  fullName={thread.author_name}
+                  size="xs"
+                />
                 <span>
                   by {thread.author_name || 'Anonymous'}
                 </span>

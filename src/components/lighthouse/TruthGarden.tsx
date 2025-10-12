@@ -1,9 +1,10 @@
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Sky, Environment } from '@react-three/drei';
+import { OrbitControls, Sky, Environment, Sparkles } from '@react-three/drei';
 import { TruthTree } from './TruthTree';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Thread {
   id: string;
@@ -23,6 +24,18 @@ interface TruthGardenProps {
 export function TruthGarden({ threads }: TruthGardenProps) {
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [cameraPosition] = useState<[number, number, number]>([0, 8, 12]);
+  const isMobile = useIsMobile();
+  
+  // Dim non-selected trees
+  const [focusedTreeId, setFocusedTreeId] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (selectedThread) {
+      setFocusedTreeId(selectedThread.id);
+    } else {
+      setFocusedTreeId(null);
+    }
+  }, [selectedThread]);
 
   // Filter threads that have garden positions
   const gardenThreads = threads.filter(t => 
@@ -72,6 +85,16 @@ export function TruthGarden({ threads }: TruthGardenProps) {
           />
         </mesh>
 
+        {/* Firefly particles */}
+        <Sparkles
+          count={isMobile ? 30 : 100}
+          scale={[40, 5, 40]}
+          size={2}
+          speed={0.2}
+          opacity={0.6}
+          color="#B8F3FF"
+        />
+
         {/* Truth Trees */}
         {gardenThreads.map((thread) => (
           <TruthTree
@@ -84,6 +107,7 @@ export function TruthGarden({ threads }: TruthGardenProps) {
             trustScore={thread.trust_score}
             growthStage={thread.tree_growth_stage || 1}
             isNew={isNewThread(thread.created_at)}
+            isFocused={!focusedTreeId || focusedTreeId === thread.id}
             onClick={() => setSelectedThread(thread)}
           />
         ))}

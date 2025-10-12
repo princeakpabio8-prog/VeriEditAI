@@ -165,13 +165,13 @@ export default function LighthouseRoomView() {
             {user ? (
               <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
                 <Plus className="h-4 w-4" />
-                New Thread
+                Plant a Seed
               </Button>
             ) : (
               <Button asChild variant="outline" className="gap-2">
                 <Link to="/auth">
                   <Plus className="h-4 w-4" />
-                  Sign in to create thread
+                  Sign in to plant seeds
                 </Link>
               </Button>
             )}
@@ -186,7 +186,7 @@ export default function LighthouseRoomView() {
               </TabsTrigger>
               <TabsTrigger value="garden" className="gap-2">
                 <Trees className="h-4 w-4" />
-                Truth Garden
+                The Garden
               </TabsTrigger>
             </TabsList>
             
@@ -198,14 +198,14 @@ export default function LighthouseRoomView() {
             <TabsContent value="garden" className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">Truth Garden</h2>
+                  <h2 className="text-2xl font-semibold">The Garden</h2>
                   <Badge variant="outline" className="gap-1">
                     <Trees className="h-3 w-3" />
                     3D Visualization
                   </Badge>
                 </div>
-                <p className="text-muted-foreground text-sm">
-                  Each verified thread grows as a tree. Watch your forest of truth flourish as trust builds.
+                <p className="text-muted-foreground text-sm italic">
+                  Watch your forest of truth flourish as verification strengthens each seed.
                 </p>
               </div>
               <TruthGarden roomId={roomId || ''} threads={threads as any} />

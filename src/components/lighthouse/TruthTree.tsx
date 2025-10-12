@@ -7,10 +7,11 @@ interface TruthTreeProps {
   trustScore: number | null;
   growthStage: number;
   isNew?: boolean;
+  isFocused?: boolean;
   onClick?: () => void;
 }
 
-export function TruthTree({ position, trustScore, growthStage, isNew, onClick }: TruthTreeProps) {
+export function TruthTree({ position, trustScore, growthStage, isNew, isFocused = true, onClick }: TruthTreeProps) {
   const treeRef = useRef<Mesh>(null);
   const foliageRef = useRef<Mesh>(null);
 
@@ -50,12 +51,19 @@ export function TruthTree({ position, trustScore, growthStage, isNew, onClick }:
     }
   });
 
+  const opacity = isFocused ? 1 : 0.5;
+
   return (
     <group position={position} onClick={onClick}>
       {/* Tree trunk */}
       <mesh ref={treeRef} position={[0, scale * 0.5, 0]}>
         <cylinderGeometry args={[0.1 * scale, 0.15 * scale, scale, 8]} />
-        <meshStandardMaterial color="#5D4037" roughness={0.9} />
+        <meshStandardMaterial 
+          color="#5D4037" 
+          roughness={0.9}
+          transparent
+          opacity={opacity}
+        />
       </mesh>
       
       {/* Tree foliage */}
@@ -66,8 +74,20 @@ export function TruthTree({ position, trustScore, growthStage, isNew, onClick }:
           emissive={trustScore && trustScore >= 80 ? getTreeColor() : '#000000'}
           emissiveIntensity={trustScore && trustScore >= 80 ? 0.2 : 0}
           roughness={0.8}
+          transparent
+          opacity={opacity}
         />
       </mesh>
+      
+      {/* Hover glow */}
+      {isFocused && (
+        <pointLight 
+          position={[0, scale * 1.2, 0]} 
+          color={getTreeColor()} 
+          intensity={0.3} 
+          distance={3}
+        />
+      )}
       
       {/* Sparkle effect for new high-trust trees */}
       {isNew && trustScore && trustScore >= 80 && (

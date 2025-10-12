@@ -229,10 +229,19 @@ export const Navigation = () => {
                   Discover News
                 </Link>
                 <Link
-                  to="/referrals"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  to="/lighthouse"
+                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
+                  <Radio className="h-4 w-4" />
+                  Lighthouse
+                </Link>
+                <Link
+                  to="/referrals"
+                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Gift className="h-4 w-4" />
                   Referrals
                 </Link>
                 <Link

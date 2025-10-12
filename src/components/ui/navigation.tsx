@@ -94,6 +94,14 @@ export const Navigation = () => {
                 <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
                   Pricing
                 </a>
+                <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Radio className="h-4 w-4" />
+                  Lighthouse
+                </Link>
+                <Link to="/auth?next=/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Newspaper className="h-4 w-4" />
+                  Discover
+                </Link>
                 <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
                   Extensions
                 </Link>
@@ -282,6 +290,14 @@ export const Navigation = () => {
                 >
                   <Radio className="h-4 w-4" />
                   Lighthouse
+                </Link>
+                <Link
+                  to="/auth?next=/dashboard?tab=discover"
+                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Newspaper className="h-4 w-4" />
+                  Discover
                 </Link>
                 <Link
                   to="/extensions"

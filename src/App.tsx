@@ -31,6 +31,7 @@ import LighthouseRoomView from "./pages/LighthouseRoomView";
 import ThreadView from "./pages/ThreadView";
 import ApiDocs from "./pages/ApiDocs";
 import { OrganizationProfile } from "./components/partnership/OrganizationProfile";
+import { MobileBottomNav } from "./components/ui/MobileBottomNav";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <MobileBottomNav />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />

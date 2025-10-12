@@ -189,6 +189,17 @@ export default function ThreadView() {
             vote_type: 'up'
           });
         
+        // Notify thread author about upvote (only on new upvotes, not when switching from downvote)
+        if (!userVote && thread?.author_id && thread.author_id !== user.id) {
+          await supabase.from('notifications').insert({
+            user_id: thread.author_id,
+            type: 'upvote',
+            message: `Someone upvoted your thread "${thread.title}"`,
+            action_url: window.location.pathname,
+            related_id: threadId,
+          });
+        }
+        
         setUserVote('up');
         setUpvoteCount(prev => prev + (userVote === 'down' ? 2 : 1));
       }

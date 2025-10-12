@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 import { motion } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -108,8 +109,13 @@ export const Navigation = () => {
               </>
             )}
             
-            {/* Feedback button for authenticated users */}
-            {isAuthenticated && <UserFeedback />}
+            {/* Feedback and notifications for authenticated users */}
+            {isAuthenticated && (
+              <>
+                <NotificationBell />
+                <UserFeedback />
+              </>
+            )}
             
             {isAuthenticated ? (
               <div className="relative">

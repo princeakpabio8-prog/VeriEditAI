@@ -167,6 +167,23 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
 
       if (error) throw error;
 
+      // Notify thread author about new comment
+      const { data: threadData } = await supabase
+        .from('room_threads')
+        .select('author_id, title')
+        .eq('id', threadId)
+        .single();
+
+      if (threadData && threadData.author_id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: threadData.author_id,
+          type: 'comment',
+          message: `New comment on "${threadData.title}"`,
+          action_url: window.location.pathname,
+          related_id: threadId,
+        });
+      }
+
       setNewComment('');
       setImageUrls([]);
       setImageMetadata([]);

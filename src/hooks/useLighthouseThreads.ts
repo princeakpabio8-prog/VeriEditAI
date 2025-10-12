@@ -33,22 +33,34 @@ export function useLighthouseThreads(roomId: string) {
       setLoading(true);
       setError(null);
 
+      // Fetch threads without embed
       const { data: threadsData, error: threadsError } = await supabase
         .from('room_threads')
-        .select(`
-          *,
-          profiles!room_threads_author_id_fkey(full_name)
-        `)
+        .select('*')
         .eq('room_id', roomId)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
       if (threadsError) throw threadsError;
 
-      const formattedThreads = threadsData?.map((thread: any) => ({
+      // Fetch author profiles separately
+      const authorIds = Array.from(new Set((threadsData || []).map((t: any) => t.author_id)));
+      let profilesMap = new Map<string, string | null>();
+      
+      if (authorIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', authorIds);
+        
+        profilesMap = new Map((profilesData || []).map((p: any) => [p.user_id, p.full_name]));
+      }
+
+      // Merge author names into threads
+      const formattedThreads = (threadsData || []).map((thread: any) => ({
         ...thread,
-        author_name: thread.profiles?.full_name
-      })) || [];
+        author_name: profilesMap.get(thread.author_id) ?? null
+      }));
 
       setThreads(formattedThreads);
     } catch (err) {

@@ -32,6 +32,7 @@ import ThreadView from "./pages/ThreadView";
 import ApiDocs from "./pages/ApiDocs";
 import { OrganizationProfile } from "./components/partnership/OrganizationProfile";
 import { MobileBottomNav } from "./components/ui/MobileBottomNav";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const App = () => (
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ThreadView />} />
             <Route path="/lighthouse/organizations/:orgId" element={<OrganizationProfile />} />
             <Route path="/api-docs" element={<ApiDocs />} />
+            <Route path="/profile/:userId" element={<UserProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

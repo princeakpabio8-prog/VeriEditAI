@@ -8,9 +8,10 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { UserAvatar } from '@/components/ui/user-avatar';
+import { Link } from 'react-router-dom';
 import { ImageUploader } from './ImageUploader';
 import { ImageGallery } from './ImageGallery';
-import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface Comment {
   id: string;
@@ -267,13 +268,17 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
               <UserAvatar
                 avatarUrl={comment.author_avatar}
                 fullName={comment.author_name}
+                userId={comment.author_id}
                 size="sm"
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium">
+                  <Link 
+                    to={`/profile/${comment.author_id}`}
+                    className="font-medium hover:text-primary transition-colors"
+                  >
                     {comment.author_name || 'Anonymous'}
-                  </span>
+                  </Link>
                    <span className="text-sm text-muted-foreground">
                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                    </span>

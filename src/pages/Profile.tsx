@@ -16,6 +16,7 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ApiKeyManager } from '@/components/api-key-manager';
 import { AvatarUploader } from '@/components/profile/AvatarUploader';
+import { FollowersList } from '@/components/profile/FollowersList';
 
 interface Profile {
   full_name: string;
@@ -30,6 +31,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [verificationCount, setVerificationCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -57,6 +60,8 @@ const Profile = () => {
           company: data.company || '',
           avatar_url: data.avatar_url || null,
         });
+        setFollowersCount(data.followers_count || 0);
+        setFollowingCount(data.following_count || 0);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -343,6 +348,13 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Social Section */}
+            <FollowersList
+              userId={user?.id || ''}
+              followersCount={followersCount}
+              followingCount={followingCount}
+            />
           </div>
         </div>
       </main>

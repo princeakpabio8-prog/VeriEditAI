@@ -1,11 +1,14 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface UserAvatarProps {
   avatarUrl?: string | null;
   fullName?: string | null;
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
+  userId?: string;
+  clickable?: boolean;
 }
 
 // Generate consistent color from name
@@ -53,13 +56,15 @@ export function UserAvatar({
   avatarUrl, 
   fullName, 
   size = "md", 
-  className 
+  className,
+  userId,
+  clickable = true
 }: UserAvatarProps) {
   const initials = getInitials(fullName);
   const bgColor = getAvatarColor(fullName);
   
-  return (
-    <Avatar className={cn(sizeClasses[size], className)}>
+  const avatarContent = (
+    <Avatar className={cn(sizeClasses[size], clickable && userId && "cursor-pointer hover:opacity-80 transition-opacity", className)}>
       {avatarUrl && (
         <AvatarImage 
           src={avatarUrl} 
@@ -74,4 +79,10 @@ export function UserAvatar({
       </AvatarFallback>
     </Avatar>
   );
+
+  if (clickable && userId) {
+    return <Link to={`/profile/${userId}`}>{avatarContent}</Link>;
+  }
+
+  return avatarContent;
 }

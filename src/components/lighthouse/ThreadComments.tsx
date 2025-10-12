@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +10,7 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 import { Link } from 'react-router-dom';
 import { ImageUploader } from './ImageUploader';
 import { ImageGallery } from './ImageGallery';
+import { MentionInput } from '@/components/mentions/MentionInput';
 import { notifyThreadAuthorNewComment, parseMentionsAndNotify } from '@/lib/notification-helpers';
 
 interface Comment {
@@ -43,6 +42,7 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   const [submitting, setSubmitting] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageMetadata, setImageMetadata] = useState<any[]>([]);
+  const [mentionedUsers, setMentionedUsers] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -174,7 +174,31 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
       await notifyThreadAuthorNewComment(threadId, roomId, user.id);
 
       // Parse and notify mentioned users
-      await parseMentionsAndNotify(newComment, threadId, roomId, user.id);
+      if (mentionedUsers.length > 0) {
+        for (const username of mentionedUsers) {
+          const { data: mentionedProfile } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('username', username)
+            .single();
+
+          if (mentionedProfile && mentionedProfile.user_id !== user.id) {
+            await supabase
+              .from('notifications')
+              .insert({
+                user_id: mentionedProfile.user_id,
+                type: 'mention',
+                message: `mentioned you in a comment`,
+                actionUrl: `/threads/${threadId}`,
+                metadata: {
+                  thread_id: threadId,
+                  room_id: roomId,
+                  comment_content: newComment.substring(0, 100)
+                }
+              });
+          }
+        }
+      }
 
       setNewComment('');
       setImageUrls([]);
@@ -221,12 +245,12 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
 
       {/* Comment form */}
       <form onSubmit={handleSubmit} className="mb-8 space-y-3">
-        <Textarea
+        <MentionInput
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Share your thoughts..."
-          className="min-h-[100px]"
-          maxLength={2000}
+          onChange={setNewComment}
+          onMentionsChange={setMentionedUsers}
+          placeholder="Share your thoughts... (type @ to mention users)"
+          rows={4}
         />
         
         <ImageUploader

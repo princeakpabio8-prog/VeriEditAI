@@ -773,6 +773,7 @@ export type Database = {
           total_referrals: number | null
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -794,6 +795,7 @@ export type Database = {
           total_referrals?: number | null
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -815,6 +817,7 @@ export type Database = {
           total_referrals?: number | null
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -2158,6 +2161,10 @@ export type Database = {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
       }
+      is_username_available: {
+        Args: { username_to_check: string }
+        Returns: boolean
+      }
       ivfflat_bit_support: {
         Args: { "": unknown }
         Returns: unknown
@@ -2185,6 +2192,15 @@ export type Database = {
       reset_monthly_usage_for_free_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      search_users: {
+        Args: { limit_count?: number; search_query: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          user_id: string
+          username: string
+        }[]
       }
       sparsevec_out: {
         Args: { "": unknown }

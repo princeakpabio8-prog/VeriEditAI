@@ -22,17 +22,20 @@ interface Profile {
   full_name: string;
   company: string;
   avatar_url?: string | null;
+  username?: string | null;
 }
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<Profile>({ full_name: '', company: '', avatar_url: null });
+  const [profile, setProfile] = useState<Profile>({ full_name: '', company: '', avatar_url: null, username: null });
   const [loading, setLoading] = useState(false);
   const [verificationCount, setVerificationCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(0);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -59,6 +62,7 @@ const Profile = () => {
           full_name: data.full_name || '',
           company: data.company || '',
           avatar_url: data.avatar_url || null,
+          username: data.username || null,
         });
         setFollowersCount(data.followers_count || 0);
         setFollowingCount(data.following_count || 0);
@@ -99,9 +103,58 @@ const Profile = () => {
     }
   };
 
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    const usernameRegex = /^[a-z0-9_]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+      setUsernameAvailable(false);
+      return;
+    }
+
+    setCheckingUsername(true);
+    try {
+      const { data, error } = await supabase.rpc('is_username_available', {
+        username_to_check: username
+      });
+
+      if (error) throw error;
+      setUsernameAvailable(data);
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameAvailable(null);
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  const handleUsernameChange = (newUsername: string) => {
+    const lowercase = newUsername.toLowerCase();
+    setProfile({ ...profile, username: lowercase });
+    
+    setTimeout(() => {
+      if (lowercase && lowercase !== profile.username) {
+        checkUsernameAvailability(lowercase);
+      }
+    }, 500);
+  };
+
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (profile.username && usernameAvailable === false) {
+      toast({
+        title: "Invalid username",
+        description: "This username is already taken or invalid.",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -110,6 +163,7 @@ const Profile = () => {
           user_id: user?.id,
           full_name: profile.full_name,
           company: profile.company,
+          username: profile.username || null,
         });
 
       if (error) throw error;
@@ -187,6 +241,38 @@ const Profile = () => {
                     <p className="text-xs text-muted-foreground">
                       Email cannot be changed from this page
                     </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="Choose a unique username"
+                      value={profile.username || ''}
+                      onChange={(e) => handleUsernameChange(e.target.value)}
+                      className={
+                        profile.username
+                          ? usernameAvailable === true
+                            ? 'border-green-500'
+                            : usernameAvailable === false
+                            ? 'border-red-500'
+                            : ''
+                          : ''
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      3-20 characters, lowercase letters, numbers, and underscores only
+                    </p>
+                    {checkingUsername && (
+                      <p className="text-xs text-muted-foreground">Checking availability...</p>
+                    )}
+                    {usernameAvailable === true && profile.username && (
+                      <p className="text-xs text-green-600">✓ Username available</p>
+                    )}
+                    {usernameAvailable === false && profile.username && (
+                      <p className="text-xs text-red-600">✗ Username not available</p>
+                    )}
                   </div>
                   
                   <div className="space-y-2">

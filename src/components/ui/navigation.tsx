@@ -161,6 +161,14 @@ export const Navigation = () => {
                       API Hub
                     </Link>
                     <Link
+                      to="/find-users"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Find Users
+                    </Link>
+                    <Link
                       to="/profile"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}

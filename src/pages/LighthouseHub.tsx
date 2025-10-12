@@ -188,7 +188,7 @@ export default function LighthouseHub() {
       </section>
 
       {/* Tabs Section with sticky navigation on mobile */}
-      <section className="py-8 px-4">
+      <section className="py-8 px-4 pb-20 md:pb-8">
         <div className="max-w-7xl mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 md:pb-0 md:static">

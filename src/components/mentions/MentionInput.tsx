@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface User {
   user_id: string;
@@ -33,6 +34,7 @@ export const MentionInput = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [mentionStart, setMentionStart] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
 
   const searchUsers = async (query: string) => {
     if (!query || query.length < 1) {
@@ -140,7 +142,7 @@ export const MentionInput = ({
       />
 
       {showSuggestions && (
-        <div className="absolute z-50 mt-1 w-full max-w-md bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+        <div className={`absolute z-50 mt-1 bg-card border border-border rounded-lg shadow-lg overflow-hidden ${isMobile ? 'w-full' : 'w-full max-w-md'}`}>
           {loading ? (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -152,7 +154,7 @@ export const MentionInput = ({
                   key={user.user_id}
                   type="button"
                   onClick={() => insertMention(user)}
-                  className={`w-full flex items-center gap-3 px-4 py-2 text-left transition-colors ${
+                  className={`w-full flex items-center gap-3 text-left transition-colors touch-manipulation ${isMobile ? 'px-4 py-3 min-h-[56px]' : 'px-4 py-2'} ${
                     index === selectedIndex
                       ? 'bg-accent text-accent-foreground'
                       : 'hover:bg-muted'
@@ -161,13 +163,13 @@ export const MentionInput = ({
                   <UserAvatar
                     avatarUrl={user.avatar_url}
                     fullName={user.full_name}
-                    size="sm"
+                    size={isMobile ? "md" : "sm"}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">
+                    <div className={`font-medium truncate ${isMobile ? 'text-base' : 'text-sm'}`}>
                       {user.full_name || 'Anonymous'}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className={`text-muted-foreground ${isMobile ? 'text-sm' : 'text-xs'}`}>
                       @{user.username}
                     </div>
                   </div>
@@ -175,7 +177,7 @@ export const MentionInput = ({
               ))}
             </div>
           ) : (
-            <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+            <div className={`text-muted-foreground text-center ${isMobile ? 'px-4 py-4 text-base' : 'px-4 py-3 text-sm'}`}>
               No users found
             </div>
           )}

@@ -8,6 +8,8 @@ import { FollowButton } from '@/components/profile/FollowButton';
 import { Search, Users, TrendingUp, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { SwipeToRefresh } from '@/components/mobile-optimized-ui';
 
 interface User {
   user_id: string;
@@ -19,6 +21,7 @@ interface User {
 
 const FindUsers = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
@@ -83,21 +86,21 @@ const FindUsers = () => {
   };
 
   const UserCard = ({ user: profileUser }: { user: User }) => (
-    <div className="flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+    <div className={`flex items-center gap-4 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors touch-manipulation ${isMobile ? 'min-h-[80px]' : ''}`}>
       <Link to={`/user/${profileUser.user_id}`}>
         <UserAvatar
           avatarUrl={profileUser.avatar_url}
           fullName={profileUser.full_name}
-          size="lg"
+          size={isMobile ? "lg" : "lg"}
         />
       </Link>
       <div className="flex-1 min-w-0">
         <Link to={`/user/${profileUser.user_id}`} className="hover:underline">
-          <div className="font-medium truncate">
+          <div className={`font-medium truncate ${isMobile ? 'text-base' : ''}`}>
             {profileUser.full_name || 'Anonymous User'}
           </div>
         </Link>
-        <div className="text-sm text-muted-foreground">
+        <div className={`text-sm text-muted-foreground ${isMobile ? 'mt-0.5' : ''}`}>
           @{profileUser.username}
         </div>
         {profileUser.followers_count !== undefined && profileUser.followers_count > 0 && (
@@ -110,13 +113,18 @@ const FindUsers = () => {
     </div>
   );
 
+  const handleRefresh = () => {
+    fetchSuggestedUsers();
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="space-y-6">
+    <SwipeToRefresh onRefresh={handleRefresh}>
+      <div className={`container mx-auto px-4 max-w-4xl ${isMobile ? 'py-4 pb-24' : 'py-8'}`}>
+        <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold mb-2">Find Users</h1>
-          <p className="text-muted-foreground">
+          <h1 className={`font-bold mb-2 ${isMobile ? 'text-2xl' : 'text-3xl'}`}>Find Users</h1>
+          <p className={`text-muted-foreground ${isMobile ? 'text-sm' : ''}`}>
             Connect with other members of the community
           </p>
         </div>
@@ -138,7 +146,7 @@ const FindUsers = () => {
               placeholder="Search for users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className={`w-full ${isMobile ? 'min-h-[44px] text-base' : ''}`}
             />
 
             {loading && (
@@ -196,6 +204,7 @@ const FindUsers = () => {
         )}
       </div>
     </div>
+    </SwipeToRefresh>
   );
 };
 

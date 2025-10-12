@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ActivityItem {
   id: string;
@@ -54,6 +55,7 @@ export function LiveActivityStream() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [isLive, setIsLive] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchInitialActivities();
@@ -140,8 +142,8 @@ export function LiveActivityStream() {
         </div>
       </div>
       
-      <ScrollArea className="h-[400px]">
-        <div className="p-4 space-y-3">
+      <ScrollArea className={isMobile ? "h-[300px]" : "h-[400px]"}>
+        <div className={`p-4 space-y-3 ${isMobile ? 'space-y-2' : ''}`}>
           {activities.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Activity className="h-12 w-12 mx-auto mb-2 opacity-20" />
@@ -156,13 +158,13 @@ export function LiveActivityStream() {
                 <div
                   key={activity.id}
                   onClick={() => handleActivityClick(activity)}
-                  className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-all cursor-pointer group border border-transparent hover:border-primary/20"
+                  className={`flex items-start gap-3 rounded-lg hover:bg-muted/50 transition-all cursor-pointer group border border-transparent hover:border-primary/20 touch-manipulation ${isMobile ? 'p-3 min-h-[60px]' : 'p-3'}`}
                 >
-                  <div className={`p-2 rounded-full bg-muted/50 ${iconColor}`}>
-                    <Icon className="h-4 w-4" />
+                  <div className={`p-2 rounded-full bg-muted/50 ${iconColor} ${isMobile ? 'shrink-0' : ''}`}>
+                    <Icon className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground group-hover:text-primary transition-colors">
+                    <p className={`text-foreground group-hover:text-primary transition-colors ${isMobile ? 'text-sm' : 'text-sm'}`}>
                       {getActivityText(activity)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">

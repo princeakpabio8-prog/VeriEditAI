@@ -220,7 +220,7 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
           maxImages={3}
           maxSizeMB={5}
           onUploadComplete={handleImageUpload}
-          uploadPath={`${crypto.randomUUID()}/comments`}
+          uploadPath="comments"
         />
         
         <div className="flex items-center justify-between">

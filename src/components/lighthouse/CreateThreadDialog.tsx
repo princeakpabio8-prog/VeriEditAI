@@ -177,7 +177,7 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
               maxImages={5}
               maxSizeMB={5}
               onUploadComplete={handleImageUpload}
-              uploadPath={`${crypto.randomUUID()}/threads`}
+              uploadPath="threads"
             />
           </div>
 

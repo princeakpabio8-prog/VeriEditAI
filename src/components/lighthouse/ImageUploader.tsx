@@ -88,11 +88,17 @@ export const ImageUploader = ({
     const uploadedMetadata: any[] = [];
 
     try {
+      // Get current user for proper RLS path
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
       for (const file of files) {
         const timestamp = Date.now();
         const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
         const fileName = `${timestamp}_${sanitizedName}`;
-        const filePath = `${uploadPath}/${fileName}`;
+        const filePath = `${user.id}/${uploadPath}/${fileName}`;
 
         const { data, error } = await supabase.storage
           .from("thread-images")

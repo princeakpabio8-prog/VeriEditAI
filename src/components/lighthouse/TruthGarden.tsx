@@ -78,7 +78,6 @@ export function TruthGarden({ threads }: TruthGardenProps) {
           inclination={0.6}
           azimuth={0.25}
         />
-        <Environment preset="sunset" />
 
         {/* Ground */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>

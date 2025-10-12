@@ -207,7 +207,7 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
       </h2>
 
       {/* Comment form */}
-      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+      <form onSubmit={handleSubmit} className="mb-8 space-y-3">
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}

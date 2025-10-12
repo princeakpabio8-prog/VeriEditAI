@@ -136,9 +136,9 @@ export const ImageUploader = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div
-        className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
+        className="border-2 border-dashed border-border rounded-lg p-3 md:p-6 text-center hover:border-primary/50 transition-colors cursor-pointer"
         onClick={() => document.getElementById("image-upload")?.click()}
         onDragOver={(e) => {
           e.preventDefault();
@@ -154,12 +154,12 @@ export const ImageUploader = ({
           handleFileSelect(e.dataTransfer.files);
         }}
       >
-        <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
+        <Upload className="h-6 w-6 md:h-8 md:w-8 mx-auto mb-2 text-muted-foreground" />
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Drag & drop images or click to select
         </p>
         <p className="text-xs text-muted-foreground mt-1">
-          Max {maxImages} images, {maxSizeMB}MB each (JPG, PNG, WEBP, GIF)
+          Max {maxImages} images, {maxSizeMB}MB each
         </p>
         <input
           id="image-upload"
@@ -172,13 +172,13 @@ export const ImageUploader = ({
       </div>
 
       {previews.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {previews.map((preview, index) => (
             <div key={index} className="relative group">
               <img
                 src={preview}
                 alt={`Preview ${index + 1}`}
-                className="w-full h-32 object-cover rounded-lg"
+                className="w-full h-24 sm:h-32 object-cover rounded-lg"
               />
               <Button
                 type="button"

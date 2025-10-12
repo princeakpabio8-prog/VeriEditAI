@@ -258,13 +258,6 @@ export const Navigation = () => {
                 >
                   About
                 </Link>
-                <Link
-                  to="/api"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  API
-                </Link>
               </>
             ) : (
               <>
@@ -282,6 +275,14 @@ export const Navigation = () => {
                 >
                   Pricing
                 </a>
+                <Link
+                  to="/lighthouse"
+                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Radio className="h-4 w-4" />
+                  Lighthouse
+                </Link>
                 <Link
                   to="/extensions"
                   className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"

@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_stream: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       aggregation_logs: {
         Row: {
           created_at: string
@@ -1999,6 +2026,10 @@ export type Database = {
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
+      }
+      cleanup_old_activities: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       cleanup_old_webhook_idempotency: {
         Args: Record<PropertyKey, never>

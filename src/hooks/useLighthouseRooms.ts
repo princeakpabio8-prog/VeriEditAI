@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useActivityLogger } from './useActivityLogger';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LighthouseRoom {
   id: string;

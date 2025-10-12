@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { notifyRoomMembersNewThread, notifyThreadVerified } from '@/lib/notification-helpers';
+import { useActivityLogger } from './useActivityLogger';
 
 interface ThreadAuthor {
   full_name: string | null;
@@ -28,6 +29,7 @@ export function useLighthouseThreads(roomId: string) {
   const [threads, setThreads] = useState<LighthouseThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { logActivity } = useActivityLogger();
 
   const fetchThreads = async () => {
     try {
@@ -122,6 +124,13 @@ export function useLighthouseThreads(roomId: string) {
       // Notify room members about new thread
       if (thread) {
         await notifyRoomMembersNewThread(roomId, thread.id, title, user.id);
+        
+        // Log activity to live stream
+        await logActivity({
+          activityType: 'thread_created',
+          entityId: thread.id,
+          metadata: { title },
+        });
       }
 
       // Auto-verification if requested

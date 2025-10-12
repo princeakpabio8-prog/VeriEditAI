@@ -16,6 +16,7 @@ import { SignalsTab } from '@/components/lighthouse/tabs/SignalsTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { FloatingWorkspaceButton } from '@/components/lighthouse/FloatingWorkspaceButton';
+import { LiveActivityStream } from '@/components/lighthouse/LiveActivityStream';
 
 export default function LighthouseHub() {
   const { user } = useAuth();
@@ -116,9 +117,9 @@ export default function LighthouseHub() {
             </p>
           </div>
 
-          {/* Interactive Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-8 md:mt-12">
-            <Card 
+          {/* Interactive Stats Cards with Live Activity */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-8 md:mt-12">
+            <Card
               className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 hover:scale-105 transition-all duration-300 cursor-pointer group"
               onClick={() => handleTabChange('feed')}
               role="button"
@@ -177,6 +178,11 @@ export default function LighthouseHub() {
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Community Members</div>
               </CardContent>
             </Card>
+            
+            {/* Live Activity Stream */}
+            <div className="col-span-2 md:col-span-5 lg:col-span-1 lg:row-span-2">
+              <LiveActivityStream />
+            </div>
           </div>
         </div>
       </section>

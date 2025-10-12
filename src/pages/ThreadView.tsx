@@ -15,6 +15,7 @@ import { ThreadComments } from '@/components/lighthouse/ThreadComments';
 import { DynamicMeta } from '@/components/DynamicMeta';
 import { generateClaimReviewSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
 import { trackPageView, createShareableURL } from '@/lib/public-analytics';
+import { ImageGallery } from '@/components/lighthouse/ImageGallery';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
@@ -326,9 +327,16 @@ export default function ThreadView() {
             </div>
 
             {/* Thread content */}
-            <div className="prose prose-lg max-w-none mb-8">
+            <div className="prose prose-lg max-w-none mb-6">
               <p className="whitespace-pre-wrap">{thread.content}</p>
             </div>
+
+            {/* Thread images */}
+            {thread.image_urls && thread.image_urls.length > 0 && (
+              <div className="mb-8">
+                <ImageGallery images={thread.image_urls} altPrefix="Thread image" />
+              </div>
+            )}
 
             {/* Interactive upvotes */}
             <div className="flex items-center gap-4 pt-6 border-t">

@@ -980,6 +980,8 @@ export type Database = {
           garden_position_x: number | null
           garden_position_z: number | null
           id: string
+          image_metadata: Json | null
+          image_urls: string[] | null
           is_auto_verified: boolean | null
           metadata: Json | null
           room_id: string
@@ -1000,6 +1002,8 @@ export type Database = {
           garden_position_x?: number | null
           garden_position_z?: number | null
           id?: string
+          image_metadata?: Json | null
+          image_urls?: string[] | null
           is_auto_verified?: boolean | null
           metadata?: Json | null
           room_id: string
@@ -1020,6 +1024,8 @@ export type Database = {
           garden_position_x?: number | null
           garden_position_z?: number | null
           id?: string
+          image_metadata?: Json | null
+          image_urls?: string[] | null
           is_auto_verified?: boolean | null
           metadata?: Json | null
           room_id?: string
@@ -1310,6 +1316,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_metadata: Json | null
+          image_urls: string[] | null
           parent_comment_id: string | null
           thread_id: string
           updated_at: string
@@ -1319,6 +1327,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_metadata?: Json | null
+          image_urls?: string[] | null
           parent_comment_id?: string | null
           thread_id: string
           updated_at?: string
@@ -1328,6 +1338,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_metadata?: Json | null
+          image_urls?: string[] | null
           parent_comment_id?: string | null
           thread_id?: string
           updated_at?: string

@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, Flame } from 'lucide-react';
 import { VerificationRitual } from './VerificationRitual';
+import { ImageUploader } from './ImageUploader';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CreateThreadDialogProps {
   open: boolean;
@@ -24,6 +26,8 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
   const [loading, setLoading] = useState(false);
   const [showRitual, setShowRitual] = useState(false);
   const [createdThreadId, setCreatedThreadId] = useState<string | null>(null);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageMetadata, setImageMetadata] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +47,19 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
     // Standard thread creation
     try {
       setLoading(true);
-      await onCreateThread(title.trim(), content.trim(), autoVerify);
+      const thread = await onCreateThread(title.trim(), content.trim(), autoVerify);
+      
+      // Update thread with images if any were uploaded
+      if (thread?.id && imageUrls.length > 0) {
+        await supabase
+          .from('room_threads')
+          .update({
+            image_urls: imageUrls,
+            image_metadata: imageMetadata
+          })
+          .eq('id', thread.id);
+      }
+      
       toast.success('Thread created successfully');
       
       // Reset form
@@ -51,6 +67,8 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
       setContent('');
       setAutoVerify(false);
       setUseRitual(true);
+      setImageUrls([]);
+      setImageMetadata([]);
       onOpenChange(false);
     } catch (error) {
       console.error('Error creating thread:', error);
@@ -68,6 +86,17 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
         ritualData.autoVerify
       );
       
+      // Update thread with images if any were uploaded
+      if (thread?.id && imageUrls.length > 0) {
+        await supabase
+          .from('room_threads')
+          .update({
+            image_urls: imageUrls,
+            image_metadata: imageMetadata
+          })
+          .eq('id', thread.id);
+      }
+      
       // Store thread ID for navigation
       if (thread?.id) {
         setCreatedThreadId(thread.id);
@@ -78,11 +107,18 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
       setContent('');
       setAutoVerify(false);
       setUseRitual(true);
+      setImageUrls([]);
+      setImageMetadata([]);
     } catch (error) {
       console.error('Error creating thread:', error);
       toast.error('Failed to create thread');
       throw error;
     }
+  };
+  
+  const handleImageUpload = (urls: string[], metadata: any[]) => {
+    setImageUrls(urls);
+    setImageMetadata(metadata);
   };
 
   const handleViewThread = () => {
@@ -133,6 +169,16 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThrea
             <p className="text-xs text-muted-foreground">
               {content.length}/5000 characters
             </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Images (Optional)</Label>
+            <ImageUploader
+              maxImages={5}
+              maxSizeMB={5}
+              onUploadComplete={handleImageUpload}
+              uploadPath={`${crypto.randomUUID()}/threads`}
+            />
           </div>
 
           <div className="space-y-3">

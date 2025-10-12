@@ -8,6 +8,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { MessageSquare, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { ImageUploader } from './ImageUploader';
+import { ImageGallery } from './ImageGallery';
 
 interface Comment {
   id: string;
@@ -15,6 +17,7 @@ interface Comment {
   created_at: string;
   author_id: string;
   author_name: string | null;
+  image_urls?: string[];
 }
 
 interface ThreadCommentsProps {
@@ -33,6 +36,8 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imageMetadata, setImageMetadata] = useState<any[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -151,12 +156,16 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
         .insert({
           thread_id: threadId,
           author_id: user.id,
-          content: newComment.trim()
+          content: newComment.trim(),
+          image_urls: imageUrls.length > 0 ? imageUrls : null,
+          image_metadata: imageMetadata.length > 0 ? imageMetadata : null
         });
 
       if (error) throw error;
 
       setNewComment('');
+      setImageUrls([]);
+      setImageMetadata([]);
       toast({
         title: "Comment posted",
         description: "Your comment has been added",
@@ -171,6 +180,11 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
     } finally {
       setSubmitting(false);
     }
+  };
+  
+  const handleImageUpload = (urls: string[], metadata: any[]) => {
+    setImageUrls(urls);
+    setImageMetadata(metadata);
   };
 
   if (loading) {
@@ -193,14 +207,22 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
       </h2>
 
       {/* Comment form */}
-      <form onSubmit={handleSubmit} className="mb-8">
+      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Share your thoughts..."
-          className="mb-3 min-h-[100px]"
+          className="min-h-[100px]"
           maxLength={2000}
         />
+        
+        <ImageUploader
+          maxImages={3}
+          maxSizeMB={5}
+          onUploadComplete={handleImageUpload}
+          uploadPath={`${crypto.randomUUID()}/comments`}
+        />
+        
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
             {newComment.length}/2000
@@ -231,15 +253,18 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
                   <span className="font-medium">
                     {comment.author_name || 'Anonymous'}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                  </span>
-                </div>
-                <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
-              </div>
-            </div>
-          ))
-        )}
+                   <span className="text-sm text-muted-foreground">
+                     {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                   </span>
+                 </div>
+                 <p className="text-sm whitespace-pre-wrap mb-3">{comment.content}</p>
+                 {comment.image_urls && comment.image_urls.length > 0 && (
+                   <ImageGallery images={comment.image_urls} altPrefix="Comment image" />
+                 )}
+               </div>
+             </div>
+           ))
+         )}
       </div>
     </Card>
   );

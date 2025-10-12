@@ -54,7 +54,11 @@ export function TruthGarden({ threads }: TruthGardenProps) {
       {/* 3D Canvas */}
       <Canvas
         camera={{ position: cameraPosition, fov: 60 }}
-        shadows
+        shadows={!isMobile}
+        gl={{ 
+          antialias: !isMobile,
+          powerPreference: isMobile ? 'low-power' : 'high-performance'
+        }}
       >
         {/* Lighting */}
         <ambientLight intensity={0.5} />

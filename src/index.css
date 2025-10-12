@@ -273,3 +273,52 @@ All colors MUST be HSL.
     box-shadow: 0 0 20px rgba(0, 186, 242, 0.6);
   }
 }
+
+@keyframes word-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flame-morph {
+  0% {
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2);
+    filter: hue-rotate(60deg) brightness(1.5);
+  }
+  100% {
+    transform: scale(1);
+    filter: hue-rotate(0deg);
+  }
+}
+
+@keyframes tree-grow {
+  from {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Ritual particle background */
+.ritual-particle-bg {
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, hsl(var(--truth-flame) / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, hsl(var(--truth-bloom) / 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, hsl(var(--ritual-sacred) / 0.1) 0%, transparent 70%);
+  animation: shimmer 8s infinite alternate;
+  pointer-events: none;
+}

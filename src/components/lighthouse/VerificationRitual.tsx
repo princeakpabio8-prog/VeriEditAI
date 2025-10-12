@@ -28,6 +28,18 @@ export function VerificationRitual({ open, onOpenChange, onComplete }: Verificat
   const [verificationProgress, setVerificationProgress] = useState(0);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+
+  const ritualMessages = [
+    "Consulting ancient scrolls...",
+    "Traversing knowledge streams...",
+    "Seeking wisdom from the elders...",
+    "Weighing truth against feathers...",
+    "Reading the celestial patterns...",
+    "Gathering witness testimony...",
+    "Illuminating hidden connections...",
+    "The flame grows stronger..."
+  ];
 
   const commitmentPhrase = "I commit to truth";
 
@@ -62,13 +74,18 @@ export function VerificationRitual({ open, onOpenChange, onComplete }: Verificat
     setCurrentStep('waiting');
     setIsProcessing(true);
 
-    // Simulate verification progress
+    // Simulate verification progress with poetic status messages
+    let currentProgress = 0;
     const progressInterval = setInterval(() => {
       setVerificationProgress(prev => {
+        currentProgress = prev;
         if (prev >= 95) {
           clearInterval(progressInterval);
           return 95;
         }
+        // Update status message based on progress
+        const messageIndex = Math.floor((prev / 100) * ritualMessages.length);
+        setStatusMessage(ritualMessages[Math.min(messageIndex, ritualMessages.length - 1)]);
         return prev + Math.random() * 10;
       });
     }, 300);
@@ -310,9 +327,11 @@ export function VerificationRitual({ open, onOpenChange, onComplete }: Verificat
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-6"
+            className="space-y-6 relative"
           >
-            <div className="text-center space-y-3">
+            <div className="ritual-particle-bg" />
+            
+            <div className="text-center space-y-3 relative z-10">
               <motion.div
                 animate={{ 
                   scale: [1, 1.2, 1],
@@ -327,22 +346,21 @@ export function VerificationRitual({ open, onOpenChange, onComplete }: Verificat
                 <Flame className="w-20 h-20 mx-auto text-[hsl(var(--truth-flame))]" />
               </motion.div>
               <h2 className="text-2xl font-bold">The Flame Burns...</h2>
-              <p className="text-muted-foreground">
-                Verifying your claim through trusted sources
-              </p>
+              <motion.p
+                key={statusMessage}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-muted-foreground italic text-lg"
+              >
+                {statusMessage || "Beginning the ritual..."}
+              </motion.p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 relative z-10">
               <Progress value={verificationProgress} className="h-2" />
               <p className="text-sm text-center text-muted-foreground">
                 {Math.round(verificationProgress)}% Complete
               </p>
-            </div>
-
-            <div className="text-center text-sm text-muted-foreground space-y-1">
-              <p>Analyzing sources...</p>
-              <p>Cross-referencing claims...</p>
-              <p>Calculating trust score...</p>
             </div>
           </motion.div>
         );

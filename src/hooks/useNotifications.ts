@@ -94,28 +94,6 @@ export const useNotifications = () => {
     });
   };
 
-  const createNotification = async (
-    userId: string,
-    type: string,
-    message: string,
-    actionUrl?: string,
-    relatedId?: string
-  ) => {
-    const { error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        type,
-        message,
-        action_url: actionUrl,
-        related_id: relatedId,
-      });
-
-    if (error) {
-      console.error('Error creating notification:', error);
-    }
-  };
-
   useEffect(() => {
     fetchNotifications();
 
@@ -162,7 +140,6 @@ export const useNotifications = () => {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    createNotification,
     refetch: fetchNotifications,
   };
 };

@@ -3,18 +3,16 @@ import { supabase } from '@/integrations/supabase/client';
 export interface CreateNotificationParams {
   userId: string;
   type: string;
-  title: string;
   message: string;
-  link?: string;
+  actionUrl?: string;
   metadata?: Record<string, any>;
 }
 
 export const createNotification = async ({
   userId,
   type,
-  title,
   message,
-  link,
+  actionUrl,
   metadata = {},
 }: CreateNotificationParams) => {
   try {
@@ -23,9 +21,8 @@ export const createNotification = async ({
       .insert({
         user_id: userId,
         type,
-        title,
         message,
-        link,
+        action_url: actionUrl,
         metadata,
         is_read: false,
       });
@@ -72,9 +69,8 @@ export const notifyRoomMembersNewThread = async (
     const notifications = members.map(member => ({
       user_id: member.user_id,
       type: 'new_thread',
-      title: 'New Thread',
       message: `${authorName} posted a new thread: "${threadTitle}"`,
-      link: `/lighthouse/${roomId}/thread/${threadId}`,
+      action_url: `/lighthouse/${roomId}/thread/${threadId}`,
       metadata: { room_id: roomId, thread_id: threadId, author_id: authorId },
       is_read: false,
     }));
@@ -114,9 +110,8 @@ export const notifyCommentReply = async (
     await createNotification({
       userId: parentComment.author_id,
       type: 'comment_reply',
-      title: 'New Reply',
       message: `${authorName} replied to your comment`,
-      link: `/lighthouse/${roomId}/thread/${threadId}`,
+      actionUrl: `/lighthouse/${roomId}/thread/${threadId}`,
       metadata: { 
         thread_id: threadId, 
         room_id: roomId,
@@ -145,9 +140,8 @@ export const notifyThreadVerified = async (
     await createNotification({
       userId: authorId,
       type: 'thread_verified',
-      title: isFeatured ? 'Thread Featured!' : 'Thread Verified',
       message,
-      link: `/lighthouse/${roomId}/thread/${threadId}`,
+      actionUrl: `/lighthouse/${roomId}/thread/${threadId}`,
       metadata: { 
         thread_id: threadId, 
         room_id: roomId,
@@ -202,9 +196,8 @@ export const parseMentionsAndNotify = async (
       .map(profile => ({
         user_id: profile.user_id,
         type: 'mention',
-        title: 'You were mentioned',
         message: `${authorName} mentioned you in a comment`,
-        link: `/lighthouse/${roomId}/thread/${threadId}`,
+        action_url: `/lighthouse/${roomId}/thread/${threadId}`,
         metadata: { 
           thread_id: threadId, 
           room_id: roomId,
@@ -249,9 +242,8 @@ export const notifyThreadAuthorNewComment = async (
     await createNotification({
       userId: thread.author_id,
       type: 'new_comment',
-      title: 'New Comment',
       message: `${authorName} commented on "${thread.title}"`,
-      link: `/lighthouse/${roomId}/thread/${threadId}`,
+      actionUrl: `/lighthouse/${roomId}/thread/${threadId}`,
       metadata: { 
         thread_id: threadId, 
         room_id: roomId,

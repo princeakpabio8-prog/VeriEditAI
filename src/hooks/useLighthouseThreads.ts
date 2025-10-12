@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { notifyRoomMembersNewThread, notifyThreadVerified } from '@/lib/notification-helpers';
 
 interface ThreadAuthor {
   full_name: string | null;
@@ -118,6 +119,11 @@ export function useLighthouseThreads(roomId: string) {
 
       if (threadError) throw threadError;
 
+      // Notify room members about new thread
+      if (thread) {
+        await notifyRoomMembersNewThread(roomId, thread.id, title, user.id);
+      }
+
       // Auto-verification if requested
       if (autoVerify && thread) {
         try {
@@ -137,6 +143,17 @@ export function useLighthouseThreads(roomId: string) {
                 trust_score: verificationData.trust_score
               })
               .eq('id', thread.id);
+
+            // Notify author about verification
+            if (verificationData.trust_score) {
+              await notifyThreadVerified(
+                thread.id,
+                roomId,
+                user.id,
+                verificationData.trust_score,
+                verificationData.trust_score >= 80 // Featured if trust score >= 80
+              );
+            }
           }
         } catch (verifyErr) {
           console.error('Auto-verification failed:', verifyErr);

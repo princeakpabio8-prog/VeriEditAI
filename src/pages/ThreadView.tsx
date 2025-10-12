@@ -486,7 +486,7 @@ export default function ThreadView() {
 
           {/* Comments section */}
           <div id="comments-section">
-            <ThreadComments threadId={threadId!} />
+            <ThreadComments threadId={threadId!} roomId={roomId!} />
           </div>
         </div>
       </div>

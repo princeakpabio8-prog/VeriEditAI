@@ -12,6 +12,7 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 import { Link } from 'react-router-dom';
 import { ImageUploader } from './ImageUploader';
 import { ImageGallery } from './ImageGallery';
+import { notifyThreadAuthorNewComment, parseMentionsAndNotify } from '@/lib/notification-helpers';
 
 interface Comment {
   id: string;
@@ -25,6 +26,7 @@ interface Comment {
 
 interface ThreadCommentsProps {
   threadId: string;
+  roomId: string;
 }
 
 const commentSchema = z.object({
@@ -34,7 +36,7 @@ const commentSchema = z.object({
     .max(2000, "Comment must be less than 2000 characters")
 });
 
-export function ThreadComments({ threadId }: ThreadCommentsProps) {
+export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
@@ -169,21 +171,10 @@ export function ThreadComments({ threadId }: ThreadCommentsProps) {
       if (error) throw error;
 
       // Notify thread author about new comment
-      const { data: threadData } = await supabase
-        .from('room_threads')
-        .select('author_id, title')
-        .eq('id', threadId)
-        .single();
+      await notifyThreadAuthorNewComment(threadId, roomId, user.id);
 
-      if (threadData && threadData.author_id !== user.id) {
-        await supabase.from('notifications').insert({
-          user_id: threadData.author_id,
-          type: 'comment',
-          message: `New comment on "${threadData.title}"`,
-          action_url: window.location.pathname,
-          related_id: threadId,
-        });
-      }
+      // Parse and notify mentioned users
+      await parseMentionsAndNotify(newComment, threadId, roomId, user.id);
 
       setNewComment('');
       setImageUrls([]);

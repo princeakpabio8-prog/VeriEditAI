@@ -11,9 +11,15 @@ interface TruthTreeProps {
   onClick?: () => void;
 }
 
+interface PointerPosition {
+  x: number;
+  y: number;
+}
+
 export function TruthTree({ position, trustScore, growthStage, isNew, isFocused = true, onClick }: TruthTreeProps) {
   const treeRef = useRef<Mesh>(null);
   const foliageRef = useRef<Mesh>(null);
+  const downRef = useRef<PointerPosition>({ x: 0, y: 0 });
 
   // Determine tree color based on trust score
   const getTreeColor = () => {
@@ -24,7 +30,8 @@ export function TruthTree({ position, trustScore, growthStage, isNew, isFocused 
   };
 
   // Calculate tree size based on growth stage and trust score
-  const scale = growthStage * 0.2 * (trustScore ? Math.max(0.5, trustScore / 100) : 0.3);
+  const computedScale = growthStage * 0.2 * (trustScore ? Math.max(0.5, trustScore / 100) : 0.3);
+  const scale = Math.max(1.1, computedScale); // Increase minimum size for visibility
 
   // Animation: gentle sway and growth
   useFrame((state) => {
@@ -53,8 +60,38 @@ export function TruthTree({ position, trustScore, growthStage, isNew, isFocused 
 
   const opacity = isFocused ? 1 : 0.5;
 
+  // Pointer handlers for reliable click detection
+  const handlePointerDown = (e: any) => {
+    e.stopPropagation();
+    downRef.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handlePointerUp = (e: any) => {
+    e.stopPropagation();
+    const dx = e.clientX - downRef.current.x;
+    const dy = e.clientY - downRef.current.y;
+    // Only trigger click if movement was minimal (not a drag)
+    if (Math.hypot(dx, dy) < 6) {
+      onClick?.();
+    }
+  };
+
+  const handlePointerOver = () => {
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = () => {
+    document.body.style.cursor = 'auto';
+  };
+
   return (
-    <group position={position} onClick={onClick}>
+    <group 
+      position={position}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+    >
       {/* Tree trunk */}
       <mesh ref={treeRef} position={[0, scale * 0.5, 0]}>
         <cylinderGeometry args={[0.1 * scale, 0.15 * scale, scale, 8]} />
@@ -77,6 +114,12 @@ export function TruthTree({ position, trustScore, growthStage, isNew, isFocused 
           transparent
           opacity={opacity}
         />
+      </mesh>
+      
+      {/* Invisible hit bubble for easier clicking */}
+      <mesh position={[0, scale * 1.2, 0]}>
+        <sphereGeometry args={[Math.max(scale * 0.8, 0.8), 16, 16]} />
+        <meshBasicMaterial transparent opacity={0} />
       </mesh>
       
       {/* Hover glow */}

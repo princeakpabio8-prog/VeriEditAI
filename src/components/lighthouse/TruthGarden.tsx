@@ -3,8 +3,10 @@ import { OrbitControls, Sky, Environment, Sparkles } from '@react-three/drei';
 import { TruthTree } from './TruthTree';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 interface Thread {
   id: string;
@@ -21,10 +23,11 @@ interface TruthGardenProps {
   threads: Thread[];
 }
 
-export function TruthGarden({ threads }: TruthGardenProps) {
+export function TruthGarden({ roomId, threads }: TruthGardenProps) {
   const [selectedThread, setSelectedThread] = useState<Thread | null>(null);
   const [cameraPosition] = useState<[number, number, number]>([0, 8, 12]);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   // Dim non-selected trees
   const [focusedTreeId, setFocusedTreeId] = useState<string | null>(null);
@@ -59,6 +62,7 @@ export function TruthGarden({ threads }: TruthGardenProps) {
           antialias: !isMobile,
           powerPreference: isMobile ? 'low-power' : 'high-performance'
         }}
+        onPointerMissed={() => setSelectedThread(null)}
       >
         {/* Lighting */}
         <ambientLight intensity={0.5} />
@@ -66,8 +70,8 @@ export function TruthGarden({ threads }: TruthGardenProps) {
           position={[10, 10, 5]} 
           intensity={1} 
           castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
         />
         <pointLight position={[0, 5, 0]} intensity={0.3} color="#B8F3FF" />
 
@@ -117,7 +121,7 @@ export function TruthGarden({ threads }: TruthGardenProps) {
 
         {/* Camera Controls */}
         <OrbitControls
-          enablePan={true}
+          enablePan={!isMobile}
           enableZoom={true}
           enableRotate={true}
           minDistance={5}
@@ -146,7 +150,7 @@ export function TruthGarden({ threads }: TruthGardenProps) {
         <Card className="p-3 bg-background/80 backdrop-blur-sm">
           <div className="text-sm font-medium">🌳 {gardenThreads.length} Trees Planted</div>
           <div className="text-xs text-muted-foreground mt-1">
-            Click trees to view threads
+            Tap a tree to select it, then Open thread
           </div>
         </Card>
       </div>
@@ -156,8 +160,8 @@ export function TruthGarden({ threads }: TruthGardenProps) {
         <Card className="absolute bottom-4 left-4 right-4 p-4 bg-background/90 backdrop-blur-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
-              <h3 className="font-semibold text-sm mb-1">{selectedThread.title}</h3>
-              <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-sm mb-2">{selectedThread.title}</h3>
+              <div className="flex items-center gap-2 mb-3">
                 {selectedThread.trust_score !== null && (
                   <Badge variant={selectedThread.trust_score >= 80 ? 'default' : 'secondary'}>
                     Trust: {selectedThread.trust_score}%
@@ -167,6 +171,13 @@ export function TruthGarden({ threads }: TruthGardenProps) {
                   Stage {selectedThread.tree_growth_stage}
                 </Badge>
               </div>
+              <Button 
+                onClick={() => navigate(`/lighthouse/${roomId}/thread/${selectedThread.id}`)}
+                size="sm"
+                className="w-full"
+              >
+                Open Thread
+              </Button>
             </div>
             <button
               onClick={() => setSelectedThread(null)}

@@ -12,6 +12,7 @@ import { ImageUploader } from './ImageUploader';
 import { ImageGallery } from './ImageGallery';
 import { MentionInput } from '@/components/mentions/MentionInput';
 import { notifyThreadAuthorNewComment, parseMentionsAndNotify } from '@/lib/notification-helpers';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Comment {
   id: string;
@@ -44,6 +45,7 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   const [imageMetadata, setImageMetadata] = useState<any[]>([]);
   const [mentionedUsers, setMentionedUsers] = useState<string[]>([]);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchComments();
@@ -237,9 +239,9 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-        <MessageSquare className="h-5 w-5" />
+    <Card className={isMobile ? "p-4" : "p-6"}>
+      <h2 className={`${isMobile ? "text-lg" : "text-xl"} font-semibold mb-6 flex items-center gap-2`}>
+        <MessageSquare className={isMobile ? "h-4 w-4" : "h-5 w-5"} />
         Comments ({comments.length})
       </h2>
 
@@ -264,7 +266,12 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
           <span className="text-sm text-muted-foreground">
             {newComment.length}/2000
           </span>
-          <Button type="submit" disabled={submitting || !newComment.trim()} className="gap-2">
+          <Button 
+            type="submit" 
+            disabled={submitting || !newComment.trim()} 
+            className="gap-2"
+            size={isMobile ? "mobile" : "default"}
+          >
             <Send className="h-4 w-4" />
             {submitting ? 'Posting...' : 'Post Comment'}
           </Button>
@@ -279,26 +286,26 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
           </p>
         ) : (
           comments.map((comment) => (
-            <div key={comment.id} className="flex gap-4">
+            <div key={comment.id} className={`flex gap-3 ${isMobile ? 'p-3 touch-manipulation' : 'gap-4'}`}>
               <UserAvatar
                 avatarUrl={comment.author_avatar}
                 fullName={comment.author_name}
                 userId={comment.author_id}
-                size="sm"
+                size={isMobile ? "md" : "sm"}
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Link 
                     to={`/profile/${comment.author_id}`}
-                    className="font-medium hover:text-primary transition-colors"
+                    className={`font-medium hover:text-primary transition-colors ${isMobile ? 'text-base' : ''}`}
                   >
                     {comment.author_name || 'Anonymous'}
                   </Link>
-                   <span className="text-sm text-muted-foreground">
+                   <span className={isMobile ? "text-xs text-muted-foreground" : "text-sm text-muted-foreground"}>
                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                    </span>
                  </div>
-                 <p className="text-sm whitespace-pre-wrap mb-3">{comment.content}</p>
+                 <p className={`${isMobile ? 'text-base' : 'text-sm'} whitespace-pre-wrap mb-3`}>{comment.content}</p>
                  {comment.image_urls && comment.image_urls.length > 0 && (
                    <ImageGallery images={comment.image_urls} altPrefix="Comment image" />
                  )}

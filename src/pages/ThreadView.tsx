@@ -17,11 +17,14 @@ import { generateClaimReviewSchema, injectStructuredData, removeStructuredData }
 import { trackPageView, createShareableURL } from '@/lib/public-analytics';
 import { ImageGallery } from '@/components/lighthouse/ImageGallery';
 import { UserAvatar } from '@/components/ui/user-avatar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [thread, setThread] = useState<any>(null);
   const [room, setRoom] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
@@ -29,6 +32,7 @@ export default function ThreadView() {
   const [userVote, setUserVote] = useState<'up' | 'down' | null>(null);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [authorAvatar, setAuthorAvatar] = useState<string | null>(null);
+  const [shareSheetOpen, setShareSheetOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -246,7 +250,7 @@ export default function ThreadView() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-      <div className="pt-24 pb-24 md:pb-16 px-4">
+        <div className="pt-24 pb-24 md:pb-16 px-4">
           <div className="max-w-4xl mx-auto space-y-6">
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-64 w-full" />
@@ -290,10 +294,10 @@ export default function ThreadView() {
         publishedTime={thread?.created_at}
       />
       <Navigation />
-      <div className="pt-24 pb-16 px-4">
+      <div className="pt-24 pb-24 md:pb-16 px-4">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={`flex items-center gap-2 ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
             <Link to="/lighthouse" className="hover:text-foreground">
               Lighthouse Room
             </Link>
@@ -316,10 +320,10 @@ export default function ThreadView() {
           </Button>
 
           {/* Thread header */}
-          <Card className="p-8">
+          <Card className={isMobile ? "p-4" : "p-8"}>
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-4">{thread.title}</h1>
+                <h1 className={`${isMobile ? 'text-xl' : 'text-3xl'} font-bold mb-4`}>{thread.title}</h1>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <UserAvatar
                     avatarUrl={authorAvatar}
@@ -358,11 +362,12 @@ export default function ThreadView() {
             )}
 
             {/* Interactive upvotes */}
-            <div className="flex items-center gap-4 pt-6 border-t">
+            <div className={`flex items-center ${isMobile ? 'flex-wrap' : ''} gap-3 pt-6 border-t`}>
               <Button 
                 variant={userVote === 'up' ? 'default' : 'outline'} 
                 onClick={handleUpvote}
                 className="gap-2"
+                size={isMobile ? "mobile" : "default"}
               >
                 <ThumbsUp className="h-4 w-4" />
                 {upvoteCount}
@@ -377,43 +382,102 @@ export default function ThreadView() {
                   });
                 }}
                 className="gap-2"
+                size={isMobile ? "mobile" : "default"}
               >
                 <MessageSquare className="h-4 w-4" />
                 {thread.comment_count} Comments
               </Button>
               
-              <div className="relative group">
-                <Button variant="outline" className="gap-2">
-                  <Share2 className="h-4 w-4" />
-                  Share
-                </Button>
-                <div className="absolute right-0 mt-2 w-48 bg-background border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                  <button
-                    onClick={() => handleShare('twitter')}
-                    className="w-full px-4 py-2 text-left hover:bg-accent rounded-t-lg"
-                  >
-                    Share on Twitter
-                  </button>
-                  <button
-                    onClick={() => handleShare('linkedin')}
-                    className="w-full px-4 py-2 text-left hover:bg-accent"
-                  >
-                    Share on LinkedIn
-                  </button>
-                  <button
-                    onClick={() => handleShare('facebook')}
-                    className="w-full px-4 py-2 text-left hover:bg-accent"
-                  >
-                    Share on Facebook
-                  </button>
-                  <button
-                    onClick={() => handleShare('copy')}
-                    className="w-full px-4 py-2 text-left hover:bg-accent rounded-b-lg"
-                  >
-                    Copy Link
-                  </button>
+              {isMobile ? (
+                <Sheet open={shareSheetOpen} onOpenChange={setShareSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="gap-2" size="mobile">
+                      <Share2 className="h-4 w-4" />
+                      Share
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="pb-safe">
+                    <SheetHeader>
+                      <SheetTitle>Share Thread</SheetTitle>
+                    </SheetHeader>
+                    <div className="space-y-2 mt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleShare('twitter');
+                          setShareSheetOpen(false);
+                        }}
+                        className="w-full justify-start min-h-[56px] touch-manipulation"
+                      >
+                        Share on Twitter
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleShare('linkedin');
+                          setShareSheetOpen(false);
+                        }}
+                        className="w-full justify-start min-h-[56px] touch-manipulation"
+                      >
+                        Share on LinkedIn
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleShare('facebook');
+                          setShareSheetOpen(false);
+                        }}
+                        className="w-full justify-start min-h-[56px] touch-manipulation"
+                      >
+                        Share on Facebook
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleShare('copy');
+                          setShareSheetOpen(false);
+                        }}
+                        className="w-full justify-start min-h-[56px] touch-manipulation"
+                      >
+                        Copy Link
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <div className="relative group">
+                  <Button variant="outline" className="gap-2">
+                    <Share2 className="h-4 w-4" />
+                    Share
+                  </Button>
+                  <div className="absolute right-0 mt-2 w-48 bg-background border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                    <button
+                      onClick={() => handleShare('twitter')}
+                      className="w-full px-4 py-2 text-left hover:bg-accent rounded-t-lg"
+                    >
+                      Share on Twitter
+                    </button>
+                    <button
+                      onClick={() => handleShare('linkedin')}
+                      className="w-full px-4 py-2 text-left hover:bg-accent"
+                    >
+                      Share on LinkedIn
+                    </button>
+                    <button
+                      onClick={() => handleShare('facebook')}
+                      className="w-full px-4 py-2 text-left hover:bg-accent"
+                    >
+                      Share on Facebook
+                    </button>
+                    <button
+                      onClick={() => handleShare('copy')}
+                      className="w-full px-4 py-2 text-left hover:bg-accent rounded-b-lg"
+                    >
+                      Copy Link
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </Card>
 

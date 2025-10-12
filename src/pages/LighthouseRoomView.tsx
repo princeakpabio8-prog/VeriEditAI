@@ -13,11 +13,13 @@ import { LighthouseThreadList } from '@/components/lighthouse/LighthouseThreadLi
 import { CreateThreadDialog } from '@/components/lighthouse/CreateThreadDialog';
 import { TruthGarden } from '@/components/lighthouse/TruthGarden';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function LighthouseRoomView() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWorkspace, setIsWorkspace] = useState(false);
@@ -156,24 +158,24 @@ export default function LighthouseRoomView() {
                     </Badge>
                   )}
                 </div>
-                <h1 className="text-4xl font-bold mb-3">{room.name}</h1>
+                <h1 className={`${isMobile ? 'text-2xl' : 'text-4xl'} font-bold mb-3`}>{room.name}</h1>
                 {room.description && (
-                  <p className="text-lg text-muted-foreground">{room.description}</p>
+                  <p className={`${isMobile ? 'text-base' : 'text-lg'} text-muted-foreground`}>{room.description}</p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className={`flex items-center ${isMobile ? 'flex-wrap gap-3' : 'gap-6'} text-sm text-muted-foreground`}>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <span>{room.member_count} members</span>
               </div>
-              <span>•</span>
+              <span className={isMobile ? 'hidden' : ''}>•</span>
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 <span>{room.thread_count} threads</span>
               </div>
-              <span>•</span>
+              <span className={isMobile ? 'hidden' : ''}>•</span>
               <div className="flex items-center gap-2">
                 <Star className="h-4 w-4" />
                 <span>{room.trust_rating}% trust</span>
@@ -181,12 +183,16 @@ export default function LighthouseRoomView() {
             </div>
 
             {user ? (
-              <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+              <Button 
+                onClick={() => setCreateDialogOpen(true)} 
+                className="gap-2"
+                size={isMobile ? "mobile" : "default"}
+              >
                 <Plus className="h-4 w-4" />
                 Plant a Seed
               </Button>
             ) : (
-              <Button asChild variant="outline" className="gap-2">
+              <Button asChild variant="outline" className="gap-2" size={isMobile ? "mobile" : "default"}>
                 <Link to="/auth">
                   <Plus className="h-4 w-4" />
                   Sign in to plant seeds
@@ -197,32 +203,32 @@ export default function LighthouseRoomView() {
 
           {/* Tabs: Discussions & Garden */}
           <Tabs defaultValue="discussions" className="space-y-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className={`grid w-full ${isMobile ? '' : 'max-w-md'} grid-cols-2`}>
               <TabsTrigger value="discussions" className="gap-2">
                 <MessageSquare className="h-4 w-4" />
-                Discussions
+                {isMobile ? 'Discuss' : 'Discussions'}
               </TabsTrigger>
               <TabsTrigger value="garden" className="gap-2">
                 <Trees className="h-4 w-4" />
-                The Garden
+                {isMobile ? 'Garden' : 'The Garden'}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="discussions" className="space-y-4">
-              <h2 className="text-2xl font-semibold">Discussions</h2>
+              <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`}>Discussions</h2>
               <LighthouseThreadList threads={threads} loading={threadsLoading} />
             </TabsContent>
             
             <TabsContent value="garden" className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold">The Garden</h2>
+                  <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`}>The Garden</h2>
                   <Badge variant="outline" className="gap-1">
                     <Trees className="h-3 w-3" />
-                    3D Visualization
+                    {isMobile ? '3D' : '3D Visualization'}
                   </Badge>
                 </div>
-                <p className="text-muted-foreground text-sm italic">
+                <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'} italic`}>
                   Watch your forest of truth flourish as verification strengthens each seed.
                 </p>
               </div>

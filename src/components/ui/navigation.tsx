@@ -225,6 +225,13 @@ export const Navigation = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-2">
+            {isAuthenticated && (
+              <div className="flex items-center gap-3 px-4 pb-3 border-b border-border">
+                <NotificationBell />
+                <UserFeedback />
+              </div>
+            )}
+            
             {isAuthenticated ? (
               <>
                 <Link

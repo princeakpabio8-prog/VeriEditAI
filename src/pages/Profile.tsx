@@ -15,16 +15,18 @@ import { useToast } from '@/hooks/use-toast';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ApiKeyManager } from '@/components/api-key-manager';
+import { AvatarUploader } from '@/components/profile/AvatarUploader';
 
 interface Profile {
   full_name: string;
   company: string;
+  avatar_url?: string | null;
 }
 
 const Profile = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
-  const [profile, setProfile] = useState<Profile>({ full_name: '', company: '' });
+  const [profile, setProfile] = useState<Profile>({ full_name: '', company: '', avatar_url: null });
   const [loading, setLoading] = useState(false);
   const [verificationCount, setVerificationCount] = useState(0);
   const [monthlyUsage, setMonthlyUsage] = useState(0);
@@ -53,6 +55,7 @@ const Profile = () => {
         setProfile({
           full_name: data.full_name || '',
           company: data.company || '',
+          avatar_url: data.avatar_url || null,
         });
       }
     } catch (error) {
@@ -156,6 +159,16 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6 pb-6 border-b border-border">
+                  <AvatarUploader
+                    userId={user?.id || ''}
+                    currentAvatarUrl={profile.avatar_url}
+                    fullName={profile.full_name}
+                    onUploadComplete={(url) => setProfile(prev => ({ ...prev, avatar_url: url }))}
+                    onDelete={() => setProfile(prev => ({ ...prev, avatar_url: null }))}
+                  />
+                </div>
+                
                 <form onSubmit={updateProfile} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>

@@ -13,15 +13,17 @@ interface CreateThreadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateThread: (title: string, content: string, autoVerify: boolean) => Promise<any>;
+  onThreadCreated?: (threadId: string) => void;
 }
 
-export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: CreateThreadDialogProps) {
+export function CreateThreadDialog({ open, onOpenChange, onCreateThread, onThreadCreated }: CreateThreadDialogProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [autoVerify, setAutoVerify] = useState(false);
   const [useRitual, setUseRitual] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showRitual, setShowRitual] = useState(false);
+  const [createdThreadId, setCreatedThreadId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,11 +62,16 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
 
   const handleRitualComplete = async (ritualData: any) => {
     try {
-      await onCreateThread(
+      const thread = await onCreateThread(
         ritualData.title,
         ritualData.content,
         ritualData.autoVerify
       );
+      
+      // Store thread ID for navigation
+      if (thread?.id) {
+        setCreatedThreadId(thread.id);
+      }
       
       // Reset form
       setTitle('');
@@ -75,6 +82,14 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
       console.error('Error creating thread:', error);
       toast.error('Failed to create thread');
       throw error;
+    }
+  };
+
+  const handleViewThread = () => {
+    if (createdThreadId && onThreadCreated) {
+      onThreadCreated(createdThreadId);
+      setShowRitual(false);
+      setCreatedThreadId(null);
     }
   };
 
@@ -193,6 +208,7 @@ export function CreateThreadDialog({ open, onOpenChange, onCreateThread }: Creat
           }
         }}
         onComplete={handleRitualComplete}
+        onViewThread={createdThreadId ? handleViewThread : undefined}
       />
     </Dialog>
   );

@@ -16,11 +16,12 @@ interface VerificationRitualProps {
     autoVerify: boolean;
     ritualMetadata: any;
   }) => Promise<void>;
+  onViewThread?: () => void;
 }
 
 type RitualStep = 'intention' | 'commitment' | 'witness' | 'ignition' | 'waiting' | 'revelation';
 
-export function VerificationRitual({ open, onOpenChange, onComplete }: VerificationRitualProps) {
+export function VerificationRitual({ open, onOpenChange, onComplete, onViewThread }: VerificationRitualProps) {
   const [currentStep, setCurrentStep] = useState<RitualStep>('intention');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -404,7 +405,13 @@ export function VerificationRitual({ open, onOpenChange, onComplete }: Verificat
             </motion.div>
 
             <Button 
-              onClick={() => onOpenChange(false)}
+              onClick={() => {
+                if (onViewThread) {
+                  onViewThread();
+                } else {
+                  onOpenChange(false);
+                }
+              }}
               className="w-full bg-[hsl(var(--truth-bloom))] hover:bg-[hsl(var(--truth-bloom))]/90"
             >
               View Your Thread

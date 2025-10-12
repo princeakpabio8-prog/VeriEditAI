@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
@@ -16,13 +16,31 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function LighthouseRoomView() {
   const { roomId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWorkspace, setIsWorkspace] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [pendingThreadId, setPendingThreadId] = useState<string | null>(null);
   
   const { threads, loading: threadsLoading, createThread } = useLighthouseThreads(roomId || '');
+
+  const handleCreateThread = async (title: string, content: string, autoVerify: boolean) => {
+    const thread = await createThread(title, content, autoVerify);
+    if (thread?.id) {
+      setPendingThreadId(thread.id);
+    }
+    return thread;
+  };
+
+  const handleNavigateToThread = () => {
+    if (pendingThreadId && roomId) {
+      navigate(`/lighthouse/${roomId}/thread/${pendingThreadId}`);
+      setPendingThreadId(null);
+      setCreateDialogOpen(false);
+    }
+  };
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -217,8 +235,18 @@ export default function LighthouseRoomView() {
 
       <CreateThreadDialog
         open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreateThread={createThread}
+        onOpenChange={(open) => {
+          setCreateDialogOpen(open);
+          if (!open) {
+            setPendingThreadId(null);
+          }
+        }}
+        onCreateThread={handleCreateThread}
+        onThreadCreated={(threadId) => {
+          if (roomId) {
+            navigate(`/lighthouse/${roomId}/thread/${threadId}`);
+          }
+        }}
       />
     </div>
   );

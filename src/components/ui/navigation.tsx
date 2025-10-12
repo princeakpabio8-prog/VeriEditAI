@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,9 +83,6 @@ export const Navigation = () => {
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>
-                <Link to="/api" className="text-muted-foreground hover:text-foreground transition-colors">
-                  API
-                </Link>
               </>
             ) : (
               <>
@@ -130,7 +127,7 @@ export const Navigation = () => {
                 </Button>
                 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2">
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2 z-50">
                     <Link
                       to="/dashboard"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -154,6 +151,14 @@ export const Navigation = () => {
                     >
                       <Lock className="h-4 w-4 mr-2" />
                       License Management
+                    </Link>
+                    <Link
+                      to="/api"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      API Hub
                     </Link>
                     <Link
                       to="/profile"

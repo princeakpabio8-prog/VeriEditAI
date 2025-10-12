@@ -71,7 +71,7 @@ export default function LighthouseRoomView() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="pt-24 pb-16 px-4">
+        <div className="pt-24 pb-24 md:pb-16 px-4">
           <div className="max-w-4xl mx-auto space-y-6">
             <Skeleton className="h-12 w-3/4" />
             <Skeleton className="h-24 w-full" />
@@ -86,7 +86,7 @@ export default function LighthouseRoomView() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="pt-24 pb-16 px-4">
+        <div className="pt-24 pb-24 md:pb-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-2xl font-bold mb-4">Room not found</h1>
             <Button asChild>
@@ -113,7 +113,7 @@ export default function LighthouseRoomView() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="pt-24 pb-16 px-4">
+      <div className="pt-24 pb-24 md:pb-16 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Navigation */}
           <div className="flex items-center justify-between">

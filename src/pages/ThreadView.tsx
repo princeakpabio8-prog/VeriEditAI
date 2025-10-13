@@ -19,6 +19,7 @@ import { ImageGallery } from '@/components/lighthouse/ImageGallery';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ThreadShareModal } from '@/components/thread-share-modal';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
@@ -33,6 +34,7 @@ export default function ThreadView() {
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [authorAvatar, setAuthorAvatar] = useState<string | null>(null);
   const [shareSheetOpen, setShareSheetOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -388,63 +390,17 @@ export default function ThreadView() {
                 {thread.comment_count} Comments
               </Button>
               
-              {isMobile ? (
-                <Sheet open={shareSheetOpen} onOpenChange={setShareSheetOpen}>
-                  <SheetTrigger asChild>
-                    <Button variant="outline" className="gap-2" size="mobile">
-                      <Share2 className="h-4 w-4" />
-                      Share
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="pb-safe">
-                    <SheetHeader>
-                      <SheetTitle>Share Thread</SheetTitle>
-                    </SheetHeader>
-                    <div className="space-y-2 mt-4">
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleShare('twitter');
-                          setShareSheetOpen(false);
-                        }}
-                        className="w-full justify-start min-h-[56px] touch-manipulation"
-                      >
-                        Share on Twitter
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleShare('linkedin');
-                          setShareSheetOpen(false);
-                        }}
-                        className="w-full justify-start min-h-[56px] touch-manipulation"
-                      >
-                        Share on LinkedIn
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleShare('facebook');
-                          setShareSheetOpen(false);
-                        }}
-                        className="w-full justify-start min-h-[56px] touch-manipulation"
-                      >
-                        Share on Facebook
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleShare('copy');
-                          setShareSheetOpen(false);
-                        }}
-                        className="w-full justify-start min-h-[56px] touch-manipulation"
-                      >
-                        Copy Link
-                      </Button>
-                    </div>
-                  </SheetContent>
-                </Sheet>
-              ) : (
+              <Button 
+                variant="outline" 
+                onClick={() => setShareModalOpen(true)}
+                className="gap-2"
+                size={isMobile ? "mobile" : "default"}
+              >
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+              
+              {!isMobile && (
                 <div className="relative group">
                   <Button variant="outline" className="gap-2">
                     <Share2 className="h-4 w-4" />
@@ -554,6 +510,16 @@ export default function ThreadView() {
           </div>
         </div>
       </div>
+      
+      {/* Share Modal */}
+      {threadId && (
+        <ThreadShareModal 
+          threadId={threadId} 
+          isOpen={shareModalOpen} 
+          onClose={() => setShareModalOpen(false)} 
+        />
+      )}
+      
       <Footer />
     </div>
   );

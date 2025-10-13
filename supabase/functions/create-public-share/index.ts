@@ -115,6 +115,33 @@ Deno.serve(async (req) => {
       ? verification.result_summary.substring(0, 160)
       : 'This content has been verified using AI-powered fact-checking.';
 
+    // Generate OG image
+    let ogImageUrl = null;
+    try {
+      const ogImageResponse = await fetch(`${supabaseUrl}/functions/v1/generate-og-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contentType: 'verification',
+          title: verification.content.substring(0, 100),
+          trustScore: verification.trust_score,
+          content: verification.result_summary || verification.content,
+        }),
+      });
+
+      if (ogImageResponse.ok) {
+        const ogData = await ogImageResponse.json();
+        ogImageUrl = ogData.imageUrl;
+        console.log('OG image generated:', ogImageUrl);
+      }
+    } catch (ogError) {
+      console.error('Error generating OG image:', ogError);
+      // Continue without OG image
+    }
+
     // Create public share record
     const { data: publicShare, error: shareError } = await supabase
       .from('public_verifications')
@@ -125,6 +152,7 @@ Deno.serve(async (req) => {
         expires_at: expiresAt,
         og_title: ogTitle,
         og_description: ogDescription,
+        og_image_url: ogImageUrl,
       })
       .select()
       .single();

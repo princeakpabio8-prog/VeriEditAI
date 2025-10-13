@@ -5,7 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Copy, Check, Share2, Eye, X, QrCode, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { Copy, Check, Share2, Eye, X, QrCode, Facebook, Twitter, Linkedin, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import QRCodeLib from 'qrcode';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -106,6 +106,14 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
+      
+      // Track copy
+      if (shareToken) {
+        await supabase.functions.invoke('track-share', {
+          body: { shareToken, contentType: 'verification', platform: 'copy', contentId: verificationId },
+        }).catch(console.error);
+      }
+      
       toast({
         title: 'Copied!',
         description: 'Share link copied to clipboard',
@@ -120,14 +128,22 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
     }
   };
 
-  const shareOnSocial = (platform: 'twitter' | 'facebook' | 'linkedin') => {
-    const text = encodeURIComponent('Check out this AI-verified content on VeriedIT AI');
+  const shareOnSocial = async (platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp') => {
+    const text = encodeURIComponent('Just verified this content on VeriedIT AI 🛡️ Check it out!');
     const url = encodeURIComponent(shareUrl);
+
+    // Track share
+    if (shareToken) {
+      await supabase.functions.invoke('track-share', {
+        body: { shareToken, contentType: 'verification', platform, contentId: verificationId },
+      }).catch(console.error);
+    }
 
     const urls = {
       twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
+      whatsapp: `https://wa.me/?text=${text}%20${url}`,
     };
 
     window.open(urls[platform], '_blank', 'width=600,height=400');
@@ -208,7 +224,7 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
 
               <div className="space-y-2">
                 <Label>Share on Social Media</Label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={() => shareOnSocial('twitter')}
                     variant="outline"
@@ -232,6 +248,14 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
                   >
                     <Linkedin className="h-4 w-4 mr-2" />
                     LinkedIn
+                  </Button>
+                  <Button
+                    onClick={() => shareOnSocial('whatsapp')}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    WhatsApp
                   </Button>
                 </div>
               </div>

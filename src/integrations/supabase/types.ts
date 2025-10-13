@@ -884,6 +884,65 @@ export type Database = {
         }
         Relationships: []
       }
+      public_threads: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          og_description: string | null
+          og_image_url: string | null
+          og_title: string | null
+          platform_stats: Json | null
+          share_count: number
+          share_token: string
+          thread_id: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          platform_stats?: Json | null
+          share_count?: number
+          share_token: string
+          thread_id: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          og_description?: string | null
+          og_image_url?: string | null
+          og_title?: string | null
+          platform_stats?: Json | null
+          share_count?: number
+          share_token?: string
+          thread_id?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_threads_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "room_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_verifications: {
         Row: {
           created_at: string
@@ -893,6 +952,8 @@ export type Database = {
           og_description: string | null
           og_image_url: string | null
           og_title: string | null
+          platform_stats: Json | null
+          share_count: number | null
           share_token: string
           updated_at: string
           user_id: string
@@ -907,6 +968,8 @@ export type Database = {
           og_description?: string | null
           og_image_url?: string | null
           og_title?: string | null
+          platform_stats?: Json | null
+          share_count?: number | null
           share_token: string
           updated_at?: string
           user_id: string
@@ -921,6 +984,8 @@ export type Database = {
           og_description?: string | null
           og_image_url?: string | null
           og_title?: string | null
+          platform_stats?: Json | null
+          share_count?: number | null
           share_token?: string
           updated_at?: string
           user_id?: string
@@ -1129,6 +1194,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      share_analytics: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          platform: string
+          referrer: string | null
+          share_token: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          platform: string
+          referrer?: string | null
+          share_token: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          platform?: string
+          referrer?: string | null
+          share_token?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       signal_feed: {
         Row: {

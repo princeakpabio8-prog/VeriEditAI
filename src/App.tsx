@@ -20,6 +20,7 @@ import VerificationDashboard from "./components/VerificationDashboard";
 import Demo from "./pages/Demo";
 import AdminDashboard from "./pages/AdminDashboard";
 import ShareVerification from "./pages/ShareVerification";
+import ShareThread from "./pages/ShareThread";
 import Extensions from "./pages/Extensions";
 import Referrals from "./pages/Referrals";
 import ApiHub from "./pages/ApiHub";
@@ -115,8 +116,9 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/payment-callback" element={<PaymentCallback />} />
-            {/* Public route for shared verifications - no auth required */}
+            {/* Public routes for sharing - no auth required */}
             <Route path="/share/:shareToken" element={<ShareVerification />} />
+            <Route path="/thread/share/:shareToken" element={<ShareThread />} />
             <Route path="/lighthouse" element={<LighthouseHub />} />
             <Route path="/lighthouse/:roomId" element={<LighthouseRoomView />} />
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ThreadView />} />

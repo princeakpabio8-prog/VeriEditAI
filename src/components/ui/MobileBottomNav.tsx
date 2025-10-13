@@ -12,10 +12,26 @@ export const MobileBottomNav = () => {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
   const isAuthenticated = !!user;
+  
+  if (import.meta.env.DEV) {
+    console.debug('[MobileBottomNav] Location:', location.pathname);
+  }
 
   const handleDiscoverClick = (e: React.MouseEvent) => {
+    if (import.meta.env.DEV) {
+      console.debug('[MobileBottomNav] Discover clicked, authenticated:', isAuthenticated);
+    }
+    
     if (!isAuthenticated) {
       e.preventDefault();
+      
+      // Show brief toast before redirecting
+      const toast = document.createElement('div');
+      toast.textContent = 'Sign in to view Discover';
+      toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-lg z-50';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+      
       navigate('/auth?next=/dashboard?tab=discover');
     }
   };
@@ -49,7 +65,13 @@ export const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border pb-safe">
+    <nav 
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border"
+      style={{
+        height: 'calc(64px + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+      }}
+    >
       <div className="grid grid-cols-6 items-center h-16 px-2 py-1">
         {navItems.map((item) => {
           const isActive = item.activeCheck(location.pathname);

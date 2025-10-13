@@ -67,20 +67,26 @@ export default function LighthouseHub() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Remember last visited tab
+  // Remember last visited tab (desktop only to avoid mobile flicker)
   useEffect(() => {
-    if (activeTab) {
+    if (activeTab && window.innerWidth >= 768) {
       localStorage.setItem('lighthouse_last_tab', activeTab);
     }
   }, [activeTab]);
 
-  // Restore last tab on mount
+  // Restore last tab on mount (desktop only)
   useEffect(() => {
-    const lastTab = localStorage.getItem('lighthouse_last_tab');
-    if (lastTab && !searchParams.has('tab')) {
-      setSearchParams({ tab: lastTab });
+    if (window.innerWidth >= 768) {
+      const lastTab = localStorage.getItem('lighthouse_last_tab');
+      if (lastTab && !searchParams.has('tab')) {
+        setSearchParams({ tab: lastTab });
+      }
     }
   }, []);
+  
+  if (import.meta.env.DEV) {
+    console.debug('[LighthouseHub] Mounted - Tab:', activeTab, 'User:', user?.id);
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,8 +121,8 @@ export default function LighthouseHub() {
           {/* Interactive Stats Cards with Live Activity */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-8 md:mt-12">
             <Card
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('feed')}
               role="button"
               tabIndex={0}
@@ -124,15 +130,15 @@ export default function LighthouseHub() {
             >
               <CardContent className="pt-4 md:pt-6 text-center">
                 <Newspaper className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-[hsl(var(--lighthouse-beam))] group-hover:scale-110 transition-transform" />
-                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))] animate-fade-in">
+                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">
                   {stats?.verifiedArticles || 0}
                 </div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Verified Articles</div>
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('organizations')}
               role="button"
               tabIndex={0}
@@ -140,15 +146,15 @@ export default function LighthouseHub() {
             >
               <CardContent className="pt-4 md:pt-6 text-center">
                 <Building2 className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-[hsl(var(--lighthouse-beam))] group-hover:scale-110 transition-transform" />
-                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))] animate-fade-in">
+                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">
                   {stats?.organizations || 0}
                 </div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Organizations</div>
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('rooms')}
               role="button"
               tabIndex={0}
@@ -156,22 +162,22 @@ export default function LighthouseHub() {
             >
               <CardContent className="pt-4 md:pt-6 text-center">
                 <Radio className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-[hsl(var(--lighthouse-beam))] group-hover:scale-110 transition-transform" />
-                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))] animate-fade-in">
+                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">
                   {stats?.activeRooms || 0}
                 </div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Active Rooms</div>
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              style={{ animationDelay: '0ms' }}
               onClick={() => {}}
               role="button"
               tabIndex={0}
             >
               <CardContent className="pt-4 md:pt-6 text-center">
                 <Users className="w-6 h-6 md:w-8 md:h-8 mx-auto mb-2 text-[hsl(var(--lighthouse-beam))] group-hover:scale-110 transition-transform" />
-                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))] animate-fade-in">
+                <div className="text-2xl md:text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">
                   {stats?.communityMembers || 0}
                 </div>
                 <div className="text-xs md:text-sm text-muted-foreground mt-1">Community Members</div>

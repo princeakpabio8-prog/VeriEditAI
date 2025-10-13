@@ -1,5 +1,5 @@
 // Service Worker for PWA and offline support - Optimized for mobile
-const SW_VERSION = 'v9';
+const SW_VERSION = 'v10';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -28,7 +28,7 @@ const OFFLINE_FALLBACK_ROUTES = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing v9...');
+  console.log('Service Worker installing v10...');
   
   event.waitUntil(
     Promise.all([
@@ -68,14 +68,16 @@ self.addEventListener('install', (event) => {
           headers: { 'Content-Type': 'text/html' }
         }));
       })
-    ])
-    // Don't skip waiting - let the browser handle updates naturally
+    ]).then(() => {
+      // Skip waiting immediately to take control
+      return self.skipWaiting();
+    })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating v9...');
+  console.log('Service Worker activating v10...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -88,9 +90,9 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('Service Worker activated - ready for next page load');
-      // Only claim clients if explicitly requested (via message)
-      // Don't force immediate takeover to avoid disrupting current sessions
+      console.log('Service Worker activated - claiming clients');
+      // Immediately claim all clients so new version takes effect
+      return self.clients.claim();
     })
   );
 });

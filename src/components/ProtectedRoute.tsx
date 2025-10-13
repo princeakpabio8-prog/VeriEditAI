@@ -20,6 +20,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!user) {
     // Redirect to auth page with return URL
+    if (import.meta.env.DEV) {
+      console.debug('[ProtectedRoute] Redirecting unauthenticated user from:', location.pathname);
+    }
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

@@ -20,48 +20,67 @@ createRoot(document.getElementById("root")!).render(
   </ErrorBoundary>
 );
 
-// Register service worker for PWA functionality
+// Register service worker for PWA functionality with auto-update
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
         console.log('SW registered: ', registration);
         
-        // Listen for service worker updates - notify instead of auto-reload
+        // Listen for service worker updates and auto-reload
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('New service worker available');
+                console.log('New service worker available - preparing to update');
                 
-                // Show notification instead of auto-reload
-                if ('Notification' in window && Notification.permission === 'granted') {
-                  new Notification('Update Available', {
-                    body: 'A new version is available. Refresh to update.',
-                    icon: '/favicon.ico'
-                  });
-                }
+                // Tell the new SW to skip waiting
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
               }
             });
           }
         });
         
-        // Check for updates every 5 minutes on mobile (not 10 seconds)
-        if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // Check for updates periodically on mobile
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
           setInterval(() => {
             registration.update().catch(() => {}); // Silent update check
           }, 5 * 60 * 1000); // Check every 5 minutes
         }
+        
+        // Version check on mount to force update if needed
+        fetch('/sw-version')
+          .then(res => res.json())
+          .then(data => {
+            const storedVersion = localStorage.getItem('sw_version');
+            if (storedVersion && storedVersion !== data.version) {
+              console.log('SW version changed, forcing update');
+              registration.update();
+            }
+            localStorage.setItem('sw_version', data.version);
+          })
+          .catch(() => {});
       })
       .catch((registrationError) => {
         console.log('SW registration failed: ', registrationError);
       });
 
+    // Listen for controller change and reload
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        console.log('New service worker activated - reloading page');
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
     // Listen for service worker messages
     navigator.serviceWorker.addEventListener('message', (event) => {
-      if (event.data?.type === 'SW_UPDATED') {
-        console.log('Service worker updated to version:', event.data.version);
+      if (event.data?.type === 'SW_READY') {
+        console.log('Service worker ready, version:', event.data.version);
       }
     });
   });

@@ -5,17 +5,21 @@ import { cn } from "@/lib/utils";
 import { NotificationBell } from "./NotificationBell";
 import { Badge } from "./badge";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
+  const isMobile = useIsMobile();
   const isAuthenticated = !!user;
   
   if (import.meta.env.DEV) {
-    console.debug('[MobileBottomNav] Location:', location.pathname);
+    console.debug('[MobileBottomNav] Mounted, isMobile:', isMobile, 'Location:', location.pathname);
   }
+
+  if (!isMobile) return null;
 
   const handleDiscoverClick = (e: React.MouseEvent) => {
     if (import.meta.env.DEV) {
@@ -66,7 +70,7 @@ export const MobileBottomNav = () => {
 
   return (
     <nav 
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-[70] bg-card/95 backdrop-blur-lg border-t border-border"
       style={{
         height: 'calc(64px + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'

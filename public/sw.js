@@ -1,5 +1,5 @@
 // Service Worker for PWA and offline support - Optimized for mobile
-const SW_VERSION = 'v10';
+const SW_VERSION = 'v11';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -15,6 +15,7 @@ const STATIC_ASSETS = [
   '/about',
   '/payment-callback',
   '/verification-dashboard',
+  '/lighthouse',
   '/manifest.json',
   '/icon-192x192.png',
   '/icon-512x512.png'
@@ -28,7 +29,7 @@ const OFFLINE_FALLBACK_ROUTES = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing v10...');
+  console.log('Service Worker installing v11...');
   
   event.waitUntil(
     Promise.all([
@@ -77,7 +78,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating v10...');
+  console.log('Service Worker activating v11...');
   
   event.waitUntil(
     caches.keys().then((cacheNames) => {

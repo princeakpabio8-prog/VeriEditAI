@@ -459,12 +459,11 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
-        <TabsList className={isMobile ? "grid w-full grid-cols-4 gap-1" : "grid w-full grid-cols-7"}>
+        <TabsList className={isMobile ? "grid w-full grid-cols-4 gap-1" : "grid w-full grid-cols-6"}>
           <TabsTrigger value="overview" className={isMobile ? "text-xs px-2" : ""}>Overview</TabsTrigger>
           <TabsTrigger value="discover" className={isMobile ? "text-xs px-2" : ""}>Discover</TabsTrigger>
           <TabsTrigger value="analytics" className={isMobile ? "text-xs px-2" : ""}>Analytics</TabsTrigger>
           {!isMobile && <TabsTrigger value="executive">Executive</TabsTrigger>}
-          {!isMobile && <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>}
           {!isMobile && <TabsTrigger value="export">Export Data</TabsTrigger>}
           <TabsTrigger value="trust-intel" className={isMobile ? "text-xs px-2" : ""}>Trust Intel</TabsTrigger>
         </TabsList>
@@ -603,11 +602,6 @@ const Dashboard = () => {
           </ErrorBoundary>
         </TabsContent>
 
-          <TabsContent value="bulk" className="animate-fade-in">
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">Bulk verification features coming soon!</p>
-            </div>
-          </TabsContent>
 
           <TabsContent value="export" className="animate-fade-in">
             <div className="text-center py-8">

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { ImageResponse } from 'https://deno.land/x/og_edge@0.0.6/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,104 +19,198 @@ interface OGImageRequest {
   };
 }
 
-function generateSVG(data: OGImageRequest): string {
+function getGradientColors(trustScore?: number): { start: string; end: string } {
+  if (trustScore === undefined) return { start: '#3b82f6', end: '#1d4ed8' };
+  
+  if (trustScore >= 70) return { start: '#10b981', end: '#059669' }; // Green
+  if (trustScore >= 40) return { start: '#f59e0b', end: '#d97706' }; // Orange
+  return { start: '#ef4444', end: '#dc2626' }; // Red
+}
+
+async function generatePNG(data: OGImageRequest) {
   const { contentType, title, trustScore, content, author, stats } = data;
-  
-  // Determine gradient based on trust score
-  let gradientColors = ['#3b82f6', '#1d4ed8']; // Default blue
-  if (trustScore !== undefined) {
-    if (trustScore >= 70) {
-      gradientColors = ['#10b981', '#059669']; // Green
-    } else if (trustScore >= 40) {
-      gradientColors = ['#f59e0b', '#d97706']; // Orange
-    } else {
-      gradientColors = ['#ef4444', '#dc2626']; // Red
-    }
-  }
-  
-  const contentPreview = content ? content.substring(0, 150) + '...' : '';
+  const colors = getGradientColors(trustScore);
   const displayTrustScore = trustScore !== undefined ? Math.round(trustScore) : null;
-  
-  return `
-    <svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:${gradientColors[0]};stop-opacity:1" />
-          <stop offset="100%" style="stop-color:${gradientColors[1]};stop-opacity:1" />
-        </linearGradient>
-        <linearGradient id="card-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style="stop-color:rgba(255,255,255,0.15);stop-opacity:1" />
-          <stop offset="100%" style="stop-color:rgba(255,255,255,0.05);stop-opacity:1" />
-        </linearGradient>
-      </defs>
-      
-      <!-- Background -->
-      <rect width="1200" height="630" fill="url(#bg-gradient)"/>
-      
-      <!-- Pattern overlay -->
-      <rect width="1200" height="630" fill="url(#card-gradient)" opacity="0.3"/>
-      
-      <!-- Logo and badge area -->
-      <text x="60" y="80" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="white">
-        VeriedIT AI
-      </text>
-      <rect x="240" y="50" width="140" height="40" rx="20" fill="rgba(255,255,255,0.2)"/>
-      <text x="310" y="76" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="white" text-anchor="middle">
-        ✓ Verified
-      </text>
-      
-      <!-- Trust Score Card -->
-      ${displayTrustScore !== null ? `
-      <rect x="60" y="140" width="280" height="200" rx="20" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-      <text x="200" y="190" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="white" text-anchor="middle">
-        TRUST SCORE
-      </text>
-      <text x="200" y="265" font-family="Arial, sans-serif" font-size="80" font-weight="700" fill="white" text-anchor="middle">
-        ${displayTrustScore}%
-      </text>
-      ` : ''}
-      
-      <!-- Content area -->
-      <rect x="380" y="140" width="760" height="340" rx="20" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-      
-      <!-- Title -->
-      <text x="420" y="200" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="white">
-        ${title.substring(0, 40)}${title.length > 40 ? '...' : ''}
-      </text>
-      
-      <!-- Content preview -->
-      ${contentPreview ? `
-      <text x="420" y="250" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.9)">
-        ${contentPreview.split(' ').slice(0, 15).join(' ')}
-      </text>
-      ` : ''}
-      
-      <!-- Author -->
-      ${author ? `
-      <text x="420" y="330" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.8)">
-        By ${author}
-      </text>
-      ` : ''}
-      
-      <!-- Stats -->
-      ${stats ? `
-      <text x="420" y="400" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.8)">
-        ${stats.views ? `👁 ${stats.views} views` : ''} 
-        ${stats.shares ? `• 🔗 ${stats.shares} shares` : ''} 
-        ${stats.comments ? `• 💬 ${stats.comments} comments` : ''}
-      </text>
-      ` : ''}
-      
-      <!-- Footer -->
-      <rect y="580" width="1200" height="50" fill="rgba(0,0,0,0.3)"/>
-      <text x="60" y="613" font-family="Arial, sans-serif" font-size="20" font-weight="600" fill="white">
-        AI-Powered Truth Verification
-      </text>
-      <text x="1140" y="613" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.8)" text-anchor="end">
-        veried.it
-      </text>
-    </svg>
-  `;
+  const contentPreview = content ? content.substring(0, 150) : '';
+
+  return new ImageResponse(
+    {
+      type: 'div',
+      props: {
+        style: {
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: `linear-gradient(135deg, ${colors.start}, ${colors.end})`,
+          padding: 60,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        },
+        children: [
+          // Header
+          {
+            type: 'div',
+            props: {
+              style: { display: 'flex', alignItems: 'center', marginBottom: 40 },
+              children: [
+                {
+                  type: 'div',
+                  props: {
+                    style: { fontSize: 32, fontWeight: 700, color: 'white' },
+                    children: 'VeriedIT AI',
+                  },
+                },
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      marginLeft: 20,
+                      padding: '8px 24px',
+                      background: 'rgba(255,255,255,0.2)',
+                      borderRadius: 20,
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: 'white',
+                    },
+                    children: '✓ Verified',
+                  },
+                },
+              ],
+            },
+          },
+          // Main Content
+          {
+            type: 'div',
+            props: {
+              style: {
+                display: 'flex',
+                gap: 40,
+                flex: 1,
+              },
+              children: [
+                // Trust Score Card (if available)
+                displayTrustScore !== null && {
+                  type: 'div',
+                  props: {
+                    style: {
+                      width: 280,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: 20,
+                      padding: 40,
+                    },
+                    children: [
+                      {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 20 },
+                          children: 'TRUST SCORE',
+                        },
+                      },
+                      {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 80, fontWeight: 700, color: 'white' },
+                          children: `${displayTrustScore}%`,
+                        },
+                      },
+                    ],
+                  },
+                },
+                // Content Area
+                {
+                  type: 'div',
+                  props: {
+                    style: {
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderRadius: 20,
+                      padding: 40,
+                    },
+                    children: [
+                      {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 36, fontWeight: 700, color: 'white', marginBottom: 20 },
+                          children: title.substring(0, 60) + (title.length > 60 ? '...' : ''),
+                        },
+                      },
+                      contentPreview && {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 20, color: 'rgba(255,255,255,0.9)', marginBottom: 20 },
+                          children: contentPreview.substring(0, 100) + '...',
+                        },
+                      },
+                      author && {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 'auto' },
+                          children: `By ${author}`,
+                        },
+                      },
+                      stats && (stats.views || stats.shares || stats.comments) && {
+                        type: 'div',
+                        props: {
+                          style: { fontSize: 18, color: 'rgba(255,255,255,0.8)', marginTop: 10 },
+                          children: [
+                            stats.views && `👁 ${stats.views} views`,
+                            stats.shares && ` • 🔗 ${stats.shares} shares`,
+                            stats.comments && ` • 💬 ${stats.comments} comments`,
+                          ].filter(Boolean).join(''),
+                        },
+                      },
+                    ].filter(Boolean),
+                  },
+                },
+              ].filter(Boolean),
+            },
+          },
+          // Footer
+          {
+            type: 'div',
+            props: {
+              style: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: 40,
+                paddingTop: 20,
+                borderTop: '2px solid rgba(255,255,255,0.3)',
+              },
+              children: [
+                {
+                  type: 'div',
+                  props: {
+                    style: { fontSize: 20, fontWeight: 600, color: 'white' },
+                    children: 'AI-Powered Truth Verification',
+                  },
+                },
+                {
+                  type: 'div',
+                  props: {
+                    style: { fontSize: 18, color: 'rgba(255,255,255,0.8)' },
+                    children: 'veried.it',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      width: 1200,
+      height: 630,
+    }
+  );
 }
 
 Deno.serve(async (req) => {
@@ -131,24 +226,22 @@ Deno.serve(async (req) => {
     const requestData: OGImageRequest = await req.json();
     console.log('Generating OG image for:', requestData);
 
-    // Generate SVG
-    const svg = generateSVG(requestData);
-    
-    // Convert SVG to PNG using a simple base64 approach
-    // For production, consider using a proper SVG to PNG converter
-    const svgBuffer = new TextEncoder().encode(svg);
-    const svgBase64 = btoa(String.fromCharCode(...new Uint8Array(svgBuffer)));
+    // Generate PNG image
+    const imageResponse = await generatePNG(requestData);
+    const pngBuffer = await imageResponse.arrayBuffer();
     
     // Generate unique filename
     const timestamp = Date.now();
-    const filename = `og-${requestData.contentType}-${timestamp}.svg`;
+    const filename = `og-${requestData.contentType}-${timestamp}.png`;
     const filePath = `${filename}`;
+
+    console.log(`Uploading PNG image: ${filePath} (${pngBuffer.byteLength} bytes)`);
 
     // Upload to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('og-images')
-      .upload(filePath, svgBuffer, {
-        contentType: 'image/svg+xml',
+      .upload(filePath, pngBuffer, {
+        contentType: 'image/png',
         cacheControl: '86400', // 24 hours
       });
 
@@ -162,7 +255,7 @@ Deno.serve(async (req) => {
       .from('og-images')
       .getPublicUrl(filePath);
 
-    console.log('OG image generated:', publicUrl);
+    console.log('OG image generated successfully:', publicUrl);
 
     return new Response(
       JSON.stringify({ 

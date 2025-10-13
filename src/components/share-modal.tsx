@@ -20,6 +20,7 @@ interface ShareModalProps {
 export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps) {
   const [shareUrl, setShareUrl] = useState<string>('');
   const [shareToken, setShareToken] = useState<string>('');
+  const [ogImageUrl, setOgImageUrl] = useState<string>('');
   const [viewCount, setViewCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -67,6 +68,7 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
 
       setShareUrl(data.shareUrl);
       setShareToken(data.shareToken);
+      setOgImageUrl(data.ogImageUrl || '');
       setViewCount(data.viewCount || 0);
 
       toast({
@@ -200,6 +202,18 @@ export function ShareModal({ verificationId, isOpen, onClose }: ShareModalProps)
             </TabsList>
 
             <TabsContent value="link" className="space-y-4">
+              {ogImageUrl && (
+                <div className="mb-4 p-4 bg-muted rounded-lg">
+                  <Label className="mb-2 block">Share Preview</Label>
+                  <div className="bg-background border rounded-lg overflow-hidden">
+                    <img src={ogImageUrl} alt="Share preview" className="w-full" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    This is how your verification will appear when shared on LinkedIn, Facebook, and Twitter
+                  </p>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label>Share Link</Label>
                 <div className="flex gap-2">

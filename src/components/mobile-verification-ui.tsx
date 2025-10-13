@@ -359,15 +359,31 @@ export function MobileVerificationUI({
     });
   };
 
-  const shareResult = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Verification Result',
-        text: `Verification Result: ${result?.confidence}% confidence`,
-        url: window.location.href,
-      });
+  const shareResult = async () => {
+    const shareData = {
+      title: 'Verification Result',
+      text: `Verification Result: ${result?.confidence}% confidence`,
+      url: window.location.href,
+    };
+    
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully! 🎉",
+          description: "Thanks for sharing!",
+        });
+      } catch (error: any) {
+        if (error.name !== 'AbortError') {
+          await navigator.clipboard.writeText(`${shareData.text} - ${shareData.url}`);
+          toast({
+            title: "Link Copied",
+            description: "Verification result link copied to clipboard",
+          });
+        }
+      }
     } else {
-      navigator.clipboard.writeText(
+      await navigator.clipboard.writeText(
         `Verification Result: ${result?.confidence}% confidence - ${window.location.href}`
       );
       toast({

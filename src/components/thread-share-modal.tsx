@@ -96,23 +96,59 @@ export function ThreadShareModal({ threadId, isOpen, onClose }: ThreadShareModal
   };
 
   const shareOnSocial = async (platform: 'twitter' | 'facebook' | 'linkedin' | 'whatsapp') => {
+    // Try Web Share API first (mobile native)
+    if (navigator.share && navigator.canShare) {
+      const shareData = {
+        title: 'VeriedIT AI Thread',
+        text: 'Check out this verified thread on VeriedIT AI 🌟',
+        url: shareUrl
+      };
+      
+      if (navigator.canShare(shareData)) {
+        try {
+          await navigator.share(shareData);
+          if (shareToken) {
+            supabase.functions.invoke('track-share', {
+              body: { shareToken, contentType: 'thread', platform: 'native', contentId: threadId }
+            }).catch(console.error);
+          }
+          toast({ title: 'Shared successfully! 🎉' });
+          return;
+        } catch (error: any) {
+          if (error.name === 'AbortError') return;
+          console.warn('Web Share API failed, falling back:', error);
+        }
+      }
+    }
+    
+    // Desktop fallback
     const text = encodeURIComponent('Check out this verified thread on VeriedIT AI 🌟');
     const url = encodeURIComponent(shareUrl);
-
-    if (shareToken) {
-      await supabase.functions.invoke('track-share', {
-        body: { shareToken, contentType: 'thread', platform, contentId: threadId },
-      }).catch(console.error);
-    }
-
+    
     const urls = {
       twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
       whatsapp: `https://wa.me/?text=${text}%20${url}`,
     };
-
-    window.open(urls[platform], '_blank', 'width=600,height=400');
+    
+    const isMobile = window.innerWidth < 768;
+    const windowFeatures = isMobile ? undefined : 'width=600,height=400';
+    const newWindow = window.open(urls[platform], '_blank', windowFeatures);
+    
+    if (shareToken) {
+      supabase.functions.invoke('track-share', {
+        body: { shareToken, contentType: 'thread', platform, contentId: threadId }
+      }).catch(console.error);
+    }
+    
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      toast({
+        title: 'Popup blocked',
+        description: 'Copying link to clipboard instead...',
+      });
+      await copyToClipboard();
+    }
   };
 
   const revokeShare = async () => {

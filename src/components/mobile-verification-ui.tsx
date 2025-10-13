@@ -139,7 +139,7 @@ export function MobileVerificationUI({
     }
   };
 
-  const handleUrlVerify = () => {
+  const handleUrlVerify = async () => {
     if (!urlContent.trim()) {
       toast({
         title: "URL Required",
@@ -155,13 +155,80 @@ export function MobileVerificationUI({
         contentType: 'url' as const
       });
 
-      console.log('Starting URL verification:', urlContent);
-      onVerify({
-        type: 'url',
-        content: validation.content,
+      toast({
+        title: "Fetching content from URL...",
+        description: "Please wait while we retrieve the page content",
       });
+
+      const { supabase } = await import('@/integrations/supabase/client');
+      const { data, error } = await supabase.functions.invoke('fetch-url-content', {
+        body: { url: validation.content }
+      });
+
+      if (error || !data?.success) {
+        const errorMessage = data?.error || error?.message || 'Failed to fetch URL content';
+        toast({
+          title: "Unable to fetch URL",
+          description: errorMessage,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data.contentType === 'pdf') {
+        toast({
+          title: "Processing PDF...",
+          description: "Extracting text from PDF document",
+        });
+
+        const pdfData = atob(data.data);
+        const bytes = new Uint8Array(pdfData.length);
+        for (let i = 0; i < pdfData.length; i++) {
+          bytes[i] = pdfData.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const file = new File([blob], 'document.pdf', { type: 'application/pdf' });
+        
+        const parsed = await parseDocument(file);
+        
+        if (!parsed.metadata.extractionSuccess) {
+          toast({
+            title: "PDF Processing Failed",
+            description: "Unable to extract text from PDF.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        onVerify({
+          type: 'file',
+          content: parsed.text,
+          contentType: 'document',
+          fileName: 'document.pdf',
+          fileSize: data.size,
+          metadata: {
+            originalUrl: urlContent,
+            fetchedFromUrl: true,
+            documentMetadata: parsed.metadata
+          }
+        });
+        return;
+      }
+
+      console.log('Starting URL verification with fetched content:', data.text.slice(0, 50) + '...');
+      onVerify({
+        type: 'text',
+        content: data.text,
+        contentType: 'text',
+        metadata: {
+          originalUrl: urlContent,
+          contentLength: data.length,
+          fetchedFromUrl: true
+        }
+      });
+      
     } catch (error: any) {
-      setValidationError(error.message || 'Invalid URL format');
+      setValidationError(error.message || 'Validation failed');
       toast({
         title: "Validation Error",
         description: error.message || 'Invalid URL format',

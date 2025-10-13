@@ -39,15 +39,17 @@ const Index = () => {
         <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 fade-in-up">
                 Start Your Verification
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto fade-in-up" style={{ animationDelay: '100ms' }}>
                 Get instant trust scores and detailed evidence for any digital content
               </p>
             </div>
             
-            <VerificationUpload onVerificationStart={handleVerificationStart} />
+            <div className="fade-in-up" style={{ animationDelay: '200ms' }}>
+              <VerificationUpload onVerificationStart={handleVerificationStart} />
+            </div>
           </div>
         </section>
 
@@ -55,16 +57,16 @@ const Index = () => {
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 fade-in-up">
                 AI-Powered Trust Scoring
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto fade-in-up" style={{ animationDelay: '100ms' }}>
                 Our advanced algorithms analyze multiple factors to give you a comprehensive trust score
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <Card className="text-center bg-gradient-card border-border/50">
+              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '0ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={85} showAnimation />
@@ -84,7 +86,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="text-center bg-gradient-card border-border/50">
+              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '150ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={65} showAnimation />
@@ -104,7 +106,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="text-center bg-gradient-card border-border/50">
+              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '300ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={25} showAnimation />

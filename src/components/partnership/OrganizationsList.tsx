@@ -90,17 +90,18 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="border-border/50 bg-card/50 backdrop-blur animate-pulse">
+              <Card key={i} className="border-border/50 bg-card/50 backdrop-blur shimmer">
                 <CardContent className="p-6">
                   <div className="h-32 bg-muted rounded" />
                 </CardContent>
               </Card>
             ))
           ) : filteredOrganizations && filteredOrganizations.length > 0 ? (
-            filteredOrganizations.map((org) => (
+            filteredOrganizations.map((org, index) => (
               <Card
                 key={org.id}
-                className="border-border/50 bg-card/50 backdrop-blur hover:border-primary/30 transition-all cursor-pointer group"
+                className="border-border/50 bg-card/50 backdrop-blur hover:border-primary/30 transition-all cursor-pointer group card-hover-lift fade-in-up"
+                style={{ animationDelay: `${index * 50}ms` }}
                 onClick={() => navigate(`/lighthouse/organizations/${org.id}`)}
               >
                 <CardContent className="p-6 space-y-4">

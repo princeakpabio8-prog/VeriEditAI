@@ -241,7 +241,7 @@ export default function Verify() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="verify">
+              <TabsContent value="verify" className="animate-fade-in">
                 {verificationState.stage === 'upload' && (
                   <>
                     <VerificationUpload 
@@ -264,7 +264,8 @@ export default function Verify() {
                 )}
                 
                 {(verificationState.stage === 'completed' || result) && (
-                  <VerificationResult
+                  <div className="fade-in-up">
+                    <VerificationResult
                     verificationId={(verificationState.result || result)?.verificationId || null}
                     trustScore={(verificationState.result || result)?.confidence || 0}
                     status={(verificationState.result || result)?.status || 'unknown'}
@@ -285,6 +286,7 @@ export default function Verify() {
                     content={verificationState.content || 'No content'}
                     industry={verificationState.selectedTemplate?.industry}
                   />
+                  </div>
                 )}
 
                 {(verificationState.stage === 'completed' || result) && verificationState.content && (
@@ -317,7 +319,7 @@ export default function Verify() {
                 )}
               </TabsContent>
 
-              <TabsContent value="templates">
+              <TabsContent value="templates" className="animate-fade-in">
                 <IndustryTemplates onSelectTemplate={handleTemplateSelection} />
               </TabsContent>
             </Tabs>
@@ -329,7 +331,7 @@ export default function Verify() {
                   How It Works
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Card className="text-center bg-gradient-card border-border/50">
+                  <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '0ms' }}>
                     <CardHeader>
                       <div className="flex justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -345,7 +347,7 @@ export default function Verify() {
                     </CardContent>
                   </Card>
 
-                  <Card className="text-center bg-gradient-card border-border/50">
+                  <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '100ms' }}>
                     <CardHeader>
                       <div className="flex justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -361,7 +363,7 @@ export default function Verify() {
                     </CardContent>
                   </Card>
 
-                  <Card className="text-center bg-gradient-card border-border/50">
+                  <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '200ms' }}>
                     <CardHeader>
                       <div className="flex justify-center mb-4">
                         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">

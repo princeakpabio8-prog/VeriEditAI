@@ -104,7 +104,7 @@ export function RoomCard({
 
   return (
     <Card 
-      className="group cursor-pointer bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:border-[hsl(var(--lighthouse-beam))]/50 transition-all hover:scale-105"
+      className="group cursor-pointer bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:border-[hsl(var(--lighthouse-beam))]/50 transition-all card-hover-lift"
       onClick={() => navigate(`/lighthouse/${id}`)}
     >
       <CardHeader>

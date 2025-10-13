@@ -5,6 +5,8 @@ import { ArrowLeft, ExternalLink, Shield, Target, Users, Video } from "lucide-re
 import { Link } from "react-router-dom";
 
 const About = () => {
+  console.log('[About] Page mounted, pathname:', window.location.pathname);
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Header */}

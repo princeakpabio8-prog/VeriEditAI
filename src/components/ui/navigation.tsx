@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code } from "lucide-react";
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
 import { NotificationBell } from '@/components/ui/NotificationBell';
@@ -14,6 +14,7 @@ export const Navigation = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const { signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Derive auth state from hook
   const isAuthenticated = !!authUser;
@@ -249,14 +250,18 @@ export const Navigation = () => {
               <>
                 <Link
                   to="/dashboard"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`block px-4 py-3 transition-colors ${
+                    location.pathname === '/dashboard' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <Link
                   to="/dashboard?tab=discover"
-                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname === '/dashboard' && location.search.includes('tab=discover') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Newspaper className="h-4 w-4" />
@@ -264,7 +269,9 @@ export const Navigation = () => {
                 </Link>
                 <Link
                   to="/lighthouse"
-                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname.startsWith('/lighthouse') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Radio className="h-4 w-4" />
@@ -272,7 +279,9 @@ export const Navigation = () => {
                 </Link>
                 <Link
                   to="/referrals"
-                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname === '/referrals' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Gift className="h-4 w-4" />
@@ -280,14 +289,18 @@ export const Navigation = () => {
                 </Link>
                 <Link
                   to="/billing"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`block px-4 py-3 transition-colors ${
+                    location.pathname === '/billing' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Billing
                 </Link>
                 <Link
                   to="/about"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className={`block px-4 py-3 transition-colors ${
+                    location.pathname === '/about' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   About
@@ -297,21 +310,21 @@ export const Navigation = () => {
               <>
                 <a
                   href="#features"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Features
                 </a>
                 <a
                   href="#pricing"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Pricing
                 </a>
                 <Link
                   to="/lighthouse"
-                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Radio className="h-4 w-4" />
@@ -319,7 +332,7 @@ export const Navigation = () => {
                 </Link>
                 <Link
                   to="/auth?next=/dashboard?tab=discover"
-                  className="flex items-center gap-2 px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Newspaper className="h-4 w-4" />
@@ -327,10 +340,17 @@ export const Navigation = () => {
                 </Link>
                 <Link
                   to="/extensions"
-                  className="block px-4 py-2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Extensions
+                </Link>
+                <Link
+                  to="/about"
+                  className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  About
                 </Link>
               </>
             )}

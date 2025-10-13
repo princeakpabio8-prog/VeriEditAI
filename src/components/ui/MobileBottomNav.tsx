@@ -1,4 +1,4 @@
-import { Home, Radio, Newspaper, User, Users } from "lucide-react";
+import { Home, Radio, Newspaper, User, Users, Info } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -41,22 +41,16 @@ export const MobileBottomNav = () => {
       onClick: handleDiscoverClick,
     },
     {
-      label: "Find",
-      icon: Users,
-      path: isAuthenticated ? "/find-users" : "/auth?next=/find-users",
-      activeCheck: (path: string) => path === "/find-users",
-      onClick: (e: React.MouseEvent) => {
-        if (!isAuthenticated) {
-          e.preventDefault();
-          navigate('/auth?next=/find-users');
-        }
-      },
+      label: "About",
+      icon: Info,
+      path: "/about",
+      activeCheck: (path: string) => path === "/about",
     },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border pb-safe">
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="grid grid-cols-6 items-center h-16 px-2">
         {navItems.map((item) => {
           const isActive = item.activeCheck(location.pathname);
           const Icon = item.icon;

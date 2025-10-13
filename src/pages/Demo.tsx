@@ -84,98 +84,16 @@ const Demo = () => {
         <section className="max-w-6xl mx-auto mb-12">
           <Card className="overflow-hidden shadow-2xl">
             <CardContent className="p-0">
-              <div 
-                className="relative group"
-                onMouseEnter={() => setShowControls(true)}
-                onMouseLeave={() => setShowControls(false)}
-              >
-                <video
-                  ref={videoRef}
-                  className="w-full aspect-video object-cover"
-                  src="/assets/demo-video.mp4"
-                  muted={isMuted}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  onEnded={handleVideoEnd}
-                  poster="/placeholder.svg"
-                  preload="metadata"
-                >
-                  Your browser does not support the video tag.
-                </video>
-
-                {/* Video Overlay */}
-                {(!isPlaying || showControls) && (
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity duration-300">
-                    {videoEnded ? (
-                      <div className="text-center">
-                        <Button
-                          onClick={restartVideo}
-                          size="lg"
-                          className="mb-4 bg-primary/90 hover:bg-primary text-primary-foreground"
-                        >
-                          <RotateCcw className="mr-2 h-5 w-5" />
-                          Watch Again
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        onClick={togglePlay}
-                        size="lg"
-                        className="bg-primary/90 hover:bg-primary text-primary-foreground"
-                      >
-                        {isPlaying ? (
-                          <Pause className="h-8 w-8" />
-                        ) : (
-                          <Play className="h-8 w-8 ml-1" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Custom Controls */}
-                {showControls && !videoEnded && (
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <div className="flex items-center justify-between bg-black/70 rounded-lg px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          onClick={togglePlay}
-                          variant="ghost"
-                          size="sm"
-                          className="text-white hover:bg-white/20"
-                        >
-                          {isPlaying ? (
-                            <Pause className="h-4 w-4" />
-                          ) : (
-                            <Play className="h-4 w-4" />
-                          )}
-                        </Button>
-
-                        <Button
-                          onClick={toggleMute}
-                          variant="ghost"
-                          size="sm"
-                          className="text-white hover:bg-white/20"
-                        >
-                          {isMuted ? (
-                            <VolumeX className="h-4 w-4" />
-                          ) : (
-                            <Volume2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-
-                      <Button
-                        onClick={toggleFullscreen}
-                        variant="ghost"
-                        size="sm"
-                        className="text-white hover:bg-white/20"
-                      >
-                        <Maximize className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/LpIkzJ4C-aI"
+                  title="VeriEdit AI Full Product Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  aria-label="Complete demonstration of VeriEdit AI verification system"
+                />
               </div>
             </CardContent>
           </Card>

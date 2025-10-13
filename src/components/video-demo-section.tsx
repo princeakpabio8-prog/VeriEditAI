@@ -70,92 +70,16 @@ export const VideoDemoSection = () => {
         <div className="max-w-4xl mx-auto">
           <Card className="overflow-hidden shadow-2xl border-border/50">
             <CardContent className="p-0">
-              <div 
-                className="relative group"
-                onMouseEnter={() => !isMobile && setShowControls(true)}
-                onMouseLeave={() => !isMobile && setShowControls(false)}
-                onClick={() => isMobile && setShowControls(!showControls)}
-              >
-                {videoError ? (
-                  <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <p className="text-muted-foreground mb-4">Video preview not available</p>
-                      <Button onClick={handleWatchFull} variant="outline">
-                        Watch Full Demo
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <video
-                    ref={videoRef}
-                    className="w-full aspect-video object-contain bg-black rounded-lg cursor-pointer"
-                    src="/assets/demo-video.mp4"
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onLoadedData={() => setVideoLoaded(true)}
-                    onError={() => {
-                      console.log('Video failed to load on mobile');
-                      setVideoError(true);
-                    }}
-                    preload="metadata"
-                    playsInline
-                    // @ts-ignore - for iOS Safari inline playback
-                    webkit-playsinline="true"
-                    muted={isMuted || isMobile} // Ensure muted on mobile and reflect user toggle
-                    onClick={isMobile ? togglePlay : undefined}
-                    onLoadedMetadata={() => {
-                      if (videoRef.current && !isMobile) {
-                        videoRef.current.volume = 0.7;
-                      }
-                    }}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                )}
-
-                {/* Video Overlay */}
-                {(!isPlaying || showControls || isMobile) && (
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-opacity duration-300">
-                    <div className={`flex items-center gap-4 ${isMobile ? 'gap-6' : 'gap-4'}`}>
-                      <Button
-                        onClick={togglePlay}
-                        size={isMobile ? "lg" : "lg"}
-                        className={`bg-primary/90 hover:bg-primary text-primary-foreground shadow-lg ${isMobile ? 'h-16 w-16 rounded-full' : ''}`}
-                      >
-                        {isPlaying ? (
-                          <Pause className={`${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`} />
-                        ) : (
-                          <Play className={`${isMobile ? 'h-10 w-10 ml-1' : 'h-8 w-8 ml-1'}`} />
-                        )}
-                      </Button>
-                      
-                      <Button
-                        onClick={toggleMute}
-                        size={isMobile ? "lg" : "lg"}
-                        variant="secondary"
-                        className={`bg-background/90 hover:bg-background text-foreground shadow-lg ${isMobile ? 'h-16 w-16 rounded-full' : ''}`}
-                      >
-                        {isMuted ? (
-                          <VolumeX className={`${isMobile ? 'h-8 w-8' : 'h-6 w-6'}`} />
-                        ) : (
-                          <Volume2 className={`${isMobile ? 'h-8 w-8' : 'h-6 w-6'}`} />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Call-to-action overlay */}
-                <div className="absolute top-4 right-4">
-                  <Button
-                    onClick={handleWatchFull}
-                    variant="secondary"
-                    size="sm"
-                    className="bg-background/90 hover:bg-background text-foreground border border-border/50"
-                  >
-                    Full Demo
-                  </Button>
-                </div>
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/LpIkzJ4C-aI"
+                  title="VeriEdit AI Product Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  loading="lazy"
+                  aria-label="VeriEdit AI verification system demonstration video"
+                />
               </div>
             </CardContent>
           </Card>

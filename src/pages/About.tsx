@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Shield, Target, Users, Video } from "lucide-react";
 import { Link } from "react-router-dom";
+import founderPhoto from "@/assets/founder-photo.jpg";
 
 const About = () => {
   console.log('[About] Page mounted, pathname:', window.location.pathname);
@@ -43,6 +44,14 @@ const About = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
+                <div className="mb-6 flex justify-center animate-fade-in-up">
+                  <img 
+                    src={founderPhoto}
+                    alt="Prince Akpabio Esien, Founder & CEO of VeriEdit AI"
+                    className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-primary/20 shadow-lg"
+                    loading="lazy"
+                  />
+                </div>
                 <h3 className="text-2xl font-semibold text-foreground mb-2">
                   Prince Akpabio Esien
                 </h3>

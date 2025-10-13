@@ -164,6 +164,7 @@ const Profile = () => {
           full_name: profile.full_name,
           company: profile.company,
           username: profile.username || null,
+          avatar_url: profile.avatar_url || null,
         });
 
       if (error) throw error;
@@ -172,11 +173,11 @@ const Profile = () => {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: error?.message || "Failed to update profile",
         variant: "destructive",
       });
     } finally {

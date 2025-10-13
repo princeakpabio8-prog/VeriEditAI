@@ -11,7 +11,7 @@ import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { safeLower } from "@/lib/utils";
+import { lower } from "@/lib/string";
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Source {
@@ -66,8 +66,8 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   }, []);
   
   // Normalize status to prevent toLowerCase errors
-  const normalizedStatus = safeLower(status);
-  const normalizedCategory = safeLower(category || 'general');
+  const normalizedStatus = lower(status);
+  const normalizedCategory = lower(category || 'general');
 
   // Removed - no longer needed as we use native <a> tags for reliable new tab opening
 
@@ -84,7 +84,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   };
 
   const getStatusBadge = (statusValue: string) => {
-    const safeStatus = safeLower(statusValue);
+    const safeStatus = lower(statusValue);
     if (!safeStatus) return <Badge variant="secondary">Unknown</Badge>;
     
     const variants = {

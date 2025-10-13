@@ -1,4 +1,4 @@
-import { safeLower } from './utils';
+import { lower } from './string';
 
 /**
  * Normalized verification result shape
@@ -69,9 +69,9 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
     confidence = !isNaN(parsed) ? Math.max(0, Math.min(100, parsed)) : 0;
   }
 
-  // Normalize string fields with safeLower - ensure never undefined
-  const status = safeLower(raw.status) || safeLower(raw.verification_status) || 'unknown';
-  const category = safeLower(raw.category) || 'general';
+  // Normalize string fields with lower - ensure never undefined
+  const status = lower(raw.status) || lower(raw.verification_status) || 'unknown';
+  const category = lower(raw.category) || 'general';
   const summary = typeof raw.summary === 'string' ? raw.summary : 'No summary available';
   const analysis = typeof raw.analysis === 'string' ? raw.analysis : summary;
 

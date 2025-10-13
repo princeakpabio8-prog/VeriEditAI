@@ -6,6 +6,7 @@ import { AlertTriangle, CheckCircle2, Download, FileText, Shield, TrendingUp } f
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import QRCode from 'qrcode';
+import { lower } from '@/lib/string';
 
 interface ComplianceMetrics {
   totalVerifications: number;
@@ -237,7 +238,7 @@ export const ComplianceReport: React.FC<ComplianceReportProps> = ({
     doc.text(`Verify online: ${verificationUrl}`, 14, footerY + 5);
     doc.text('This report is confidential and intended for internal compliance use only.', pageWidth / 2, footerY + 10, { align: 'center' });
     
-    doc.save(`${appName.toLowerCase()}-compliance-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    doc.save(`${lower(appName)}-compliance-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
   return (

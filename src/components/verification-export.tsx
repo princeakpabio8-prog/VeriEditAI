@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Download, FileText, Image, Loader2, Shield } from "lucide-react";
 import jsPDF from 'jspdf';
-import { safeLower } from "@/lib/utils";
+import { lower } from "@/lib/string";
 import QRCode from 'qrcode';
 
 interface VerificationExportProps {
@@ -383,7 +383,7 @@ export function VerificationExport({
       addPageFooter();
 
       // Save the PDF
-      pdf.save(`${appName.toLowerCase()}-verification-${verificationId}.pdf`);
+      pdf.save(`${lower(appName)}-verification-${verificationId}.pdf`);
 
       toast({
         title: "Export Complete",
@@ -502,7 +502,7 @@ export function VerificationExport({
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-gray-500/10 text-gray-700 border-gray-200';
     
-    const safeStatus = safeLower(status);
+    const safeStatus = lower(status);
     switch (safeStatus) {
       case 'verified':
       case 'completed':

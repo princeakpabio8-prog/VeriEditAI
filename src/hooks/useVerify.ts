@@ -240,6 +240,16 @@ export function useVerify() {
             throw new Error('No data received from verification service');
           }
 
+          // Mobile diagnostics - log types before normalization
+          const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+          if (isMobile && data) {
+            console.log('📱 Mobile pre-normalization check:', {
+              statusType: typeof data.status,
+              categoryType: typeof data.category,
+              confidenceType: typeof data.confidence
+            });
+          }
+
           // Check for quota exceeded responses
           if (data.metadata?.quota_exceeded) {
             console.log('Quota exceeded response received');
@@ -252,9 +262,12 @@ export function useVerify() {
             return quotaResult as any;
           }
 
-          // Validation
-          if (typeof data.confidence !== 'number' || !data.status || !data.summary) {
-            console.warn('⚠️ Incomplete verification result:', data);
+          // Normalize IMMEDIATELY after receiving data - remove brittle pre-checks
+          const normalizedData = normalizeVerifyResult(data) as VerifyResult;
+
+          // Now validate the NORMALIZED data
+          if (typeof normalizedData.confidence !== 'number' || !normalizedData.status || !normalizedData.summary) {
+            console.warn('⚠️ Incomplete verification result after normalization:', normalizedData);
             throw new Error('Invalid verification result format');
           }
 
@@ -266,10 +279,7 @@ export function useVerify() {
           }
           
           console.log(`✅ Verification successful in ${processingTime}ms`);
-          console.log(`📊 Confidence: ${data.confidence}% | Status: ${data.status}`);
-
-          // Use normalizer to ensure safe types
-          const normalizedData = normalizeVerifyResult(data) as VerifyResult;
+          console.log(`📊 Confidence: ${normalizedData.confidence}% | Status: ${normalizedData.status}`);
 
           // Track successful verification analytics
           verificationAnalytics.trackVerification({

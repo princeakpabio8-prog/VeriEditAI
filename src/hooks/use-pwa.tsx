@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { lower } from '@/lib/string';
 
 interface PWAInstallPrompt {
   prompt: () => Promise<void>;
@@ -169,7 +170,7 @@ export const usePWA = () => {
 
   // Get install instructions based on device/browser
   const getInstallInstructions = (): string => {
-    const userAgent = (navigator?.userAgent || '').toLowerCase();
+    const userAgent = lower(navigator?.userAgent);
     
     if (!userAgent) {
       return "Use your browser's 'Add to Home Screen' or 'Install App' option";

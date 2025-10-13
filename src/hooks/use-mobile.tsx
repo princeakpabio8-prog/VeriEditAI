@@ -1,4 +1,5 @@
 import * as React from "react";
+import { lower } from "@/lib/string";
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -12,7 +13,7 @@ const hasTouchCapability = () => {
 const detectMobileDevice = () => {
   if (typeof window === 'undefined') return false;
   
-  const userAgent = (navigator?.userAgent ?? '').toLowerCase();
+  const userAgent = lower(navigator?.userAgent);
   const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
   const isSmallScreen = window.innerWidth < MOBILE_BREAKPOINT;
   const hasTouch = hasTouchCapability();

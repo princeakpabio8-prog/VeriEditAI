@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ApiKeyManager } from '@/components/api-key-manager';
 import { AvatarUploader } from '@/components/profile/AvatarUploader';
 import { FollowersList } from '@/components/profile/FollowersList';
+import { lower } from '@/lib/string';
 
 interface Profile {
   full_name: string;
@@ -132,7 +133,7 @@ const Profile = () => {
   };
 
   const handleUsernameChange = (newUsername: string) => {
-    const lowercase = newUsername.toLowerCase();
+    const lowercase = lower(newUsername);
     setProfile({ ...profile, username: lowercase });
     
     setTimeout(() => {

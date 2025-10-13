@@ -68,6 +68,34 @@
     <priority>0.4</priority>
   </url>
   
+  <!-- Press & Media -->
+  <url>
+    <loc>https://verieditai.com/press</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Public Activity Feed -->
+  <url>
+    <loc>https://verieditai.com/activity-feed</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- RSS Feed -->
+  <url>
+    <loc>https://verieditai.com/rss/activity-feed.xml</loc>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Activity Sitemap (dynamically generated) -->
+  <url>
+    <loc>https://verieditai.com/activity-sitemap.xml</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
   <!-- Note: Dynamic URLs (rooms, threads, organizations) should be added via edge function -->
   <!-- See supabase/functions/generate-sitemap for dynamic generation -->
 </urlset>

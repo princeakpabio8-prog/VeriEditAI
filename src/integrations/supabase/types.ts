@@ -793,7 +793,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          activity_digest_enabled: boolean | null
           avatar_url: string | null
+          badges: Json | null
           bonus_verifications: number | null
           company: string | null
           created_at: string
@@ -815,7 +817,9 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          activity_digest_enabled?: boolean | null
           avatar_url?: string | null
+          badges?: Json | null
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string
@@ -837,7 +841,9 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          activity_digest_enabled?: boolean | null
           avatar_url?: string | null
+          badges?: Json | null
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string

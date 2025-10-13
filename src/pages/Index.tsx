@@ -3,6 +3,7 @@ import { Navigation } from "@/components/ui/navigation";
 import { HeroSection } from "@/components/hero-section";
 import { VideoDemoSection } from "@/components/video-demo-section";
 import { VerificationUpload } from "@/components/verification-upload";
+import { LiveActivityWidget } from "@/components/LiveActivityWidget";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -126,6 +127,22 @@ const Index = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </section>
+
+        {/* Live Activity Widget Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Real-Time Verification Happening Now
+              </h2>
+              <p className="text-xl text-muted-foreground">
+                Join thousands of users fighting misinformation together
+              </p>
+            </div>
+            
+            <LiveActivityWidget />
           </div>
         </section>
       </main>

@@ -3,6 +3,10 @@ Allow: /
 
 # Sitemaps
 Sitemap: https://verieditai.com/sitemap.xml
+Sitemap: https://verieditai.com/activity-sitemap.xml
+
+# RSS Feed
+Allow: /rss/activity-feed.xml
 
 # Crawl rate (optional)
 Crawl-delay: 1
@@ -14,6 +18,8 @@ Allow: /lighthouse/room/*
 Allow: /lighthouse/thread/*
 Allow: /share/*
 Allow: /activity-feed
+Allow: /activity/*
+Allow: /press
 
 # Special bot permissions
 User-agent: Googlebot

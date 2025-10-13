@@ -37,6 +37,7 @@ import UserProfile from "./pages/UserProfile";
 import FindUsers from "./pages/FindUsers";
 import ActivityFeed from "./pages/ActivityFeed";
 import ActivityDetail from "./pages/ActivityDetail";
+import Press from "./pages/Press";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const App = () => (
             <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />
+            <Route path="/press" element={<Press />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

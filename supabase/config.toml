@@ -164,3 +164,15 @@ verify_jwt = false
 
 [functions.send-ngo-partnership-invite]
 verify_jwt = false
+
+[functions.send-activity-digest]
+verify_jwt = false
+
+[functions.activity-rss-feed]
+verify_jwt = false
+
+[functions.generate-activity-sitemap]
+verify_jwt = false
+
+[functions.public-stats]
+verify_jwt = false

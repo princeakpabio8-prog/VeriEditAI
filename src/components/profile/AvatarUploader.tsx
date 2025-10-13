@@ -38,11 +38,11 @@ export function AvatarUploader({
       return;
     }
 
-    // Validate file size (2MB max)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image under 2MB",
+        description: "Please select an image under 5MB",
         variant: "destructive",
       });
       return;
@@ -195,7 +195,7 @@ export function AvatarUploader({
         )}
         
         <p className="text-xs text-muted-foreground">
-          JPG, PNG or WEBP. Max 2MB.
+          JPG, PNG or WEBP. Max 5MB.
         </p>
       </div>
     </div>

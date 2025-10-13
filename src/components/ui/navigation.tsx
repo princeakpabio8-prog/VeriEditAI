@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -162,6 +162,14 @@ export const Navigation = () => {
                       API Hub
                     </Link>
                     <Link
+                      to="/dashboard?tab=bulk"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Package className="h-4 w-4 mr-2" />
+                      Bulk Verification
+                    </Link>
+                    <Link
                       to="/find-users"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}
@@ -286,6 +294,16 @@ export const Navigation = () => {
                 >
                   <Gift className="h-4 w-4" />
                   Referrals
+                </Link>
+                <Link
+                  to="/dashboard?tab=bulk"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.search.includes('tab=bulk') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Package className="h-4 w-4" />
+                  Bulk Verification
                 </Link>
                 <Link
                   to="/billing"

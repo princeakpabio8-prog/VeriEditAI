@@ -602,6 +602,11 @@ const Dashboard = () => {
           </ErrorBoundary>
         </TabsContent>
 
+          <TabsContent value="bulk" className="animate-fade-in">
+            <ErrorBoundary>
+              <BulkVerification />
+            </ErrorBoundary>
+          </TabsContent>
 
           <TabsContent value="export" className="animate-fade-in">
             <div className="text-center py-8">

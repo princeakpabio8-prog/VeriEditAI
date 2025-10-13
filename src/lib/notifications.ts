@@ -50,14 +50,10 @@ class NotificationManager {
   }
 
   private async initializeServiceWorker(): Promise<void> {
-    if ('serviceWorker' in navigator) {
-      try {
-        this.serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker registered successfully');
-      } catch (error) {
-        console.warn('Service Worker registration failed:', error);
-      }
-    }
+    // SERVICE WORKER DISABLED - caused mobile caching issues
+    // Do NOT register /sw.js to prevent stale bundle problems
+    console.log('Service Worker registration disabled (mobile stability)');
+    return;
   }
 
   async requestPermission(): Promise<boolean> {

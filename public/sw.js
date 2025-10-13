@@ -1,5 +1,6 @@
-// Service Worker for PWA and offline support - Optimized for mobile
-const SW_VERSION = 'v11';
+// Service Worker for PWA and offline support - DISABLED FOR MOBILE STABILITY
+// Version v12 - Minimal no-op implementation to prevent errors
+const SW_VERSION = 'v12-disabled';
 const CACHE_NAME = `verification-app-${SW_VERSION}`;
 const OFFLINE_CACHE = `verification-offline-${SW_VERSION}`;
 
@@ -27,152 +28,49 @@ const OFFLINE_FALLBACK_ROUTES = [
   '/api/analytics'
 ];
 
-// Install event - cache static assets
+// Install event - minimal no-op for safety
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing v11...');
-  
-  event.waitUntil(
-    Promise.all([
-      caches.open(CACHE_NAME).then((cache) => {
-        console.log('Caching static assets');
-        return cache.addAll(STATIC_ASSETS).catch((err) => {
-          console.warn('Failed to cache some assets:', err);
-          // Continue even if some assets fail to cache
-          return Promise.resolve();
-        });
-      }),
-      caches.open(OFFLINE_CACHE).then((cache) => {
-        console.log('Setting up offline cache');
-        return cache.put('/offline.html', new Response(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <title>Offline - Verification App</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1">
-              <style>
-                body { font-family: system-ui, sans-serif; text-align: center; padding: 2rem; }
-                .offline { color: #666; max-width: 400px; margin: 0 auto; }
-                .icon { font-size: 4rem; margin-bottom: 1rem; }
-              </style>
-            </head>
-            <body>
-              <div class="offline">
-                <div class="icon">📡</div>
-                <h1>You're Offline</h1>
-                <p>This page isn't available offline. Please check your internet connection and try again.</p>
-                <button onclick="window.location.reload()">Try Again</button>
-              </div>
-            </body>
-          </html>
-        `, {
-          headers: { 'Content-Type': 'text/html' }
-        }));
-      })
-    ]).then(() => {
-      // Skip waiting immediately to take control
-      return self.skipWaiting();
-    })
-  );
+  console.log('Service Worker installing v12 (disabled mode)...');
+  event.waitUntil(self.skipWaiting());
 });
 
-// Activate event - clean up old caches
+// Activate event - delete all caches and unregister
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating v11...');
+  console.log('Service Worker v12 activating - cleaning up...');
   
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== OFFLINE_CACHE) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('Service Worker activated - claiming clients');
-      // Immediately claim all clients so new version takes effect
-      return self.clients.claim();
-    })
+    caches.keys()
+      .then((cacheNames) => Promise.all(cacheNames.map(name => caches.delete(name))))
+      .then(() => {
+        console.log('All caches deleted by v12 - unregistering self');
+        return self.registration.unregister();
+      })
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch event - smarter strategy to avoid stale HTML
+// Fetch event - minimal passthrough (no caching)
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Only handle same-origin GET requests
-  if (request.method !== 'GET' || url.origin !== self.location.origin) {
-    return;
-  }
-
   // Special endpoint to report SW version
   if (url.pathname === '/sw-version') {
-    event.respondWith(new Response(JSON.stringify({ version: SW_VERSION, cacheName: CACHE_NAME, offlineCache: OFFLINE_CACHE }), { headers: { 'Content-Type': 'application/json' } }));
-    return;
-  }
-
-  // Bypass caching for Range requests (used by media streaming)
-  if (request.headers.has('range')) {
-    event.respondWith(fetch(request));
-    return;
-  }
-
-  // Bypass caching for all media files to prevent mobile playback issues
-  const mediaExtRegex = /\.(mp4|webm|mov|m4v|mp3|wav|m4a|ogg|avi|flv|mkv)$/i;
-  if (mediaExtRegex.test(url.pathname)) {
     event.respondWith(
-      fetch(request, { 
-        cache: 'no-store',
-        // Important for mobile Safari
-        credentials: 'same-origin'
-      })
+      new Response(
+        JSON.stringify({ 
+          version: SW_VERSION, 
+          status: 'disabled', 
+          message: 'Service Worker v12 is in cleanup mode - will unregister on next activation' 
+        }), 
+        { headers: { 'Content-Type': 'application/json' } }
+      )
     );
     return;
   }
 
-  // Also bypass for video-related API calls
-  if (url.pathname.includes('/video') || url.pathname.includes('/media')) {
-    event.respondWith(fetch(request, { cache: 'no-store' }));
-    return;
-  }
-
-  // Network-first for navigations (HTML) to prevent stale UI
-  if (request.mode === 'navigate') {
-    event.respondWith((async () => {
-      try {
-        const networkResponse = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(request, networkResponse.clone());
-        return networkResponse;
-      } catch (err) {
-        // Fallback to any cached page or offline page
-        const cached = await caches.match(request);
-        if (cached) return cached;
-        return caches.match('/offline.html');
-      }
-    })());
-    return;
-  }
-
-  // Cache-first for other same-origin GET requests with background update
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseToCache));
-          }
-          return response;
-        })
-        .catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
-  );
+  // Pass through all other requests without caching
+  event.respondWith(fetch(request));
 });
 
 // Push notification event
@@ -266,63 +164,10 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Process offline verification queue
+// Process offline verification queue - DISABLED
 async function processOfflineVerifications() {
-  try {
-    const cache = await caches.open(SW_VERSION);
-    const keys = await cache.keys();
-    
-    for (const request of keys) {
-      if (request.url.includes('offline-verification-')) {
-        const response = await cache.match(request);
-        if (response) {
-          const verificationData = await response.json();
-          
-          // Skip if missing required fields
-          if (!verificationData.content && !verificationData.imageBase64) {
-            console.log('Skipping verification with missing content');
-            await cache.delete(request);
-            continue;
-          }
-          
-          try {
-            // Determine which function to call based on content type
-            const isImage = verificationData.contentType === 'image' || verificationData.imageBase64;
-            const functionName = isImage ? 'image-verify' : 'verify';
-            const functionUrl = `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/${functionName}`;
-            
-            const result = await fetch(functionUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxdGtremRzd3hhenlpa2NoZWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MDM1NDEsImV4cCI6MjA3MzA3OTU0MX0.1vQ2RDB5dgsmUwfiy9KeVuS0P6gHlKSAUsMVo5-5vto`
-              },
-              body: JSON.stringify(verificationData)
-            });
-            
-            if (result.ok) {
-              // Success - remove from cache and store result
-              await cache.delete(request);
-              const resultData = await result.json();
-              await cache.put(
-                new Request(`verification-result-${verificationData.id}`),
-                new Response(JSON.stringify(resultData))
-              );
-            }
-          } catch (error) {
-            console.log('Failed to sync verification:', error);
-            // Keep in cache for retry
-          }
-        }
-      }
-    }
-      
-      // Update the queue
-      await cache.put('/offline-queue', new Response(JSON.stringify(queue)));
-    }
-  } catch (error) {
-    console.error('Error processing offline verifications:', error);
-  }
+  console.log('Offline verification processing disabled in v12');
+  return Promise.resolve();
 }
 
 // Message event for communication with main app

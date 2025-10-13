@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { lower } from '@/lib/string';
 
 export interface CreateNotificationParams {
   userId: string;
@@ -168,7 +169,8 @@ export const parseMentionsAndNotify = async (
     const mentionedUsernames = new Set<string>();
 
     for (const match of matches) {
-      mentionedUsernames.add(match[1].toLowerCase());
+      // Use null-safe lower() to prevent "undefined is not an object" errors
+      mentionedUsernames.add(lower(match[1]));
     }
 
     if (mentionedUsernames.size === 0) return;

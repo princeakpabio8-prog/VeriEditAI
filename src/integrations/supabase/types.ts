@@ -17,27 +17,39 @@ export type Database = {
       activity_stream: {
         Row: {
           activity_type: string
+          click_count: number
           created_at: string | null
           entity_id: string | null
           id: string
+          is_public: boolean
           metadata: Json | null
+          share_count: number
           user_id: string | null
+          view_count: number
         }
         Insert: {
           activity_type: string
+          click_count?: number
           created_at?: string | null
           entity_id?: string | null
           id?: string
+          is_public?: boolean
           metadata?: Json | null
+          share_count?: number
           user_id?: string | null
+          view_count?: number
         }
         Update: {
           activity_type?: string
+          click_count?: number
           created_at?: string | null
           entity_id?: string | null
           id?: string
+          is_public?: boolean
           metadata?: Json | null
+          share_count?: number
           user_id?: string | null
+          view_count?: number
         }
         Relationships: []
       }

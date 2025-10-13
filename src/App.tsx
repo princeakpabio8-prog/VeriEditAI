@@ -35,6 +35,8 @@ import { OrganizationProfile } from "./components/partnership/OrganizationProfil
 import { MobileBottomNav } from "./components/ui/MobileBottomNav";
 import UserProfile from "./pages/UserProfile";
 import FindUsers from "./pages/FindUsers";
+import ActivityFeed from "./pages/ActivityFeed";
+import ActivityDetail from "./pages/ActivityDetail";
 
 const queryClient = new QueryClient();
 
@@ -123,6 +125,8 @@ const App = () => (
             <Route path="/lighthouse/:roomId" element={<LighthouseRoomView />} />
             <Route path="/lighthouse/:roomId/thread/:threadId" element={<ThreadView />} />
             <Route path="/lighthouse/organizations/:orgId" element={<OrganizationProfile />} />
+            <Route path="/activity-feed" element={<ActivityFeed />} />
+            <Route path="/lighthouse/activity/:activityId" element={<ActivityDetail />} />
             <Route path="/api-docs" element={<ApiDocs />} />
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />

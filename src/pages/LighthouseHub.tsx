@@ -25,13 +25,7 @@ export default function LighthouseHub() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'rooms';
 
-  // Auto-navigate to workspace for authenticated users (unless they're browsing or chose a tab)
-  useEffect(() => {
-    const isBrowsing = searchParams.get('browse') === 'true';
-    if (user && workspaceId && !workspaceLoading && !searchParams.has('tab') && !isBrowsing) {
-      navigate(`/lighthouse/${workspaceId}`);
-    }
-  }, [user, workspaceId, workspaceLoading, navigate, searchParams]);
+  // Removed auto-navigation to prevent content flash on mobile devices
 
   const handleTabChange = (value: string) => {
     setSearchParams({ tab: value });
@@ -92,6 +86,7 @@ export default function LighthouseHub() {
     <div className="min-h-screen bg-background">
       <Navigation />
       
+      <main className="pb-20 md:pb-8">
       {/* Hero Section */}
       <section className="relative pt-20 pb-10 md:pt-24 md:pb-12 px-4 overflow-hidden bg-gradient-to-b from-[hsl(var(--lighthouse-deep))]/20 to-background">
         {/* Enhanced Lighthouse beam animation with particles */}
@@ -120,8 +115,8 @@ export default function LighthouseHub() {
           {/* Interactive Stats Cards with Live Activity */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-8 md:mt-12">
             <Card
-              className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: '0ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
+              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}
               onClick={() => handleTabChange('feed')}
               role="button"
               tabIndex={0}
@@ -136,8 +131,8 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: '100ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
+              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
               onClick={() => handleTabChange('organizations')}
               role="button"
               tabIndex={0}
@@ -152,8 +147,8 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: '200ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
+              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
               onClick={() => handleTabChange('rooms')}
               role="button"
               tabIndex={0}
@@ -168,8 +163,8 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
-              style={{ animationDelay: '300ms' }}
+              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group fade-in-up"
+              style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
               onClick={() => {}}
               role="button"
               tabIndex={0}
@@ -262,6 +257,7 @@ export default function LighthouseHub() {
           </Tabs>
         </div>
       </section>
+      </main>
 
       <FloatingWorkspaceButton />
 

@@ -138,7 +138,7 @@ const TrustIntelTab = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Global Trust Index */}
-      <Card className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: '0ms' }}>
+      <Card className="relative z-0 card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary" />
@@ -158,7 +158,7 @@ const TrustIntelTab = () => {
       </Card>
 
       {/* Regional Breakdown */}
-      <Card className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: '100ms' }}>
+      <Card className="relative z-0 card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}>
         <CardHeader>
           <CardTitle>Regional Breakdown</CardTitle>
           <CardDescription>Top 5 regions by verification volume</CardDescription>
@@ -196,7 +196,7 @@ const TrustIntelTab = () => {
       </Card>
 
       {/* Source Credibility Ranking */}
-      <Card className="card-hover-lift bg-gradient-card border-border/50 md:col-span-2 fade-in-up" style={{ animationDelay: '200ms' }}>
+      <Card className="relative z-0 card-hover-lift bg-gradient-card border-border/50 md:col-span-2 fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />
@@ -434,7 +434,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pb-20 md:pb-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -466,8 +466,8 @@ const Dashboard = () => {
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
               <MobileCard 
-                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
-                style={{ animationDelay: '0ms' }}
+                className="relative z-0 min-h-[100px] card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Total Verifications</CardTitle>
@@ -480,8 +480,8 @@ const Dashboard = () => {
               </MobileCard>
 
               <MobileCard 
-                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
-                style={{ animationDelay: '100ms' }}
+                className="relative z-0 min-h-[100px] card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Queue Status</CardTitle>
@@ -498,8 +498,8 @@ const Dashboard = () => {
               </MobileCard>
 
               <MobileCard 
-                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
-                style={{ animationDelay: '200ms' }}
+                className="relative z-0 min-h-[100px] card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '100ms' }}
               >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Success Rate</CardTitle>

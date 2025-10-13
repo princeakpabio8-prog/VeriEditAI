@@ -49,8 +49,8 @@ export const MobileBottomNav = () => {
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border pb-safe">
-      <div className="grid grid-cols-6 items-center h-16 px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border pb-safe">
+      <div className="grid grid-cols-6 items-center h-16 px-2 py-1">
         {navItems.map((item) => {
           const isActive = item.activeCheck(location.pathname);
           const Icon = item.icon;

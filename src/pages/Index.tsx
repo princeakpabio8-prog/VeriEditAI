@@ -66,7 +66,7 @@ const Index = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '0ms' }}>
+               <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={85} showAnimation />
@@ -86,7 +86,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '150ms' }}>
+              <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '150ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={65} showAnimation />
@@ -106,7 +106,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: '300ms' }}>
+              <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '300ms' }}>
                 <CardHeader>
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={25} showAnimation />

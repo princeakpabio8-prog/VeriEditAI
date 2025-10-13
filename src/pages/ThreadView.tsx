@@ -20,11 +20,13 @@ import { UserAvatar } from '@/components/ui/user-avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ThreadShareModal } from '@/components/thread-share-modal';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ThreadView() {
   const { roomId, threadId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const [thread, setThread] = useState<any>(null);
   const [room, setRoom] = useState<any>(null);
@@ -164,7 +166,6 @@ export default function ThreadView() {
   }, [roomId, threadId]);
 
   const handleUpvote = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({
         title: "Sign in required",
@@ -438,16 +439,16 @@ export default function ThreadView() {
           </Card>
 
           {/* Public viewing notice for anonymous users */}
-          {!userVote && (
-            <Card className="p-4 bg-[hsl(var(--lighthouse-ocean))]/20 border-[hsl(var(--lighthouse-beam))]/30">
-              <p className="text-sm text-muted-foreground text-center">
-                <Link to="/auth" className="text-[hsl(var(--lighthouse-beam))] hover:underline font-medium">
-                  Sign in
-                </Link>
-                {' '}to upvote, comment, and join the discussion
-              </p>
-            </Card>
-          )}
+            {!user && (
+              <Card className="p-4 bg-[hsl(var(--lighthouse-ocean))]/20 border-[hsl(var(--lighthouse-beam))]/30">
+                <p className="text-sm text-muted-foreground text-center">
+                  <Link to="/auth" className="text-[hsl(var(--lighthouse-beam))] hover:underline font-medium">
+                    Sign in
+                  </Link>
+                  {' '}to upvote, comment, and join the discussion
+                </p>
+              </Card>
+            )}
 
           {/* Verification results */}
           {verification && (

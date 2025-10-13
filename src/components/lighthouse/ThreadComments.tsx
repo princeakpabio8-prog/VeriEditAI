@@ -13,6 +13,7 @@ import { ImageGallery } from './ImageGallery';
 import { MentionInput } from '@/components/mentions/MentionInput';
 import { notifyThreadAuthorNewComment, parseMentionsAndNotify } from '@/lib/notification-helpers';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Comment {
   id: string;
@@ -45,6 +46,7 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   const [imageMetadata, setImageMetadata] = useState<any[]>([]);
   const [mentionedUsers, setMentionedUsers] = useState<string[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -134,7 +136,6 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({
         title: "Sign in required",

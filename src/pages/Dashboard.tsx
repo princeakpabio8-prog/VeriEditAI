@@ -288,10 +288,17 @@ const Dashboard = () => {
   }, [user]);
 
   const fetchVerifications = async () => {
+    if (!user?.id) {
+      console.warn('[Dashboard] No user ID, skipping verification fetch');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('verifications')
         .select('*')
+        .eq('user_id', user.id) // ✅ CRITICAL FIX: Filter by user
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -452,14 +459,14 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="discover">Discover</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="executive">Executive</TabsTrigger>
-          <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>
-          <TabsTrigger value="export">Export Data</TabsTrigger>
-          <TabsTrigger value="trust-intel">Trust Intel</TabsTrigger>
+        <TabsList className={isMobile ? "grid w-full grid-cols-4 gap-1" : "grid w-full grid-cols-7"}>
+          <TabsTrigger value="overview" className={isMobile ? "text-xs px-2" : ""}>Overview</TabsTrigger>
+          <TabsTrigger value="discover" className={isMobile ? "text-xs px-2" : ""}>Discover</TabsTrigger>
+          <TabsTrigger value="analytics" className={isMobile ? "text-xs px-2" : ""}>Analytics</TabsTrigger>
+          {!isMobile && <TabsTrigger value="executive">Executive</TabsTrigger>}
+          {!isMobile && <TabsTrigger value="bulk">Bulk Operations</TabsTrigger>}
+          {!isMobile && <TabsTrigger value="export">Export Data</TabsTrigger>}
+          <TabsTrigger value="trust-intel" className={isMobile ? "text-xs px-2" : ""}>Trust Intel</TabsTrigger>
         </TabsList>
 
           <TabsContent value="overview" className="space-y-6 animate-fade-in">

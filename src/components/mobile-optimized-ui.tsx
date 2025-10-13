@@ -83,58 +83,9 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
       </header>
 
       {/* Main content */}
-      <main className="pb-20">
+      <main className="pb-16">
         {children}
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t">
-        <div className="grid grid-cols-4 gap-1 p-2">
-          <Link to="/dashboard">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/dashboard' ? 'text-primary bg-primary/10' : ''}`}
-            >
-              <Home className="h-4 w-4" />
-              <span className="text-xs">Home</span>
-            </Button>
-          </Link>
-          
-          <Link to="/verify">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/verify' ? 'text-primary bg-primary/10' : ''}`}
-            >
-              <Search className="h-4 w-4" />
-              <span className="text-xs">Verify</span>
-            </Button>
-          </Link>
-          
-          <Link to="/billing">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/billing' ? 'text-primary bg-primary/10' : ''}`}
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-xs">Billing</span>
-            </Button>
-          </Link>
-          
-          <Link to="/profile">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`flex flex-col gap-1 h-auto py-2 w-full ${location.pathname === '/profile' ? 'text-primary bg-primary/10' : ''}`}
-            >
-              <User className="h-4 w-4" />
-              <span className="text-xs">Profile</span>
-            </Button>
-          </Link>
-        </div>
-      </nav>
 
       {/* Mobile Menu Drawer */}
       <Drawer open={isMenuOpen} onOpenChange={setIsMenuOpen}>

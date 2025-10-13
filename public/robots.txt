@@ -10,7 +10,10 @@ Crawl-delay: 1
 # Important public pages for discovery
 Allow: /lighthouse
 Allow: /lighthouse/*
+Allow: /lighthouse/room/*
+Allow: /lighthouse/thread/*
 Allow: /share/*
+Allow: /activity-feed
 
 # Special bot permissions
 User-agent: Googlebot

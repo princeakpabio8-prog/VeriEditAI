@@ -15,6 +15,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { generateActivityStreamSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
 
 interface ActivityItem {
   id: string;
@@ -79,8 +80,32 @@ export function LiveActivityStream() {
 
     return () => {
       supabase.removeChannel(channel);
+      removeStructuredData('activity-stream-schema');
     };
   }, []);
+
+  // Inject structured data when activities change
+  useEffect(() => {
+    if (activities.length > 0) {
+      const schemaData = generateActivityStreamSchema({
+        activities: activities.slice(0, 10).map(activity => ({
+          id: activity.id,
+          activityType: activity.activity_type,
+          description: getActivityText(activity),
+          timestamp: activity.created_at,
+          userName: activity.metadata.username || activity.metadata.full_name,
+          url: activity.activity_type === 'thread_created' && activity.entity_id
+            ? `https://verieditai.com/lighthouse/thread/${activity.entity_id}`
+            : activity.activity_type === 'room_created' && activity.entity_id
+            ? `https://verieditai.com/lighthouse/room/${activity.entity_id}`
+            : undefined
+        })),
+        totalActivities: activities.length
+      });
+
+      injectStructuredData(schemaData, 'activity-stream-schema');
+    }
+  }, [activities]);
 
   const fetchInitialActivities = async () => {
     const { data } = await supabase

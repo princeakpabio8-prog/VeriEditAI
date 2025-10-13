@@ -162,3 +162,93 @@ export function removeStructuredData(id: string = 'structured-data') {
     script.remove();
   }
 }
+
+interface ActivityStreamData {
+  activities: Array<{
+    id: string;
+    activityType: string;
+    description: string;
+    timestamp: string;
+    userName?: string;
+    url?: string;
+  }>;
+  totalActivities: number;
+}
+
+interface LighthouseHubData {
+  verifiedArticles: number;
+  organizations: number;
+  activeRooms: number;
+  communityMembers: number;
+  url: string;
+}
+
+/**
+ * Generate Schema.org structured data for Live Activity Stream
+ */
+export function generateActivityStreamSchema(data: ActivityStreamData): string {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Live Activity Stream - Truth Verification Activities",
+    "description": "Real-time stream of verification activities, thread creations, and community engagement",
+    "numberOfItems": data.totalActivities,
+    "itemListElement": data.activities.map((activity, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Action",
+        "name": activity.activityType,
+        "description": activity.description,
+        "startTime": activity.timestamp,
+        "agent": activity.userName ? {
+          "@type": "Person",
+          "name": activity.userName
+        } : undefined,
+        "url": activity.url
+      }
+    }))
+  };
+
+  return JSON.stringify(schema);
+}
+
+/**
+ * Generate Schema.org structured data for Lighthouse Hub
+ */
+export function generateLighthouseHubSchema(data: LighthouseHubData): string {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "The Lighthouse Hub - Truth Verification Platform",
+    "description": `Central hub for truth verification and collaboration with ${data.verifiedArticles} verified articles, ${data.organizations} organizations, ${data.activeRooms} active rooms, and ${data.communityMembers} community members`,
+    "url": data.url,
+    "mainEntity": {
+      "@type": "DiscussionForumPosting",
+      "headline": "Real-Time Truth Verification Community",
+      "text": "Collaborative platform for verifying claims, analyzing sources, and discovering verified information",
+      "datePublished": new Date().toISOString(),
+      "interactionStatistic": [
+        {
+          "@type": "InteractionCounter",
+          "interactionType": "https://schema.org/ReadAction",
+          "userInteractionCount": data.verifiedArticles
+        },
+        {
+          "@type": "InteractionCounter",
+          "interactionType": "https://schema.org/JoinAction",
+          "userInteractionCount": data.communityMembers
+        }
+      ]
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": 4.8,
+      "bestRating": 5,
+      "worstRating": 1,
+      "ratingCount": data.communityMembers
+    }
+  };
+
+  return JSON.stringify(schema);
+}

@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { FloatingWorkspaceButton } from '@/components/lighthouse/FloatingWorkspaceButton';
 import { LiveActivityStream } from '@/components/lighthouse/LiveActivityStream';
+import { DynamicMeta } from '@/components/DynamicMeta';
 
 export default function LighthouseHub() {
   const { user } = useAuth();
@@ -90,6 +91,12 @@ export default function LighthouseHub() {
 
   return (
     <div className="min-h-screen bg-background">
+      <DynamicMeta
+        title="The Lighthouse Hub - Real-Time Truth Verification"
+        description={`Join the live truth verification hub with ${stats?.activeRooms || 0} active rooms, ${stats?.verifiedArticles || 0} verified articles, and ${stats?.communityMembers || 0} community members verifying claims in real-time. Signal over noise.`}
+        url="https://verieditai.com/lighthouse"
+        type="website"
+      />
       <Navigation />
       
       <main className="pb-20 md:pb-8">

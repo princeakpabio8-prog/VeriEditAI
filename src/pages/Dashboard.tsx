@@ -118,13 +118,27 @@ const TrustIntelTab = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="shimmer">
+            <CardHeader>
+              <div className="h-5 bg-muted rounded w-1/2 mb-2"></div>
+              <div className="h-4 bg-muted/70 rounded w-3/4"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-12 bg-muted rounded w-1/4"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Global Trust Index */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: '0ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary" />
@@ -144,7 +158,7 @@ const TrustIntelTab = () => {
       </Card>
 
       {/* Regional Breakdown */}
-      <Card className="bg-gradient-card border-border/50">
+      <Card className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: '100ms' }}>
         <CardHeader>
           <CardTitle>Regional Breakdown</CardTitle>
           <CardDescription>Top 5 regions by verification volume</CardDescription>
@@ -182,7 +196,7 @@ const TrustIntelTab = () => {
       </Card>
 
       {/* Source Credibility Ranking */}
-      <Card className="bg-gradient-card border-border/50 md:col-span-2">
+      <Card className="card-hover-lift bg-gradient-card border-border/50 md:col-span-2 fade-in-up" style={{ animationDelay: '200ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Award className="h-5 w-5 text-primary" />
@@ -206,7 +220,7 @@ const TrustIntelTab = () => {
                   <TableCell className="font-bold text-primary">#{idx + 1}</TableCell>
                   <TableCell className="font-medium">{source.domain}</TableCell>
                   <TableCell>
-                    <TrustScoreDisplay score={source.avgScore} size="sm" showLabel={false} />
+                    <TrustScoreDisplay score={source.avgScore} size="sm" showLabel={false} showAnimation={true} />
                   </TableCell>
                   <TableCell className="text-muted-foreground">{source.count}</TableCell>
                 </TableRow>
@@ -397,9 +411,20 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-      <Navigation />
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="shimmer">
+                <CardHeader>
+                  <div className="h-4 bg-muted rounded w-1/2 mb-2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-8 bg-muted rounded w-1/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -437,10 +462,13 @@ const Dashboard = () => {
           <TabsTrigger value="trust-intel">Trust Intel</TabsTrigger>
         </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6 animate-fade-in">
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-              <MobileCard className="bg-gradient-card border-border/50">
+              <MobileCard 
+                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: '0ms' }}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Total Verifications</CardTitle>
                 </CardHeader>
@@ -451,7 +479,10 @@ const Dashboard = () => {
                 </CardContent>
               </MobileCard>
 
-              <MobileCard className="bg-gradient-card border-border/50">
+              <MobileCard 
+                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: '100ms' }}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Queue Status</CardTitle>
                 </CardHeader>
@@ -460,10 +491,16 @@ const Dashboard = () => {
                     {getStats().pending + getStats().processing}
                   </div>
                   <p className="text-xs md:text-sm text-muted-foreground">Items in queue</p>
+                  {(getStats().pending + getStats().processing) > 0 && (
+                    <Badge className="mt-2 trust-pulse">Processing</Badge>
+                  )}
                 </CardContent>
               </MobileCard>
 
-              <MobileCard className="bg-gradient-card border-border/50">
+              <MobileCard 
+                className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" 
+                style={{ animationDelay: '200ms' }}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base md:text-lg">Success Rate</CardTitle>
                 </CardHeader>
@@ -535,7 +572,7 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent key="discover" value="discover" className="space-y-6">
+          <TabsContent key="discover" value="discover" className="space-y-6 animate-fade-in">
             <ErrorBoundary>
               <VerificationErrorBoundary>
                 <LighthouseFeed />
@@ -543,7 +580,7 @@ const Dashboard = () => {
             </ErrorBoundary>
           </TabsContent>
 
-        <TabsContent key="analytics" value="analytics">
+        <TabsContent key="analytics" value="analytics" className="animate-fade-in">
           <ErrorBoundary>
             <VerificationErrorBoundary>
               <VerificationAnalytics />
@@ -551,7 +588,7 @@ const Dashboard = () => {
           </ErrorBoundary>
         </TabsContent>
 
-        <TabsContent key="executive" value="executive">
+        <TabsContent key="executive" value="executive" className="animate-fade-in">
           <ErrorBoundary>
             <VerificationErrorBoundary>
               <EnhancedAnalyticsDashboard />
@@ -559,25 +596,25 @@ const Dashboard = () => {
           </ErrorBoundary>
         </TabsContent>
 
-          <TabsContent value="bulk">
+          <TabsContent value="bulk" className="animate-fade-in">
             <div className="text-center py-8">
               <p className="text-muted-foreground">Bulk verification features coming soon!</p>
             </div>
           </TabsContent>
 
-          <TabsContent value="export">
+          <TabsContent value="export" className="animate-fade-in">
             <div className="text-center py-8">
               <p className="text-muted-foreground">Export features available after verifications are completed.</p>
             </div>
           </TabsContent>
 
-          <TabsContent value="trust-intel" className="space-y-6">
+          <TabsContent value="trust-intel" className="space-y-6 animate-fade-in">
             <TrustIntelTab />
           </TabsContent>
         </Tabs>
 
         {/* Recent Verifications */}
-        <Card className="bg-gradient-card border-border/50">
+        <Card className="card-hover-lift bg-gradient-card border-border/50 fade-in-up" style={{ animationDelay: '300ms' }}>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Recent Verifications</CardTitle>
@@ -636,12 +673,13 @@ const Dashboard = () => {
                           {getStatusBadge(verification.status)}
                         </div>
                       </TableCell>
-                      <TableCell>
+                       <TableCell>
                         {verification.trust_score !== null ? (
                           <TrustScoreDisplay 
                             score={verification.trust_score} 
                             size="sm"
                             showLabel={false}
+                            showAnimation={true}
                           />
                         ) : (
                           <span className="text-muted-foreground">-</span>

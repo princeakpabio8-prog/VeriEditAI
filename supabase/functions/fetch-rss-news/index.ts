@@ -111,12 +111,33 @@ const RSS_SOURCES = [
     url: "https://www.completesports.com/feed/",
     source_url: "https://www.completesports.com",
   },
-  // Health Sources
+  // Health Sources - Global Health Authorities & Research
   {
     name: "WHO News",
     url: "https://www.who.int/rss-feeds/news-english.xml",
     source_url: "https://www.who.int",
   },
+  {
+    name: "CDC News",
+    url: "https://tools.cdc.gov/api/v2/resources/media/403372.rss",
+    source_url: "https://www.cdc.gov",
+  },
+  {
+    name: "NIH News Releases",
+    url: "https://www.nih.gov/news-events/news-releases/rss",
+    source_url: "https://www.nih.gov",
+  },
+  {
+    name: "Johns Hopkins Medicine",
+    url: "https://www.hopkinsmedicine.org/news/articles.rss",
+    source_url: "https://www.hopkinsmedicine.org",
+  },
+  {
+    name: "The BMJ",
+    url: "https://www.bmj.com/rss/recent.xml",
+    source_url: "https://www.bmj.com",
+  },
+  // Health Sources - Medical News & Journalism
   {
     name: "Medical News Today",
     url: "https://www.medicalnewstoday.com/rss",
@@ -131,6 +152,49 @@ const RSS_SOURCES = [
     name: "Reuters Health",
     url: "https://feeds.reuters.com/reuters/healthNews",
     source_url: "https://www.reuters.com/health",
+  },
+  {
+    name: "HealthDay",
+    url: "https://consumer.healthday.com/rss.xml",
+    source_url: "https://consumer.healthday.com",
+  },
+  {
+    name: "STAT News",
+    url: "https://www.statnews.com/feed/",
+    source_url: "https://www.statnews.com",
+  },
+  {
+    name: "Kaiser Health News",
+    url: "https://khn.org/feed/",
+    source_url: "https://khn.org",
+  },
+  // Health Sources - Research & Academia
+  {
+    name: "Harvard Health Blog",
+    url: "https://www.health.harvard.edu/blog/feed",
+    source_url: "https://www.health.harvard.edu",
+  },
+  {
+    name: "Nature Medicine",
+    url: "https://www.nature.com/nm.rss",
+    source_url: "https://www.nature.com/nm",
+  },
+  // Health Sources - Mental Health
+  {
+    name: "Psychology Today",
+    url: "https://www.psychologytoday.com/us/front/feed",
+    source_url: "https://www.psychologytoday.com",
+  },
+  {
+    name: "Mental Health Foundation",
+    url: "https://www.mentalhealth.org.uk/feed",
+    source_url: "https://www.mentalhealth.org.uk",
+  },
+  // Health Sources - Global & Humanitarian
+  {
+    name: "Reliefweb Health",
+    url: "https://reliefweb.int/updates?format=rss&filter[theme][0]=8072",
+    source_url: "https://reliefweb.int",
   },
   // Business Sources
   {
@@ -190,7 +254,7 @@ const RSS_SOURCES = [
 const CATEGORIES = {
   Politics: ["government", "election", "policy", "congress", "parliament", "politics", "minister", "president", "senate"],
   Technology: ["tech", "ai", "software", "digital", "innovation", "technology", "artificial intelligence", "computer", "internet"],
-  Health: ["health", "medical", "vaccine", "disease", "hospital", "covid", "virus", "treatment", "doctor"],
+  Health: ["health", "medical", "vaccine", "disease", "hospital", "covid", "virus", "treatment", "doctor", "mental health", "psychology", "wellbeing", "clinical trial", "peer review", "journal", "epidemic", "outbreak", "pandemic", "nutrition", "diet", "fitness", "surgery", "diagnosis", "symptom", "medicine", "pharmaceutical", "therapy", "patient", "healthcare"],
   Business: ["business", "economy", "market", "finance", "trade", "stock", "investment", "company"],
   Science: ["science", "research", "study", "discovery", "climate", "environment", "nasa", "space"],
   Sports: ["sports", "football", "soccer", "cricket", "tournament", "championship", "league", "olympics"],

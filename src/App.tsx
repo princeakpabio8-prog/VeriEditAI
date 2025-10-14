@@ -38,6 +38,8 @@ import FindUsers from "./pages/FindUsers";
 import ActivityFeed from "./pages/ActivityFeed";
 import ActivityDetail from "./pages/ActivityDetail";
 import Press from "./pages/Press";
+import ViralClaims from "./pages/ViralClaims";
+import SignalFeed from "./pages/SignalFeed";
 
 const queryClient = new QueryClient();
 
@@ -132,6 +134,12 @@ const App = () => (
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />
             <Route path="/press" element={<Press />} />
+            <Route path="/viral-claims" element={
+              <ProtectedRoute>
+                <ViralClaims />
+              </ProtectedRoute>
+            } />
+            <Route path="/signal-feed" element={<SignalFeed />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

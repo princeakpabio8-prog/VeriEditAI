@@ -272,6 +272,44 @@ export type Database = {
         }
         Relationships: []
       }
+      engagement_snapshots: {
+        Row: {
+          comments: number | null
+          id: string
+          recorded_at: string | null
+          score: number | null
+          shares: number | null
+          total_engagement: number | null
+          viral_claim_id: string
+        }
+        Insert: {
+          comments?: number | null
+          id?: string
+          recorded_at?: string | null
+          score?: number | null
+          shares?: number | null
+          total_engagement?: number | null
+          viral_claim_id: string
+        }
+        Update: {
+          comments?: number | null
+          id?: string
+          recorded_at?: string | null
+          score?: number | null
+          shares?: number | null
+          total_engagement?: number | null
+          viral_claim_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_snapshots_viral_claim_id_fkey"
+            columns: ["viral_claim_id"]
+            isOneToOne: false
+            referencedRelation: "viral_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string | null
@@ -1748,6 +1786,33 @@ export type Database = {
           },
         ]
       }
+      trending_topics: {
+        Row: {
+          detected_at: string | null
+          id: string
+          mention_count: number | null
+          platform: string
+          related_claims: Json | null
+          topic: string
+        }
+        Insert: {
+          detected_at?: string | null
+          id?: string
+          mention_count?: number | null
+          platform: string
+          related_claims?: Json | null
+          topic: string
+        }
+        Update: {
+          detected_at?: string | null
+          id?: string
+          mention_count?: number | null
+          platform?: string
+          related_claims?: Json | null
+          topic?: string
+        }
+        Relationships: []
+      }
       trust_analytics: {
         Row: {
           analysis_period_end: string
@@ -2194,6 +2259,71 @@ export type Database = {
           verification_source?: string | null
         }
         Relationships: []
+      }
+      viral_claims: {
+        Row: {
+          author: string | null
+          claim_hash: string
+          claim_text: string
+          created_at: string | null
+          engagement_score: number | null
+          engagement_velocity: number | null
+          first_seen_at: string
+          id: string
+          last_checked_at: string
+          metadata: Json | null
+          peak_engagement: number | null
+          platform: string
+          source_url: string
+          status: string | null
+          updated_at: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          author?: string | null
+          claim_hash: string
+          claim_text: string
+          created_at?: string | null
+          engagement_score?: number | null
+          engagement_velocity?: number | null
+          first_seen_at?: string
+          id?: string
+          last_checked_at?: string
+          metadata?: Json | null
+          peak_engagement?: number | null
+          platform: string
+          source_url: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          author?: string | null
+          claim_hash?: string
+          claim_text?: string
+          created_at?: string | null
+          engagement_score?: number | null
+          engagement_velocity?: number | null
+          first_seen_at?: string
+          id?: string
+          last_checked_at?: string
+          metadata?: Json | null
+          peak_engagement?: number | null
+          platform?: string
+          source_url?: string
+          status?: string | null
+          updated_at?: string | null
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viral_claims_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_idempotency: {
         Row: {

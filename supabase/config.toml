@@ -176,3 +176,9 @@ verify_jwt = false
 
 [functions.public-stats]
 verify_jwt = false
+
+[functions.monitor-reddit]
+verify_jwt = false
+
+[functions.calculate-virality]
+verify_jwt = false

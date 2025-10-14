@@ -294,7 +294,7 @@ serve(async (req) => {
               .map((source) => {
                 let domain = null;
                 try {
-                  domain = new URL(source.url).hostname;
+                  domain = new URL(source.url).hostname.replace(/^www\./, '');
                 } catch (err) {
                   console.warn(`Failed to extract domain from URL: ${source.url}`);
                 }
@@ -307,7 +307,8 @@ serve(async (req) => {
                   full_content: (source as any).full_content || '',
                   reliability_score: reliability,
                   domain,
-                  source_type: (source as any).source_type || 'news'
+                  source_type: (source as any).source_type || 'news',
+                  source_region: detectSourceRegion(domain || '')
                 };
               });
 
@@ -1716,6 +1717,114 @@ async function detectContentCategory(
     console.error('Error in detectContentCategory:', err);
     return [];
   }
+}
+
+/**
+ * Detect the geographic region of a source based on domain
+ */
+function detectSourceRegion(domain: string): string {
+  const lowerDomain = domain.toLowerCase();
+  
+  // North America - Major US outlets and .com/.us/.ca
+  const northAmericaDomains = [
+    'nytimes.com', 'cnn.com', 'reuters.com', 'apnews.com', 'npr.org',
+    'washingtonpost.com', 'foxnews.com', 'nbcnews.com', 'abcnews.go.com',
+    'cbsnews.com', 'usatoday.com', 'wsj.com', 'politico.com', 'thehill.com',
+    'latimes.com', 'nypost.com', 'newsweek.com', 'time.com', 'fortune.com',
+    'bloomberg.com', 'cnbc.com', 'forbes.com', 'businessinsider.com',
+    'huffpost.com', 'vox.com', 'slate.com', 'salon.com', 'theatlantic.com',
+    'newyorker.com', 'propublica.org', 'factcheck.org', 'politifact.com',
+    'snopes.com', 'truthorfiction.com', 'cbc.ca', 'globalnews.ca'
+  ];
+  
+  // Europe - Major European outlets and TLDs
+  const europeDomains = [
+    'bbc.com', 'bbc.co.uk', 'theguardian.com', 'independent.co.uk',
+    'telegraph.co.uk', 'dailymail.co.uk', 'thetimes.co.uk', 'ft.com',
+    'economist.com', 'euronews.com', 'dw.com', 'france24.com', 'rfi.fr',
+    'lemonde.fr', 'lefigaro.fr', 'spiegel.de', 'zeit.de', 'elpais.com',
+    'elmundo.es', 'corriere.it', 'repubblica.it', 'ansa.it', 'rtve.es',
+    'rte.ie', 'thejournal.ie', 'nos.nl', 'svt.se', 'dr.dk', 'nrk.no'
+  ];
+  
+  // Africa - African outlets and TLDs
+  const africaDomains = [
+    'businessday.ng', 'completesports.com', 'premiumtimesng.com',
+    'punchng.com', 'vanguardngr.com', 'thenationonlineng.net',
+    'dailytrust.com.ng', 'guardian.ng', 'news24.com', 'iol.co.za',
+    'timeslive.co.za', 'mg.co.za', 'dailymaverick.co.za',
+    'nation.co.ke', 'standardmedia.co.ke', 'businessdailyafrica.com',
+    'theeastafrican.co.ke', 'africanews.com'
+  ];
+  
+  // Asia Pacific - Asian outlets and TLDs
+  const asiaPacificDomains = [
+    'aljazeera.com', 'scmp.com', 'straitstimes.com', 'channelnewsasia.com',
+    'japantimes.co.jp', 'asahi.com', 'mainichi.jp', 'yomiuri.co.jp',
+    'thehindu.com', 'hindustantimes.com', 'indianexpress.com', 'timesofindia.com',
+    'dawn.com', 'thenews.com.pk', 'smh.com.au', 'abc.net.au', 'news.com.au',
+    'nzherald.co.nz', 'stuff.co.nz', 'bangkokpost.com', 'nationthailand.com',
+    'todayonline.com', 'koreaherald.com', 'koreatimes.co.kr'
+  ];
+  
+  // Latin America - Latin American outlets and TLDs
+  const latinAmericaDomains = [
+    'folha.uol.com.br', 'globo.com', 'estadao.com.br', 'uol.com.br',
+    'clarin.com', 'lanacion.com.ar', 'pagina12.com.ar', 'infobae.com',
+    'eluniversal.com.mx', 'reforma.com', 'jornada.com.mx', 'milenio.com',
+    'eltiempo.com', 'semana.com', 'elespectador.com', 'latercera.com',
+    'emol.com', 'elmercurio.com', 'elpais.com.uy', 'elobservador.com.uy'
+  ];
+  
+  // Middle East - Middle Eastern outlets and TLDs
+  const middleEastDomains = [
+    'alarabiya.net', 'aljazeera.net', 'arabnews.com', 'gulfnews.com',
+    'khaleejtimes.com', 'thenational.ae', 'gulf-times.com', 'dohanews.co',
+    'haaretz.com', 'timesofisrael.com', 'jpost.com', 'ynetnews.com',
+    'turkishminute.com', 'hurriyetdailynews.com', 'dailysabah.com'
+  ];
+  
+  // Check known domains first
+  if (northAmericaDomains.some(d => lowerDomain.includes(d))) return 'North America';
+  if (europeDomains.some(d => lowerDomain.includes(d))) return 'Europe';
+  if (africaDomains.some(d => lowerDomain.includes(d))) return 'Africa';
+  if (asiaPacificDomains.some(d => lowerDomain.includes(d))) return 'Asia Pacific';
+  if (latinAmericaDomains.some(d => lowerDomain.includes(d))) return 'Latin America';
+  if (middleEastDomains.some(d => lowerDomain.includes(d))) return 'Middle East';
+  
+  // TLD-based detection
+  if (lowerDomain.endsWith('.com') || lowerDomain.endsWith('.us') || lowerDomain.endsWith('.ca')) {
+    return 'North America';
+  }
+  if (lowerDomain.endsWith('.uk') || lowerDomain.endsWith('.eu') || lowerDomain.endsWith('.de') || 
+      lowerDomain.endsWith('.fr') || lowerDomain.endsWith('.es') || lowerDomain.endsWith('.it') ||
+      lowerDomain.endsWith('.nl') || lowerDomain.endsWith('.se') || lowerDomain.endsWith('.no') ||
+      lowerDomain.endsWith('.dk') || lowerDomain.endsWith('.fi') || lowerDomain.endsWith('.ie')) {
+    return 'Europe';
+  }
+  if (lowerDomain.endsWith('.ng') || lowerDomain.endsWith('.za') || lowerDomain.endsWith('.ke') ||
+      lowerDomain.endsWith('.gh') || lowerDomain.endsWith('.tz') || lowerDomain.endsWith('.ug') ||
+      lowerDomain.endsWith('.et') || lowerDomain.endsWith('.eg')) {
+    return 'Africa';
+  }
+  if (lowerDomain.endsWith('.jp') || lowerDomain.endsWith('.cn') || lowerDomain.endsWith('.au') ||
+      lowerDomain.endsWith('.in') || lowerDomain.endsWith('.sg') || lowerDomain.endsWith('.kr') ||
+      lowerDomain.endsWith('.th') || lowerDomain.endsWith('.my') || lowerDomain.endsWith('.nz') ||
+      lowerDomain.endsWith('.ph') || lowerDomain.endsWith('.vn') || lowerDomain.endsWith('.id')) {
+    return 'Asia Pacific';
+  }
+  if (lowerDomain.endsWith('.br') || lowerDomain.endsWith('.mx') || lowerDomain.endsWith('.ar') ||
+      lowerDomain.endsWith('.cl') || lowerDomain.endsWith('.co') || lowerDomain.endsWith('.pe') ||
+      lowerDomain.endsWith('.ve') || lowerDomain.endsWith('.uy')) {
+    return 'Latin America';
+  }
+  if (lowerDomain.endsWith('.ae') || lowerDomain.endsWith('.sa') || lowerDomain.endsWith('.il') ||
+      lowerDomain.endsWith('.qa') || lowerDomain.endsWith('.kw') || lowerDomain.endsWith('.tr')) {
+    return 'Middle East';
+  }
+  
+  // Default to International for truly global/unknown sources
+  return 'International';
 }
 
 // Legacy simple categorization (fallback)

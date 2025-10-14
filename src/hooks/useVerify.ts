@@ -205,7 +205,16 @@ export function useVerify() {
               .single();
             
             if (verificationError) {
-              throw new Error('Failed to create verification record');
+              console.error('❌ Failed to create verification record:', {
+                error: verificationError,
+                message: verificationError.message,
+                details: verificationError.details,
+                hint: verificationError.hint,
+                code: verificationError.code,
+                userId,
+                fileName: verificationData.fileName
+              });
+              throw new Error(`Database error: ${verificationError.message || 'Failed to create verification record'}`);
             }
             
             requestBody = {

@@ -25,7 +25,7 @@ export default function ThreadView() {
   const { roomId, threadId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const isMobile = useIsMobile();
   const [thread, setThread] = useState<any>(null);
   const [room, setRoom] = useState<any>(null);
@@ -164,13 +164,17 @@ export default function ThreadView() {
   }, [roomId, threadId]);
 
   const handleUpvote = async () => {
-    if (!user) {
+    if (!user && !authLoading) {
       toast({
         title: "Sign in required",
         description: "Please sign in to upvote threads",
         variant: "destructive",
       });
       return;
+    }
+    
+    if (authLoading) {
+      return; // Don't do anything while auth is loading
     }
 
     try {
@@ -369,9 +373,10 @@ export default function ThreadView() {
                 onClick={handleUpvote}
                 className="gap-2"
                 size={isMobile ? "mobile" : "default"}
+                disabled={authLoading}
               >
                 <ThumbsUp className="h-4 w-4" />
-                {upvoteCount}
+                {authLoading ? 'Loading...' : upvoteCount}
               </Button>
               <Button 
                 variant="outline" 

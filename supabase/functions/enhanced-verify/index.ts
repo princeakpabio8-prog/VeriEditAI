@@ -319,6 +319,58 @@ serve(async (req) => {
     
     const timeToVerify = Date.now() - startTime;
     
+    // Feature 1: Check for contradictions with existing claims (if verificationId provided in response)
+    let contradictions: any[] = [];
+    let relatedClaims: any[] = [];
+    
+    if (userId) {
+      try {
+        // Find similar recent verifications by same user
+        const { data: similarClaims } = await supabase
+          .from('verifications')
+          .select('id, content, trust_score, created_at')
+          .eq('user_id', userId)
+          .neq('content', safeContent)
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+          .limit(5);
+        
+        if (similarClaims && similarClaims.length > 0) {
+          // Check for contradictions using detect-refutation function
+          for (const claim of similarClaims) {
+            try {
+              const { data: refutationData } = await supabase.functions.invoke('detect-refutation', {
+                body: {
+                  claim: claim.content,
+                  answer: safeContent,
+                  sources: allSources.slice(0, 3)
+                }
+              });
+              
+              if (refutationData?.is_refutation && refutationData?.confidence > 70) {
+                contradictions.push({
+                  claim_id: claim.id,
+                  claim_text: claim.content.substring(0, 100),
+                  confidence: refutationData.confidence,
+                  reasoning: refutationData.reasoning,
+                  type: refutationData.refutation_type
+                });
+              } else if (refutationData?.confidence > 50) {
+                relatedClaims.push({
+                  claim_id: claim.id,
+                  claim_text: claim.content.substring(0, 100),
+                  similarity: refutationData.confidence
+                });
+              }
+            } catch (err) {
+              console.error('Error checking refutation:', err);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error detecting contradictions:', err);
+      }
+    }
+    
     return new Response(JSON.stringify({
       confidence: consensus,
       status,
@@ -329,6 +381,8 @@ serve(async (req) => {
       verification_method: successfulResults.map(r => r.source),
       category: safeCategory,
       created_at: new Date().toISOString(),
+      contradictions: contradictions.length > 0 ? contradictions : undefined,
+      related_claims: relatedClaims.length > 0 ? relatedClaims : undefined,
       behavioral_data: {
         device_type: deviceType,
         verification_source: verificationSource,

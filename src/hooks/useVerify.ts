@@ -27,6 +27,19 @@ interface VerifyResult {
   fromFallback?: boolean;
   originalError?: string;
   created_at: string;
+  // NEW: Contradiction detection & version tracking
+  contradictions?: Array<{
+    claim_id: string;
+    claim_text: string;
+    confidence: number;
+    reasoning: string;
+    type: string;
+  }>;
+  related_claims?: Array<{
+    claim_id: string;
+    claim_text: string;
+    similarity: number;
+  }>;
 }
 
 // Local minimal fallback analysis to guarantee a result even if API fails

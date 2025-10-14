@@ -7,12 +7,15 @@ import { TrustScoreFeedback } from './trust-score-feedback';
 import { VerificationExport } from './verification-export';
 import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ShareModal } from './share-modal';
+import { ContradictionAlert } from './ContradictionAlert';
+import { SourceFreshnessDisplay } from './SourceFreshnessDisplay';
 import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { lower } from "@/lib/string";
 import { useAuth } from '@/contexts/AuthContext';
+import { useClaimVersions } from '@/hooks/useClaimVersions';
 
 interface Source {
   id?: string;
@@ -39,6 +42,18 @@ interface VerificationResultProps {
   onNewVerification?: () => void;
   content?: string;
   industry?: 'bank' | 'ngo';
+  contradictions?: Array<{
+    claim_id: string;
+    claim_text: string;
+    confidence: number;
+    reasoning: string;
+    type: string;
+  }>;
+  related_claims?: Array<{
+    claim_id: string;
+    claim_text: string;
+    similarity: number;
+  }>;
 }
 
 export const VerificationResult: React.FC<VerificationResultProps> = ({
@@ -56,10 +71,13 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   onNewVerification,
   content = "",
   industry,
+  contradictions,
+  related_claims,
 }) => {
   const { user } = useAuth();
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   const [shareModalOpen, setShareModalOpen] = React.useState(false);
+  const { versions } = useClaimVersions(verificationId);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -274,6 +292,58 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           </Card>
         </motion.div>
       ) : null}
+
+      {/* NEW FEATURES */}
+      {/* Feature 1: Contradiction Detection */}
+      {contradictions && contradictions.length > 0 && (
+        <ContradictionAlert contradictions={contradictions} />
+      )}
+
+      {/* Feature 2: Claim Version History */}
+      {versions && versions.length > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                Claim Version History ({versions.length} versions)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {versions.map((version, idx) => (
+                <div key={version.id} className="p-3 bg-muted/50 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline">Version {version.version_number}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(version.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {version.confidence_delta && (
+                    <p className="text-sm">
+                      Trust score change: 
+                      <span className={version.confidence_delta > 0 ? 'text-green-600 ml-1' : 'text-red-600 ml-1'}>
+                        {version.confidence_delta > 0 ? '+' : ''}{version.confidence_delta}%
+                      </span>
+                    </p>
+                  )}
+                  {version.semantic_similarity && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {version.semantic_similarity}% similar to original
+                    </p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Feature 3: Source Freshness Display */}
+      <SourceFreshnessDisplay verificationId={verificationId} />
 
       {/* Transparency Report Card */}
       <motion.div

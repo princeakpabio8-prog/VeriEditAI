@@ -146,6 +146,105 @@ export type Database = {
         }
         Relationships: []
       }
+      claim_relationships: {
+        Row: {
+          claim_a: string
+          claim_b: string
+          confidence: number | null
+          detected_at: string
+          id: string
+          metadata: Json | null
+          reasoning: string | null
+          relationship_type: string
+        }
+        Insert: {
+          claim_a: string
+          claim_b: string
+          confidence?: number | null
+          detected_at?: string
+          id?: string
+          metadata?: Json | null
+          reasoning?: string | null
+          relationship_type: string
+        }
+        Update: {
+          claim_a?: string
+          claim_b?: string
+          confidence?: number | null
+          detected_at?: string
+          id?: string
+          metadata?: Json | null
+          reasoning?: string | null
+          relationship_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_relationships_claim_a_fkey"
+            columns: ["claim_a"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_relationships_claim_b_fkey"
+            columns: ["claim_b"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_versions: {
+        Row: {
+          confidence_delta: number | null
+          content_hash: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          original_verification_id: string | null
+          semantic_similarity: number | null
+          verification_id: string
+          version_number: number | null
+        }
+        Insert: {
+          confidence_delta?: number | null
+          content_hash: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_verification_id?: string | null
+          semantic_similarity?: number | null
+          verification_id: string
+          version_number?: number | null
+        }
+        Update: {
+          confidence_delta?: number | null
+          content_hash?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          original_verification_id?: string | null
+          semantic_similarity?: number | null
+          verification_id?: string
+          version_number?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_versions_original_verification_id_fkey"
+            columns: ["original_verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_versions_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       embedding_cache: {
         Row: {
           access_count: number | null
@@ -1372,6 +1471,7 @@ export type Database = {
           full_content: string | null
           id: string
           political_bias: number | null
+          published_at: string | null
           reliability_score: number | null
           source_region: string | null
           source_type: string | null
@@ -1388,6 +1488,7 @@ export type Database = {
           full_content?: string | null
           id?: string
           political_bias?: number | null
+          published_at?: string | null
           reliability_score?: number | null
           source_region?: string | null
           source_type?: string | null
@@ -1404,6 +1505,7 @@ export type Database = {
           full_content?: string | null
           id?: string
           political_bias?: number | null
+          published_at?: string | null
           reliability_score?: number | null
           source_region?: string | null
           source_type?: string | null
@@ -2248,6 +2350,10 @@ export type Database = {
         Args: { user_uuid: string }
         Returns: Json
       }
+      get_source_age_distribution: {
+        Args: { verification_uuid: string }
+        Returns: Json
+      }
       get_user_subscription: {
         Args: { user_uuid: string }
         Returns: {
@@ -2336,7 +2442,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       refresh_engagement_analytics: {
         Args: Record<PropertyKey, never>

@@ -285,6 +285,8 @@ export default function Verify() {
                     onNewVerification={handleNewVerification}
                     content={verificationState.content || 'No content'}
                     industry={verificationState.selectedTemplate?.industry}
+                    contradictions={(verificationState.result || result)?.contradictions}
+                    related_claims={(verificationState.result || result)?.related_claims}
                   />
                   </div>
                 )}

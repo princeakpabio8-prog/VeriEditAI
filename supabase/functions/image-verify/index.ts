@@ -250,14 +250,23 @@ async function storeReverseSearchResults(
 ) {
   const pagesWithMatching = webDetection.pagesWithMatchingImages || [];
   const fullMatching = webDetection.fullMatchingImages || [];
+  const partialMatching = webDetection.partialMatchingImages || [];
+  const visuallySimilar = webDetection.visuallySimilarImages || [];
   
-  // Find oldest URL (first appearance)
+  // Calculate total matches from all sources
+  const totalMatches = pagesWithMatching.length + fullMatching.length + partialMatching.length + visuallySimilar.length;
+  
+  // Find oldest URL from all matching images
   let oldestUrl = null;
+  const allUrls = [
+    ...pagesWithMatching.map((p: any) => p.url),
+    ...fullMatching.map((img: any) => img.url),
+    ...partialMatching.map((img: any) => img.url),
+    ...visuallySimilar.map((img: any) => img.url)
+  ].filter(Boolean);
   
-  if (pagesWithMatching.length > 0) {
-    // Google returns in relevance order, not chronological
-    // Use first result as "most relevant"
-    oldestUrl = pagesWithMatching[0].url;
+  if (allUrls.length > 0) {
+    oldestUrl = allUrls[0]; // Use first result as most relevant
   }
   
   const matchingUrls = pagesWithMatching.map((page: any) => ({
@@ -272,10 +281,13 @@ async function storeReverseSearchResults(
       verification_id: verificationId,
       search_engine: 'google',
       oldest_url: oldestUrl,
-      total_matches: pagesWithMatching.length + fullMatching.length,
+      total_matches: totalMatches,
       matching_urls: matchingUrls,
       best_guess_labels: webDetection.bestGuessLabels || [],
-      visually_similar_urls: (webDetection.visuallySimilarImages || []).map((img: any) => img.url),
+      visually_similar_urls: visuallySimilar.map((img: any) => ({
+        url: img.url,
+        title: img.pageTitle || 'Untitled'
+      })),
       pages_with_matching_images: pagesWithMatching,
       raw_response: webDetection,
     });

@@ -113,19 +113,20 @@ serve(async (req) => {
         .from('image_verifications')
         .insert({
           verification_id: verificationId,
-          user_id: userId,
-          image_data: imageBase64.substring(0, 1000),
-          confidence: calculateImageConfidence(imageResult),
-          status: getStatusFromConfidence(calculateImageConfidence(imageResult)),
-          summary: `Image analysis via Google Vision. Quality: ${imageResult.contentAnalysis?.imageQuality || 'Unknown'}`,
-          analysis: `OCR length: ${imageResult.ocrText?.length || 0}. Manipulation risk: ${imageResult.contentAnalysis?.manipulationRisk || 'Unknown'}`,
-          sources: [],
-          google_vision_result: imageResult,
-          created_at: new Date().toISOString()
+          image_url: null,
+          ocr_text: imageResult.ocrText || '',
+          content_analysis: imageResult.contentAnalysis,
+          labels: imageResult.labels,
+          safe_search: imageResult.safeSearch
         });
 
       if (insertError) {
-        console.error('Error storing image verification:', insertError);
+        console.error('Error storing image verification:', {
+          error: insertError,
+          message: insertError.message,
+          details: insertError.details,
+          code: insertError.code
+        });
       }
     }
 
@@ -222,14 +223,26 @@ serve(async (req) => {
         .update({
           status: 'completed',
           trust_score: confidence,
-          summary: summary,
-          analysis: analysis_points.join('\n'),
+          result_summary: summary,
+          processing_time_ms: processingTime,
+          score_breakdown: {
+            analysis_points,
+            method: ['Google Vision AI', 'Image Analysis'],
+            safe_search: imageResult.safeSearch,
+            label_count: imageResult.labels?.length || 0,
+            reverse_matches: imageResult.webDetection?.pagesWithMatchingImages?.length || 0
+          },
           updated_at: new Date().toISOString()
         })
         .eq('id', verificationId);
 
       if (updateError) {
-        console.error('❌ Error updating verification record:', updateError);
+        console.error('❌ Error updating verification record:', {
+          error: updateError,
+          message: updateError.message,
+          details: updateError.details,
+          code: updateError.code
+        });
       } else {
         console.log('✅ Verification record updated successfully');
       }
@@ -261,14 +274,18 @@ serve(async (req) => {
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
         const supabase = createClient(supabaseUrl, supabaseKey);
         
-        await supabase
+        const { error: updateError } = await supabase
           .from('verifications')
           .update({
             status: 'failed',
-            error_message: String(error),
+            result_summary: `Image verification failed: ${String(error).slice(0, 500)}`,
             updated_at: new Date().toISOString()
           })
           .eq('id', verificationId);
+        
+        if (updateError) {
+          console.error('Failed to update verification status:', updateError);
+        }
       }
     } catch (e) {
       console.error('Could not update failed verification:', e);

@@ -25,7 +25,7 @@ const plans: Plan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 20,
+    price: 9,
     currency: 'USD',
     description: 'Perfect for professionals and small teams',
     icon: Zap,
@@ -46,7 +46,7 @@ const plans: Plan[] = [
     currency: 'USD',
     description: 'Advanced features for organizations',
     icon: Crown,
-    billing: 'yearly',
+    billing: 'monthly',
     features: [
       'Everything in Pro',
       'Unlimited API access',

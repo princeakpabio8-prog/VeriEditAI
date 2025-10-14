@@ -233,7 +233,7 @@ const Billing = () => {
                   <Card className="border-primary">
                     <CardHeader className="text-center">
                       <Zap className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                      <CardTitle>Pro - $10/month</CardTitle>
+                      <CardTitle>Pro - $9/month</CardTitle>
                       <Badge className="bg-blue-100 text-blue-800">Most Popular</Badge>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -259,7 +259,7 @@ const Billing = () => {
                   <Card>
                     <CardHeader className="text-center">
                       <Crown className="w-8 h-8 mx-auto mb-2 text-purple-500" />
-                      <CardTitle>Enterprise - $99/month</CardTitle>
+                      <CardTitle>Enterprise - $200/month</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="flex items-center justify-between text-sm">

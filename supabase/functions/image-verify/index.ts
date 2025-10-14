@@ -24,6 +24,14 @@ interface ImageVerificationResult {
     imageQuality: string;
     manipulationRisk: string;
   };
+  webDetection?: {
+    pagesWithMatchingImages: any[];
+    fullMatchingImages: any[];
+    partialMatchingImages: any[];
+    visuallySimilarImages: any[];
+    bestGuessLabels: any[];
+    webEntities: any[];
+  };
 }
 
 serve(async (req) => {
@@ -94,6 +102,11 @@ serve(async (req) => {
     // Verify the image with Google Vision API
     const imageResult = await verifyImageWithGoogleVision(imageBase64, googleVisionApiKey);
     
+    // Store reverse search results if we have complete data
+    if (!isMissingFields && imageResult.webDetection) {
+      await storeReverseSearchResults(supabase, verificationId, imageResult.webDetection);
+    }
+    
     // Store the image verification results only if we have complete data
     if (!isMissingFields) {
       const { error: insertError } = await supabase
@@ -121,8 +134,13 @@ serve(async (req) => {
     const processingTime = Date.now() - startTime;
 
     // Build standardized verification result with clear summary and analysis points
-    const confidence = calculateImageConfidence(imageResult);
+    let confidence = calculateImageConfidence(imageResult);
     const status = getStatusFromConfidence(confidence);
+    
+    // Adjust confidence if image is widely used (possible stock photo)
+    if (imageResult.webDetection?.pagesWithMatchingImages?.length > 50) {
+      confidence = Math.max(confidence - 10, 40);
+    }
     const topLabels = (imageResult.labels || []).slice(0, 5);
     const ocrLength = imageResult.ocrText?.length || 0;
     const quality = imageResult.contentAnalysis.imageQuality;
@@ -168,6 +186,15 @@ serve(async (req) => {
     }
     
     analysis_points.push(`**Manipulation Risk**: ${manipRisk.charAt(0).toUpperCase() + manipRisk.slice(1)} risk of digital alteration`);
+    
+    // Add reverse search analysis point
+    if (imageResult.webDetection?.pagesWithMatchingImages?.length > 0) {
+      const matchCount = imageResult.webDetection.pagesWithMatchingImages.length;
+      const oldestUrl = imageResult.webDetection.pagesWithMatchingImages[0].url;
+      analysis_points.push(
+        `**Reverse Image Search**: Found ${matchCount} matching pages. First seen: ${new URL(oldestUrl).hostname}`
+      );
+    }
 
     const result = {
       confidence,
@@ -216,6 +243,48 @@ serve(async (req) => {
   }
 });
 
+async function storeReverseSearchResults(
+  supabase: any,
+  verificationId: string,
+  webDetection: any
+) {
+  const pagesWithMatching = webDetection.pagesWithMatchingImages || [];
+  const fullMatching = webDetection.fullMatchingImages || [];
+  
+  // Find oldest URL (first appearance)
+  let oldestUrl = null;
+  
+  if (pagesWithMatching.length > 0) {
+    // Google returns in relevance order, not chronological
+    // Use first result as "most relevant"
+    oldestUrl = pagesWithMatching[0].url;
+  }
+  
+  const matchingUrls = pagesWithMatching.map((page: any) => ({
+    url: page.url,
+    title: page.pageTitle || 'Untitled',
+    image_url: fullMatching[0]?.url || null,
+  }));
+  
+  const { error } = await supabase
+    .from('image_reverse_search_results')
+    .insert({
+      verification_id: verificationId,
+      search_engine: 'google',
+      oldest_url: oldestUrl,
+      total_matches: pagesWithMatching.length + fullMatching.length,
+      matching_urls: matchingUrls,
+      best_guess_labels: webDetection.bestGuessLabels || [],
+      visually_similar_urls: (webDetection.visuallySimilarImages || []).map((img: any) => img.url),
+      pages_with_matching_images: pagesWithMatching,
+      raw_response: webDetection,
+    });
+  
+  if (error) {
+    console.error('Failed to store reverse search results:', error);
+  }
+}
+
 async function verifyImageWithGoogleVision(
   imageBase64: string, 
   apiKey: string
@@ -236,6 +305,7 @@ async function verifyImageWithGoogleVision(
           { type: 'LABEL_DETECTION', maxResults: 10 },
           { type: 'SAFE_SEARCH_DETECTION', maxResults: 1 },
           { type: 'IMAGE_PROPERTIES', maxResults: 1 },
+          { type: 'WEB_DETECTION', maxResults: 10 },
         ],
       },
     ],
@@ -285,6 +355,17 @@ async function verifyImageWithGoogleVision(
     racy: safeSearchAnnotation.racy || 'UNKNOWN',
   };
 
+  // Extract web detection (reverse image search)
+  const webDetection = visionResult.webDetection || {};
+  const reverseSearchData = {
+    pagesWithMatchingImages: webDetection.pagesWithMatchingImages?.slice(0, 10) || [],
+    fullMatchingImages: webDetection.fullMatchingImages?.slice(0, 10) || [],
+    partialMatchingImages: webDetection.partialMatchingImages?.slice(0, 10) || [],
+    visuallySimilarImages: webDetection.visuallySimilarImages?.slice(0, 10) || [],
+    bestGuessLabels: webDetection.bestGuessLabels || [],
+    webEntities: webDetection.webEntities || [],
+  };
+  
   // Analyze content quality and manipulation risk
   const contentAnalysis = analyzeImageContent(visionResult, ocrText, labels);
 
@@ -293,6 +374,7 @@ async function verifyImageWithGoogleVision(
     labels,
     safeSearch,
     contentAnalysis,
+    webDetection: reverseSearchData,
   };
 }
 

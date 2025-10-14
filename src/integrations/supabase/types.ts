@@ -391,6 +391,62 @@ export type Database = {
           },
         ]
       }
+      image_reverse_search_results: {
+        Row: {
+          best_guess_labels: Json | null
+          created_at: string | null
+          first_seen_date: string | null
+          id: string
+          matching_urls: Json | null
+          oldest_url: string | null
+          pages_with_matching_images: Json | null
+          raw_response: Json | null
+          search_engine: string
+          total_matches: number | null
+          updated_at: string | null
+          verification_id: string
+          visually_similar_urls: Json | null
+        }
+        Insert: {
+          best_guess_labels?: Json | null
+          created_at?: string | null
+          first_seen_date?: string | null
+          id?: string
+          matching_urls?: Json | null
+          oldest_url?: string | null
+          pages_with_matching_images?: Json | null
+          raw_response?: Json | null
+          search_engine?: string
+          total_matches?: number | null
+          updated_at?: string | null
+          verification_id: string
+          visually_similar_urls?: Json | null
+        }
+        Update: {
+          best_guess_labels?: Json | null
+          created_at?: string | null
+          first_seen_date?: string | null
+          id?: string
+          matching_urls?: Json | null
+          oldest_url?: string | null
+          pages_with_matching_images?: Json | null
+          raw_response?: Json | null
+          search_engine?: string
+          total_matches?: number | null
+          updated_at?: string | null
+          verification_id?: string
+          visually_similar_urls?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_reverse_search_results_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       image_verifications: {
         Row: {
           content_analysis: Json | null

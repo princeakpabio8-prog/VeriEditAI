@@ -9,6 +9,7 @@ import { SourceCredibilityAnalysis } from './source-credibility-analysis';
 import { ShareModal } from './share-modal';
 import { ContradictionAlert } from './ContradictionAlert';
 import { SourceFreshnessDisplay } from './SourceFreshnessDisplay';
+import { ReverseImageSearchResults } from './ReverseImageSearchResults';
 import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
@@ -344,6 +345,17 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
 
       {/* Feature 3: Source Freshness Display */}
       <SourceFreshnessDisplay verificationId={verificationId} />
+      
+      {/* Reverse Image Search for image verifications */}
+      {normalizedCategory === 'image' && verificationId && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 1.9 }}
+        >
+          <ReverseImageSearchResults verificationId={verificationId} />
+        </motion.div>
+      )}
 
       {/* Transparency Report Card */}
       <motion.div

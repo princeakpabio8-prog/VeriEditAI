@@ -1213,6 +1213,62 @@ export type Database = {
           },
         ]
       }
+      quality_flags: {
+        Row: {
+          auto_flagged: boolean | null
+          created_at: string | null
+          details: Json | null
+          flag_type: string
+          id: string
+          resolution: string | null
+          resolution_notes: string | null
+          reviewed: boolean | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+          updated_at: string | null
+          verification_id: string
+        }
+        Insert: {
+          auto_flagged?: boolean | null
+          created_at?: string | null
+          details?: Json | null
+          flag_type: string
+          id?: string
+          resolution?: string | null
+          resolution_notes?: string | null
+          reviewed?: boolean | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          updated_at?: string | null
+          verification_id: string
+        }
+        Update: {
+          auto_flagged?: boolean | null
+          created_at?: string | null
+          details?: Json | null
+          flag_type?: string
+          id?: string
+          resolution?: string | null
+          resolution_notes?: string | null
+          reviewed?: boolean | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          updated_at?: string | null
+          verification_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_flags_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referrals: {
         Row: {
           bonus_credits_awarded: number | null
@@ -2180,6 +2236,7 @@ export type Database = {
           category_confidence: number | null
           claim_type: string | null
           content: string
+          content_hash: string | null
           content_type: string
           created_at: string
           detected_categories: Json | null
@@ -2208,6 +2265,7 @@ export type Database = {
           category_confidence?: number | null
           claim_type?: string | null
           content: string
+          content_hash?: string | null
           content_type: string
           created_at?: string
           detected_categories?: Json | null
@@ -2236,6 +2294,7 @@ export type Database = {
           category_confidence?: number | null
           claim_type?: string | null
           content?: string
+          content_hash?: string | null
           content_type?: string
           created_at?: string
           detected_categories?: Json | null
@@ -2549,6 +2608,10 @@ export type Database = {
           end_date: string
           plan: Database["public"]["Enums"]["plan_type"]
         }[]
+      }
+      get_verification_quality_status: {
+        Args: { verification_uuid: string }
+        Returns: Json
       }
       halfvec_avg: {
         Args: { "": number[] }

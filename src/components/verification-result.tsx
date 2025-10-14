@@ -17,6 +17,8 @@ import { motion } from 'framer-motion';
 import { lower } from "@/lib/string";
 import { useAuth } from '@/contexts/AuthContext';
 import { useClaimVersions } from '@/hooks/useClaimVersions';
+import { useQualityFlags } from '@/hooks/useQualityFlags';
+import { QualityBadge } from './QualityBadge';
 
 interface Source {
   id?: string;
@@ -79,6 +81,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   const [shareModalOpen, setShareModalOpen] = React.useState(false);
   const { versions } = useClaimVersions(verificationId);
+  const { qualityStatus } = useQualityFlags(verificationId);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -295,6 +298,15 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
       ) : null}
 
       {/* NEW FEATURES */}
+      {/* Quality Assurance Badge */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 1.7 }}
+      >
+        <QualityBadge qualityStatus={qualityStatus} />
+      </motion.div>
+
       {/* Feature 1: Contradiction Detection */}
       {contradictions && contradictions.length > 0 && (
         <ContradictionAlert contradictions={contradictions} />

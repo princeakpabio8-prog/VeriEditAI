@@ -137,6 +137,11 @@ serve(async (req) => {
     let confidence = calculateImageConfidence(imageResult);
     const status = getStatusFromConfidence(confidence);
     
+    // Update verification record status to completed if we have the verification ID
+    if (!isMissingFields) {
+      console.log('📝 Updating verification record status to completed...');
+    }
+    
     // Adjust confidence if image is widely used (possible stock photo)
     if (imageResult.webDetection?.pagesWithMatchingImages?.length > 50) {
       confidence = Math.max(confidence - 10, 40);
@@ -210,6 +215,26 @@ serve(async (req) => {
       processing_time: processingTime,
     };
 
+    // Update verification record with complete results
+    if (!isMissingFields) {
+      const { error: updateError } = await supabase
+        .from('verifications')
+        .update({
+          status: 'completed',
+          trust_score: confidence,
+          summary: summary,
+          analysis: analysis_points.join('\n'),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', verificationId);
+
+      if (updateError) {
+        console.error('❌ Error updating verification record:', updateError);
+      } else {
+        console.log('✅ Verification record updated successfully');
+      }
+    }
+
     // Add metadata for mobile compatibility
     const finalResult = {
       ...result,
@@ -223,6 +248,32 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in image verification:', error);
+    
+    // Try to extract verification info from the request
+    let verificationId = null;
+    try {
+      const body = await req.clone().json();
+      verificationId = body.verificationId;
+      
+      // Update verification status to failed if we have the ID
+      if (verificationId) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        await supabase
+          .from('verifications')
+          .update({
+            status: 'failed',
+            error_message: String(error),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', verificationId);
+      }
+    } catch (e) {
+      console.error('Could not update failed verification:', e);
+    }
+    
     // Always return 200 with inconclusive result for mobile compatibility
     return new Response(
       JSON.stringify({

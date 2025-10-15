@@ -32,26 +32,79 @@ interface RedditPost {
   total_awards_received?: number;
 }
 
-async function fetchRedditPosts(subreddit: string): Promise<RedditPost[]> {
+// Shuffle array to randomize request order
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Sleep with random jitter
+async function randomDelay(minMs: number, maxMs: number): Promise<void> {
+  const delay = minMs + Math.random() * (maxMs - minMs);
+  await new Promise(resolve => setTimeout(resolve, delay));
+}
+
+async function fetchRedditPosts(subreddit: string, retryCount = 0): Promise<RedditPost[]> {
+  const maxRetries = 3;
+  const baseDelay = 1000;
+  
   try {
+    // More realistic User-Agent with version info
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    
     const response = await fetch(
       `https://www.reddit.com/r/${subreddit}/hot.json?limit=100`,
       {
         headers: {
-          'User-Agent': 'VerifiedIt-Monitor/1.0 (Fact-checking platform)',
+          'User-Agent': userAgent,
+          'Accept': 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
         },
       }
     );
 
     if (!response.ok) {
-      console.error(`Failed to fetch r/${subreddit}: ${response.status}`);
+      const responseText = await response.text().catch(() => 'Unable to read response');
+      console.error(`Failed to fetch r/${subreddit}: ${response.status}`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText.substring(0, 500),
+        attempt: retryCount + 1
+      });
+
+      // Retry logic with exponential backoff
+      if (retryCount < maxRetries && (response.status === 403 || response.status === 429 || response.status >= 500)) {
+        const delay = baseDelay * Math.pow(2, retryCount);
+        console.log(`⏳ Retrying r/${subreddit} in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return fetchRedditPosts(subreddit, retryCount + 1);
+      }
+
       return [];
     }
 
     const data = await response.json();
+    console.log(`✅ Successfully fetched r/${subreddit}: ${data.data.children.length} posts`);
     return data.data.children.map((child: any) => child.data);
   } catch (error) {
     console.error(`Error fetching r/${subreddit}:`, error);
+    
+    // Retry on network errors
+    if (retryCount < maxRetries) {
+      const delay = baseDelay * Math.pow(2, retryCount);
+      console.log(`⏳ Retrying r/${subreddit} after error in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchRedditPosts(subreddit, retryCount + 1);
+    }
+    
     return [];
   }
 }
@@ -85,11 +138,23 @@ serve(async (req) => {
     let totalProcessed = 0;
     let newClaims = 0;
     let updatedClaims = 0;
+    let failedSubreddits = 0;
+    let successfulSubreddits = 0;
+
+    // Randomize subreddit order to avoid patterns
+    const shuffledSubreddits = shuffleArray(TARGET_SUBREDDITS);
+    console.log(`📋 Processing ${shuffledSubreddits.length} subreddits in randomized order`);
 
     // Fetch posts from all target subreddits
-    for (const subreddit of TARGET_SUBREDDITS) {
+    for (const subreddit of shuffledSubreddits) {
       console.log(`📡 Fetching r/${subreddit}...`);
       const posts = await fetchRedditPosts(subreddit);
+      
+      if (posts.length === 0) {
+        failedSubreddits++;
+      } else {
+        successfulSubreddits++;
+      }
       
       for (const post of posts) {
         totalProcessed++;
@@ -197,11 +262,12 @@ serve(async (req) => {
         }
       }
       
-      // Rate limiting - Reddit requests 1 request per second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Rate limiting with random delay (2-3.5 seconds) to avoid detection
+      await randomDelay(2000, 3500);
     }
 
     console.log(`✅ Reddit monitoring complete: ${totalProcessed} posts processed, ${newClaims} new claims, ${updatedClaims} updated`);
+    console.log(`📊 Success rate: ${successfulSubreddits}/${shuffledSubreddits.length} subreddits, ${failedSubreddits} failed`);
 
     return new Response(
       JSON.stringify({
@@ -210,6 +276,9 @@ serve(async (req) => {
         newClaims,
         updatedClaims,
         subreddits: TARGET_SUBREDDITS.length,
+        successfulSubreddits,
+        failedSubreddits,
+        successRate: `${successfulSubreddits}/${TARGET_SUBREDDITS.length}`,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

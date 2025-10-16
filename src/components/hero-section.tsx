@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Zap, Users } from "lucide-react";
+import { ArrowRight, Shield, Zap, Users, Radio } from "lucide-react";
 import { Link } from "react-router-dom";
 import lighthouseHero from "@/assets/lighthouse-hero.jpg";
 
@@ -43,14 +43,16 @@ export const HeroSection = () => {
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="text-lg px-8 py-6"
-              onClick={() => document.getElementById('demo-video')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Watch Demo
-            </Button>
+            <Link to="/lighthouse">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="text-lg px-8 py-6"
+              >
+                <Radio className="mr-2 h-5 w-5" />
+                Explore Lighthouse
+              </Button>
+            </Link>
           </div>
 
           {/* Stats */}

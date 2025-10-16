@@ -138,9 +138,61 @@ class VerificationAnalytics {
     }
   }
 
-  getMetrics(): VerificationMetrics {
-    this.calculateSuccessRate();
-    return this.metrics;
+  async getMetrics(): Promise<VerificationMetrics> {
+    // Import supabase here to avoid circular dependencies
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    try {
+      // Query actual database for real metrics
+      const { data: verifications } = await supabase
+        .from('verifications')
+        .select('trust_score, status, created_at, processing_time_ms, content_type');
+
+      const totalVerifications = verifications?.length || 0;
+      const successfulVerifications = verifications?.filter(v => v.status === 'completed') || [];
+      
+      const successRate = totalVerifications > 0
+        ? (successfulVerifications.length / totalVerifications) * 100
+        : 100;
+
+      const avgProcessingTime = successfulVerifications.length > 0
+        ? successfulVerifications.reduce((sum, v) => sum + (v.processing_time_ms || 0), 0) / successfulVerifications.length
+        : 0;
+
+      // Calculate category breakdown from actual data
+      const categoryBreakdown = verifications?.reduce((acc, v) => {
+        const category = v.content_type || 'unknown';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      // Calculate confidence distribution from trust scores
+      const confidenceDistribution = verifications?.reduce((acc, v) => {
+        const range = this.getConfidenceRange(v.trust_score || 0);
+        acc[range] = (acc[range] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      return {
+        totalVerifications,
+        successRate,
+        averageProcessingTime: avgProcessingTime,
+        categoryBreakdown,
+        confidenceDistribution,
+        errorTypes: this.metrics.errorTypes, // Keep error tracking from client-side
+        peakUsageHours: this.metrics.peakUsageHours,
+        userEngagement: {
+          dailyActiveUsers: 0, // Would need activity tracking
+          averageVerificationsPerUser: 0, // Would need user-level aggregation
+          retentionRate: 0
+        }
+      };
+    } catch (error) {
+      console.error('Failed to fetch metrics from database:', error);
+      // Fallback to in-memory metrics if database query fails
+      this.calculateSuccessRate();
+      return this.metrics;
+    }
   }
 
   private calculateSuccessRate() {
@@ -153,8 +205,8 @@ class VerificationAnalytics {
   }
 
   // Performance optimization insights
-  getPerformanceInsights() {
-    const metrics = this.getMetrics();
+  async getPerformanceInsights() {
+    const metrics = await this.getMetrics();
     const insights = [];
 
     if (metrics.averageProcessingTime > 5000) {
@@ -177,7 +229,7 @@ class VerificationAnalytics {
 
     // Check for category imbalances
     const totalCategoryCount = Object.values(metrics.categoryBreakdown)
-      .reduce((sum, count) => sum + count, 0);
+      .reduce((sum: number, count: number) => sum + count, 0);
     
     Object.entries(metrics.categoryBreakdown).forEach(([category, count]) => {
       const percentage = (count / totalCategoryCount) * 100;
@@ -197,9 +249,10 @@ class VerificationAnalytics {
   // Real-time monitoring
   startRealTimeMonitoring() {
     // Monitor for anomalies only if we have meaningful data
-    setInterval(() => {
-      if (this.metrics.totalVerifications > 5) { // Only monitor with sufficient data
-        const insights = this.getPerformanceInsights();
+    setInterval(async () => {
+      const metrics = await this.getMetrics();
+      if (metrics.totalVerifications > 5) { // Only monitor with sufficient data
+        const insights = await this.getPerformanceInsights();
         
         insights.forEach(insight => {
           if (insight.type === 'error') {

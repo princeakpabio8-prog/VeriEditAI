@@ -83,6 +83,39 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_audit: {
+        Row: {
+          actual_value: number | null
+          checked_at: string | null
+          discrepancy: number | null
+          id: string
+          is_accurate: boolean | null
+          metadata: Json | null
+          metric_type: string
+          reported_value: number | null
+        }
+        Insert: {
+          actual_value?: number | null
+          checked_at?: string | null
+          discrepancy?: number | null
+          id?: string
+          is_accurate?: boolean | null
+          metadata?: Json | null
+          metric_type: string
+          reported_value?: number | null
+        }
+        Update: {
+          actual_value?: number | null
+          checked_at?: string | null
+          discrepancy?: number | null
+          id?: string
+          is_accurate?: boolean | null
+          metadata?: Json | null
+          metric_type?: string
+          reported_value?: number | null
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string

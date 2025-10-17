@@ -718,6 +718,59 @@ export type Database = {
           },
         ]
       }
+      nft_badges: {
+        Row: {
+          chain_id: number
+          claim_text: string
+          contract_address: string
+          id: string
+          metadata_uri: string
+          minted_at: string | null
+          token_id: string
+          transaction_hash: string
+          trust_score: number
+          user_id: string
+          verification_id: string
+          wallet_address: string
+        }
+        Insert: {
+          chain_id?: number
+          claim_text: string
+          contract_address: string
+          id?: string
+          metadata_uri: string
+          minted_at?: string | null
+          token_id: string
+          transaction_hash: string
+          trust_score: number
+          user_id: string
+          verification_id: string
+          wallet_address: string
+        }
+        Update: {
+          chain_id?: number
+          claim_text?: string
+          contract_address?: string
+          id?: string
+          metadata_uri?: string
+          minted_at?: string | null
+          token_id?: string
+          transaction_hash?: string
+          trust_score?: number
+          user_id?: string
+          verification_id?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_badges_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: true
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           action_url: string | null

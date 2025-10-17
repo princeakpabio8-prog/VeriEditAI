@@ -10,7 +10,8 @@ import { ShareModal } from './share-modal';
 import { ContradictionAlert } from './ContradictionAlert';
 import { SourceFreshnessDisplay } from './SourceFreshnessDisplay';
 import { ReverseImageSearchResults } from './ReverseImageSearchResults';
-import { ExternalLink, Clock, FileText, Activity, Shield, Share2 } from 'lucide-react';
+import { MintBadgeButton } from './nft/MintBadgeButton';
+import { ExternalLink, Clock, FileText, Activity, Shield, Share2, Award } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -665,6 +666,36 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
           confidence={trustScore}
         />
       </motion.div>
+
+      {/* NFT Badge Minting Section */}
+      {verificationId && trustScore >= 75 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 2.0 }}
+        >
+          <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Award className="h-5 w-5 text-purple-400" />
+                Earn Your Truth Badge
+              </CardTitle>
+              <CardDescription>
+                Mint a free NFT badge on Shardeum Testnet to commemorate this verified claim
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MintBadgeButton 
+                verificationId={verificationId}
+                trustScore={trustScore}
+              />
+              <p className="text-xs text-muted-foreground mt-3">
+                🪙 These badges can later be migrated to Shardeum Mainnet for real-world recognition or token rewards
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* User Feedback Section */}
       <motion.div

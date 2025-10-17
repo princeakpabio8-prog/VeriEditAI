@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { TrustScoreDisplay } from '@/components/trust-score-display';
-import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2, Globe, TrendingUp, Award } from 'lucide-react';
+import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2, Globe, TrendingUp, Award, Coins } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseStatus } from '@/components/license-status';
@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { TruthBadgeGallery } from '@/components/nft/TruthBadgeGallery';
 
 import { useSearchParams } from 'react-router-dom';
 import { LighthouseFeed } from '@/components/lighthouse-feed';
@@ -459,12 +460,16 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
-        <TabsList className={isMobile ? "grid w-full grid-cols-4 gap-1" : "grid w-full grid-cols-6"}>
+        <TabsList className={isMobile ? "grid w-full grid-cols-5 gap-1" : "grid w-full grid-cols-7"}>
           <TabsTrigger value="overview" className={isMobile ? "text-xs px-2" : ""}>Overview</TabsTrigger>
           <TabsTrigger value="discover" className={isMobile ? "text-xs px-2" : ""}>Discover</TabsTrigger>
           <TabsTrigger value="analytics" className={isMobile ? "text-xs px-2" : ""}>Analytics</TabsTrigger>
           {!isMobile && <TabsTrigger value="executive">Executive</TabsTrigger>}
           {!isMobile && <TabsTrigger value="export">Export Data</TabsTrigger>}
+          <TabsTrigger value="truth-badges" className={isMobile ? "text-xs px-2" : ""}>
+            <Coins className="h-4 w-4 mr-1" />
+            {!isMobile && "Badges"}
+          </TabsTrigger>
           <TabsTrigger value="trust-intel" className={isMobile ? "text-xs px-2" : ""}>Trust Intel</TabsTrigger>
         </TabsList>
 
@@ -612,6 +617,23 @@ const Dashboard = () => {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Export features available after verifications are completed.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="truth-badges" className="space-y-6 animate-fade-in">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Coins className="h-5 w-5 text-purple-500" />
+                  My Truth Badges
+                </CardTitle>
+                <CardDescription>
+                  NFT badges you've earned by verifying claims with ≥75% trust score on Shardeum Testnet
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TruthBadgeGallery />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="trust-intel" className="space-y-6 animate-fade-in">

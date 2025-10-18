@@ -52,21 +52,125 @@ serve(async (req) => {
       throw new Error('Badge already minted for this verification')
     }
     
-    // For testnet demo, create a simulated badge record
-    // In production, this would mint actual NFT via ethers.js and NFTs2Me/custom contract
-    const mockTokenId = Math.floor(Math.random() * 1000000).toString()
-    const mockTxHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+    // Get environment variables for contract interaction
+    const contractAddress = Deno.env.get('TRUTH_BADGE_CONTRACT_ADDRESS')
+    const mintingWalletPK = Deno.env.get('MINTING_WALLET_PRIVATE_KEY')
+    const nftStorageKey = Deno.env.get('NFT_STORAGE_API_KEY')
     
+    if (!contractAddress || !mintingWalletPK || !nftStorageKey) {
+      throw new Error('Missing required environment variables. Please configure TRUTH_BADGE_CONTRACT_ADDRESS, MINTING_WALLET_PRIVATE_KEY, and NFT_STORAGE_API_KEY')
+    }
+    
+    // Import ethers dynamically
+    const { ethers } = await import('https://esm.sh/ethers@6.9.0')
+    
+    // Setup provider and wallet
+    const provider = new ethers.JsonRpcProvider('https://liberty10.shardeum.org/')
+    const wallet = new ethers.Wallet(mintingWalletPK, provider)
+    
+    // TruthBadge contract ABI (only the functions we need)
+    const contractABI = [
+      'function mintBadge(address to, string memory verificationId, uint256 trustScore, string memory metadataURI) public returns (uint256)',
+      'function verificationMinted(string memory verificationId) public view returns (bool)',
+      'function totalSupply() public view returns (uint256)'
+    ]
+    
+    const contract = new ethers.Contract(contractAddress, contractABI, wallet)
+    
+    // Check if already minted on-chain
+    const alreadyMinted = await contract.verificationMinted(verificationId)
+    if (alreadyMinted) {
+      throw new Error('Badge already minted on blockchain for this verification')
+    }
+    
+    // Upload metadata to IPFS via NFT.Storage
+    const metadata = {
+      name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
+      description: `This badge certifies that the claim "${verification.content.substring(0, 100)}..." was verified by VeriEdit AI with a trust score of ${verification.trust_score}%.`,
+      image: 'ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly', // VeriEdit badge graphic
+      attributes: [
+        {
+          trait_type: 'Trust Score',
+          value: verification.trust_score
+        },
+        {
+          trait_type: 'Verification Date',
+          value: verification.created_at
+        },
+        {
+          trait_type: 'Claim Preview',
+          value: verification.content.substring(0, 200)
+        },
+        {
+          trait_type: 'Chain',
+          value: 'Shardeum Liberty Testnet'
+        }
+      ],
+      external_url: `https://veriedit.ai/share/${verificationId}`,
+      verification_id: verificationId,
+      claim_text: verification.content.substring(0, 500)
+    }
+    
+    // Upload to NFT.Storage
+    const nftStorageResponse = await fetch('https://api.nft.storage/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${nftStorageKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(metadata)
+    })
+    
+    if (!nftStorageResponse.ok) {
+      throw new Error('Failed to upload metadata to IPFS')
+    }
+    
+    const { value } = await nftStorageResponse.json()
+    const metadataURI = `ipfs://${value.cid}`
+    
+    console.log('📦 Metadata uploaded to IPFS:', metadataURI)
+    
+    // Mint NFT on blockchain
+    console.log('🔨 Minting badge on Shardeum...')
+    const tx = await contract.mintBadge(
+      walletAddress,
+      verificationId,
+      verification.trust_score,
+      metadataURI
+    )
+    
+    console.log('⏳ Waiting for confirmation...')
+    const receipt = await tx.wait()
+    
+    console.log('✅ Badge minted! Transaction:', receipt.hash)
+    
+    // Extract tokenId from events
+    const mintEvent = receipt.logs.find((log: any) => {
+      try {
+        const parsed = contract.interface.parseLog(log)
+        return parsed?.name === 'BadgeMinted'
+      } catch {
+        return false
+      }
+    })
+    
+    let tokenId = '0'
+    if (mintEvent) {
+      const parsed = contract.interface.parseLog(mintEvent)
+      tokenId = parsed?.args[0].toString()
+    }
+    
+    // Store in database
     const { error: insertError } = await supabase
       .from('nft_badges')
       .insert({
         user_id: user.id,
         verification_id: verificationId,
-        token_id: mockTokenId,
-        contract_address: '0x0000000000000000000000000000000000000000',
-        transaction_hash: mockTxHash,
+        token_id: tokenId,
+        contract_address: contractAddress,
+        transaction_hash: receipt.hash,
         chain_id: 8081,
-        metadata_uri: `ipfs://demo-${verification.id}`,
+        metadata_uri: metadataURI,
         claim_text: verification.content.substring(0, 500),
         trust_score: verification.trust_score,
         wallet_address: walletAddress
@@ -77,10 +181,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        tokenId: mockTokenId,
-        transactionHash: mockTxHash,
-        metadataUri: `ipfs://demo-${verification.id}`,
-        explorerUrl: `https://explorer-liberty10.shardeum.org/tx/${mockTxHash}`
+        tokenId,
+        transactionHash: receipt.hash,
+        metadataUri: metadataURI,
+        explorerUrl: `https://explorer-liberty10.shardeum.org/tx/${receipt.hash}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

@@ -264,6 +264,7 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
+  const [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -305,6 +306,19 @@ const Dashboard = () => {
 
       if (error) throw error;
       setVerifications(data || []);
+
+      // Fetch minted badges for these verifications
+      if (data && data.length > 0) {
+        const verificationIds = data.map(v => v.id);
+        const { data: badges, error: badgeError } = await supabase
+          .from('nft_badges')
+          .select('verification_id')
+          .in('verification_id', verificationIds);
+
+        if (!badgeError && badges) {
+          setMintedBadges(new Set(badges.map(b => b.verification_id)));
+        }
+      }
     } catch (error) {
       console.error('Error fetching verifications:', error);
       toast({
@@ -679,45 +693,68 @@ const Dashboard = () => {
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Trust Score</TableHead>
+                    <TableHead>Badge Status</TableHead>
                     <TableHead>Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {verifications.map((verification) => (
-                    <TableRow key={verification.id}>
-                      <TableCell className="max-w-xs">
-                        <div className="truncate" title={verification.content}>
-                          {verification.content}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {verification.content_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(verification.status)}
-                          {getStatusBadge(verification.status)}
-                        </div>
-                      </TableCell>
-                       <TableCell>
-                        {verification.trust_score !== null ? (
-                          <TrustScoreDisplay 
-                            score={verification.trust_score} 
-                            size="sm"
-                            showLabel={false}
-                            showAnimation={true}
-                          />
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(verification.created_at).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {verifications.map((verification) => {
+                    const isMinted = mintedBadges.has(verification.id);
+                    const isEligible = verification.trust_score !== null && verification.trust_score >= 75;
+                    
+                    return (
+                      <TableRow key={verification.id}>
+                        <TableCell className="max-w-xs">
+                          <div className="truncate" title={verification.content}>
+                            {verification.content}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {verification.content_type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(verification.status)}
+                            {getStatusBadge(verification.status)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {verification.trust_score !== null ? (
+                            <TrustScoreDisplay 
+                              score={verification.trust_score} 
+                              size="sm"
+                              showLabel={false}
+                              showAnimation={true}
+                            />
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isMinted ? (
+                            <Badge variant="default" className="gap-1 bg-purple-500 hover:bg-purple-600">
+                              <Award className="h-3 w-3" />
+                              Badge Minted
+                            </Badge>
+                          ) : isEligible ? (
+                            <Badge variant="outline" className="gap-1 border-purple-500 text-purple-500">
+                              <Award className="h-3 w-3" />
+                              Eligible
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1">
+                              Not Eligible
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(verification.created_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

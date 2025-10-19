@@ -88,7 +88,7 @@ serve(async (req) => {
     // Upload metadata
     const metadata = {
       name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
-      description: `This VeriEdit Truth Badge certifies that a claim was verified with ${verification.trust_score}% confidence. VeriEdit uses AI-powered fact-checking to analyze claims against multiple trusted sources, providing transparent verification for truth-seekers worldwide.`,
+      description: `Own a piece of the truth revolution. This VeriEdit Truth Badge represents a verified claim in the fight against misinformation. Powered by AI and validated against trusted sources, each badge is a digital artifact proving that facts matter. With a ${verification.trust_score}% confidence rating, this NFT certifies authenticity in an age of deception. Join the movement. Collect truth. Change the world.`,
       image: badgeImageUrl,
       attributes: [
         {

@@ -111,24 +111,32 @@ serve(async (req) => {
       claim_text: verification.content.substring(0, 500)
     }
     
-    // Upload to NFT.Storage (use JSON metadata store endpoint)
-    const nftStorageResponse = await fetch('https://api.nft.storage/store', {
+    // Upload to NFT.Storage using multipart/form-data with a JSON file
+    const form = new FormData()
+    const jsonBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
+    form.append('file', jsonBlob, 'metadata.json')
+
+    const nftStorageResponse = await fetch('https://api.nft.storage/upload', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${nftStorageKey}`,
-        'Content-Type': 'application/json'
+        // Do NOT set Content-Type here; let fetch set the multipart boundary
       },
-      body: JSON.stringify(metadata)
+      body: form
     })
-    
+
     if (!nftStorageResponse.ok) {
       const errText = await nftStorageResponse.text().catch(() => '')
       throw new Error(`Failed to upload metadata to IPFS: ${nftStorageResponse.status} ${nftStorageResponse.statusText} ${errText}`)
     }
-    
-    const { value } = await nftStorageResponse.json()
-    const metadataURI = `ipfs://${value.cid}`
-    
+
+    const respJson = await nftStorageResponse.json()
+    const metadataURI = `ipfs://${respJson?.value?.cid}`
+
+    if (!metadataURI || metadataURI === 'ipfs://undefined') {
+      throw new Error('Failed to obtain CID from NFT.Storage response')
+    }
+
     console.log('📦 Metadata uploaded to IPFS:', metadataURI)
     
     // Mint NFT on blockchain

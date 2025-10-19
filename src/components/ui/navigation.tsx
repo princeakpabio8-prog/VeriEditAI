@@ -81,6 +81,10 @@ export const Navigation = () => {
                   <Award className="h-4 w-4" />
                   Badges
                 </Link>
+                <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Award className="h-4 w-4" />
+                  Achievements
+                </Link>
                 <Link to="/referrals" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Gift className="h-4 w-4" />
                   Referrals

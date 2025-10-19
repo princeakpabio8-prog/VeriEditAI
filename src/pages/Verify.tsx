@@ -18,6 +18,7 @@ import { MobileVerificationUI } from '@/components/mobile-verification-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { normalizeVerifyResult } from '@/lib/normalizers';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { useVerificationAchievements } from '@/hooks/useVerificationAchievements';
 
 interface VerificationState {
   stage: 'upload' | 'completed';
@@ -40,6 +41,7 @@ export default function Verify() {
   const { user } = useAuth();
   const { verify, loading, error, result } = useVerify();
   const isMobile = useIsMobile();
+  const { checkAchievementsAfterVerification } = useVerificationAchievements();
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
@@ -114,6 +116,9 @@ export default function Verify() {
         content: data.content,
         result: normalizedResult || result
       });
+
+      // Check for achievements after successful verification
+      await checkAchievementsAfterVerification();
       
     } catch (error) {
       console.error('Error starting verification:', error);

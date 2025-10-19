@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_key: string
+          category: string
+          created_at: string | null
+          description: string
+          icon_name: string
+          id: string
+          is_hidden: boolean | null
+          name: string
+          points: number
+          requirement_type: string
+          requirement_value: number | null
+          tier: string
+        }
+        Insert: {
+          achievement_key: string
+          category: string
+          created_at?: string | null
+          description: string
+          icon_name: string
+          id?: string
+          is_hidden?: boolean | null
+          name: string
+          points?: number
+          requirement_type: string
+          requirement_value?: number | null
+          tier: string
+        }
+        Update: {
+          achievement_key?: string
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon_name?: string
+          id?: string
+          is_hidden?: boolean | null
+          name?: string
+          points?: number
+          requirement_type?: string
+          requirement_value?: number | null
+          tier?: string
+        }
+        Relationships: []
+      }
       activity_stream: {
         Row: {
           activity_type: string
@@ -2075,6 +2120,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          progress_current: number | null
+          progress_required: number | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          progress_current?: number | null
+          progress_required?: number | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          progress_current?: number | null
+          progress_required?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_name: string
@@ -2125,6 +2215,56 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      user_leaderboard_stats: {
+        Row: {
+          highest_trust_score: number | null
+          last_verification_date: string | null
+          rank: number | null
+          total_achievement_points: number | null
+          total_lighthouse_contributions: number | null
+          total_nft_badges: number | null
+          total_shares: number | null
+          total_verifications: number | null
+          updated_at: string | null
+          user_id: string
+          verification_streak: number | null
+        }
+        Insert: {
+          highest_trust_score?: number | null
+          last_verification_date?: string | null
+          rank?: number | null
+          total_achievement_points?: number | null
+          total_lighthouse_contributions?: number | null
+          total_nft_badges?: number | null
+          total_shares?: number | null
+          total_verifications?: number | null
+          updated_at?: string | null
+          user_id: string
+          verification_streak?: number | null
+        }
+        Update: {
+          highest_trust_score?: number | null
+          last_verification_date?: string | null
+          rank?: number | null
+          total_achievement_points?: number | null
+          total_lighthouse_contributions?: number | null
+          total_nft_badges?: number | null
+          total_shares?: number | null
+          total_verifications?: number | null
+          updated_at?: string | null
+          user_id?: string
+          verification_streak?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_leaderboard_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

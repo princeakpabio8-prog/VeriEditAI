@@ -40,6 +40,8 @@ import ActivityDetail from "./pages/ActivityDetail";
 import Press from "./pages/Press";
 import ViralClaims from "./pages/ViralClaims";
 import SignalFeed from "./pages/SignalFeed";
+import Achievements from "./pages/Achievements";
+import { AchievementNotification } from "./components/AchievementNotification";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AchievementNotification />
           <MobileBottomNav />
           <Routes>
             <Route path="/" element={<Index />} />
@@ -140,6 +143,11 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/signal-feed" element={<SignalFeed />} />
+            <Route path="/achievements" element={
+              <ProtectedRoute>
+                <Achievements />
+              </ProtectedRoute>
+            } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

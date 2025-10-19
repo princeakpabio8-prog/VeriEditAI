@@ -17,6 +17,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ApiKeyManager } from '@/components/api-key-manager';
 import { AvatarUploader } from '@/components/profile/AvatarUploader';
 import { FollowersList } from '@/components/profile/FollowersList';
+import { ProfileAchievements } from '@/components/ProfileAchievements';
 import { lower } from '@/lib/string';
 
 interface Profile {
@@ -436,6 +437,9 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Achievements Section */}
+            <ProfileAchievements />
 
             {/* Social Section */}
             <FollowersList

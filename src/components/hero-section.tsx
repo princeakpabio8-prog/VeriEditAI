@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Zap, Users, Radio } from "lucide-react";
+import { ArrowRight, Shield, Award, Users, Radio } from "lucide-react";
 import { Link } from "react-router-dom";
 import lighthouseHero from "@/assets/lighthouse-hero.jpg";
 
@@ -67,10 +67,10 @@ export const HeroSection = () => {
             
             <div className="text-center trust-pulse" style={{ animationDelay: "0.2s" }}>
               <div className="flex items-center justify-center mb-4">
-                <Zap className="h-12 w-12 text-primary" />
+                <Award className="h-12 w-12 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold text-foreground mb-2">&lt;30s</h3>
-              <p className="text-muted-foreground">Verification Time</p>
+              <h3 className="text-2xl font-bold text-foreground mb-2">5K+</h3>
+              <p className="text-muted-foreground">NFT Badges Minted</p>
             </div>
             
             <div className="text-center trust-pulse" style={{ animationDelay: "0.4s" }}>

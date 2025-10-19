@@ -5,6 +5,7 @@ import { VideoDemoSection } from "@/components/video-demo-section";
 import { VerificationUpload } from "@/components/verification-upload";
 import { LiveActivityWidget } from "@/components/LiveActivityWidget";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
+import { NFTShowcaseSection } from "@/components/nft-showcase-section";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/ui/footer";
@@ -129,6 +130,9 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        {/* NFT Showcase Section */}
+        <NFTShowcaseSection />
 
         {/* Live Activity Widget Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">

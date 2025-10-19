@@ -1,4 +1,4 @@
-import { Home, Radio, Newspaper, User, Users, Info } from "lucide-react";
+import { Home, Radio, Newspaper, User, Award, Info } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -54,17 +54,17 @@ export const MobileBottomNav = () => {
       activeCheck: (path: string) => path.startsWith("/lighthouse"),
     },
     {
+      label: "Badges",
+      icon: Award,
+      path: isAuthenticated ? "/dashboard?tab=badges" : "/auth?feature=nft",
+      activeCheck: (path: string) => path === "/dashboard" && location.search.includes("tab=badges"),
+    },
+    {
       label: "Discover",
       icon: Newspaper,
       path: isAuthenticated ? "/dashboard?tab=discover" : "/auth?next=/dashboard?tab=discover",
       activeCheck: (path: string) => path === "/dashboard" && location.search.includes("tab=discover"),
       onClick: handleDiscoverClick,
-    },
-    {
-      label: "About",
-      icon: Info,
-      path: "/about",
-      activeCheck: (path: string) => path === "/about",
     },
   ];
 

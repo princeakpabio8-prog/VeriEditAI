@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +77,10 @@ export const Navigation = () => {
                   <Radio className="h-4 w-4" />
                   Lighthouse
                 </Link>
+                <Link to="/dashboard?tab=badges" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Award className="h-4 w-4" />
+                  Badges
+                </Link>
                 <Link to="/referrals" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Gift className="h-4 w-4" />
                   Referrals
@@ -96,6 +100,10 @@ export const Navigation = () => {
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
                   Lighthouse
+                </Link>
+                <Link to="/auth?next=/dashboard?tab=badges" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Award className="h-4 w-4" />
+                  Badges
                 </Link>
                 <Link to="/auth?next=/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Newspaper className="h-4 w-4" />
@@ -284,6 +292,16 @@ export const Navigation = () => {
                 >
                   <Radio className="h-4 w-4" />
                   Lighthouse
+                </Link>
+                <Link
+                  to="/dashboard?tab=badges"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.search.includes('tab=badges') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Award className="h-4 w-4" />
+                  My Badges
                 </Link>
                 <Link
                   to="/referrals"

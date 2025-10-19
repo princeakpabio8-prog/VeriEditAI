@@ -27,6 +27,7 @@ import {
   ChevronDown,
   Sparkles,
   ImageIcon,
+  Award,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ShareModal } from "@/components/share-modal";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
+import { MintBadgeButton } from "@/components/nft/MintBadgeButton";
 
 interface NewsArticle {
   id: string;
@@ -518,46 +520,61 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2 relative">
-                        {!article.is_verified && verifyingArticleId === article.id ? (
-                          <div className="flex-1 flex items-center justify-center py-4">
-                            <TrustScoreDisplay 
-                              score={verificationResults[article.id] || 0}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex gap-2 relative">
+                          {!article.is_verified && verifyingArticleId === article.id ? (
+                            <div className="flex-1 flex items-center justify-center py-4">
+                              <TrustScoreDisplay 
+                                score={verificationResults[article.id] || 0}
+                                size="sm"
+                                showAnimation={true}
+                                showLabel={false}
+                              />
+                            </div>
+                          ) : !article.is_verified ? (
+                            <Button
                               size="sm"
-                              showAnimation={true}
-                              showLabel={false}
+                              onClick={() => handleVerify(article)}
+                              className="flex-1 gap-2"
+                              disabled={verifyingArticleId !== null}
+                            >
+                              <Sparkles className="h-3 w-3" />
+                              Verify Now
+                            </Button>
+                          ) : null}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(article.link, "_blank")}
+                            className={article.is_verified ? "flex-1" : ""}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Read
+                          </Button>
+                          {article.is_verified && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setShareArticle(article)}
+                            >
+                              <Share2 className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Mint NFT Badge Button */}
+                        {article.is_verified && article.trust_score && article.trust_score >= 75 && article.verification_id && user && (
+                          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                              <Award className="h-3 w-3" />
+                              NFT Eligible
+                            </Badge>
+                            <MintBadgeButton 
+                              verificationId={article.verification_id} 
+                              trustScore={article.trust_score}
                             />
                           </div>
-                        ) : !article.is_verified ? (
-                          <Button
-                            size="sm"
-                            onClick={() => handleVerify(article)}
-                            className="flex-1 gap-2"
-                            disabled={verifyingArticleId !== null}
-                          >
-                            <Sparkles className="h-3 w-3" />
-                            Verify Now
-                          </Button>
-                        ) : null}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => window.open(article.link, "_blank")}
-                          className={article.is_verified ? "flex-1" : ""}
-                        >
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          Read
-                        </Button>
-                        {article.is_verified && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setShareArticle(article)}
-                          >
-                            <Share2 className="h-3 w-3" />
-                          </Button>
                         )}
-
                       </div>
                     </CardContent>
                   </Card>

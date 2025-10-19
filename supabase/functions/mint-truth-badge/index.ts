@@ -55,10 +55,9 @@ serve(async (req) => {
     // Get environment variables for contract interaction
     const contractAddress = Deno.env.get('TRUTH_BADGE_CONTRACT_ADDRESS')
     const mintingWalletPK = Deno.env.get('MINTING_WALLET_PRIVATE_KEY')
-    const nftStorageKey = Deno.env.get('NFT_STORAGE_API_KEY')
     
-    if (!contractAddress || !mintingWalletPK || !nftStorageKey) {
-      throw new Error('Missing required environment variables. Please configure TRUTH_BADGE_CONTRACT_ADDRESS, MINTING_WALLET_PRIVATE_KEY, and NFT_STORAGE_API_KEY')
+    if (!contractAddress || !mintingWalletPK) {
+      throw new Error('Missing required environment variables. Please configure TRUTH_BADGE_CONTRACT_ADDRESS and MINTING_WALLET_PRIVATE_KEY')
     }
     
     // Import ethers dynamically
@@ -111,33 +110,28 @@ serve(async (req) => {
       claim_text: verification.content.substring(0, 500)
     }
     
-    // Upload to NFT.Storage using multipart/form-data with a JSON file
-    const form = new FormData()
-    const jsonBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' })
-    form.append('file', jsonBlob, 'metadata.json')
-
-    const nftStorageResponse = await fetch('https://api.nft.storage/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${nftStorageKey}`,
-        // Do NOT set Content-Type here; let fetch set the multipart boundary
-      },
-      body: form
-    })
-
-    if (!nftStorageResponse.ok) {
-      const errText = await nftStorageResponse.text().catch(() => '')
-      throw new Error(`Failed to upload metadata to IPFS: ${nftStorageResponse.status} ${nftStorageResponse.statusText} ${errText}`)
+    // Upload metadata to Supabase Storage instead of NFT.Storage
+    const metadataJson = JSON.stringify(metadata, null, 2)
+    const fileName = `badge-${verificationId}-${Date.now()}.json`
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('nft-metadata')
+      .upload(fileName, metadataJson, {
+        contentType: 'application/json'
+      })
+    
+    if (uploadError) {
+      throw new Error(`Failed to upload metadata: ${uploadError.message}`)
     }
-
-    const respJson = await nftStorageResponse.json()
-    const metadataURI = `ipfs://${respJson?.value?.cid}`
-
-    if (!metadataURI || metadataURI === 'ipfs://undefined') {
-      throw new Error('Failed to obtain CID from NFT.Storage response')
-    }
-
-    console.log('📦 Metadata uploaded to IPFS:', metadataURI)
+    
+    // Get public URL for the metadata
+    const { data: publicUrl } = supabase.storage
+      .from('nft-metadata')
+      .getPublicUrl(fileName)
+    
+    const metadataURI = publicUrl.publicUrl
+    
+    console.log('📦 Metadata uploaded to Supabase Storage:', metadataURI)
     
     // Mint NFT on blockchain
     console.log('🔨 Minting badge on Polygon Mainnet...')

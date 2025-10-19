@@ -681,7 +681,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                 Earn Your Truth Badge
               </CardTitle>
               <CardDescription>
-                Mint a free NFT badge on Shardeum Testnet to commemorate this verified claim
+                Mint a free NFT badge on Polygon Mainnet to commemorate this verified claim
               </CardDescription>
             </CardHeader>
             <CardContent>

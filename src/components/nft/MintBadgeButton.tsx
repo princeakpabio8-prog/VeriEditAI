@@ -64,7 +64,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
       toast({
         title: "🎖️ Proof of Verification Badge Minted!",
-        description: `Successfully minted on Shardeum Testnet. You've earned your place in the Truth Network.`,
+        description: `Successfully minted on Polygon Mainnet. You've earned your place in the Truth Network.`,
         duration: 10000
       })
 

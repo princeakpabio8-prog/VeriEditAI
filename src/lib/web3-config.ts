@@ -1,27 +1,27 @@
 import { defineChain } from 'viem'
 
-export const shardeumLiberty = defineChain({
-  id: 8081,
-  name: 'Shardeum Liberty Testnet',
-  network: 'shardeum-liberty',
+export const polygonMainnet = defineChain({
+  id: 137,
+  name: 'Polygon Mainnet',
+  network: 'polygon',
   nativeCurrency: {
     decimals: 18,
-    name: 'Shardeum',
-    symbol: 'SHM',
+    name: 'MATIC',
+    symbol: 'MATIC',
   },
   rpcUrls: {
     default: {
-      http: ['https://liberty10.shardeum.org/'],
+      http: ['https://polygon-rpc.com/'],
     },
     public: {
-      http: ['https://liberty10.shardeum.org/'],
+      http: ['https://polygon-rpc.com/'],
     },
   },
   blockExplorers: {
     default: { 
-      name: 'Shardeum Explorer', 
-      url: 'https://explorer-liberty10.shardeum.org' 
+      name: 'PolygonScan', 
+      url: 'https://polygonscan.com' 
     },
   },
-  testnet: true,
+  testnet: false,
 })

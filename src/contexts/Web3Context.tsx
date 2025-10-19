@@ -1,15 +1,15 @@
 import { WagmiProvider, createConfig, http } from 'wagmi'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { shardeumLiberty } from '@/lib/web3-config'
+import { polygonMainnet } from '@/lib/web3-config'
 import { injected } from 'wagmi/connectors'
 
 const config = createConfig({
-  chains: [shardeumLiberty],
+  chains: [polygonMainnet],
   connectors: [
     injected(), // MetaMask
   ],
   transports: {
-    [shardeumLiberty.id]: http(),
+    [polygonMainnet.id]: http(),
   },
 })
 

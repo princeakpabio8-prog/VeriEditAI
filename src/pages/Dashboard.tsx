@@ -641,7 +641,7 @@ const Dashboard = () => {
                   My Truth Badges
                 </CardTitle>
                 <CardDescription>
-                  NFT badges you've earned by verifying claims with ≥75% trust score on Shardeum Testnet
+                  NFT badges you've earned by verifying claims with ≥75% trust score on Polygon Mainnet
                 </CardDescription>
               </CardHeader>
               <CardContent>

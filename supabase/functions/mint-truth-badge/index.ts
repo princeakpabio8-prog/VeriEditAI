@@ -111,8 +111,8 @@ serve(async (req) => {
       claim_text: verification.content.substring(0, 500)
     }
     
-    // Upload to NFT.Storage
-    const nftStorageResponse = await fetch('https://api.nft.storage/upload', {
+    // Upload to NFT.Storage (use JSON metadata store endpoint)
+    const nftStorageResponse = await fetch('https://api.nft.storage/store', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${nftStorageKey}`,
@@ -122,7 +122,8 @@ serve(async (req) => {
     })
     
     if (!nftStorageResponse.ok) {
-      throw new Error('Failed to upload metadata to IPFS')
+      const errText = await nftStorageResponse.text().catch(() => '')
+      throw new Error(`Failed to upload metadata to IPFS: ${nftStorageResponse.status} ${nftStorageResponse.statusText} ${errText}`)
     }
     
     const { value } = await nftStorageResponse.json()

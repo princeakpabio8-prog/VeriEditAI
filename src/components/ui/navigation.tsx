@@ -85,10 +85,6 @@ export const Navigation = () => {
                   <Award className="h-4 w-4" />
                   Achievements
                 </Link>
-                <Link to="/referrals" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Gift className="h-4 w-4" />
-                  Referrals
-                </Link>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
                 </Link>
@@ -204,6 +200,14 @@ export const Navigation = () => {
                     >
                       <Puzzle className="h-4 w-4 mr-2" />
                       Extensions
+                    </Link>
+                    <Link
+                      to="/referrals"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Gift className="h-4 w-4 mr-2" />
+                      Referrals
                     </Link>
                     {isAdmin && (
                       <Link

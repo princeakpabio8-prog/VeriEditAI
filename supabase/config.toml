@@ -185,3 +185,9 @@ verify_jwt = false
 
 [functions.backfill-trust-analytics]
 verify_jwt = false
+
+[functions.opensea-webhook]
+verify_jwt = false
+
+[functions.send-nft-notification-email]
+verify_jwt = false

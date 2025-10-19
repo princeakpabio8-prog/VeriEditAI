@@ -256,3 +256,53 @@ export const notifyThreadAuthorNewComment = async (
     console.error('Error notifying thread author:', error);
   }
 };
+
+// Notify badge owner of NFT sale
+export const notifyNFTSale = async (
+  userId: string,
+  tokenId: string,
+  salePrice: number,
+  royaltyAmount: number,
+  platform: string = 'opensea'
+) => {
+  try {
+    await createNotification({
+      userId,
+      type: 'nft_sold',
+      message: `Your Truth Badge #${tokenId} sold for ${salePrice.toFixed(4)} MATIC! Earned ${royaltyAmount.toFixed(4)} MATIC in royalties.`,
+      actionUrl: `/nft/marketplace?badge=${tokenId}`,
+      metadata: {
+        token_id: tokenId,
+        sale_price: salePrice,
+        royalty_amount: royaltyAmount,
+        platform,
+      },
+    });
+  } catch (error) {
+    console.error('Error notifying NFT sale:', error);
+  }
+};
+
+// Notify badge owner of NFT listing
+export const notifyNFTListing = async (
+  userId: string,
+  tokenId: string,
+  listingPrice: number,
+  platform: string = 'opensea'
+) => {
+  try {
+    await createNotification({
+      userId,
+      type: 'nft_listed',
+      message: `Your Truth Badge #${tokenId} was listed for ${listingPrice.toFixed(4)} MATIC`,
+      actionUrl: `/nft/marketplace?badge=${tokenId}`,
+      metadata: {
+        token_id: tokenId,
+        listing_price: listingPrice,
+        platform,
+      },
+    });
+  } catch (error) {
+    console.error('Error notifying NFT listing:', error);
+  }
+};

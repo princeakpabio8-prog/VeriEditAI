@@ -37,6 +37,41 @@ export default function RoyaltyDashboard() {
     }
   }, [isAdmin]);
 
+  // Real-time subscription for new royalty earnings
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
+      .channel('royalty-earnings')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'nft_royalty_earnings',
+        },
+        (payload) => {
+          console.log('🎉 New royalty earning:', payload);
+          const newEarning = payload.new as RoyaltyEarning;
+          
+          setEarnings(prev => [newEarning, ...prev]);
+          setTotalEarnings(prev => prev + Number(newEarning.royalty_amount));
+          if (!newEarning.claimed) {
+            setUnclaimedEarnings(prev => prev + Number(newEarning.royalty_amount));
+          }
+          
+          toast.success(`New sale! Earned ${Number(newEarning.royalty_amount).toFixed(4)} MATIC`, {
+            description: `Badge #${newEarning.token_id} sold for ${Number(newEarning.sale_price).toFixed(4)} MATIC`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin]);
+
   const fetchRoyaltyData = async () => {
     try {
       const { data, error } = await supabase

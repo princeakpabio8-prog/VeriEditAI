@@ -971,6 +971,36 @@ export type Database = {
         }
         Relationships: []
       }
+      nft_webhook_events: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean | null
+          token_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean | null
+          token_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean | null
+          token_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           action_url: string | null

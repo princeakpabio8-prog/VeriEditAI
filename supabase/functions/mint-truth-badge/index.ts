@@ -82,15 +82,19 @@ serve(async (req) => {
       throw new Error('Badge already minted on blockchain for this verification')
     }
     
-    // Upload metadata to IPFS via NFT.Storage
+    // Get the badge image URL from Supabase Storage
+    const badgeImageUrl = `https://sqtkkzdswxazyikcheds.supabase.co/storage/v1/object/public/nft-badge-images/truth-badge-template.png`
+    
+    // Upload metadata
     const metadata = {
       name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
-      description: `This badge certifies that the claim "${verification.content.substring(0, 100)}..." was verified by VeriEdit AI with a trust score of ${verification.trust_score}%.`,
-      image: 'ipfs://bafybeihkoviema7g3gxyt6la7vd5ho32ictqbilu3wnlo3rs7ewhnp7lly', // VeriEdit badge graphic
+      description: `This VeriEdit Truth Badge certifies that a claim was verified with ${verification.trust_score}% confidence. VeriEdit uses AI-powered fact-checking to analyze claims against multiple trusted sources, providing transparent verification for truth-seekers worldwide.`,
+      image: badgeImageUrl,
       attributes: [
         {
           trait_type: 'Trust Score',
-          value: verification.trust_score
+          value: verification.trust_score,
+          display_type: 'number'
         },
         {
           trait_type: 'Verification Date',
@@ -99,6 +103,10 @@ serve(async (req) => {
         {
           trait_type: 'Claim Preview',
           value: verification.content.substring(0, 200)
+        },
+        {
+          trait_type: 'Verified By',
+          value: 'VeriEdit AI'
         },
         {
           trait_type: 'Chain',

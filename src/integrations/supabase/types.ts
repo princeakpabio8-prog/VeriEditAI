@@ -224,6 +224,94 @@ export type Database = {
         }
         Relationships: []
       }
+      badge_evolution: {
+        Row: {
+          badge_id: string
+          created_at: string
+          evolution_level: number
+          evolution_threshold: number
+          evolved_at: string | null
+          id: string
+          special_traits: Json | null
+          updated_at: string
+          verifications_contributed: number
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          evolution_level?: number
+          evolution_threshold?: number
+          evolved_at?: string | null
+          id?: string
+          special_traits?: Json | null
+          updated_at?: string
+          verifications_contributed?: number
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          evolution_level?: number
+          evolution_threshold?: number
+          evolved_at?: string | null
+          id?: string
+          special_traits?: Json | null
+          updated_at?: string
+          verifications_contributed?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badge_evolution_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: true
+            referencedRelation: "nft_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_mentions: {
+        Row: {
+          created_at: string
+          detected_at: string
+          engagement_count: number | null
+          id: string
+          metadata: Json | null
+          platform: string
+          posted_at: string
+          source_url: string
+          viral_claim_id: string
+        }
+        Insert: {
+          created_at?: string
+          detected_at?: string
+          engagement_count?: number | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          posted_at: string
+          source_url: string
+          viral_claim_id: string
+        }
+        Update: {
+          created_at?: string
+          detected_at?: string
+          engagement_count?: number | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          posted_at?: string
+          source_url?: string
+          viral_claim_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_mentions_viral_claim_id_fkey"
+            columns: ["viral_claim_id"]
+            isOneToOne: false
+            referencedRelation: "viral_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claim_relationships: {
         Row: {
           claim_a: string
@@ -322,6 +410,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      email_digests: {
+        Row: {
+          created_at: string
+          frequency: string
+          highlights: Json | null
+          id: string
+          last_sent_at: string | null
+          next_send_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          highlights?: Json | null
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          highlights?: Json | null
+          id?: string
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       embedding_cache: {
         Row: {
@@ -596,6 +717,48 @@ export type Database = {
           safe_search?: Json | null
           updated_at?: string
           verification_id?: string
+        }
+        Relationships: []
+      }
+      leaderboard_entries: {
+        Row: {
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          period_type: string
+          points: number
+          rank: number | null
+          trust_score_avg: number | null
+          updated_at: string
+          user_id: string
+          verification_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          period_type: string
+          points?: number
+          rank?: number | null
+          trust_score_avg?: number | null
+          updated_at?: string
+          user_id: string
+          verification_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          points?: number
+          rank?: number | null
+          trust_score_avg?: number | null
+          updated_at?: string
+          user_id?: string
+          verification_count?: number
         }
         Relationships: []
       }
@@ -1817,6 +1980,36 @@ export type Database = {
         }
         Relationships: []
       }
+      share_events: {
+        Row: {
+          content_id: string
+          content_type: string
+          id: string
+          metadata: Json | null
+          platform: string
+          shared_at: string
+          user_id: string | null
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          id?: string
+          metadata?: Json | null
+          platform: string
+          shared_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          shared_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       signal_feed: {
         Row: {
           created_at: string
@@ -2071,6 +2264,62 @@ export type Database = {
             columns: ["last_payment_id"]
             isOneToOne: false
             referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          created_by: string | null
+          current_value: number
+          end_date: string
+          id: string
+          metadata: Json | null
+          reward_points: number
+          room_id: string
+          start_date: string
+          status: string
+          target_value: number
+          updated_at: string
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number
+          end_date: string
+          id?: string
+          metadata?: Json | null
+          reward_points?: number
+          room_id: string
+          start_date: string
+          status?: string
+          target_value: number
+          updated_at?: string
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          created_by?: string | null
+          current_value?: number
+          end_date?: string
+          id?: string
+          metadata?: Json | null
+          reward_points?: number
+          room_id?: string
+          start_date?: string
+          status?: string
+          target_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_challenges_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "lighthouse_rooms"
             referencedColumns: ["id"]
           },
         ]
@@ -2640,6 +2889,39 @@ export type Database = {
           },
         ]
       }
+      verification_streaks: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_verification_date: string | null
+          longest_streak: number
+          streak_freeze_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_verification_date?: string | null
+          longest_streak?: number
+          streak_freeze_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_verification_date?: string | null
+          longest_streak?: number
+          streak_freeze_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       verifications: {
         Row: {
           azure_embedding: string | null
@@ -3108,6 +3390,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      refresh_leaderboards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       reset_monthly_usage_for_free_users: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -3132,6 +3418,10 @@ export type Database = {
       sparsevec_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      update_verification_streak: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       upgrade_user_subscription: {
         Args: {

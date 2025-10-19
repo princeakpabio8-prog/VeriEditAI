@@ -8,6 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Trophy, Target, Users, Gem, Sparkles, Lock } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
+import { StreakDisplay } from '@/components/gamification/StreakDisplay';
+import { LeaderboardCard } from '@/components/gamification/LeaderboardCard';
+import { ViralClaimsDashboard } from '@/components/viral/ViralClaimsDashboard';
+import { Navigation } from '@/components/ui/navigation';
 
 interface Achievement {
   id: string;
@@ -133,8 +137,18 @@ export default function Achievements() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-6 space-y-6">
-      {/* Header Stats */}
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="container max-w-7xl mx-auto p-6 space-y-6">
+        {/* New Gamification Features */}
+        <div className="grid gap-6 md:grid-cols-2 mb-6">
+          <StreakDisplay />
+          <LeaderboardCard />
+        </div>
+
+        <ViralClaimsDashboard />
+
+        {/* Original Achievements */}
       <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -261,6 +275,7 @@ export default function Achievements() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }

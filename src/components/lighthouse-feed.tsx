@@ -56,6 +56,7 @@ interface NewsArticle {
   verification_id: string | null;
   is_verified: boolean;
   image_url: string | null;
+  video_url: string | null;
   metadata: any;
 }
 
@@ -438,8 +439,27 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card className="h-full flex flex-col hover:shadow-lg transition-shadow group overflow-hidden">
-                    {/* Article Image */}
-                    {article.image_url && (
+                    {/* Article Video or Image */}
+                    {article.video_url ? (
+                      <div className="relative w-full overflow-hidden bg-black">
+                        <video
+                          controls
+                          className="w-full h-64 object-contain"
+                          src={article.video_url}
+                          poster={getProxiedImageUrl(article.image_url) || article.image_url || undefined}
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                        {article.is_verified && article.trust_score && article.trust_score > 80 && (
+                          <div className="absolute top-2 right-2">
+                            <Badge className="bg-green-600/90 backdrop-blur-sm hover:bg-green-700">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Verified
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                    ) : article.image_url && (
                       <div className="relative h-48 w-full overflow-hidden bg-muted">
                         <img
                           src={getProxiedImageUrl(article.image_url) || article.image_url}

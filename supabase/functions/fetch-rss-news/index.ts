@@ -388,6 +388,42 @@ function getFromEnclosure(item: any, baseUrl: string): string | null {
   return null;
 }
 
+// Extract video from enclosure (only if type is video/*)
+function getVideoFromEnclosure(item: any, baseUrl: string): string | null {
+  const enclosure = item.enclosure;
+  if (!enclosure) return null;
+  
+  if (Array.isArray(enclosure)) {
+    const videoEnc = enclosure.find((e: any) => e["@_type"]?.startsWith("video/"));
+    return videoEnc ? resolveUrl(baseUrl, videoEnc["@_url"]) : null;
+  }
+  
+  if (enclosure["@_type"]?.startsWith("video/")) {
+    return resolveUrl(baseUrl, enclosure["@_url"]);
+  }
+  
+  return null;
+}
+
+// Extract video from media:content
+function getVideoFromMediaContent(item: any, baseUrl: string): string | null {
+  const content = item["media:content"];
+  if (!content) return null;
+  
+  if (Array.isArray(content)) {
+    const videos = content.filter((c: any) => c["@_type"]?.startsWith("video/"));
+    if (videos.length > 0) {
+      return resolveUrl(baseUrl, videos[0]["@_url"]);
+    }
+  }
+  
+  if (content["@_type"]?.startsWith("video/")) {
+    return resolveUrl(baseUrl, content["@_url"]);
+  }
+  
+  return null;
+}
+
 // Extract from HTML content (support srcset, data-src, single quotes)
 function getFromHtml(html: string, baseUrl: string): string | null {
   if (!html) return null;
@@ -497,6 +533,11 @@ async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
                  getFromMediaContent(item, link) ||
                  getFromMediaGroup(item, link) ||
                  getFromEnclosure(item, link);
+
+      // Extract video URL from enclosures
+      let videoUrl = null;
+      videoUrl = getVideoFromMediaContent(item, link) ||
+                 getVideoFromEnclosure(item, link);
       
       // Check for image tag
       if (!imageUrl && (item.image?.url || item.image)) {
@@ -522,6 +563,7 @@ async function fetchFeed(source: typeof RSS_SOURCES[0], itemLimit = 25) {
         published_at: new Date(pubDate).toISOString(),
         category: categorizeArticle(title, description, source.name),
         image_url: imageUrl,
+        video_url: videoUrl,
         metadata: {
           author: author || null,
           guid: guid || null,

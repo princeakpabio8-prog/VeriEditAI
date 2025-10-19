@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Award, ExternalLink, Calendar } from 'lucide-react'
-import { TrustScoreDisplay } from '@/components/trust-score-display'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Award, ExternalLink } from 'lucide-react'
+import badgeImage from '@/assets/truth-badge.png'
 
 interface TruthBadge {
   id: string
@@ -56,41 +56,67 @@ export function TruthBadgeGallery() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {badges.map((badge) => (
-        <Card key={badge.id} className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600/20 to-blue-600/20" />
-          
-          <CardHeader className="relative">
-            <div className="flex items-center justify-between">
-              <Badge variant="secondary">#{badge.token_id}</Badge>
-              <TrustScoreDisplay score={badge.trust_score} size="sm" />
-            </div>
-            <CardTitle className="text-lg mt-2">Truth Badge</CardTitle>
-          </CardHeader>
-          
-          <CardContent className="relative space-y-3">
-            <div className="text-sm text-muted-foreground line-clamp-3">
-              {badge.claim_text}
-            </div>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              {new Date(badge.minted_at).toLocaleDateString()}
-            </div>
-            
-            <a
-              href={`https://explorer-liberty10.shardeum.org/tx/${badge.transaction_hash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-primary hover:underline"
-            >
-              View on Explorer
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </CardContent>
-        </Card>
-      ))}
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">My Truth Badges</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {badges.map((badge) => (
+          <Card 
+            key={badge.id} 
+            className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300"
+          >
+            <CardContent className="p-6 space-y-4">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-lg blur-xl group-hover:blur-2xl transition-all" />
+                <img 
+                  src={badgeImage} 
+                  alt="Truth Badge" 
+                  className="relative h-40 w-40 mx-auto object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
+                />
+              </div>
+
+              <div className="space-y-2 text-center">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Token ID</span>
+                  <span className="font-mono font-semibold">#{badge.token_id}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Trust Score</span>
+                  <span className="font-bold text-primary">{badge.trust_score}%</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground line-clamp-2 text-center">
+                {badge.claim_text}
+              </p>
+
+              <div className="text-xs text-muted-foreground text-center">
+                Minted {new Date(badge.minted_at).toLocaleDateString()}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  PolygonScan
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => window.open(badge.metadata_uri, '_blank')}
+                >
+                  View Metadata
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Award, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { WalletConnect } from './WalletConnect'
+import { BadgeRevealModal } from './BadgeRevealModal'
 
 interface MintBadgeButtonProps {
   verificationId: string
@@ -16,6 +17,8 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const { toast } = useToast()
   const [minting, setMinting] = useState(false)
   const [alreadyMinted, setAlreadyMinted] = useState(false)
+  const [showReveal, setShowReveal] = useState(false)
+  const [mintedBadge, setMintedBadge] = useState<any>(null)
 
   useEffect(() => {
     checkExistingBadge()
@@ -62,17 +65,22 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
       if (error) throw error
 
-      toast({
-        title: "🎖️ Proof of Verification Badge Minted!",
-        description: `Successfully minted on Polygon Mainnet. You've earned your place in the Truth Network.`,
-        duration: 10000
+      // Get verification details for the modal
+      const { data: verification } = await supabase
+        .from('verifications')
+        .select('content')
+        .eq('id', verificationId)
+        .single()
+
+      // Show epic reveal modal
+      setMintedBadge({
+        tokenId: data.tokenId,
+        trustScore,
+        claimText: verification?.content || 'Verified claim',
+        explorerUrl: data.explorerUrl,
       })
-
+      setShowReveal(true)
       setAlreadyMinted(true)
-
-      if (data?.explorerUrl) {
-        window.open(data.explorerUrl, '_blank')
-      }
 
     } catch (error: any) {
       toast({
@@ -95,32 +103,42 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {!isConnected && <WalletConnect />}
-      
-      <Button
-        onClick={handleMint}
-        disabled={!isConnected || minting || trustScore < 75}
-        className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
-      >
-        {minting ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Minting Badge...
-          </>
-        ) : (
-          <>
-            <Award className="h-4 w-4" />
-            Mint Truth Badge NFT
-          </>
-        )}
-      </Button>
+    <>
+      <div className="flex flex-col gap-3">
+        {!isConnected && <WalletConnect />}
+        
+        <Button
+          onClick={handleMint}
+          disabled={!isConnected || minting || trustScore < 75}
+          className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+        >
+          {minting ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Minting Badge...
+            </>
+          ) : (
+            <>
+              <Award className="h-4 w-4" />
+              Mint Truth Badge NFT
+            </>
+          )}
+        </Button>
 
-      {trustScore < 75 && (
-        <p className="text-xs text-muted-foreground">
-          ℹ️ Trust score must be ≥75% to mint a badge (currently {trustScore}%)
-        </p>
+        {trustScore < 75 && (
+          <p className="text-xs text-muted-foreground">
+            ℹ️ Trust score must be ≥75% to mint a badge (currently {trustScore}%)
+          </p>
+        )}
+      </div>
+
+      {mintedBadge && (
+        <BadgeRevealModal
+          open={showReveal}
+          onClose={() => setShowReveal(false)}
+          badgeData={mintedBadge}
+        />
       )}
-    </div>
+    </>
   )
 }

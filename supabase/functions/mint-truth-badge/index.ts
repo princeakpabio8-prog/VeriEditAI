@@ -65,7 +65,7 @@ serve(async (req) => {
     const { ethers } = await import('https://esm.sh/ethers@6.9.0')
     
     // Setup provider and wallet
-    const provider = new ethers.JsonRpcProvider('https://liberty10.shardeum.org/')
+    const provider = new ethers.JsonRpcProvider('https://polygon-rpc.com/')
     const wallet = new ethers.Wallet(mintingWalletPK, provider)
     
     // TruthBadge contract ABI (only the functions we need)
@@ -103,7 +103,7 @@ serve(async (req) => {
         },
         {
           trait_type: 'Chain',
-          value: 'Shardeum Liberty Testnet'
+          value: 'Polygon Mainnet'
         }
       ],
       external_url: `https://veriedit.ai/share/${verificationId}`,
@@ -131,7 +131,7 @@ serve(async (req) => {
     console.log('📦 Metadata uploaded to IPFS:', metadataURI)
     
     // Mint NFT on blockchain
-    console.log('🔨 Minting badge on Shardeum...')
+    console.log('🔨 Minting badge on Polygon Mainnet...')
     const tx = await contract.mintBadge(
       walletAddress,
       verificationId,
@@ -169,7 +169,7 @@ serve(async (req) => {
         token_id: tokenId,
         contract_address: contractAddress,
         transaction_hash: receipt.hash,
-        chain_id: 8081,
+        chain_id: 137,
         metadata_uri: metadataURI,
         claim_text: verification.content.substring(0, 500),
         trust_score: verification.trust_score,
@@ -184,7 +184,7 @@ serve(async (req) => {
         tokenId,
         transactionHash: receipt.hash,
         metadataUri: metadataURI,
-        explorerUrl: `https://explorer-liberty10.shardeum.org/tx/${receipt.hash}`
+        explorerUrl: `https://polygonscan.com/tx/${receipt.hash}`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

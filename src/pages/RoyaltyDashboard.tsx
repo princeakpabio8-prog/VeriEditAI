@@ -42,6 +42,36 @@ export default function RoyaltyDashboard() {
     if (!isAdmin) return;
 
     const channel = supabase
+      .channel('royalty_earnings_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'nft_royalty_earnings',
+        },
+        (payload) => {
+          console.log('New royalty earning:', payload);
+          setEarnings(prev => [payload.new as RoyaltyEarning, ...prev]);
+          setTotalEarnings(prev => prev + Number((payload.new as RoyaltyEarning).royalty_amount));
+          setUnclaimedEarnings(prev => prev + Number((payload.new as RoyaltyEarning).royalty_amount));
+          toast.success('🎉 New royalty earned!', {
+            description: `+${Number((payload.new as RoyaltyEarning).royalty_amount).toFixed(4)} MATIC from Token #${(payload.new as RoyaltyEarning).token_id}`,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin]);
+
+  // Real-time subscription for new royalty earnings
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const channel = supabase
       .channel('royalty-earnings')
       .on(
         'postgres_changes',

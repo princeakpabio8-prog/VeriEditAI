@@ -41,6 +41,8 @@ import Press from "./pages/Press";
 import ViralClaims from "./pages/ViralClaims";
 import SignalFeed from "./pages/SignalFeed";
 import Achievements from "./pages/Achievements";
+import NFTMarketplace from "./pages/NFTMarketplace";
+import RoyaltyDashboard from "./pages/RoyaltyDashboard";
 import { AchievementNotification } from "./components/AchievementNotification";
 
 const queryClient = new QueryClient();
@@ -146,6 +148,12 @@ const App = () => (
             <Route path="/achievements" element={
               <ProtectedRoute>
                 <Achievements />
+              </ProtectedRoute>
+            } />
+            <Route path="/nft-marketplace" element={<NFTMarketplace />} />
+            <Route path="/royalties" element={
+              <ProtectedRoute>
+                <RoyaltyDashboard />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

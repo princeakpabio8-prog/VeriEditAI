@@ -24,20 +24,28 @@ export const NFTShowcaseSection = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Earn Blockchain Rewards</span>
+              <span className="text-sm font-medium text-primary">Earn Blockchain Rewards + Royalties</span>
             </div>
             
             <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-6">
-              Mint Truth Badges as{" "}
+              Mint & Trade Truth Badges as{" "}
               <span className="bg-gradient-to-r from-primary via-purple-500 to-primary bg-clip-text text-transparent">
                 NFTs on Polygon
               </span>
             </h2>
             
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
               Verify claims with ≥75% trust score and mint permanent blockchain badges. 
               Own your contribution to fighting misinformation.
             </p>
+            
+            <div className="flex items-center justify-center gap-4 mt-6">
+              <Link to="/nft-marketplace">
+                <Button variant="outline" size="lg">
+                  Browse Marketplace
+                </Button>
+              </Link>
+            </div>
           </motion.div>
         </div>
 

@@ -771,12 +771,17 @@ export type Database = {
           chain_id: number
           claim_text: string
           contract_address: string
+          current_listing_price: number | null
           id: string
+          last_sale_price: number | null
           metadata_uri: string
           minted_at: string | null
+          opensea_listed: boolean | null
+          opensea_url: string | null
           token_id: string
           transaction_hash: string
           trust_score: number
+          updated_at: string | null
           user_id: string
           verification_id: string
           wallet_address: string
@@ -785,12 +790,17 @@ export type Database = {
           chain_id?: number
           claim_text: string
           contract_address: string
+          current_listing_price?: number | null
           id?: string
+          last_sale_price?: number | null
           metadata_uri: string
           minted_at?: string | null
+          opensea_listed?: boolean | null
+          opensea_url?: string | null
           token_id: string
           transaction_hash: string
           trust_score: number
+          updated_at?: string | null
           user_id: string
           verification_id: string
           wallet_address: string
@@ -799,12 +809,17 @@ export type Database = {
           chain_id?: number
           claim_text?: string
           contract_address?: string
+          current_listing_price?: number | null
           id?: string
+          last_sale_price?: number | null
           metadata_uri?: string
           minted_at?: string | null
+          opensea_listed?: boolean | null
+          opensea_url?: string | null
           token_id?: string
           transaction_hash?: string
           trust_score?: number
+          updated_at?: string | null
           user_id?: string
           verification_id?: string
           wallet_address?: string
@@ -818,6 +833,143 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nft_collection_stats: {
+        Row: {
+          average_price: number | null
+          floor_price: number | null
+          id: string
+          last_synced_at: string | null
+          listed_count: number | null
+          owners_count: number | null
+          total_sales: number | null
+          total_volume: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average_price?: number | null
+          floor_price?: number | null
+          id?: string
+          last_synced_at?: string | null
+          listed_count?: number | null
+          owners_count?: number | null
+          total_sales?: number | null
+          total_volume?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average_price?: number | null
+          floor_price?: number | null
+          id?: string
+          last_synced_at?: string | null
+          listed_count?: number | null
+          owners_count?: number | null
+          total_sales?: number | null
+          total_volume?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      nft_marketplace_listings: {
+        Row: {
+          badge_id: string | null
+          created_at: string | null
+          currency: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          listing_price: number
+          listing_url: string | null
+          platform: string | null
+          seller_address: string
+          token_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_price: number
+          listing_url?: string | null
+          platform?: string | null
+          seller_address: string
+          token_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_price?: number
+          listing_url?: string | null
+          platform?: string | null
+          seller_address?: string
+          token_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nft_marketplace_listings_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "nft_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nft_royalty_earnings: {
+        Row: {
+          buyer_address: string
+          claimed: boolean | null
+          claimed_at: string | null
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          platform: string | null
+          royalty_amount: number
+          royalty_percentage: number
+          sale_price: number
+          seller_address: string
+          token_id: string
+          transaction_hash: string
+        }
+        Insert: {
+          buyer_address: string
+          claimed?: boolean | null
+          claimed_at?: string | null
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string | null
+          royalty_amount: number
+          royalty_percentage?: number
+          sale_price: number
+          seller_address: string
+          token_id: string
+          transaction_hash: string
+        }
+        Update: {
+          buyer_address?: string
+          claimed?: boolean | null
+          claimed_at?: string | null
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          platform?: string | null
+          royalty_amount?: number
+          royalty_percentage?: number
+          sale_price?: number
+          seller_address?: string
+          token_id?: string
+          transaction_hash?: string
+        }
+        Relationships: []
       }
       notifications: {
         Row: {

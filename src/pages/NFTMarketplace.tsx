@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { OpenSeaIntegration } from '@/components/nft/OpenSeaIntegration';
+import { CollectionStats } from '@/components/nft/CollectionStats';
 import { ExternalLink, TrendingUp, Award, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -131,7 +132,8 @@ export default function NFTMarketplace() {
         </div>
 
         {/* Collection Stats */}
-        <div className="mb-8">
+        <div className="mb-8 space-y-6">
+          <CollectionStats />
           <OpenSeaIntegration />
         </div>
 

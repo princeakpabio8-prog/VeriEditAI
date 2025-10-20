@@ -194,3 +194,6 @@ verify_jwt = false
 
 [functions.send-nft-notification-email]
 verify_jwt = false
+
+[functions.update-leaderboards]
+verify_jwt = false

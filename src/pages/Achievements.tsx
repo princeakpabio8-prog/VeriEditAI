@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Target, Users, Gem, Sparkles, Lock } from 'lucide-react';
+import { Trophy, Target, Users, Gem, Sparkles, Lock, RefreshCw } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
 import { StreakDisplay } from '@/components/gamification/StreakDisplay';
 import { LeaderboardCard } from '@/components/gamification/LeaderboardCard';
 import { ViralClaimsDashboard } from '@/components/viral/ViralClaimsDashboard';
 import { Navigation } from '@/components/ui/navigation';
+import { Button } from '@/components/ui/button';
 
 interface Achievement {
   id: string;
@@ -99,6 +100,23 @@ export default function Achievements() {
     }
   };
 
+  const handleRefreshLeaderboards = async () => {
+    try {
+      toast.loading('Updating leaderboards...', { id: 'refresh-leaderboards' });
+      const { error } = await supabase.functions.invoke('update-leaderboards');
+      
+      if (error) throw error;
+      
+      toast.success('Leaderboards updated!', { id: 'refresh-leaderboards' });
+      
+      // Refresh the page to show new data
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      console.error('Error updating leaderboards:', error);
+      toast.error('Failed to update leaderboards', { id: 'refresh-leaderboards' });
+    }
+  };
+
   const getAchievementIcon = (iconName: string) => {
     const Icon = (Icons as any)[iconName] || Trophy;
     return <Icon className="w-8 h-8" />;
@@ -141,6 +159,13 @@ export default function Achievements() {
       <Navigation />
       <div className="container max-w-7xl mx-auto p-6 space-y-6">
         {/* New Gamification Features */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">Leaderboards & Streaks</h2>
+          <Button onClick={handleRefreshLeaderboards} variant="outline" size="sm" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Update Leaderboards
+          </Button>
+        </div>
         <div className="grid gap-6 md:grid-cols-2 mb-6">
           <StreakDisplay />
           <LeaderboardCard />

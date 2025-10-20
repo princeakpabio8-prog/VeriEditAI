@@ -252,3 +252,52 @@ export function generateLighthouseHubSchema(data: LighthouseHubData): string {
 
   return JSON.stringify(schema);
 }
+
+export interface RoomData {
+  name: string;
+  description: string;
+  url: string;
+  memberCount: number;
+  threadCount: number;
+  trustRating: number;
+  category: string;
+}
+
+/**
+ * Generate Schema.org structured data for Lighthouse Room
+ */
+export function generateRoomSchema(data: RoomData): string {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": data.name,
+    "description": data.description,
+    "url": data.url,
+    "about": {
+      "@type": "Thing",
+      "name": data.category,
+      "description": "Verification category"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": (data.trustRating / 100 * 5).toFixed(1),
+      "bestRating": "5",
+      "worstRating": "0",
+      "ratingCount": data.memberCount
+    },
+    "interactionStatistic": [
+      {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/JoinAction",
+        "userInteractionCount": data.memberCount
+      },
+      {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/CommentAction",
+        "userInteractionCount": data.threadCount
+      }
+    ]
+  };
+
+  return JSON.stringify(schema);
+}

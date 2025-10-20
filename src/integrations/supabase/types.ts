@@ -821,6 +821,7 @@ export type Database = {
           member_count: number
           metadata: Json | null
           name: string
+          og_image_url: string | null
           room_type: Database["public"]["Enums"]["room_type"]
           thread_count: number
           trust_rating: number | null
@@ -836,6 +837,7 @@ export type Database = {
           member_count?: number
           metadata?: Json | null
           name: string
+          og_image_url?: string | null
           room_type?: Database["public"]["Enums"]["room_type"]
           thread_count?: number
           trust_rating?: number | null
@@ -851,6 +853,7 @@ export type Database = {
           member_count?: number
           metadata?: Json | null
           name?: string
+          og_image_url?: string | null
           room_type?: Database["public"]["Enums"]["room_type"]
           thread_count?: number
           trust_rating?: number | null
@@ -1889,6 +1892,7 @@ export type Database = {
           image_urls: string[] | null
           is_auto_verified: boolean | null
           metadata: Json | null
+          og_image_url: string | null
           room_id: string
           status: Database["public"]["Enums"]["thread_status"]
           title: string
@@ -1911,6 +1915,7 @@ export type Database = {
           image_urls?: string[] | null
           is_auto_verified?: boolean | null
           metadata?: Json | null
+          og_image_url?: string | null
           room_id: string
           status?: Database["public"]["Enums"]["thread_status"]
           title: string
@@ -1933,6 +1938,7 @@ export type Database = {
           image_urls?: string[] | null
           is_auto_verified?: boolean | null
           metadata?: Json | null
+          og_image_url?: string | null
           room_id?: string
           status?: Database["public"]["Enums"]["thread_status"]
           title?: string

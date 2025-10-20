@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,6 +72,10 @@ export const Navigation = () => {
                 <Link to="/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Newspaper className="h-4 w-4" />
                   Discover
+                </Link>
+                <Link to="/viral-claims" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Flame className="h-4 w-4" />
+                  Hot Claims
                 </Link>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
@@ -290,6 +294,16 @@ export const Navigation = () => {
                 >
                   <Newspaper className="h-4 w-4" />
                   Discover News
+                </Link>
+                <Link
+                  to="/viral-claims"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname === '/viral-claims' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Flame className="h-4 w-4" />
+                  Hot Claims
                 </Link>
                 <Link
                   to="/lighthouse"

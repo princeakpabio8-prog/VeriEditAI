@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, TrendingUp, Clock, Target } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -146,10 +146,21 @@ export function HotClaimsWidget() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
-          🔥 Hot Claims - Race to Verify First!
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
+            <CardTitle>🔥 Hot Claims - Race to Verify First!</CardTitle>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/viral-claims')}
+            className="gap-1"
+          >
+            View All
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
         <CardDescription>
           Verify trending claims before others to mint rare NFT badges
         </CardDescription>

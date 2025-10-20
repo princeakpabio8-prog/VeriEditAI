@@ -711,7 +711,7 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                 trustScore={trustScore}
               />
               <p className="text-xs text-muted-foreground mt-3">
-                🪙 These badges can later be migrated to Shardeum Mainnet for real-world recognition or token rewards
+                🪙 These badges are minted on Polygon Mainnet and can be traded or showcased as proof of your verification work
               </p>
             </CardContent>
           </Card>

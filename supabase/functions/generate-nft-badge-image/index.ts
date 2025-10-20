@@ -25,27 +25,160 @@ serve(async (req) => {
 
     console.log(`🎨 Generating NFT badge image for: ${badge_id} (Rarity: ${rarity_tier}, Trust: ${trust_score}%)`);
 
-    // Create a detailed prompt for high-quality NFT badge image
-    const rarityColors = {
-      'LEGENDARY': 'glowing gold and radiant orange with divine sparkles',
-      'EPIC': 'vibrant purple and magenta with mystical aura',
-      'RARE': 'brilliant blue and cyan with electric energy',
-      'UNCOMMON': 'emerald green and teal with nature vibes',
-      'COMMON': 'silver and white with clean elegance'
+    // Create ultra-premium 3D cinematic prompts for each rarity tier
+    const rarityPrompts = {
+      'LEGENDARY': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+
+MAIN OBJECT:
+- Majestic golden metallic shield with divine radiance
+- Deep embossed verification checkmark (3D raised chrome element)
+- Ornate beveled edges with mirror-polished reflections
+- Brushed gold texture with realistic specularity and caustics
+- Floating holographic text: "VeriEdit Truth Badge" in elegant metallic serif font
+- Trust Score: ${trust_score}% displayed as glowing holographic numerals
+
+LIGHTING & EFFECTS:
+- Dramatic studio lighting (3-point cinematic setup)
+- Ray-traced reflections with lens flares and chromatic aberration
+- Volumetric god rays piercing through ethereal fog
+- Phoenix fire particles swirling around badge
+- Golden energy wisps and celestial sparkles
+- Divine aura with light scattering effects
+
+BACKGROUND:
+- Dark cinematic gradient (near-black to deep molten gold)
+- Subtle sacred geometry pattern (faded golden mandala)
+- Depth of field blur with bokeh effect
+- Atmospheric smoke with dramatic backlighting
+
+TECHNICAL:
+- 8K resolution, ultra-detailed, photorealistic
+- PBR materials (physically-based rendering)
+- Octane Render / Unreal Engine 5 cinematic quality
+- Premium NFT collectible aesthetic, museum-quality presentation`,
+
+      'EPIC': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+
+MAIN OBJECT:
+- Mystical purple holographic shield with iridescent sheen
+- Deep embossed verification checkmark (3D raised platinum element)
+- Beveled edges with color-shifting reflections
+- Holographic material with rainbow caustics
+- Floating metallic text: "VeriEdit Truth Badge" in elegant futuristic font
+- Trust Score: ${trust_score}% displayed as glowing purple numerals
+
+LIGHTING & EFFECTS:
+- Dramatic studio lighting with purple accent lights
+- Ray-traced reflections with magical shimmer
+- Volumetric purple mist with light rays
+- Magical orbital rings rotating around badge
+- Mystical runes etched into surface with glow effect
+- Particle effects: floating purple crystals and energy wisps
+
+BACKGROUND:
+- Dark cinematic gradient (near-black to deep purple/magenta)
+- Subtle arcane symbols pattern (faded)
+- Depth of field blur with mystical bokeh
+- Atmospheric fog with ethereal glow
+
+TECHNICAL:
+- 8K resolution, ultra-detailed, photorealistic
+- PBR materials with holographic shaders
+- Octane Render / Unreal Engine 5 cinematic quality
+- Premium NFT collectible aesthetic, masterwork presentation`,
+
+      'RARE': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+
+MAIN OBJECT:
+- Electric blue chrome shield with metallic sheen
+- Deep embossed verification checkmark (3D raised titanium element)
+- Beveled edges with electric reflections
+- Polished chrome texture with realistic specularity
+- Floating metallic text: "VeriEdit Truth Badge" in elegant tech font
+- Trust Score: ${trust_score}% displayed as glowing blue numerals
+
+LIGHTING & EFFECTS:
+- Dramatic studio lighting with electric blue accents
+- Ray-traced reflections with lens flares
+- Volumetric blue energy field surrounding badge
+- Lightning bolt effects crackling around edges
+- Neon glow with light bloom
+- Particle effects: electric sparks and energy trails
+
+BACKGROUND:
+- Dark cinematic gradient (near-black to deep electric blue)
+- Subtle circuit pattern (faded)
+- Depth of field blur with bokeh effect
+- Atmospheric fog with blue backlighting
+
+TECHNICAL:
+- 8K resolution, ultra-detailed, photorealistic
+- PBR materials (physically-based rendering)
+- Octane Render / Unreal Engine 5 cinematic quality
+- Premium NFT collectible aesthetic, elite presentation`,
+
+      'UNCOMMON': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+
+MAIN OBJECT:
+- Brushed gold/emerald metallic shield with nature-inspired accents
+- Deep embossed verification checkmark (3D raised bronze element)
+- Beveled edges with warm reflections
+- Brushed metal texture with green accent highlights
+- Floating metallic text: "VeriEdit Truth Badge" in elegant serif font
+- Trust Score: ${trust_score}% displayed as glowing green numerals
+
+LIGHTING & EFFECTS:
+- Studio lighting with warm green accent lights
+- Ray-traced reflections with natural shimmer
+- Volumetric green energy wisps
+- Nature-inspired particle effects: floating leaves and sparkles
+- Subtle growth patterns etched into surface
+- Soft glow with organic feel
+
+BACKGROUND:
+- Dark cinematic gradient (near-black to deep emerald/teal)
+- Subtle organic pattern (faded nature motifs)
+- Depth of field blur with natural bokeh
+- Atmospheric mist with green tint
+
+TECHNICAL:
+- 8K resolution, ultra-detailed, photorealistic
+- PBR materials (physically-based rendering)
+- Octane Render / Unreal Engine 5 cinematic quality
+- Premium NFT collectible aesthetic, distinguished presentation`,
+
+      'COMMON': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+
+MAIN OBJECT:
+- Polished silver/platinum metallic shield with clean design
+- Deep embossed verification checkmark (3D raised chrome element)
+- Beveled edges with mirror reflections
+- Brushed platinum texture with realistic specularity
+- Floating metallic text: "VeriEdit Truth Badge" in elegant modern font
+- Trust Score: ${trust_score}% displayed as glowing white numerals
+
+LIGHTING & EFFECTS:
+- Clean studio lighting (3-point professional setup)
+- Ray-traced reflections with subtle lens flares
+- Volumetric white light rays
+- Minimal particle effects: floating light motes
+- Subtle blockchain pattern etched into surface
+- Professional glow with clean aesthetic
+
+BACKGROUND:
+- Dark cinematic gradient (near-black to deep silver)
+- Subtle geometric grid pattern (faded)
+- Depth of field blur with clean bokeh
+- Atmospheric fog with soft backlighting
+
+TECHNICAL:
+- 8K resolution, ultra-detailed, photorealistic
+- PBR materials (physically-based rendering)
+- Octane Render / Unreal Engine 5 cinematic quality
+- Premium NFT collectible aesthetic, certified presentation`
     };
 
-    const color = rarityColors[rarity_tier as keyof typeof rarityColors] || rarityColors.COMMON;
-
-    const prompt = `Create a premium NFT badge design for a truth verification certificate:
-- Main theme: ${color}
-- Style: Modern, sleek, professional with blockchain/tech aesthetic
-- Include: Shield or badge shape with verification checkmark symbol
-- Background: Gradient with subtle geometric patterns
-- Add: Glowing effects, light particles, premium quality feel
-- Trust score indicator showing ${trust_score}% confidence
-- Text overlay: "VeriEdit Truth Badge" in elegant font
-- Overall mood: Trustworthy, authoritative, high-value digital collectible
-- Aspect ratio: Square (1:1), ultra high resolution, NFT-ready artwork`;
+    const prompt = rarityPrompts[rarity_tier as keyof typeof rarityPrompts] || rarityPrompts.COMMON;
 
     const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",

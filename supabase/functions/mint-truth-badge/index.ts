@@ -141,11 +141,23 @@ serve(async (req) => {
     // Using a reliable CDN URL that will always be accessible
     const badgeImageUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-fallback.png'
     
+    // Map rarity tier to display name for metadata
+    const getRarityDisplayName = (rarity: string) => {
+      switch (rarity) {
+        case 'LEGENDARY': return 'MYTHIC';
+        case 'EPIC': return 'SUPREME';
+        case 'RARE': return 'ELITE';
+        case 'UNCOMMON': return 'DISTINGUISHED';
+        case 'COMMON': return 'VERIFIED';
+        default: return 'VERIFIED';
+      }
+    }
+    
     // Upload metadata with rarity info
     const attributes = [
       {
-        trait_type: 'Rarity',
-        value: rarityTier
+        trait_type: 'Certification Tier',
+        value: getRarityDisplayName(rarityTier)
       },
       {
         trait_type: 'Trust Score',
@@ -201,7 +213,7 @@ serve(async (req) => {
     
     const metadata = {
       name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
-      description: `Own a piece of the truth revolution. This ${rarityTier} VeriEdit Truth Badge represents a verified claim in the fight against misinformation. Powered by AI and validated against trusted sources, each badge is a digital artifact proving that facts matter. With a ${verification.trust_score}% confidence rating, this NFT certifies authenticity in an age of deception. Join the movement. Collect truth. Change the world.`,
+      description: `Own a piece of the truth revolution. This ${getRarityDisplayName(rarityTier)} VeriEdit Truth Badge represents a verified claim in the fight against misinformation. Powered by AI and validated against trusted sources, each badge is a digital artifact proving that facts matter. With a ${verification.trust_score}% confidence rating, this NFT certifies authenticity in an age of deception. Join the movement. Collect truth. Change the world.`,
       image: badgeImageUrl,
       attributes,
       external_url: `https://veriedit.ai/share/${verificationId}`,

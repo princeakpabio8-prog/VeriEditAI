@@ -90,6 +90,23 @@ export function HotClaimsWidget() {
     }
   };
 
+  const getRarityDisplayName = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'MYTHIC';
+      case 'EPIC':
+        return 'SUPREME';
+      case 'RARE':
+        return 'ELITE';
+      case 'UNCOMMON':
+        return 'DISTINGUISHED';
+      case 'COMMON':
+        return 'VERIFIED';
+      default:
+        return 'VERIFIED';
+    }
+  };
+
   const getRarityColor = (rarity: string | null) => {
     switch (rarity) {
       case 'LEGENDARY':
@@ -271,7 +288,7 @@ export function HotClaimsWidget() {
                       <Badge
                         className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
                       >
-                        {getRarityIcon(claim.rarity_tier)} {claim.rarity_tier}
+                        {getRarityIcon(claim.rarity_tier)} {getRarityDisplayName(claim.rarity_tier)}
                       </Badge>
                     )}
                   </div>
@@ -356,13 +373,13 @@ export function HotClaimsWidget() {
                 {/* Potential Rarity */}
                 {claim.rarity_tier && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">Potential badge rarity: </span>
+                    <span className="text-muted-foreground">Potential badge tier: </span>
                     <span className="font-bold">
-                      {claim.rarity_tier}
+                      {getRarityDisplayName(claim.rarity_tier)}
                     </span>
                     {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
                       <span className="ml-2 text-orange-500 font-bold">
-                        ⚡ LEGENDARY POTENTIAL!
+                        ⚡ MYTHIC POTENTIAL!
                       </span>
                     )}
                   </div>

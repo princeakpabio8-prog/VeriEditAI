@@ -60,6 +60,23 @@ export function TruthBadgeGallery() {
     )
   }
 
+  const getRarityDisplayName = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'MYTHIC';
+      case 'EPIC':
+        return 'SUPREME';
+      case 'RARE':
+        return 'ELITE';
+      case 'UNCOMMON':
+        return 'DISTINGUISHED';
+      case 'COMMON':
+        return 'VERIFIED';
+      default:
+        return 'VERIFIED';
+    }
+  };
+
   const getRarityColor = (rarity: string | null) => {
     switch (rarity) {
       case 'LEGENDARY':
@@ -110,6 +127,23 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
     badge.rarity_tier || undefined
   )
   const displayImage = imageUrl || badgeImage
+
+  const getRarityDisplayName = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'MYTHIC';
+      case 'EPIC':
+        return 'SUPREME';
+      case 'RARE':
+        return 'ELITE';
+      case 'UNCOMMON':
+        return 'DISTINGUISHED';
+      case 'COMMON':
+        return 'VERIFIED';
+      default:
+        return 'VERIFIED';
+    }
+  };
 
   const getRarityColor = (rarity: string | null) => {
     switch (rarity) {
@@ -164,7 +198,7 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
       {badge.rarity_tier && (
         <div className="absolute top-2 right-2 z-10">
           <Badge className={`bg-gradient-to-r ${getRarityColor(badge.rarity_tier)} text-white font-bold shadow-lg`}>
-            {getRarityIcon(badge.rarity_tier)} {badge.rarity_tier}
+            {getRarityIcon(badge.rarity_tier)} {getRarityDisplayName(badge.rarity_tier)}
           </Badge>
         </div>
       )}

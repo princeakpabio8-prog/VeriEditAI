@@ -226,7 +226,7 @@ export function HotClaimsWidget() {
               {claim.image_url ? (
                 <div className="relative h-48 w-full overflow-hidden">
                   <img 
-                    src={claim.image_url} 
+                    src={claim.image_url.startsWith('http') ? `${window.location.origin}/api/image-proxy?url=${encodeURIComponent(claim.image_url)}` : claim.image_url} 
                     alt={claim.claim_text}
                     className="w-full h-full object-cover"
                   />

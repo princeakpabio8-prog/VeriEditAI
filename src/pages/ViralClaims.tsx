@@ -317,7 +317,7 @@ export default function ViralClaims() {
                       {claim.image_url && (
                         <div className="flex-shrink-0">
                           <img 
-                            src={claim.image_url} 
+                            src={claim.image_url.startsWith('http') ? `${window.location.origin}/api/image-proxy?url=${encodeURIComponent(claim.image_url)}` : claim.image_url} 
                             alt="" 
                             className="w-20 h-20 object-cover rounded-md"
                           />

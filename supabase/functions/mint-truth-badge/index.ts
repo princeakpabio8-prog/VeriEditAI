@@ -544,45 +544,6 @@ serve(async (req) => {
         } catch (error) {
           console.error('❌ Background refresh sequence failed:', error);
         }
-
-          // 3. Refresh OpenSea metadata with retry
-          console.log('🔄 Refreshing OpenSea metadata...')
-          let openseaRefreshed = false
-          for (let i = 0; i < 2; i++) {
-            try {
-              const { error: refreshError } = await supabase.functions.invoke('refresh-opensea-metadata', {
-                body: { token_id: tokenId }
-              })
-              if (!refreshError) {
-                console.log('✅ OpenSea metadata refreshed')
-                openseaRefreshed = true
-                break
-              } else {
-                console.error(`OpenSea refresh attempt ${i + 1} failed:`, refreshError)
-              }
-            } catch (refreshErr) {
-              console.error(`OpenSea refresh attempt ${i + 1} error:`, refreshErr)
-            }
-            if (i < 1) await new Promise(r => setTimeout(r, 2000))
-          }
-
-          // 4. Update marketplace listing status if successful
-          if (openseaRefreshed) {
-            await supabase
-              .from('nft_badges')
-              .update({ opensea_listed: true })
-              .eq('id', badgeData.id)
-            console.log('✅ Marketplace status updated')
-          }
-          
-          console.log('✅ All background tasks completed', {
-            imageGenerated,
-            openseaRefreshed
-          })
-        } catch (bgError) {
-          console.error('❌ Background task error:', bgError)
-          // Don't throw - these are optional enhancements
-        }
       })()
     )
     

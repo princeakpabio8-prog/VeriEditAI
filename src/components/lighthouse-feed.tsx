@@ -607,12 +607,11 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                           )}
                         </div>
                         
-                        {/* Mint NFT Badge Button - only show for verified articles with verification_id */}
+                        {/* Mint NFT Badge Button - show for all users (wallet auth handles access) */}
                         {article.is_verified && 
                          article.trust_score && 
                          article.trust_score >= 75 && 
-                         article.verification_id && 
-                         user && (
+                         article.verification_id && (
                           <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-border/50">
                             <Badge variant="secondary" className="flex items-center gap-1 text-xs w-fit">
                               <Award className="h-3 w-3" />

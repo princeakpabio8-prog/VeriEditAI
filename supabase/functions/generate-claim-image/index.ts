@@ -22,6 +22,8 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
+    console.log(`🎨 Generating image for claim: ${claim_text.substring(0, 100)}...`);
+
     // Simplified prompt for faster generation
     const prompt = `News image for: ${claim_text.substring(0, 150)}. Modern, clean, 16:9, no text.`;
 
@@ -43,12 +45,23 @@ serve(async (req) => {
       })
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ AI API error (${response.status}):`, errorText);
+      throw new Error(`AI API error: ${response.status}`);
+    }
+
     const data = await response.json();
+    console.log('📦 API Response structure:', JSON.stringify(data, null, 2));
+    
     const imageBase64 = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageBase64) {
-      throw new Error('Failed to generate image');
+      console.error('❌ No image in response. Full data:', JSON.stringify(data, null, 2));
+      throw new Error('No image generated - check API response structure');
     }
+
+    console.log('✅ Image generated successfully');
 
     // Upload to Supabase Storage
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -110,11 +123,18 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error generating claim image:', error);
+    console.error('❌ Error generating claim image:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      viral_claim_id
+    });
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        details: error.stack
       }),
       { 
         status: 500,

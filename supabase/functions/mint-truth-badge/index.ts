@@ -332,12 +332,25 @@ serve(async (req) => {
         rarity_tier: rarityTier,
         viral_claim_id: viralClaim?.id,
         virality_score: viralityScore,
-        minted_at_rank: verifierRank
+        minted_at_rank: verifierRank,
+        opensea_url: `https://opensea.io/assets/matic/${contractAddress}/${tokenId}`
       })
       .select()
       .single()
     
     if (insertError) throw insertError
+    
+    // CRITICAL: If token_id is still 0, schedule a background fix
+    if (tokenId === '0') {
+      console.log('⚠️ Token ID is 0, scheduling background correction...')
+      EdgeRuntime.waitUntil(
+        supabase.functions.invoke('fix-token-ids').then(() => {
+          console.log('✅ Background token ID fix completed')
+        }).catch((err) => {
+          console.error('❌ Background fix failed:', err)
+        })
+      )
+    }
     
     // Calculate listing price based on rarity tier and trust score
     // Base prices in MATIC by rarity tier
@@ -385,27 +398,52 @@ serve(async (req) => {
       console.log(`💰 Auto-listed NFT for ${listingPrice.toFixed(2)} MATIC`)
     }
     
-    // Trigger AI image generation in background (non-blocking)
-    try {
-      console.log('🎨 Triggering AI badge image generation...');
-      supabase.functions.invoke('generate-nft-badge-image', {
-        body: {
-          badge_id: badgeData.id,
-          claim_text: verification.content,
-          trust_score: verification.trust_score,
-          rarity_tier: rarityTier
+    // Background tasks: AI image generation + OpenSea refresh (non-blocking)
+    EdgeRuntime.waitUntil(
+      (async () => {
+        try {
+          // 1. Generate AI badge image
+          console.log('🎨 Triggering AI badge image generation...')
+          const { error: imgError } = await supabase.functions.invoke('generate-nft-badge-image', {
+            body: {
+              badge_id: badgeData.id,
+              claim_text: verification.content,
+              trust_score: verification.trust_score,
+              rarity_tier: rarityTier
+            }
+          })
+          if (imgError) {
+            console.error('Image generation failed:', imgError)
+          } else {
+            console.log('✅ AI badge image generated')
+          }
+
+          // 2. Wait 2 seconds for blockchain to propagate
+          await new Promise(r => setTimeout(r, 2000))
+
+          // 3. Refresh OpenSea metadata automatically
+          console.log('🔄 Refreshing OpenSea metadata...')
+          const { error: refreshError } = await supabase.functions.invoke('refresh-opensea-metadata', {
+            body: { token_id: tokenId }
+          })
+          if (refreshError) {
+            console.error('OpenSea refresh failed:', refreshError)
+          } else {
+            console.log('✅ OpenSea metadata refreshed')
+          }
+
+          // 4. Update marketplace listing status
+          await supabase
+            .from('nft_badges')
+            .update({ opensea_listed: true })
+            .eq('id', badgeData.id)
+          
+          console.log('✅ All background tasks completed')
+        } catch (bgError) {
+          console.error('Background task error:', bgError)
         }
-      }).then(({ data, error }) => {
-        if (error) {
-          console.error('Image generation failed:', error);
-        } else {
-          console.log('✅ AI badge image generated:', data);
-        }
-      });
-    } catch (imgError) {
-      console.error('Failed to trigger image generation:', imgError);
-      // Don't throw - minting succeeded, image is optional
-    }
+      })()
+    )
     
     return new Response(
       JSON.stringify({

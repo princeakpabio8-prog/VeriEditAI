@@ -90,29 +90,22 @@ export const OpenSeaVerification = () => {
     }
   };
 
-  const fixTokenIds = async () => {
+  const runAutoFix = async () => {
     setFixingIds(true);
     try {
-      const { data, error } = await supabase.functions.invoke('fix-token-ids');
+      // One-click auto-fix: runs fix-token-ids, fix-images, and sync-opensea automatically
+      const { data, error } = await supabase.functions.invoke('auto-fix-nft-badges');
       if (error) throw error;
 
-      const fixed = data?.stats?.fixed ?? data?.fixed ?? 0;
-      const skipped = data?.stats?.skipped ?? data?.skipped ?? 0;
-      const errors = data?.stats?.errors ?? data?.errors ?? 0;
-
       toast({
-        title: 'Token IDs corrected',
-        description: `Fixed ${fixed}, skipped ${skipped}, errors ${errors}`,
+        title: '✅ Auto-fix complete!',
+        description: data?.message || 'All badges synchronized with OpenSea',
       });
-
-      // After fixing IDs, refresh images and sync OpenSea
-      await supabase.functions.invoke('fix-nft-images');
-      await supabase.functions.invoke('sync-opensea-collection');
 
       await checkBadges();
     } catch (error: any) {
       toast({
-        title: 'Fix Token IDs failed',
+        title: 'Auto-fix failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -133,13 +126,9 @@ export const OpenSeaVerification = () => {
             {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
             Check Badges
           </Button>
-          <Button onClick={fixTokenIds} disabled={fixingIds}>
+          <Button onClick={runAutoFix} disabled={fixingIds}>
             {fixingIds ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-            Fix Token IDs
-          </Button>
-          <Button onClick={updateMetadata} disabled={updating} variant="secondary">
-            {updating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-            Fix Images
+            🔧 Auto-Fix All
           </Button>
           <Button onClick={syncCollection} disabled={syncing} variant="outline">
             {syncing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}

@@ -238,7 +238,7 @@ export default function NFTMarketplace() {
 }
 
 function BadgeMarketCard({ badge, showPrice }: { badge: NFTBadge; showPrice?: boolean }) {
-  const { imageUrl, loading } = useNFTImage(badge.metadata_uri);
+  const { imageUrl, loading } = useNFTImage(badge.metadata_uri, badge.id);
   const displayImage = imageUrl || badgeImage;
   
   const getTrustScoreColor = (score: number): string => {

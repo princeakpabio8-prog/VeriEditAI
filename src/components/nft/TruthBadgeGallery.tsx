@@ -102,7 +102,7 @@ export function TruthBadgeGallery() {
 }
 
 function BadgeCard({ badge }: { badge: TruthBadge }) {
-  const { imageUrl, loading } = useNFTImage(badge.metadata_uri)
+  const { imageUrl, loading } = useNFTImage(badge.metadata_uri, badge.id)
   const displayImage = imageUrl || badgeImage
 
   const getRarityColor = (rarity: string | null) => {

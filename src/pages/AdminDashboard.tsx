@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminDataLicensingWidget } from "@/components/admin-data-licensing-widget";
 import { TrustBriefsViewer } from "@/components/trust-briefs-viewer";
+import { OpenSeaVerification } from "@/components/nft/OpenSeaVerification";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -126,8 +127,9 @@ const AdminDashboard = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="subscribers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
+            <TabsTrigger value="nft">NFT/OpenSea</TabsTrigger>
             <TabsTrigger value="licensing">Data Licensing</TabsTrigger>
             <TabsTrigger value="briefs">Trust Briefs</TabsTrigger>
           </TabsList>
@@ -218,6 +220,10 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="nft" className="space-y-6">
+            <OpenSeaVerification />
           </TabsContent>
 
           <TabsContent value="licensing" className="space-y-6">

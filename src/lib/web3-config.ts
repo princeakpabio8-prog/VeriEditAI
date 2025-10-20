@@ -1,5 +1,7 @@
 import { defineChain } from 'viem'
 
+export const TRUTH_BADGE_CONTRACT_ADDRESS = '0x66911176b4eC70086C50b3155b04dEe433652673' as const;
+
 export const polygonMainnet = defineChain({
   id: 137,
   name: 'Polygon Mainnet',

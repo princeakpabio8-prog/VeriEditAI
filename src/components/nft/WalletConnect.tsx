@@ -26,47 +26,71 @@ export function WalletConnect() {
 
   const handleConnect = async () => {
     try {
-      // On mobile, try to detect and open installed wallet apps
-      if (isMobile) {
-        const injectedConnector = connectors.find(c => c.id === 'injected')
-        const walletConnectConnector = connectors.find(c => c.id === 'walletConnect')
-        
-        // First try injected (MetaMask mobile browser or in-app browser)
-        if (injectedConnector) {
-          try {
-            await connect({ connector: injectedConnector })
-            return
-          } catch (error) {
-            // If injected fails, try to open MetaMask app
-            const metamaskDeepLink = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`
-            window.location.href = metamaskDeepLink
-            
-            // Wait a bit to see if app opened
-            setTimeout(() => {
-              // If still here, fall back to WalletConnect
-              if (walletConnectConnector) {
-                connect({ connector: walletConnectConnector })
-              }
-            }, 2000)
-            return
-          }
-        }
-        
-        // Fall back to WalletConnect which will show mobile wallet options
-        if (walletConnectConnector) {
-          await connect({ connector: walletConnectConnector })
-        }
-      } else {
-        // Desktop: use injected (MetaMask extension)
-        const injectedConnector = connectors[0]
-        await connect({ connector: injectedConnector })
+      const injectedConnector = connectors.find((c) => c.id === 'injected')
+      const walletConnectConnector =
+        connectors.find((c) => c.id === 'walletConnect') ||
+        connectors.find((c: any) => c.name?.toLowerCase().includes('walletconnect')) ||
+        connectors.find((c: any) => String(c.id).toLowerCase().includes('wallet'))
+
+      const openMetaMaskDeepLink = () => {
+        const cleanUrl = window.location.href
+          .replace(/^https?:\/\//, '')
+          .replace(/^www\./, '')
+        window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`
       }
+
+      // Mobile flow
+      if (isMobile) {
+        // If MetaMask injected provider exists (in-app browser), use it directly
+        if (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask && injectedConnector) {
+          await connect({ connector: injectedConnector })
+          return
+        }
+
+        // Otherwise, deep link to MetaMask app immediately for better UX
+        toast({ title: 'Opening MetaMask...', description: 'Switching to your wallet app' })
+        openMetaMaskDeepLink()
+
+        // Fallback: if we remain on page, try WalletConnect after a short delay
+        setTimeout(() => {
+          if (walletConnectConnector) {
+            connect({ connector: walletConnectConnector })
+          } else if (injectedConnector) {
+            connect({ connector: injectedConnector })
+          } else {
+            toast({
+              title: 'Wallet not detected',
+              description: 'Please install MetaMask or open this page in the MetaMask browser.',
+              variant: 'destructive',
+            })
+          }
+        }, 1800)
+        return
+      }
+
+      // Desktop: prefer injected (MetaMask extension)
+      if (injectedConnector) {
+        await connect({ connector: injectedConnector })
+        return
+      }
+
+      // Desktop fallback
+      if (walletConnectConnector) {
+        await connect({ connector: walletConnectConnector })
+        return
+      }
+
+      toast({
+        title: 'No wallet found',
+        description: 'Please install MetaMask to continue.',
+        variant: 'destructive',
+      })
     } catch (error) {
       console.error('Connection error:', error)
       toast({
         title: 'Connection Failed',
         description: 'Please make sure you have MetaMask installed',
-        variant: 'destructive'
+        variant: 'destructive',
       })
     }
   }

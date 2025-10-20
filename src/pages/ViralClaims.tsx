@@ -23,6 +23,7 @@ interface ViralClaim {
   status: string;
   metadata: any;
   image_url?: string | null;
+  verification_id?: string | null;
 }
 
 export default function ViralClaims() {
@@ -315,9 +316,21 @@ export default function ViralClaims() {
 
                         {/* Actions */}
                         <div className="flex gap-2">
-                          <Button onClick={() => handleVerifyNow(claim)} size="sm" className="flex-1">
-                            Verify Now
-                          </Button>
+                          {claim.verification_id ? (
+                            <Button 
+                              onClick={() => navigate(`/share/${claim.verification_id}`)} 
+                              size="sm" 
+                              className="flex-1"
+                              variant="secondary"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                              View Verification
+                            </Button>
+                          ) : (
+                            <Button onClick={() => handleVerifyNow(claim)} size="sm" className="flex-1">
+                              Verify Now
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm" asChild>
                             <a href={claim.source_url} target="_blank" rel="noopener noreferrer">
                               <ExternalLink className="h-3.5 w-3.5" />

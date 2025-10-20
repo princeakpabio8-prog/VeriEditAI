@@ -49,36 +49,30 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
           return (await resp.json()) as NFTMetadata
         }
 
-        const headOk = async (url: string) => {
-          try {
-            const res = await fetch(url, { method: 'HEAD' })
-            return res.ok
-          } catch {
-            return false
+        const headOk = async (url: string, retries = 2) => {
+          for (let i = 0; i < retries; i++) {
+            try {
+              const res = await fetch(url, { method: 'HEAD', cache: 'no-cache' })
+              if (res.ok) return true
+              await sleep(1000 * (i + 1))
+            } catch (e) {
+              if (i === retries - 1) return false
+              await sleep(1000 * (i + 1))
+            }
           }
+          return false
         }
 
         const meta = await fetchAndParse()
         if (!meta?.image) throw new Error('No image in metadata')
 
         if (isTemplateImage(meta.image)) {
-          console.log(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}`)
+          console.warn(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}, using static fallback`)
           
-          // Validate all required parameters
-          if (!badgeId || !claimText || trustScore === undefined || !rarityTier) {
-            console.error('[NFT Image] ❌ Missing required parameters:', {
-              badgeId: !!badgeId,
-              claimText: !!claimText,
-              trustScore: trustScore !== undefined,
-              rarityTier: !!rarityTier
-            })
-          } else if (!regenerationAttempted.has(badgeId)) {
+          // Trigger AI generation if params available
+          if (badgeId && claimText && trustScore !== undefined && rarityTier && !regenerationAttempted.has(badgeId)) {
             regenerationAttempted.add(badgeId)
-            console.log(`[NFT Image] 🎨 Triggering AI generation for badge ${badgeId}:`, {
-              claimText: claimText.substring(0, 50) + '...',
-              trustScore,
-              rarityTier
-            })
+            console.log(`[NFT Image] 🎨 Triggering AI generation for badge ${badgeId}`)
             
             supabase.functions
               .invoke('generate-nft-badge-image', { 
@@ -97,39 +91,14 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
                 }
               })
               .catch((err) => console.error('[NFT Image] ❌ Invocation error:', err))
-          } else {
-            console.log(`[NFT Image] ℹ️ Already attempted generation for badge: ${badgeId}`)
           }
 
-          // Show current template, but don't cache it
+          // Don't show template, force fallback component to render
           if (!cancelled) {
-            setImageUrl(meta.image)
-            setError(null)
+            setImageUrl(null)
+            setError('Template image - using fallback')
+            setLoading(false)
           }
-
-          // Poll a few times for the real image to appear
-          for (const delay of POLL_DELAYS_MS) {
-            await sleep(delay)
-            if (cancelled) return
-
-            try {
-              const refreshed = await fetchAndParse()
-              if (refreshed?.image && !isTemplateImage(refreshed.image) && (await headOk(refreshed.image))) {
-                imageCache.set(metadataUri, refreshed.image)
-                console.log('✅ Real image detected, updating display')
-                if (!cancelled) {
-                  setImageUrl(refreshed.image)
-                  setError(null)
-                }
-                return
-              }
-            } catch (e) {
-              console.warn('Polling image check failed:', e)
-            }
-          }
-
-          // If still template after polling, keep showing it without caching
-          if (!cancelled) setLoading(false)
           return
         }
 

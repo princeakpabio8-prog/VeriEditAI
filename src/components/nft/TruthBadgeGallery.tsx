@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Award, ExternalLink } from 'lucide-react'
 import { useNFTImage } from '@/hooks/useNFTImage'
+import { NFTBadgeFallback } from '@/components/nft/NFTBadgeFallback'
 import badgeImage from '@/assets/truth-badge.png'
 
 interface TruthBadge {
@@ -119,14 +120,16 @@ export function TruthBadgeGallery() {
 }
 
 function BadgeCard({ badge }: { badge: TruthBadge }) {
-  const { imageUrl, loading } = useNFTImage(
+  const { imageUrl, loading, error } = useNFTImage(
     badge.metadata_uri, 
     badge.id,
     badge.claim_text,
     badge.trust_score,
     badge.rarity_tier || undefined
   )
+  const [imageFailed, setImageFailed] = useState(false)
   const displayImage = imageUrl || badgeImage
+  const shouldShowFallback = !imageUrl || imageFailed || error
 
   const getRarityDisplayName = (rarity: string | null) => {
     switch (rarity) {
@@ -227,6 +230,15 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
           
           {loading ? (
             <div className="relative h-40 w-40 mx-auto bg-gradient-to-br from-muted to-muted-foreground/20 animate-pulse rounded-lg shimmer" />
+          ) : shouldShowFallback ? (
+            <div className="relative h-40 w-40 mx-auto nft-image-wrapper">
+              <NFTBadgeFallback 
+                rarity={badge.rarity_tier}
+                trustScore={badge.trust_score}
+                claimText={badge.claim_text}
+                tokenId={badge.token_id}
+              />
+            </div>
           ) : (
             <div className="relative h-40 w-40 mx-auto nft-image-wrapper">
               {/* Glass backdrop */}
@@ -235,6 +247,13 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
                 src={displayImage} 
                 alt="Truth Badge" 
                 className="relative h-full w-full object-contain drop-shadow-2xl group-hover:scale-125 transition-transform duration-700 ease-out nft-badge-entrance"
+                onError={(e) => {
+                  console.error(`❌ Badge image failed to load: ${displayImage}`)
+                  setImageFailed(true)
+                }}
+                onLoad={() => {
+                  console.log(`✅ Badge image loaded: ${displayImage}`)
+                }}
               />
             </div>
           )}

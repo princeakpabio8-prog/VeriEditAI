@@ -481,7 +481,7 @@ const Dashboard = () => {
           <TabsTrigger value="analytics" className={isMobile ? "text-xs px-2" : ""}>Analytics</TabsTrigger>
           {!isMobile && <TabsTrigger value="executive">Executive</TabsTrigger>}
           {!isMobile && <TabsTrigger value="export">Export Data</TabsTrigger>}
-          <TabsTrigger value="truth-badges" className={isMobile ? "text-xs px-2" : ""}>
+          <TabsTrigger value="badges" className={isMobile ? "text-xs px-2" : ""}>
             <Coins className="h-4 w-4 mr-1" />
             {!isMobile && "Badges"}
           </TabsTrigger>
@@ -635,7 +635,7 @@ const Dashboard = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="truth-badges" className="space-y-6 animate-fade-in">
+          <TabsContent value="badges" className="space-y-6 animate-fade-in">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, TrendingUp, Clock, Target, ArrowRight } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +20,7 @@ interface HotClaim {
   rarity_tier: string | null;
   virality_score: number;
   metadata: any;
+  verification_id: string | null;
 }
 
 export function HotClaimsWidget() {
@@ -250,13 +251,25 @@ export function HotClaimsWidget() {
                 </div>
 
                 {/* Verify Button */}
-                <Button
-                  onClick={() => handleVerifyNow(claim.claim_text)}
-                  size="sm"
-                  className={index === 0 ? 'bg-orange-500 hover:bg-orange-600' : ''}
-                >
-                  {index === 0 ? '🏁 Verify Now!' : 'Verify'}
-                </Button>
+                {claim.verification_id ? (
+                  <Button
+                    onClick={() => navigate(`/share/${claim.verification_id}`)}
+                    size="sm"
+                    variant="outline"
+                    className="bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                    View Verification
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handleVerifyNow(claim.claim_text)}
+                    size="sm"
+                    className={index === 0 ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                  >
+                    {index === 0 ? '🏁 Verify Now!' : 'Verify'}
+                  </Button>
+                )}
               </div>
             </div>
           );

@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ShareModal } from '@/components/share-modal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface ViralClaim {
   id: string;
@@ -317,11 +318,12 @@ export default function ViralClaims() {
                 return (
                   <Card 
                     key={claim.id} 
-                    className={`p-4 transition-all hover:shadow-lg hover:scale-[1.02] ${
-                      claim.verification_id ? 'border-green-500/30 bg-green-50/30 dark:bg-green-950/10' :
+                    className={cn(
+                      "p-4 transition-all hover:shadow-lg hover:scale-[1.02] min-h-[200px]",
+                      !!claim.verification_id ? 'border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' :
                       alertLevel === 'critical' ? 'border-destructive/50 bg-destructive/5' :
                       alertLevel === 'high' ? 'border-yellow-500/50 bg-yellow-500/5' : ''
-                    }`}
+                    )}
                   >
                     <div className="flex gap-3">
                       {/* Thumbnail */}
@@ -347,8 +349,8 @@ export default function ViralClaims() {
                           <Badge variant={claim.status === 'verified' ? 'default' : 'secondary'} className="text-xs">
                             {claim.platform}
                           </Badge>
-                          {claim.verification_id && (
-                            <Badge className="bg-green-500 text-white text-xs">
+                          {!!claim.verification_id && (
+                            <Badge className="bg-emerald-500 text-white text-xs font-bold">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               VERIFIED
                             </Badge>

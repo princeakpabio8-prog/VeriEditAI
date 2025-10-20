@@ -267,45 +267,44 @@ export function HotClaimsWidget() {
           Verify trending claims before others to mint rare NFT badges
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {hotClaims.map((claim, index) => {
-          const hoursSinceDetection = claim.first_seen_at
-            ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60)
-            : 0;
-          
-          const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {hotClaims.map((claim, index) => {
+            const hoursSinceDetection = claim.first_seen_at
+              ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60)
+              : 0;
+            
+            const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
+            const isVerified = !!claim.verification_id;
 
-          return (
-            <div
-              key={claim.id}
-              className={cn(
-                "rounded-lg border-2 overflow-hidden transition-all duration-300",
-                index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
-                claim.status === 'verified' && "border-emerald-500 shadow-lg shadow-emerald-500/20",
-                !claim.status && "border-border"
-              )}
-            >
-              {/* Claim Image - Hero Size */}
-              {claim.image_url ? (
-                  <div className="relative h-64 md:h-80 w-full overflow-hidden rounded-t-lg">
+            return (
+              <Card
+                key={claim.id}
+                className={cn(
+                  "overflow-hidden transition-all duration-300 flex flex-col min-h-[500px]",
+                  index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
+                  isVerified && "border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20"
+                )}
+              >
+                {/* Claim Image - Standardized Aspect Ratio */}
+                {claim.image_url ? (
+                  <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden">
                     <img 
-                      src={
-                        claim.image_url.includes('supabase.co') 
-                          ? claim.image_url 
-                          : claim.image_url.startsWith('http')
-                            ? `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
-                            : claim.image_url
-                      }
+                      src={claim.image_url}
                       alt={claim.claim_text}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     
                     {/* Verified Badge Overlay */}
-                    {claim.status === 'verified' && (
-                      <div className="absolute top-2 right-2 bg-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 animate-pulse">
-                        <CheckCircle2 size={14} />
-                        VERIFIED
+                    {isVerified && (
+                      <div className="absolute top-3 right-3 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-pulse">
+                        <CheckCircle2 size={16} />
+                        ✓ VERIFIED
                       </div>
                     )}
                   
@@ -325,15 +324,17 @@ export function HotClaimsWidget() {
                     )}
                   </div>
                   
-                  {/* Rank Badge */}
-                  <div className="absolute top-3 right-3">
-                    <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
-                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                  {/* Rank Badge - Only show if not verified */}
+                  {!isVerified && (
+                    <div className="absolute bottom-3 right-3">
+                      <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : generatingImageIds.has(claim.id) ? (
-                <div className="relative h-64 md:h-80 w-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center rounded-t-lg">
+                <div className="relative w-full aspect-[16/9] max-h-[300px] bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center">
                   <div className="text-center space-y-3">
                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
                     <p className="text-sm text-muted-foreground font-medium">Generating visual...</p>
@@ -349,20 +350,25 @@ export function HotClaimsWidget() {
                   showRaceBadge={index === 0}
                 />
               )}
-              <div className="p-5 space-y-4">
-                {/* Platform Badge */}
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {claim.platform}
-                  </Badge>
-                </div>
-
-                {/* Claim Text - Larger for first */}
-                <div className="flex items-start gap-2">
-                  {claim.status === 'verified' && (
-                    <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0 mt-1" />
+              <CardContent className="flex-1 flex flex-col justify-between p-5 space-y-4">
+                <div className="space-y-4">
+                  {/* Verified Status Banner */}
+                  {isVerified && (
+                    <div className="bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-500 rounded-lg p-3 flex items-center gap-2">
+                      <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">VERIFIED CLAIM</span>
+                    </div>
                   )}
-                  <p className={`font-semibold ${index === 0 ? 'text-lg' : 'text-base'} line-clamp-2`}>
+
+                  {/* Platform Badge */}
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {claim.platform}
+                    </Badge>
+                  </div>
+
+                  {/* Claim Text */}
+                  <p className="font-semibold text-base line-clamp-3">
                     {claim.claim_text}
                   </p>
                 </div>
@@ -412,49 +418,46 @@ export function HotClaimsWidget() {
                 )}
 
                 {/* Verify Button */}
-                {claim.verification_id && claim.share_token ? (
-                  <div className="flex items-center gap-2">
+                <div className="mt-auto">
+                  {isVerified && claim.share_token ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => navigate(`/share/${claim.share_token}`)}
+                        className="flex-1 min-h-[40px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                        View Verification
+                      </Button>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedClaimForShare(claim.verification_id);
+                          setShareModalOpen(true);
+                        }}
+                        variant="outline"
+                        className="shrink-0 min-h-[40px]"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
-                      onClick={() => navigate(`/share/${claim.share_token}`)}
-                      size="sm"
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg transition-all"
+                      onClick={() => handleVerifyNow(claim)}
+                      disabled={verifyingIds.has(claim.id)}
+                      className={cn(
+                        "w-full min-h-[40px] font-semibold",
+                        index === 0 && "bg-orange-500 hover:bg-orange-600"
+                      )}
                     >
-                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
-                      View Verification
+                      {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
                     </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedClaimForShare(claim.verification_id);
-                        setShareModalOpen(true);
-                      }}
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
-                    {claim.updated_at && 
-                     (new Date().getTime() - new Date(claim.updated_at).getTime()) < 3600000 && (
-                      <Badge className="bg-green-500 text-white animate-pulse">
-                        NEW
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <Button
-                    onClick={() => handleVerifyNow(claim)}
-                    size="sm"
-                    disabled={verifyingIds.has(claim.id)}
-                    className={index === 0 ? 'bg-orange-500 hover:bg-orange-600' : ''}
-                  >
-                    {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
-                  </Button>
-                )}
-              </div>
-            </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
+        </div>
       </CardContent>
 
       {shareModalOpen && selectedClaimForShare && (

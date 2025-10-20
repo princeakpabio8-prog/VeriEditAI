@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { VerificationUpload } from '@/components/verification-upload';
 import { VerificationResult } from '@/components/verification-result';
@@ -39,12 +40,35 @@ interface TemplateConfig {
 
 export default function Verify() {
   const { user } = useAuth();
+  const location = useLocation();
   const { verify, loading, error, result } = useVerify();
   const isMobile = useIsMobile();
   const { checkAchievementsAfterVerification } = useVerificationAchievements();
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
+
+  // Handle viral claim verification from navigation state
+  useEffect(() => {
+    if (user && location.state) {
+      const { prefilledContent, viralClaimId, source } = location.state as any;
+      if (prefilledContent) {
+        console.log('Auto-starting verification from viral claim:', { viralClaimId });
+        
+        // Auto-start verification with viral claim data
+        setTimeout(() => {
+          handleVerificationStart({
+            content: prefilledContent,
+            viralClaimId,
+            source
+          });
+        }, 300);
+        
+        // Clear the state to prevent re-triggering
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [user, location.state]);
 
   // Handle pending verification from news discovery or other sources
   useEffect(() => {

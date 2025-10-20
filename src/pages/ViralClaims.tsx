@@ -328,21 +328,13 @@ export default function ViralClaims() {
                       {claim.image_url && (
                         <div className="flex-shrink-0">
                           <img 
-                            src={
-                              claim.image_url.includes('supabase.co') 
-                                ? claim.image_url 
-                                : claim.image_url.startsWith('http')
-                                  ? `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
-                                  : claim.image_url
-                            }
+                            src={claim.image_url}
                             alt="" 
-                            className="w-20 h-20 object-cover rounded-md"
+                            className="w-20 h-20 object-cover rounded-md bg-muted"
+                            loading="lazy"
                             onError={(e) => {
-                              // Fallback to direct URL if proxy fails
-                              const original = claim.image_url;
-                              if (original && e.currentTarget.src !== original) {
-                                e.currentTarget.src = original;
-                              }
+                              // Hide image on error instead of retrying
+                              e.currentTarget.style.display = 'none';
                             }}
                           />
                         </div>

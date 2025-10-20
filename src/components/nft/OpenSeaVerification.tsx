@@ -93,13 +93,17 @@ export const OpenSeaVerification = () => {
   const runAutoFix = async () => {
     setFixingIds(true);
     try {
-      // One-click auto-fix: runs fix-token-ids, fix-images, and sync-opensea automatically
+      // First fix the OpenSea URLs from /matic/ to /polygon/
+      const { data: urlFix, error: urlError } = await supabase.functions.invoke('fix-opensea-urls');
+      if (urlError) console.error('URL fix error:', urlError);
+      
+      // Then run the auto-fix for images and sync
       const { data, error } = await supabase.functions.invoke('auto-fix-nft-badges');
       if (error) throw error;
 
       toast({
         title: '✅ Auto-fix complete!',
-        description: data?.message || 'All badges synchronized with OpenSea',
+        description: `Fixed ${urlFix?.fixed || 0} OpenSea URLs. ${data?.message || 'All badges synchronized'}`,
       });
 
       await checkBadges();

@@ -49,9 +49,9 @@ serve(async (req) => {
       // Ensure token_id is properly formatted (no leading zeros unless needed)
       const cleanTokenId = badge.token_id.replace(/^0+/, '') || '0';
       
-      // Generate OpenSea URLs
-      const openSeaUrl = `https://opensea.io/assets/matic/${contractAddress}/${cleanTokenId}`;
-      const openseaMetadataUrl = `https://api.opensea.io/api/v2/chain/matic/contract/${contractAddress}/nfts/${cleanTokenId}`;
+      // Generate OpenSea URLs (using 'polygon' not 'matic')
+      const openSeaUrl = `https://opensea.io/assets/polygon/${contractAddress}/${cleanTokenId}`;
+      const openseaMetadataUrl = `https://api.opensea.io/api/v2/chain/polygon/contract/${contractAddress}/nfts/${cleanTokenId}`;
       
       console.log(`🔗 Syncing badge #${cleanTokenId}: ${openSeaUrl}`);
       

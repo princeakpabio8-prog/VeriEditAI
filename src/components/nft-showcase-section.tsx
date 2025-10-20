@@ -125,7 +125,7 @@ export const NFTShowcaseSection = () => {
                 
                 <div className="relative w-48 h-48 mx-auto mb-6">
                   <img 
-                    src="/src/assets/truth-badge.png" 
+                    src="/nft-badge-template.png" 
                     alt="Truth Badge NFT" 
                     className="w-full h-full object-contain drop-shadow-2xl animate-[spin_20s_linear_infinite]"
                     style={{ animationDirection: 'reverse' }}

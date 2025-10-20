@@ -48,6 +48,12 @@ serve(async (req) => {
     for (const badge of badges) {
       // Ensure token_id is properly formatted (no leading zeros unless needed)
       const cleanTokenId = badge.token_id.replace(/^0+/, '') || '0';
+
+      // Skip badges with token_id 0 (not minted / not indexed yet)
+      if (cleanTokenId === '0') {
+        console.log(`⏭️  Skipping badge ${badge.id} with token_id=0`);
+        continue;
+      }
       
       // Generate OpenSea URLs (using 'polygon' not 'matic')
       const openSeaUrl = `https://opensea.io/assets/polygon/${contractAddress}/${cleanTokenId}`;

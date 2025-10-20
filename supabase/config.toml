@@ -242,3 +242,9 @@ verify_jwt = false
 
 [functions.fix-nft-badge-images]
 verify_jwt = false
+
+[functions.fix-token-ids]
+verify_jwt = false
+
+[functions.fix-opensea-urls]
+verify_jwt = false

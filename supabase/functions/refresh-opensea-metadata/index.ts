@@ -28,7 +28,7 @@ serve(async (req) => {
     console.log(`🔄 Refreshing OpenSea metadata for token #${cleanTokenId}`);
 
     // OpenSea metadata refresh endpoint (forces OpenSea to re-fetch metadata from your contract)
-    const refreshUrl = `https://api.opensea.io/api/v2/chain/matic/contract/${contractAddress}/nfts/${cleanTokenId}/refresh`;
+    const refreshUrl = `https://api.opensea.io/api/v2/chain/polygon/contract/${contractAddress}/nfts/${cleanTokenId}/refresh`;
     
     const OPENSEA_API_KEY = Deno.env.get('OPENSEA_API_KEY');
     
@@ -68,7 +68,7 @@ serve(async (req) => {
         success: true,
         message: 'Metadata refresh queued on OpenSea',
         tokenId: cleanTokenId,
-        openSeaUrl: `https://opensea.io/assets/matic/${contractAddress}/${cleanTokenId}`,
+        openSeaUrl: `https://opensea.io/assets/polygon/${contractAddress}/${cleanTokenId}`,
         note: 'Changes may take a few minutes to appear on OpenSea'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -101,6 +101,13 @@ export const OpenSeaVerification = () => {
       const { data, error } = await supabase.functions.invoke('auto-fix-nft-badges');
       if (error) throw error;
 
+      // Ensure a final sync to propagate any fixed token_ids -> URLs
+      try {
+        await supabase.functions.invoke('sync-opensea-collection');
+      } catch (e) {
+        console.warn('Post-fix sync failed (non-fatal):', e);
+      }
+
       toast({
         title: '✅ Auto-fix complete!',
         description: `Fixed ${urlFix?.fixed || 0} OpenSea URLs. ${data?.message || 'All badges synchronized'}`,

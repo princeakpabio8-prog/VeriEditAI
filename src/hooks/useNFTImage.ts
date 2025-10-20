@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/integrations/supabase/client'
 
 interface NFTMetadata {
   name: string
@@ -11,84 +11,124 @@ interface NFTMetadata {
 const imageCache = new Map<string, string>()
 const regenerationAttempted = new Set<string>()
 
+function isTemplateImage(url: string) {
+  return url.includes('nft-badge-template.png') || url.includes('nft-badge-fallback.png')
+}
+
+const POLL_DELAYS_MS = [5000, 15000, 45000]
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 export function useNFTImage(metadataUri: string | null, badgeId?: string) {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!metadataUri) {
-      setLoading(false)
-      return
-    }
+    let cancelled = false
 
-    // Check cache first
-    if (imageCache.has(metadataUri)) {
-      setImageUrl(imageCache.get(metadataUri)!)
-      setLoading(false)
-      return
-    }
-
-    const fetchMetadata = async () => {
+    const run = async () => {
       try {
-        setLoading(true)
-        const response = await fetch(metadataUri)
-        if (!response.ok) throw new Error('Failed to fetch metadata')
-        
-        const metadata: NFTMetadata = await response.json()
-        
-        if (metadata.image) {
-          // Check if it's the broken template image
-          const isTemplate = metadata.image.includes('nft-badge-template.png') || 
-                            metadata.image.includes('nft-badge-fallback.png')
-          
-          if (isTemplate && badgeId && !regenerationAttempted.has(badgeId)) {
-            // Trigger silent background regeneration
+        if (!metadataUri) {
+          if (!cancelled) setLoading(false)
+          return
+        }
+
+        // Check cache first, but never serve cached template
+        const cached = imageCache.get(metadataUri)
+        if (cached && !isTemplateImage(cached)) {
+          if (!cancelled) {
+            setImageUrl(cached)
+            setLoading(false)
+          }
+          return
+        }
+
+        const fetchAndParse = async (): Promise<NFTMetadata | null> => {
+          const resp = await fetch(metadataUri)
+          if (!resp.ok) throw new Error('Failed to fetch metadata')
+          return (await resp.json()) as NFTMetadata
+        }
+
+        const headOk = async (url: string) => {
+          try {
+            const res = await fetch(url, { method: 'HEAD' })
+            return res.ok
+          } catch {
+            return false
+          }
+        }
+
+        const meta = await fetchAndParse()
+        if (!meta?.image) throw new Error('No image in metadata')
+
+        if (isTemplateImage(meta.image)) {
+          // Trigger silent background regeneration once per badge
+          if (badgeId && !regenerationAttempted.has(badgeId)) {
             regenerationAttempted.add(badgeId)
-            
-            const supabase = createClient(
-              import.meta.env.VITE_SUPABASE_URL,
-              import.meta.env.VITE_SUPABASE_ANON_KEY
-            )
-            
-            // Silent background regeneration - no await
-            supabase.functions.invoke('generate-nft-badge-image', {
-              body: { badge_id: badgeId }
-            }).catch(err => console.error('Silent regen failed:', err))
-            
-            // Show template for now
-            imageCache.set(metadataUri, metadata.image)
-            setImageUrl(metadata.image)
+            supabase.functions
+              .invoke('generate-nft-badge-image', { body: { badge_id: badgeId } })
+              .catch((err) => console.error('Silent regen failed:', err))
+          }
+
+          // Show current template, but don't cache it
+          if (!cancelled) {
+            setImageUrl(meta.image)
             setError(null)
-          } else {
-            // Normal flow - check if image is accessible
+          }
+
+          // Poll a few times for the real image to appear
+          for (const delay of POLL_DELAYS_MS) {
+            await sleep(delay)
+            if (cancelled) return
+
             try {
-              const imageCheck = await fetch(metadata.image, { method: 'HEAD' })
-              if (imageCheck.ok) {
-                imageCache.set(metadataUri, metadata.image)
-                setImageUrl(metadata.image)
-                setError(null)
-              } else {
-                throw new Error('Image not accessible')
+              const refreshed = await fetchAndParse()
+              if (refreshed?.image && !isTemplateImage(refreshed.image) && (await headOk(refreshed.image))) {
+                imageCache.set(metadataUri, refreshed.image)
+                if (!cancelled) {
+                  setImageUrl(refreshed.image)
+                  setError(null)
+                }
+                return
               }
-            } catch (imgErr) {
-              setImageUrl(null)
-              setError('Image not yet generated')
+            } catch (e) {
+              console.warn('Polling image check failed:', e)
             }
           }
+
+          // If still template after polling, keep showing it without caching
+          if (!cancelled) setLoading(false)
+          return
+        }
+
+        // Non-template: verify accessible, then cache
+        if (await headOk(meta.image)) {
+          imageCache.set(metadataUri, meta.image)
+          if (!cancelled) {
+            setImageUrl(meta.image)
+            setError(null)
+          }
         } else {
-          throw new Error('No image in metadata')
+          if (!cancelled) {
+            setImageUrl(null)
+            setError('Image not yet generated')
+          }
         }
       } catch (err) {
         console.error('Error fetching NFT metadata:', err)
-        setError(err instanceof Error ? err.message : 'Unknown error')
-        setImageUrl(null)
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Unknown error')
+          setImageUrl(null)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    fetchMetadata()
+    run()
+    return () => {
+      cancelled = true
+    }
   }, [metadataUri, badgeId])
 
   return { imageUrl, loading, error }

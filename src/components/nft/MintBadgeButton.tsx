@@ -72,6 +72,12 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         .eq('id', verificationId)
         .single()
 
+      // Show success toast immediately
+      toast({
+        title: "🎉 Badge Minted Successfully!",
+        description: "Your NFT is being synced to OpenSea. This may take a few minutes.",
+      })
+
       // Show epic reveal modal
       setMintedBadge({
         tokenId: data.tokenId,
@@ -81,6 +87,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       })
       setShowReveal(true)
       setAlreadyMinted(true)
+      setMinting(false)
 
     } catch (error: any) {
       console.error('Minting error:', error)
@@ -101,7 +108,6 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         description: errorMessage,
         variant: "destructive"
       })
-    } finally {
       setMinting(false)
     }
   }

@@ -230,61 +230,66 @@ export function HotClaimsWidget() {
                 index === 0 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : 'border-border'
               }`}
             >
-              {/* Claim Image */}
+              {/* Claim Image - Hero Size */}
               {claim.image_url ? (
-                <div className="relative h-48 w-full overflow-hidden">
+                <div className="relative h-64 md:h-80 w-full overflow-hidden rounded-t-lg">
                   <img 
                     src={claim.image_url.startsWith('http') ? `${window.location.origin}/api/image-proxy?url=${encodeURIComponent(claim.image_url)}` : claim.image_url} 
                     alt={claim.claim_text}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {index === 0 && (
-                    <div className="absolute top-2 left-2">
-                      <Badge className="bg-orange-500 text-white font-bold">
-                        🔥 HOTTEST
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  
+                  {/* Overlays */}
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    {index === 0 && (
+                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
+                        🔥 RACE TO VERIFY
                       </Badge>
+                    )}
+                    {claim.rarity_tier && (
+                      <Badge
+                        className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
+                      >
+                        {getRarityIcon(claim.rarity_tier)} {claim.rarity_tier}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Rank Badge */}
+                  <div className="absolute top-3 right-3">
+                    <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
-                <div className="relative h-48 w-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
-                  <div className="text-center space-y-2">
+                <div className="relative h-64 md:h-80 w-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center rounded-t-lg">
+                  <div className="text-center space-y-3">
                     {generatingImageIds.has(claim.id) ? (
                       <>
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="text-sm text-muted-foreground">Generating image...</p>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+                        <p className="text-sm text-muted-foreground font-medium">Generating race image...</p>
                       </>
                     ) : (
                       <>
-                        <div className="text-4xl">📰</div>
-                        <p className="text-xs text-muted-foreground">Preparing visual...</p>
+                        <div className="text-6xl animate-bounce">📰</div>
+                        <p className="text-sm text-muted-foreground">Loading visual...</p>
                       </>
                     )}
                   </div>
                 </div>
               )}
-              
-              <div className="p-4 space-y-3">
-                {/* Rank and Rarity Badge */}
+              <div className="p-5 space-y-4">
+                {/* Platform Badge */}
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-muted-foreground">
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                  </span>
-                  {claim.rarity_tier && (
-                    <Badge
-                      className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold`}
-                    >
-                      {getRarityIcon(claim.rarity_tier)} {claim.rarity_tier}
-                    </Badge>
-                  )}
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="text-xs">
                     {claim.platform}
                   </Badge>
                 </div>
 
-                {/* Claim Text */}
-                <p className="font-medium line-clamp-2">
+                {/* Claim Text - Larger for first */}
+                <p className={`font-semibold ${index === 0 ? 'text-lg' : 'text-base'} line-clamp-2`}>
                   {claim.claim_text}
                 </p>
 

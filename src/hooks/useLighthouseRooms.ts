@@ -21,6 +21,26 @@ export function useLighthouseRooms(category?: string, roomType: 'public' | 'work
 
   useEffect(() => {
     fetchRooms();
+
+    // Real-time subscription for room changes
+    const channel = supabase
+      .channel('lighthouse-rooms-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'lighthouse_rooms'
+        },
+        () => {
+          fetchRooms();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [category, roomType]);
 
   const fetchRooms = async () => {

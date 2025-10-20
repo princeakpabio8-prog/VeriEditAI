@@ -5,7 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Radio, Shield, TrendingUp, Users, Plus } from 'lucide-react';
 import { CreateRoomDialog } from '@/components/lighthouse/CreateRoomDialog';
 import { RoomCard } from '@/components/lighthouse/RoomCard';
+import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLighthouseRooms } from '@/hooks/useLighthouseRooms';
 
 const ROOM_CATEGORIES = [
@@ -20,6 +22,7 @@ const ROOM_CATEGORIES = [
 export function RoomsTab() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { rooms, loading } = useLighthouseRooms(selectedCategory, 'public');
@@ -35,10 +38,11 @@ export function RoomsTab() {
         </div>
         <Button 
           onClick={() => user ? setShowCreateDialog(true) : navigate('/auth')}
-          className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))]"
+          className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))] min-h-[44px] min-w-[44px]"
+          size={isMobile ? "sm" : "default"}
         >
           <Plus className="w-4 h-4 mr-2" />
-          Create Room
+          {!isMobile && "Create Room"}
         </Button>
       </div>
 
@@ -58,9 +62,7 @@ export function RoomsTab() {
 
         <TabsContent value={selectedCategory} className="mt-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--lighthouse-beam))]"></div>
-            </div>
+            <MobileLoadingSkeleton variant="card" count={isMobile ? 3 : 6} />
           ) : rooms.length === 0 ? (
             <div className="text-center py-12">
               <Radio className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />

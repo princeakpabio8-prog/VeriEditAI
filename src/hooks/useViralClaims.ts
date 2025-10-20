@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -35,7 +36,7 @@ interface ClaimMention {
 }
 
 export function useViralClaims(status?: string) {
-  const { data: viralClaims, isLoading } = useQuery({
+  const { data: viralClaims, isLoading, refetch } = useQuery({
     queryKey: ['viral-claims', status],
     queryFn: async () => {
       let query = supabase
@@ -53,6 +54,28 @@ export function useViralClaims(status?: string) {
       return (data || []) as ViralClaim[];
     },
   });
+
+  // Real-time subscription
+  React.useEffect(() => {
+    const channel = supabase
+      .channel('viral-claims-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'viral_claims'
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   return {
     viralClaims: viralClaims || [],

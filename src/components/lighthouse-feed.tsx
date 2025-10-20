@@ -32,6 +32,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -81,6 +82,7 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
   const [shareArticle, setShareArticle] = useState<NewsArticle | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   const getProxiedImageUrl = (imageUrl: string | null): string | null => {
     if (!imageUrl) return null;
@@ -89,6 +91,26 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
 
   useEffect(() => {
     fetchArticles();
+
+    // Real-time subscription for news feed updates
+    const channel = supabase
+      .channel('news-feed-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'news_feed'
+        },
+        () => {
+          fetchArticles();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchArticles = async () => {
@@ -98,7 +120,7 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
         .from("news_feed")
         .select("*")
         .order("published_at", { ascending: false })
-        .limit(100);
+        .limit(isMobile ? 20 : 100);
 
       if (error) throw error;
       setArticles(data || []);
@@ -327,20 +349,23 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                 onClick={handleRefresh}
                 disabled={refreshing}
                 variant="outline"
-                className="gap-2"
+                size={isMobile ? "sm" : "default"}
+                className="gap-2 min-h-[44px] min-w-[44px]"
               >
                 <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-                Refresh
+                {!isMobile && "Refresh"}
               </Button>
-              <Button
-                onClick={handleEnrichImages}
-                disabled={refreshing}
-                variant="outline"
-                className="gap-2"
-              >
-                <ImageIcon className={`h-4 w-4 ${refreshing ? "animate-pulse" : ""}`} />
-                Enrich Images
-              </Button>
+              {!isMobile && (
+                <Button
+                  onClick={handleEnrichImages}
+                  disabled={refreshing}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <ImageIcon className={`h-4 w-4 ${refreshing ? "animate-pulse" : ""}`} />
+                  Enrich Images
+                </Button>
+              )}
             </div>
           </div>
 

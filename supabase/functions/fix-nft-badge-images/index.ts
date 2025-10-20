@@ -46,7 +46,7 @@ serve(async (req) => {
         if (!metadata.image || metadata.image.includes('truth-badge-template.png')) {
           console.log(`🔨 Fixing badge ${badge.id}...`)
           
-          // Generate new AI image
+          // Generate new OpenAI image
           const { error: genError } = await supabase.functions.invoke('generate-nft-badge-image', {
             body: {
               badge_id: badge.id,

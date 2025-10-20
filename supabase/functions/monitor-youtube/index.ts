@@ -56,6 +56,8 @@ Deno.serve(async (req) => {
             const publishedMatch = entry.match(/<published>(.*?)<\/published>/);
             const viewsMatch = entry.match(/<media:statistics views="(\d+)"/);
             const likesMatch = entry.match(/<media:starRating count="(\d+)"/);
+            const videoIdMatch = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/);
+            const thumbnailMatch = entry.match(/<media:thumbnail url="(.*?)"/);
             
             if (!titleMatch || !linkMatch) continue;
             
@@ -64,6 +66,8 @@ Deno.serve(async (req) => {
             const publishedAt = publishedMatch ? new Date(publishedMatch[1]) : new Date();
             const views = viewsMatch ? parseInt(viewsMatch[1]) : 0;
             const likes = likesMatch ? parseInt(likesMatch[1]) : 0;
+            const videoId = videoIdMatch ? videoIdMatch[1] : null;
+            const thumbnail = thumbnailMatch ? thumbnailMatch[1] : (videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null);
             
             // Calculate engagement (views + likes * 10)
             const engagementScore = views + (likes * 10);
@@ -116,11 +120,13 @@ Deno.serve(async (req) => {
                   engagement_velocity: engagementScore / 24, // Assume 24hr window
                   first_seen_at: publishedAt.toISOString(),
                   status: 'monitoring',
+                  image_url: thumbnail,
                   metadata: {
                     views,
                     likes,
                     channel_id: channel.id,
                     channel_name: channel.name,
+                    video_id: videoId,
                   },
                   media_type: 'video',
                 });

@@ -82,51 +82,66 @@ export function ViralClaimsDashboard() {
             ) : (
               viralClaims.map((claim) => (
                 <Card key={claim.id} className="overflow-hidden">
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 space-y-1">
-                        <p className="font-medium line-clamp-2">{claim.claim_text}</p>
-                        <p className="text-sm text-muted-foreground">
-                          First seen {formatDistanceToNow(new Date(claim.first_seen_at))} ago
-                        </p>
+                  <div className="flex gap-4 p-4">
+                    {claim.image_url && (
+                      <div className="flex-shrink-0">
+                        <img 
+                          src={claim.image_url} 
+                          alt={claim.claim_text}
+                          className="w-24 h-24 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       </div>
-                      <Badge 
-                        variant="outline" 
-                        className={`${getStatusColor(claim.status)} flex items-center gap-1`}
-                      >
-                        {getStatusIcon(claim.status)}
-                        {claim.status}
-                      </Badge>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Engagement Velocity</span>
-                        <span className="font-medium">{claim.engagement_velocity.toFixed(1)} /hour</span>
-                      </div>
-                      <Progress 
-                        value={Math.min((Number(claim.engagement_velocity) / 10) * 100, 100)} 
-                        className="h-2"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{claim.engagement_score} engagement</span>
-                        <span>•</span>
-                        <span>{claim.platform}</span>
-                      </div>
-                      
-                      {!claim.verification_id && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleVerifyClaim(claim.claim_text)}
-                          className="gap-2"
+                    )}
+                    
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 space-y-1">
+                          <p className="font-medium line-clamp-2">{claim.claim_text}</p>
+                          <p className="text-sm text-muted-foreground">
+                            First seen {formatDistanceToNow(new Date(claim.first_seen_at))} ago
+                          </p>
+                        </div>
+                        <Badge 
+                          variant="outline" 
+                          className={`${getStatusColor(claim.status)} flex items-center gap-1 flex-shrink-0`}
                         >
-                          <CheckCircle className="h-4 w-4" />
-                          Verify Now
-                        </Button>
-                      )}
+                          {getStatusIcon(claim.status)}
+                          {claim.status}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Engagement Velocity</span>
+                          <span className="font-medium">{claim.engagement_velocity.toFixed(1)} /hour</span>
+                        </div>
+                        <Progress 
+                          value={Math.min((Number(claim.engagement_velocity) / 10) * 100, 100)} 
+                          className="h-2"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span>{claim.engagement_score} engagement</span>
+                          <span>•</span>
+                          <span>{claim.platform}</span>
+                        </div>
+                        
+                        {!claim.verification_id && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleVerifyClaim(claim.claim_text)}
+                            className="gap-2"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Verify Now
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>

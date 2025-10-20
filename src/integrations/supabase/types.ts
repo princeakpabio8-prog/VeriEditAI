@@ -3124,6 +3124,7 @@ export type Database = {
           engagement_velocity: number | null
           first_seen_at: string
           id: string
+          image_url: string | null
           last_checked_at: string
           media_type: string | null
           metadata: Json | null
@@ -3146,6 +3147,7 @@ export type Database = {
           engagement_velocity?: number | null
           first_seen_at?: string
           id?: string
+          image_url?: string | null
           last_checked_at?: string
           media_type?: string | null
           metadata?: Json | null
@@ -3168,6 +3170,7 @@ export type Database = {
           engagement_velocity?: number | null
           first_seen_at?: string
           id?: string
+          image_url?: string | null
           last_checked_at?: string
           media_type?: string | null
           metadata?: Json | null

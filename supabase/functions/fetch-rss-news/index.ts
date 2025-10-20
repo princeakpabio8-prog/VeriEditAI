@@ -695,6 +695,7 @@ serve(async (req) => {
                   engagement_velocity: 100,
                   first_seen_at: article.published_at,
                   status: 'monitoring',
+                  image_url: article.image_url || null,
                   metadata: {
                     description: article.summary.substring(0, 500),
                     feed_source: article.source,

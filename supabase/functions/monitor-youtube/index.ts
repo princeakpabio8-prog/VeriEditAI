@@ -68,8 +68,8 @@ Deno.serve(async (req) => {
             // Calculate engagement (views + likes * 10)
             const engagementScore = views + (likes * 10);
             
-            // Only track videos with significant engagement
-            if (engagementScore < 10000) continue;
+            // Only track videos with significant engagement (relaxed threshold)
+            if (engagementScore < 3000) continue;
             
             totalClaims++;
             

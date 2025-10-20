@@ -670,7 +670,8 @@ serve(async (req) => {
           const hasViralKeyword = viralKeywords.some(keyword => text.includes(keyword));
           const isRecent = (new Date() - new Date(article.published_at)) < 24 * 60 * 60 * 1000; // Last 24 hours
           
-          if (hasViralKeyword && isRecent) {
+          // Broaden criteria: recent + (viral keywords OR has an image)
+          if (isRecent && (hasViralKeyword || !!article.image_url)) {
             try {
               // Create claim hash
               const hashBuffer = await crypto.subtle.digest(

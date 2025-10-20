@@ -32,7 +32,7 @@ export function HotClaimsWidget() {
   useEffect(() => {
     fetchHotClaims();
 
-    // Real-time subscription for new hot claims
+    // Real-time subscription for new hot claims and verification updates
     const channel = supabase
       .channel('hot-claims-updates')
       .on(
@@ -40,8 +40,7 @@ export function HotClaimsWidget() {
         {
           event: '*',
           schema: 'public',
-          table: 'viral_claims',
-          filter: 'engagement_score=gte.1000'
+          table: 'viral_claims'
         },
         () => {
           fetchHotClaims();

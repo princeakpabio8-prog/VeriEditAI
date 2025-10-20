@@ -26,6 +26,7 @@ interface HotClaim {
 export function HotClaimsWidget() {
   const [hotClaims, setHotClaims] = useState<HotClaim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -101,8 +102,9 @@ export function HotClaimsWidget() {
     }
   };
 
-  const handleVerifyNow = (claimText: string) => {
-    navigate(`/verify?claim=${encodeURIComponent(claimText)}`);
+  const handleVerifyNow = (claim: HotClaim) => {
+    setVerifyingIds((prev) => new Set(prev).add(claim.id));
+    navigate(`/verify?claim=${encodeURIComponent(claim.claim_text)}&viralClaimId=${claim.id}`);
   };
 
   if (loading) {
@@ -262,11 +264,12 @@ export function HotClaimsWidget() {
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => handleVerifyNow(claim.claim_text)}
+                    onClick={() => handleVerifyNow(claim)}
                     size="sm"
+                    disabled={verifyingIds.has(claim.id)}
                     className={index === 0 ? 'bg-orange-500 hover:bg-orange-600' : ''}
                   >
-                    {index === 0 ? '🏁 Verify Now!' : 'Verify'}
+                    {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
                   </Button>
                 )}
               </div>

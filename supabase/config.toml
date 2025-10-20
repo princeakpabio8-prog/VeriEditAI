@@ -239,3 +239,6 @@ verify_jwt = false
 
 [functions.fix-nft-images]
 verify_jwt = false
+
+[functions.fix-nft-badge-images]
+verify_jwt = false

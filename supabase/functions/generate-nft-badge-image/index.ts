@@ -122,13 +122,60 @@ serve(async (req) => {
 
     console.log(`✅ Uploaded badge image to: ${publicUrl}`);
 
-    // Update the NFT badge record with the image URL
-    await supabase
+    // Get the NFT badge record to access metadata_uri
+    const { data: badgeRecord, error: badgeError } = await supabase
       .from('nft_badges')
-      .update({ 
-        metadata_uri: publicUrl  // Update the metadata to point to the new image
-      })
-      .eq('id', badge_id);
+      .select('metadata_uri')
+      .eq('id', badge_id)
+      .single();
+
+    if (badgeError || !badgeRecord) {
+      console.error('❌ Could not find badge record');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          image_url: publicUrl,
+          stored: true,
+          metadata_updated: false 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Download the existing metadata JSON
+    const metadataResponse = await fetch(badgeRecord.metadata_uri);
+    if (!metadataResponse.ok) {
+      console.error('❌ Could not fetch existing metadata');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          image_url: publicUrl,
+          stored: true,
+          metadata_updated: false 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const existingMetadata = await metadataResponse.json();
+    
+    // Update the image URL in the metadata
+    existingMetadata.image = publicUrl;
+    
+    // Re-upload the updated metadata
+    const metadataFileName = badgeRecord.metadata_uri.split('/').pop();
+    const { error: metadataError } = await supabase.storage
+      .from('nft-metadata')
+      .update(metadataFileName, JSON.stringify(existingMetadata, null, 2), {
+        contentType: 'application/json',
+        upsert: true
+      });
+
+    if (metadataError) {
+      console.error('❌ Failed to update metadata:', metadataError);
+    } else {
+      console.log('✅ Metadata updated with new image URL');
+    }
 
     return new Response(
       JSON.stringify({ 

@@ -643,7 +643,8 @@ const Dashboard = () => {
                   My Truth Badges
                 </CardTitle>
                 <CardDescription>
-                  NFT badges you've earned by verifying claims with ≥75% trust score on Polygon Mainnet
+                  NFT badges you've earned by verifying claims with ≥75% trust score on Polygon Mainnet.
+                  {' '}Images are AI-generated and may take a few moments to appear.
                 </CardDescription>
               </CardHeader>
               <CardContent>

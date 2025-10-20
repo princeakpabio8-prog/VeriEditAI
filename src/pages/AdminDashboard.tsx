@@ -223,6 +223,41 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="nft" className="space-y-6">
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle>NFT Badge Image Maintenance</CardTitle>
+                <CardDescription>
+                  Regenerate AI images for badges that have missing or broken images
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={async () => {
+                    const { supabase } = await import('@/integrations/supabase/client');
+                    const { toast } = await import('@/hooks/use-toast');
+                    try {
+                      toast({ title: "Starting image regeneration...", description: "This may take a few minutes" });
+                      const { data, error } = await supabase.functions.invoke('fix-nft-badge-images');
+                      if (error) throw error;
+                      toast({ 
+                        title: "✅ Image fix complete!", 
+                        description: `Fixed ${data.fixed} badges, ${data.skipped} skipped, ${data.failed} failed` 
+                      });
+                    } catch (err: any) {
+                      toast({ 
+                        title: "Error", 
+                        description: err.message, 
+                        variant: "destructive" 
+                      });
+                    }
+                  }}
+                  variant="default"
+                >
+                  🎨 Regenerate All Badge Images
+                </Button>
+              </CardContent>
+            </Card>
+            
             <OpenSeaVerification />
           </TabsContent>
 

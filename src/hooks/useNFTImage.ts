@@ -36,13 +36,25 @@ export function useNFTImage(metadataUri: string | null) {
         const metadata: NFTMetadata = await response.json()
         
         if (metadata.image) {
-          imageCache.set(metadataUri, metadata.image)
-          setImageUrl(metadata.image)
+          // Check if image URL is accessible
+          try {
+            const imageCheck = await fetch(metadata.image, { method: 'HEAD' })
+            if (imageCheck.ok) {
+              imageCache.set(metadataUri, metadata.image)
+              setImageUrl(metadata.image)
+              setError(null)
+            } else {
+              throw new Error('Image not accessible')
+            }
+          } catch (imgErr) {
+            console.warn('Image URL not accessible:', metadata.image)
+            // Image exists in metadata but isn't accessible - fallback will be used
+            setImageUrl(null)
+            setError('Image not yet generated')
+          }
         } else {
           throw new Error('No image in metadata')
         }
-        
-        setError(null)
       } catch (err) {
         console.error('Error fetching NFT metadata:', err)
         setError(err instanceof Error ? err.message : 'Unknown error')

@@ -137,8 +137,9 @@ serve(async (req) => {
       }
     }
     
-    // Use a placeholder image URL - will be updated with AI-generated image later
-    const badgeImageUrl = `https://sqtkkzdswxazyikcheds.supabase.co/storage/v1/object/public/nft-badge-images/truth-badge-template.png`
+    // Use a hosted fallback image - will be replaced with AI-generated image shortly after minting
+    // Using a reliable CDN URL that will always be accessible
+    const badgeImageUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-fallback.png'
     
     // Upload metadata with rarity info
     const attributes = [
@@ -373,8 +374,8 @@ serve(async (req) => {
             } else {
               console.log('✅ Background token ID fix completed successfully')
               
-              // After fixing token IDs, update images and OpenSea
-              await supabase.functions.invoke('fix-nft-images')
+              // After fixing token IDs, fix images and sync OpenSea
+              await supabase.functions.invoke('fix-nft-badge-images')
               await supabase.functions.invoke('sync-opensea-collection')
               console.log('✅ Full sync completed')
             }

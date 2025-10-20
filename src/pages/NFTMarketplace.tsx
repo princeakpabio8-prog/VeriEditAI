@@ -11,6 +11,8 @@ import { OpenSeaIntegration } from '@/components/nft/OpenSeaIntegration';
 import { CollectionStats } from '@/components/nft/CollectionStats';
 import { ExternalLink, TrendingUp, Award, Search, Filter } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNFTImage } from '@/hooks/useNFTImage';
+import badgeImage from '@/assets/truth-badge.png';
 
 interface NFTBadge {
   id: string;
@@ -205,100 +207,14 @@ export default function NFTMarketplace() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBadges.map((badge) => (
-                  <Card key={badge.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">Token #{badge.token_id}</CardTitle>
-                            {badge.opensea_listed && (
-                              <Badge variant="secondary" className="text-xs">Listed</Badge>
-                            )}
-                          </div>
-                          <Badge className={getTrustScoreColor(badge.trust_score)}>
-                            {badge.trust_score}% Trust Score
-                          </Badge>
-                        </div>
-                        <Award className="w-8 h-8 text-primary" />
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {badge.claim_text}
-                      </p>
-
-                      <div className="space-y-2 text-sm">
-                        {badge.opensea_listed && badge.current_listing_price && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Listed Price</span>
-                            <span className="font-bold text-green-600">
-                              {badge.current_listing_price} MATIC
-                            </span>
-                          </div>
-                        )}
-                        {badge.last_sale_price && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">Last Sale</span>
-                            <span className="font-medium">
-                              {badge.last_sale_price} MATIC
-                            </span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-muted-foreground">Minted</span>
-                          <span className="font-medium">
-                            {new Date(badge.minted_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button size="sm" className="flex-1" asChild>
-                          <a 
-                            href={badge.opensea_url || getOpenSeaUrl(badge.token_id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View on OpenSea
-                            <ExternalLink className="w-3 h-3 ml-2" />
-                          </a>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {filteredBadges.map((badge) => <BadgeMarketCard key={badge.id} badge={badge} />)}
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="listed" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {badges.filter(b => b.opensea_listed).map((badge) => (
-                <Card key={badge.id} className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>Token #{badge.token_id}</span>
-                      <Badge className="bg-green-600">Listed</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {badge.claim_text}
-                    </p>
-                    {badge.current_listing_price && (
-                      <div className="text-2xl font-bold text-green-600 mb-4">
-                        {badge.current_listing_price} MATIC
-                      </div>
-                    )}
-                    <Button size="sm" className="w-full" asChild>
-                      <a href={badge.opensea_url || getOpenSeaUrl(badge.token_id)} target="_blank" rel="noopener noreferrer">
-                        Buy on OpenSea
-                      </a>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+              {badges.filter(b => b.opensea_listed).map((badge) => <BadgeMarketCard key={badge.id} badge={badge} showPrice />)}
             </div>
           </TabsContent>
 
@@ -318,5 +234,99 @@ export default function NFTMarketplace() {
         </Tabs>
       </main>
     </div>
+  );
+}
+
+function BadgeMarketCard({ badge, showPrice }: { badge: NFTBadge; showPrice?: boolean }) {
+  const { imageUrl, loading } = useNFTImage(badge.metadata_uri);
+  const displayImage = imageUrl || badgeImage;
+  
+  const getTrustScoreColor = (score: number): string => {
+    if (score >= 80) return 'text-green-600 bg-green-50 border-green-200';
+    if (score >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    return 'text-red-600 bg-red-50 border-red-200';
+  };
+
+  const getOpenSeaUrl = (tokenId: string) => {
+    return `https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${tokenId}`;
+  };
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-square bg-gradient-to-br from-primary/10 to-purple-600/10 relative overflow-hidden">
+        {loading ? (
+          <div className="absolute inset-0 bg-muted animate-pulse" />
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 blur-xl" />
+            <img 
+              src={displayImage} 
+              alt={`Badge #${badge.token_id}`}
+              className="relative w-full h-full object-contain p-6"
+            />
+          </>
+        )}
+      </div>
+      
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg">Token #{badge.token_id}</CardTitle>
+              {badge.opensea_listed && (
+                <Badge variant="secondary" className="text-xs">Listed</Badge>
+              )}
+            </div>
+            <Badge className={getTrustScoreColor(badge.trust_score)}>
+              {badge.trust_score}% Trust Score
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground line-clamp-3">
+          {badge.claim_text}
+        </p>
+
+        <div className="space-y-2 text-sm">
+          {showPrice && badge.opensea_listed && badge.current_listing_price && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Listed Price</span>
+              <span className="font-bold text-green-600">
+                {badge.current_listing_price} MATIC
+              </span>
+            </div>
+          )}
+          {badge.last_sale_price && (
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Last Sale</span>
+              <span className="font-medium">
+                {badge.last_sale_price} MATIC
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Minted</span>
+            <span className="font-medium">
+              {new Date(badge.minted_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <Button size="sm" className="flex-1" asChild>
+            <a 
+              href={badge.opensea_url || getOpenSeaUrl(badge.token_id)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View on OpenSea
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </a>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Award, ExternalLink } from 'lucide-react'
+import { useNFTImage } from '@/hooks/useNFTImage'
 import badgeImage from '@/assets/truth-badge.png'
 
 interface TruthBadge {
@@ -94,38 +95,96 @@ export function TruthBadgeGallery() {
       <h2 className="text-2xl font-bold">My Truth Badges</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {badges.map((badge) => (
-          <Card 
-            key={badge.id} 
-            className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 relative"
-          >
-            {/* Rarity Badge Overlay */}
-            {badge.rarity_tier && (
-              <div className="absolute top-2 right-2 z-10">
-                <Badge className={`bg-gradient-to-r ${getRarityColor(badge.rarity_tier)} text-white font-bold shadow-lg`}>
-                  {getRarityIcon(badge.rarity_tier)} {badge.rarity_tier}
-                </Badge>
-              </div>
-            )}
-            
-            {/* First Verifier Badge */}
-            {badge.minted_at_rank === 1 && (
-              <div className="absolute top-2 left-2 z-10">
-                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg">
-                  🥇 FIRST
-                </Badge>
-              </div>
-            )}
-            
-            <CardContent className="p-6 space-y-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-lg blur-xl group-hover:blur-2xl transition-all" />
-                <img 
-                  src={badgeImage} 
-                  alt="Truth Badge" 
-                  className="relative h-40 w-40 mx-auto object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
-                />
-              </div>
+        {badges.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}
+      </div>
+    </div>
+  )
+}
+
+function BadgeCard({ badge }: { badge: TruthBadge }) {
+  const { imageUrl, loading } = useNFTImage(badge.metadata_uri)
+  const displayImage = imageUrl || badgeImage
+
+  const getRarityColor = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'from-yellow-400 to-orange-500';
+      case 'EPIC':
+        return 'from-purple-400 to-pink-500';
+      case 'RARE':
+        return 'from-blue-400 to-cyan-500';
+      case 'UNCOMMON':
+        return 'from-green-400 to-emerald-500';
+      default:
+        return 'from-gray-400 to-slate-500';
+    }
+  };
+
+  const getRarityIcon = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return '⚡';
+      case 'EPIC':
+        return '💎';
+      case 'RARE':
+        return '🔥';
+      case 'UNCOMMON':
+        return '✨';
+      default:
+        return '📝';
+    }
+  };
+
+  const getRarityGlow = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'shadow-[0_0_30px_rgba(251,191,36,0.5)]';
+      case 'EPIC':
+        return 'shadow-[0_0_30px_rgba(168,85,247,0.5)]';
+      case 'RARE':
+        return 'shadow-[0_0_30px_rgba(59,130,246,0.5)]';
+      case 'UNCOMMON':
+        return 'shadow-[0_0_30px_rgba(34,197,94,0.5)]';
+      default:
+        return '';
+    }
+  };
+
+  return (
+    <Card 
+      className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 relative"
+    >
+      {/* Rarity Badge Overlay */}
+      {badge.rarity_tier && (
+        <div className="absolute top-2 right-2 z-10">
+          <Badge className={`bg-gradient-to-r ${getRarityColor(badge.rarity_tier)} text-white font-bold shadow-lg`}>
+            {getRarityIcon(badge.rarity_tier)} {badge.rarity_tier}
+          </Badge>
+        </div>
+      )}
+      
+      {/* First Verifier Badge */}
+      {badge.minted_at_rank === 1 && (
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg">
+            🥇 FIRST
+          </Badge>
+        </div>
+      )}
+      
+      <CardContent className="p-6 space-y-4">
+        <div className="relative">
+          <div className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-lg blur-xl group-hover:blur-2xl transition-all ${getRarityGlow(badge.rarity_tier)}`} />
+          {loading ? (
+            <div className="relative h-40 w-40 mx-auto bg-muted animate-pulse rounded-lg" />
+          ) : (
+            <img 
+              src={displayImage} 
+              alt="Truth Badge" 
+              className="relative h-40 w-40 mx-auto object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
+            />
+          )}
+        </div>
 
               <div className="space-y-2 text-center">
                 <div className="flex items-center justify-between">
@@ -164,29 +223,26 @@ export function TruthBadgeGallery() {
                 Minted {new Date(badge.minted_at).toLocaleDateString()}
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  PolygonScan
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => window.open(badge.metadata_uri, '_blank')}
-                >
-                  Metadata
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            PolygonScan
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => window.open(badge.metadata_uri, '_blank')}
+          >
+            Metadata
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

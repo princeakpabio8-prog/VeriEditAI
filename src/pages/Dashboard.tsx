@@ -24,7 +24,7 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TruthBadgeGallery } from '@/components/nft/TruthBadgeGallery';
-import { HotClaimsWidget } from '@/components/viral/HotClaimsWidget';
+
 
 import { useSearchParams } from 'react-router-dom';
 import { LighthouseFeed } from '@/components/lighthouse-feed';
@@ -489,10 +489,6 @@ const Dashboard = () => {
         </TabsList>
 
           <TabsContent value="overview" className="space-y-6 animate-fade-in">
-            {/* Hot Claims Widget */}
-            <div className="mb-6">
-              <HotClaimsWidget />
-            </div>
             
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">

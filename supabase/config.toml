@@ -180,6 +180,9 @@ verify_jwt = false
 [functions.monitor-reddit]
 verify_jwt = false
 
+[functions.monitor-youtube]
+verify_jwt = false
+
 [functions.calculate-virality]
 verify_jwt = false
 

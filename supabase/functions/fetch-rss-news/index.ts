@@ -594,7 +594,7 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log("🚀 Starting RSS feed fetch with batch processing...");
+    console.log("🚀 Starting RSS feed fetch with batch processing and viral claim detection...");
     console.log(`📊 Total sources: ${RSS_SOURCES.length}`);
     
     const BATCH_SIZE = 6;
@@ -608,7 +608,11 @@ serve(async (req) => {
     let totalInserted = 0;
     let totalSkipped = 0;
     let totalFetched = 0;
+    let viralClaims = 0;
     const errors: string[] = [];
+    
+    // Viral keywords for claim detection
+    const viralKeywords = ['breaking', 'urgent', 'exclusive', 'bombshell', 'shocking', 'crisis', 'alert', 'unprecedented', 'emergency'];
     
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
@@ -660,6 +664,54 @@ serve(async (req) => {
           }
         } else {
           batchInserted++;
+          
+          // Check if article is potentially viral
+          const text = `${article.title} ${article.summary}`.toLowerCase();
+          const hasViralKeyword = viralKeywords.some(keyword => text.includes(keyword));
+          const isRecent = (new Date() - new Date(article.published_at)) < 24 * 60 * 60 * 1000; // Last 24 hours
+          
+          if (hasViralKeyword && isRecent) {
+            try {
+              // Create claim hash
+              const hashBuffer = await crypto.subtle.digest(
+                'SHA-256',
+                new TextEncoder().encode(article.title.toLowerCase().trim())
+              );
+              const hashArray = Array.from(new Uint8Array(hashBuffer));
+              const claimHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+              
+              // Insert viral claim
+              const { error: viralError } = await supabase
+                .from('viral_claims')
+                .insert({
+                  claim_text: article.title,
+                  claim_hash: claimHash,
+                  platform: 'rss',
+                  platform_category: 'news',
+                  source_url: article.link,
+                  author: article.source,
+                  engagement_score: 1000, // Base score for RSS viral claims
+                  engagement_velocity: 100,
+                  first_seen_at: article.published_at,
+                  metadata: {
+                    description: article.summary.substring(0, 500),
+                    feed_source: article.source,
+                    category: article.category,
+                    keywords: viralKeywords.filter(k => text.includes(k)),
+                  },
+                  media_type: article.image_url ? 'image' : 'text',
+                })
+                .onConflict('claim_hash')
+                .ignoreDuplicates();
+              
+              if (!viralError) {
+                viralClaims++;
+                console.log(`🔥 Viral claim: ${article.title.substring(0, 50)}...`);
+              }
+            } catch (viralErr) {
+              console.error('Error creating viral claim:', viralErr);
+            }
+          }
         }
       }
       
@@ -676,6 +728,7 @@ serve(async (req) => {
       total_fetched: totalFetched,
       inserted: totalInserted,
       skipped: totalSkipped,
+      viral_claims_detected: viralClaims,
       sources_processed: RSS_SOURCES.length,
       batches_processed: batches.length,
       errors: errors.length > 0 ? errors.slice(0, 10) : undefined,

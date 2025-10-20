@@ -939,14 +939,18 @@ export type Database = {
           last_sale_price: number | null
           metadata_uri: string
           minted_at: string | null
+          minted_at_rank: number | null
           opensea_listed: boolean | null
           opensea_url: string | null
+          rarity_tier: string | null
           token_id: string
           transaction_hash: string
           trust_score: number
           updated_at: string | null
           user_id: string
           verification_id: string
+          viral_claim_id: string | null
+          virality_score: number | null
           wallet_address: string
         }
         Insert: {
@@ -958,14 +962,18 @@ export type Database = {
           last_sale_price?: number | null
           metadata_uri: string
           minted_at?: string | null
+          minted_at_rank?: number | null
           opensea_listed?: boolean | null
           opensea_url?: string | null
+          rarity_tier?: string | null
           token_id: string
           transaction_hash: string
           trust_score: number
           updated_at?: string | null
           user_id: string
           verification_id: string
+          viral_claim_id?: string | null
+          virality_score?: number | null
           wallet_address: string
         }
         Update: {
@@ -977,14 +985,18 @@ export type Database = {
           last_sale_price?: number | null
           metadata_uri?: string
           minted_at?: string | null
+          minted_at_rank?: number | null
           opensea_listed?: boolean | null
           opensea_url?: string | null
+          rarity_tier?: string | null
           token_id?: string
           transaction_hash?: string
           trust_score?: number
           updated_at?: string | null
           user_id?: string
           verification_id?: string
+          viral_claim_id?: string | null
+          virality_score?: number | null
           wallet_address?: string
         }
         Relationships: [
@@ -993,6 +1005,13 @@ export type Database = {
             columns: ["verification_id"]
             isOneToOne: true
             referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nft_badges_viral_claim_id_fkey"
+            columns: ["viral_claim_id"]
+            isOneToOne: false
+            referencedRelation: "viral_claims"
             referencedColumns: ["id"]
           },
         ]
@@ -2845,6 +2864,89 @@ export type Database = {
           },
         ]
       }
+      verification_races: {
+        Row: {
+          claim_text: string
+          created_at: string | null
+          first_verification_id: string | null
+          first_verified_at: string | null
+          first_verifier_id: string | null
+          id: string
+          second_verification_id: string | null
+          second_verified_at: string | null
+          second_verifier_id: string | null
+          third_verification_id: string | null
+          third_verified_at: string | null
+          third_verifier_id: string | null
+          total_verifiers: number | null
+          updated_at: string | null
+          viral_claim_id: string
+        }
+        Insert: {
+          claim_text: string
+          created_at?: string | null
+          first_verification_id?: string | null
+          first_verified_at?: string | null
+          first_verifier_id?: string | null
+          id?: string
+          second_verification_id?: string | null
+          second_verified_at?: string | null
+          second_verifier_id?: string | null
+          third_verification_id?: string | null
+          third_verified_at?: string | null
+          third_verifier_id?: string | null
+          total_verifiers?: number | null
+          updated_at?: string | null
+          viral_claim_id: string
+        }
+        Update: {
+          claim_text?: string
+          created_at?: string | null
+          first_verification_id?: string | null
+          first_verified_at?: string | null
+          first_verifier_id?: string | null
+          id?: string
+          second_verification_id?: string | null
+          second_verified_at?: string | null
+          second_verifier_id?: string | null
+          third_verification_id?: string | null
+          third_verified_at?: string | null
+          third_verifier_id?: string | null
+          total_verifiers?: number | null
+          updated_at?: string | null
+          viral_claim_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_races_first_verification_id_fkey"
+            columns: ["first_verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_races_second_verification_id_fkey"
+            columns: ["second_verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_races_third_verification_id_fkey"
+            columns: ["third_verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_races_viral_claim_id_fkey"
+            columns: ["viral_claim_id"]
+            isOneToOne: false
+            referencedRelation: "viral_claims"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       verification_shares: {
         Row: {
           avg_view_duration_seconds: number | null
@@ -3023,13 +3125,17 @@ export type Database = {
           first_seen_at: string
           id: string
           last_checked_at: string
+          media_type: string | null
           metadata: Json | null
           peak_engagement: number | null
           platform: string
+          platform_category: string | null
+          rarity_tier: string | null
           source_url: string
           status: string | null
           updated_at: string | null
           verification_id: string | null
+          virality_score: number | null
         }
         Insert: {
           author?: string | null
@@ -3041,13 +3147,17 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_checked_at?: string
+          media_type?: string | null
           metadata?: Json | null
           peak_engagement?: number | null
           platform: string
+          platform_category?: string | null
+          rarity_tier?: string | null
           source_url: string
           status?: string | null
           updated_at?: string | null
           verification_id?: string | null
+          virality_score?: number | null
         }
         Update: {
           author?: string | null
@@ -3059,13 +3169,17 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_checked_at?: string
+          media_type?: string | null
           metadata?: Json | null
           peak_engagement?: number | null
           platform?: string
+          platform_category?: string | null
+          rarity_tier?: string | null
           source_url?: string
           status?: string | null
           updated_at?: string | null
           verification_id?: string | null
+          virality_score?: number | null
         }
         Relationships: [
           {

@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Award, ExternalLink } from 'lucide-react'
 import badgeImage from '@/assets/truth-badge.png'
 
@@ -14,6 +15,9 @@ interface TruthBadge {
   trust_score: number
   minted_at: string
   metadata_uri: string
+  rarity_tier: string | null
+  virality_score: number | null
+  minted_at_rank: number | null
 }
 
 export function TruthBadgeGallery() {
@@ -28,7 +32,7 @@ export function TruthBadgeGallery() {
   const fetchBadges = async () => {
     const { data, error } = await supabase
       .from('nft_badges')
-      .select('*')
+      .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank')
       .eq('user_id', user!.id)
       .order('minted_at', { ascending: false })
 
@@ -55,6 +59,36 @@ export function TruthBadgeGallery() {
     )
   }
 
+  const getRarityColor = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return 'from-yellow-400 to-orange-500';
+      case 'EPIC':
+        return 'from-purple-400 to-pink-500';
+      case 'RARE':
+        return 'from-blue-400 to-cyan-500';
+      case 'UNCOMMON':
+        return 'from-green-400 to-emerald-500';
+      default:
+        return 'from-gray-400 to-slate-500';
+    }
+  };
+
+  const getRarityIcon = (rarity: string | null) => {
+    switch (rarity) {
+      case 'LEGENDARY':
+        return '⚡';
+      case 'EPIC':
+        return '💎';
+      case 'RARE':
+        return '🔥';
+      case 'UNCOMMON':
+        return '✨';
+      default:
+        return '📝';
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">My Truth Badges</h2>
@@ -63,8 +97,26 @@ export function TruthBadgeGallery() {
         {badges.map((badge) => (
           <Card 
             key={badge.id} 
-            className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300"
+            className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 relative"
           >
+            {/* Rarity Badge Overlay */}
+            {badge.rarity_tier && (
+              <div className="absolute top-2 right-2 z-10">
+                <Badge className={`bg-gradient-to-r ${getRarityColor(badge.rarity_tier)} text-white font-bold shadow-lg`}>
+                  {getRarityIcon(badge.rarity_tier)} {badge.rarity_tier}
+                </Badge>
+              </div>
+            )}
+            
+            {/* First Verifier Badge */}
+            {badge.minted_at_rank === 1 && (
+              <div className="absolute top-2 left-2 z-10">
+                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg">
+                  🥇 FIRST
+                </Badge>
+              </div>
+            )}
+            
             <CardContent className="p-6 space-y-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-lg blur-xl group-hover:blur-2xl transition-all" />
@@ -84,6 +136,24 @@ export function TruthBadgeGallery() {
                   <span className="text-sm text-muted-foreground">Trust Score</span>
                   <span className="font-bold text-primary">{badge.trust_score}%</span>
                 </div>
+                
+                {/* Virality Score */}
+                {badge.virality_score !== null && badge.virality_score > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Virality</span>
+                    <span className="font-bold text-orange-500">{Math.round(badge.virality_score)}</span>
+                  </div>
+                )}
+                
+                {/* Verifier Rank */}
+                {badge.minted_at_rank && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Rank</span>
+                    <span className="font-bold">
+                      {badge.minted_at_rank === 1 ? '🥇 1st' : badge.minted_at_rank === 2 ? '🥈 2nd' : badge.minted_at_rank === 3 ? '🥉 3rd' : `#${badge.minted_at_rank}`}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <p className="text-sm text-muted-foreground line-clamp-2 text-center">
@@ -110,7 +180,7 @@ export function TruthBadgeGallery() {
                   className="flex-1"
                   onClick={() => window.open(badge.metadata_uri, '_blank')}
                 >
-                  View Metadata
+                  Metadata
                 </Button>
               </div>
             </CardContent>

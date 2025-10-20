@@ -82,40 +82,110 @@ serve(async (req) => {
       throw new Error('Badge already minted on blockchain for this verification')
     }
     
+    // Check if verification is linked to a viral claim and get rarity data
+    const { data: viralClaim } = await supabase
+      .from('viral_claims')
+      .select('id, rarity_tier, virality_score, engagement_score, engagement_velocity, first_seen_at')
+      .eq('claim_text', verification.content.substring(0, 500))
+      .maybeSingle()
+    
+    // Check verification race to see if this is first/second/third verifier
+    let verifierRank = null
+    let rarityTier = viralClaim?.rarity_tier || 'COMMON'
+    let viralityScore = viralClaim?.virality_score || 0
+    
+    if (viralClaim) {
+      const { data: race } = await supabase
+        .from('verification_races')
+        .select('first_verifier_id, second_verifier_id, third_verifier_id')
+        .eq('viral_claim_id', viralClaim.id)
+        .maybeSingle()
+      
+      if (race) {
+        if (race.first_verifier_id === user.id) {
+          verifierRank = 1
+          // First verifier gets 2x rarity boost
+          if (rarityTier === 'UNCOMMON') rarityTier = 'RARE'
+          else if (rarityTier === 'RARE') rarityTier = 'EPIC'
+          else if (rarityTier === 'EPIC') rarityTier = 'LEGENDARY'
+        } else if (race.second_verifier_id === user.id) {
+          verifierRank = 2
+        } else if (race.third_verifier_id === user.id) {
+          verifierRank = 3
+        }
+      }
+    }
+    
     // Get the badge image URL from Supabase Storage
     const badgeImageUrl = `https://sqtkkzdswxazyikcheds.supabase.co/storage/v1/object/public/nft-badge-images/truth-badge-template.png`
     
-    // Upload metadata
-    const metadata = {
-      name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
-      description: `Own a piece of the truth revolution. This VeriEdit Truth Badge represents a verified claim in the fight against misinformation. Powered by AI and validated against trusted sources, each badge is a digital artifact proving that facts matter. With a ${verification.trust_score}% confidence rating, this NFT certifies authenticity in an age of deception. Join the movement. Collect truth. Change the world.`,
-      image: badgeImageUrl,
-      attributes: [
+    // Upload metadata with rarity info
+    const attributes = [
+      {
+        trait_type: 'Rarity',
+        value: rarityTier
+      },
+      {
+        trait_type: 'Trust Score',
+        value: verification.trust_score,
+        display_type: 'number'
+      },
+      {
+        trait_type: 'Verification Date',
+        value: verification.created_at
+      },
+      {
+        trait_type: 'Claim Preview',
+        value: verification.content.substring(0, 200)
+      },
+      {
+        trait_type: 'Verified By',
+        value: 'VeriEdit AI'
+      },
+      {
+        trait_type: 'Chain',
+        value: 'Polygon Mainnet'
+      }
+    ]
+    
+    if (viralClaim) {
+      attributes.push(
         {
-          trait_type: 'Trust Score',
-          value: verification.trust_score,
+          trait_type: 'Virality Score',
+          value: Math.round(viralityScore),
           display_type: 'number'
         },
         {
-          trait_type: 'Verification Date',
-          value: verification.created_at
-        },
-        {
-          trait_type: 'Claim Preview',
-          value: verification.content.substring(0, 200)
-        },
-        {
-          trait_type: 'Verified By',
-          value: 'VeriEdit AI'
-        },
-        {
-          trait_type: 'Chain',
-          value: 'Polygon Mainnet'
+          trait_type: 'Engagement',
+          value: viralClaim.engagement_score,
+          display_type: 'number'
         }
-      ],
+      )
+    }
+    
+    if (verifierRank) {
+      attributes.push({
+        trait_type: 'Verifier Rank',
+        value: `#${verifierRank}`,
+      })
+      
+      if (verifierRank === 1) {
+        attributes.push({
+          trait_type: 'First Verifier',
+          value: 'Yes'
+        })
+      }
+    }
+    
+    const metadata = {
+      name: `VeriEdit Truth Badge #${await contract.totalSupply() + 1n}`,
+      description: `Own a piece of the truth revolution. This ${rarityTier} VeriEdit Truth Badge represents a verified claim in the fight against misinformation. Powered by AI and validated against trusted sources, each badge is a digital artifact proving that facts matter. With a ${verification.trust_score}% confidence rating, this NFT certifies authenticity in an age of deception. Join the movement. Collect truth. Change the world.`,
+      image: badgeImageUrl,
+      attributes,
       external_url: `https://veriedit.ai/share/${verificationId}`,
       verification_id: verificationId,
-      claim_text: verification.content.substring(0, 500)
+      claim_text: verification.content.substring(0, 500),
+      rarity_tier: rarityTier
     }
     
     // Upload metadata to Supabase Storage instead of NFT.Storage
@@ -171,7 +241,7 @@ serve(async (req) => {
       tokenId = parsed?.args[0].toString()
     }
     
-    // Store in database
+    // Store in database with rarity and viral data
     const { error: insertError } = await supabase
       .from('nft_badges')
       .insert({
@@ -184,7 +254,11 @@ serve(async (req) => {
         metadata_uri: metadataURI,
         claim_text: verification.content.substring(0, 500),
         trust_score: verification.trust_score,
-        wallet_address: walletAddress
+        wallet_address: walletAddress,
+        rarity_tier: rarityTier,
+        viral_claim_id: viralClaim?.id,
+        virality_score: viralityScore,
+        minted_at_rank: verifierRank
       })
     
     if (insertError) throw insertError

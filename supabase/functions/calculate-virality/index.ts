@@ -76,17 +76,34 @@ serve(async (req) => {
 
       const viralityScore = velocity * recencyFactor * crossPlatformMultiplier;
 
-      // Update claim with new velocity and virality score
+      // Calculate rarity tier based on engagement metrics
+      const ageInHours = hoursSinceFirstSeen;
+      let rarityTier = 'COMMON';
+      
+      if (claim.engagement_score >= 10000 && ageInHours < 6 && velocity > 1500) {
+        rarityTier = 'LEGENDARY';
+      } else if (claim.engagement_score >= 5000 && ageInHours < 24 && velocity > 500) {
+        rarityTier = 'EPIC';
+      } else if (claim.engagement_score >= 2000 && ageInHours < 48 && velocity > 100) {
+        rarityTier = 'RARE';
+      } else if (claim.engagement_score >= 1000) {
+        rarityTier = 'UNCOMMON';
+      }
+
+      // Update claim with new velocity, virality score, and rarity tier
       await supabaseClient
         .from('viral_claims')
         .update({
           engagement_velocity: velocity,
+          virality_score: viralityScore,
+          rarity_tier: rarityTier,
           last_checked_at: new Date().toISOString(),
           metadata: {
             ...(claim.metadata || {}),
             virality_score: viralityScore,
             recency_factor: recencyFactor,
             cross_platform_multiplier: crossPlatformMultiplier,
+            rarity_tier: rarityTier,
           }
         })
         .eq('id', claim.id);

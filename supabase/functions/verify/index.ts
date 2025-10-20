@@ -260,6 +260,20 @@ serve(async (req) => {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        // Check if this claim matches a viral claim and track verification race
+        let viralClaimId = null;
+        const { data: matchingViralClaim } = await supabase
+          .from('viral_claims')
+          .select('id, claim_text, first_seen_at')
+          .ilike('claim_text', `%${safeContent.substring(0, 200)}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (matchingViralClaim) {
+          viralClaimId = matchingViralClaim.id;
+          console.log(`🏁 Matched viral claim: ${viralClaimId}`);
+        }
+        
         // Save verification with embedding
         const { data: verification, error: dbError } = await supabase
           .from('verifications')
@@ -286,6 +300,72 @@ serve(async (req) => {
         } else {
           verificationId = verification.id;
           console.log(`💾 Verification saved with ID: ${verificationId}`);
+          
+          // Track verification race if this is a viral claim
+          if (viralClaimId && user_id) {
+            try {
+              const { data: existingRace } = await supabase
+                .from('verification_races')
+                .select('first_verifier_id, second_verifier_id, third_verifier_id, total_verifiers')
+                .eq('viral_claim_id', viralClaimId)
+                .maybeSingle();
+              
+              if (!existingRace) {
+                // Create new race - this user is first!
+                await supabase.from('verification_races').insert({
+                  viral_claim_id: viralClaimId,
+                  claim_text: safeContent.substring(0, 500),
+                  first_verifier_id: user_id,
+                  first_verified_at: new Date().toISOString(),
+                  first_verification_id: verificationId,
+                  total_verifiers: 1
+                });
+                
+                // Award "First Blood" achievement
+                await supabase.functions.invoke('calculate-achievements', {
+                  body: { user_id, achievement_type: 'first_blood' }
+                });
+                
+                console.log(`🥇 FIRST VERIFIER! User ${user_id} wins the race for claim ${viralClaimId}`);
+              } else if (!existingRace.second_verifier_id) {
+                // Second place
+                await supabase
+                  .from('verification_races')
+                  .update({
+                    second_verifier_id: user_id,
+                    second_verified_at: new Date().toISOString(),
+                    second_verification_id: verificationId,
+                    total_verifiers: 2
+                  })
+                  .eq('viral_claim_id', viralClaimId);
+                
+                console.log(`🥈 Second verifier for claim ${viralClaimId}`);
+              } else if (!existingRace.third_verifier_id) {
+                // Third place
+                await supabase
+                  .from('verification_races')
+                  .update({
+                    third_verifier_id: user_id,
+                    third_verified_at: new Date().toISOString(),
+                    third_verification_id: verificationId,
+                    total_verifiers: 3
+                  })
+                  .eq('viral_claim_id', viralClaimId);
+                
+                console.log(`🥉 Third verifier for claim ${viralClaimId}`);
+              } else {
+                // Just increment counter
+                await supabase
+                  .from('verification_races')
+                  .update({
+                    total_verifiers: (existingRace.total_verifiers || 3) + 1
+                  })
+                  .eq('viral_claim_id', viralClaimId);
+              }
+            } catch (raceError) {
+              console.error('Error tracking verification race:', raceError);
+            }
+          }
 
           // Save sources
           if (result.sources && result.sources.length > 0) {

@@ -236,3 +236,6 @@ verify_jwt = false
 
 [functions.update-nft-metadata]
 verify_jwt = false
+
+[functions.fix-nft-images]
+verify_jwt = false

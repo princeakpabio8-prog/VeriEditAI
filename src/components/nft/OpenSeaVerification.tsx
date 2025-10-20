@@ -67,20 +67,20 @@ export const OpenSeaVerification = () => {
   const updateMetadata = async () => {
     setUpdating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('update-nft-metadata');
+      const { data, error } = await supabase.functions.invoke('fix-nft-images');
       
       if (error) throw error;
       
       toast({
-        title: "Metadata updated",
-        description: `Updated ${data?.updated || 0} badges with proper images`,
+        title: "Images fixed!",
+        description: `Updated ${data?.updated || 0} badges. OpenSea will refresh in 5-10 mins.`,
       });
       
       // Reload badges
       await checkBadges();
     } catch (error: any) {
       toast({
-        title: "Update failed",
+        title: "Fix failed",
         description: error.message,
         variant: "destructive",
       });

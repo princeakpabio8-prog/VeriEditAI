@@ -142,10 +142,7 @@ export function HotClaimsWidget() {
 
       if (data?.success) {
         fetchHotClaims();
-        toast({
-          title: "Image Generated",
-          description: "AI-generated image added to claim",
-        });
+        // Silent generation - no toast notification
       }
     } catch (error) {
       console.error('Error generating image:', error);

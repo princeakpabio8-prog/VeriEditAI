@@ -242,7 +242,7 @@ serve(async (req) => {
     }
     
     // Store in database with rarity and viral data
-    const { error: insertError } = await supabase
+    const { data: badgeData, error: insertError } = await supabase
       .from('nft_badges')
       .insert({
         user_id: user.id,
@@ -260,8 +260,56 @@ serve(async (req) => {
         virality_score: viralityScore,
         minted_at_rank: verifierRank
       })
+      .select()
+      .single()
     
     if (insertError) throw insertError
+    
+    // Calculate listing price based on rarity tier and trust score
+    // Base prices in MATIC by rarity tier
+    const rarityPrices = {
+      'LEGENDARY': 100,   // 100 MATIC base
+      'EPIC': 50,         // 50 MATIC base
+      'RARE': 25,         // 25 MATIC base
+      'UNCOMMON': 10,     // 10 MATIC base
+      'COMMON': 5         // 5 MATIC base
+    }
+    
+    // Get base price from rarity tier
+    const basePrice = rarityPrices[rarityTier as keyof typeof rarityPrices] || rarityPrices.COMMON
+    
+    // Apply trust score multiplier (75-100 range becomes 0.75-1.0 multiplier)
+    const trustMultiplier = verification.trust_score / 100
+    
+    // Apply virality bonus (up to 50% bonus for high virality)
+    const viralityBonus = viralityScore > 0 ? 1 + (Math.min(viralityScore, 100) / 200) : 1
+    
+    // First verifier bonus (2x multiplier)
+    const verifierBonus = verifierRank === 1 ? 2 : 1
+    
+    // Final listing price
+    const listingPrice = basePrice * trustMultiplier * viralityBonus * verifierBonus
+    
+    // Auto-create marketplace listing
+    const { error: listingError } = await supabase
+      .from('nft_marketplace_listings')
+      .insert({
+        badge_id: badgeData.id,
+        token_id: tokenId,
+        seller_address: walletAddress,
+        listing_price: listingPrice,
+        currency: 'MATIC',
+        platform: 'opensea',
+        is_active: true,
+        listing_url: `https://opensea.io/assets/matic/${contractAddress}/${tokenId}`
+      })
+    
+    if (listingError) {
+      console.error('Failed to create marketplace listing:', listingError)
+      // Don't throw - listing is optional, minting succeeded
+    } else {
+      console.log(`💰 Auto-listed NFT for ${listingPrice.toFixed(2)} MATIC`)
+    }
     
     return new Response(
       JSON.stringify({
@@ -269,7 +317,12 @@ serve(async (req) => {
         tokenId,
         transactionHash: receipt.hash,
         metadataUri: metadataURI,
-        explorerUrl: `https://polygonscan.com/tx/${receipt.hash}`
+        explorerUrl: `https://polygonscan.com/tx/${receipt.hash}`,
+        listing: {
+          price: listingPrice.toFixed(2),
+          currency: 'MATIC',
+          url: `https://opensea.io/assets/matic/${contractAddress}/${tokenId}`
+        }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )

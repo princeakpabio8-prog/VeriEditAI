@@ -49,6 +49,31 @@ export default function Verify() {
     stage: 'upload'
   });
 
+  // Handle viral claim verification from URL query parameters
+  useEffect(() => {
+    if (user) {
+      const urlParams = new URLSearchParams(location.search);
+      const claim = urlParams.get('claim');
+      const viralClaimId = urlParams.get('viralClaimId');
+      
+      if (claim && viralClaimId) {
+        console.log('Auto-starting verification from URL parameters:', { viralClaimId });
+        
+        // Auto-start verification with viral claim data
+        setTimeout(() => {
+          handleVerificationStart({
+            content: claim,
+            viralClaimId,
+            source: 'viral_claim'
+          });
+        }, 300);
+        
+        // Clear URL params to prevent re-triggering
+        window.history.replaceState({}, document.title, '/verify');
+      }
+    }
+  }, [user, location.search]);
+
   // Handle viral claim verification from navigation state
   useEffect(() => {
     if (user && location.state) {

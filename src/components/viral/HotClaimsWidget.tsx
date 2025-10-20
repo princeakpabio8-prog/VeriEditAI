@@ -3,11 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { ShareModal } from '@/components/share-modal';
 
 interface HotClaim {
   id: string;
@@ -21,6 +22,7 @@ interface HotClaim {
   virality_score: number;
   metadata: any;
   verification_id: string | null;
+  share_token: string | null;
   updated_at: string;
   image_url: string | null;
 }
@@ -30,6 +32,8 @@ export function HotClaimsWidget() {
   const [loading, setLoading] = useState(true);
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedClaimForShare, setSelectedClaimForShare] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -319,16 +323,28 @@ export function HotClaimsWidget() {
                 )}
 
                 {/* Verify Button */}
-                {claim.verification_id ? (
+                {claim.verification_id && claim.share_token ? (
                   <div className="flex items-center gap-2">
                     <Button
-                      onClick={() => navigate(`/share/${claim.verification_id}`)}
+                      onClick={() => navigate(`/share/${claim.share_token}`)}
                       size="sm"
                       variant="outline"
-                      className="bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                      className="flex-1 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
                       View Verification
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedClaimForShare(claim.verification_id);
+                        setShareModalOpen(true);
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                    >
+                      <Share2 className="h-4 w-4" />
                     </Button>
                     {claim.updated_at && 
                      (new Date().getTime() - new Date(claim.updated_at).getTime()) < 3600000 && (
@@ -352,6 +368,17 @@ export function HotClaimsWidget() {
           );
         })}
       </CardContent>
+
+      {shareModalOpen && selectedClaimForShare && (
+        <ShareModal
+          verificationId={selectedClaimForShare}
+          isOpen={shareModalOpen}
+          onClose={() => {
+            setShareModalOpen(false);
+            setSelectedClaimForShare(null);
+          }}
+        />
+      )}
     </Card>
   );
 }

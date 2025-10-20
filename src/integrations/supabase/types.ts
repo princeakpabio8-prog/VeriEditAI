@@ -3132,6 +3132,7 @@ export type Database = {
           platform: string
           platform_category: string | null
           rarity_tier: string | null
+          share_token: string | null
           source_url: string
           status: string | null
           updated_at: string | null
@@ -3155,6 +3156,7 @@ export type Database = {
           platform: string
           platform_category?: string | null
           rarity_tier?: string | null
+          share_token?: string | null
           source_url: string
           status?: string | null
           updated_at?: string | null
@@ -3178,6 +3180,7 @@ export type Database = {
           platform?: string
           platform_category?: string | null
           rarity_tier?: string | null
+          share_token?: string | null
           source_url?: string
           status?: string | null
           updated_at?: string | null

@@ -4,12 +4,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink, RefreshCw, Flame, Users, Clock } from 'lucide-react';
+import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink, RefreshCw, Flame, Users, Clock, Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { ShareModal } from '@/components/share-modal';
 
 interface ViralClaim {
   id: string;
@@ -24,6 +25,7 @@ interface ViralClaim {
   metadata: any;
   image_url?: string | null;
   verification_id?: string | null;
+  share_token?: string | null;
 }
 
 export default function ViralClaims() {
@@ -32,6 +34,8 @@ export default function ViralClaims() {
   const { toast } = useToast();
   const [claims, setClaims] = useState<ViralClaim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedVerificationId, setSelectedVerificationId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'monitoring'>('all');
   const [triggering, setTriggering] = useState(false);
 
@@ -325,16 +329,30 @@ export default function ViralClaims() {
 
                         {/* Actions */}
                         <div className="flex gap-2">
-                          {claim.verification_id ? (
-                            <Button 
-                              onClick={() => navigate(`/share/${claim.verification_id}`)} 
-                              size="sm" 
-                              className="flex-1 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
-                              variant="outline"
-                            >
-                              <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                              View Verification
-                            </Button>
+                          {claim.verification_id && claim.share_token ? (
+                            <>
+                              <Button 
+                                onClick={() => navigate(`/share/${claim.share_token}`)} 
+                                size="sm" 
+                                className="flex-1 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                                variant="outline"
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                View Verification
+                              </Button>
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedVerificationId(claim.verification_id!);
+                                  setShareModalOpen(true);
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="shrink-0"
+                              >
+                                <Share2 className="h-4 w-4" />
+                              </Button>
+                            </>
                           ) : (
                             <Button onClick={() => handleVerifyNow(claim)} size="sm" className="flex-1">
                               Verify Now
@@ -355,6 +373,18 @@ export default function ViralClaims() {
           </div>
         </div>
       </div>
+
+      {shareModalOpen && selectedVerificationId && (
+        <ShareModal
+          verificationId={selectedVerificationId}
+          isOpen={shareModalOpen}
+          onClose={() => {
+            setShareModalOpen(false);
+            setSelectedVerificationId(null);
+          }}
+        />
+      )}
+
       <Footer />
     </div>
   );

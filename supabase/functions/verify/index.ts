@@ -302,6 +302,29 @@ serve(async (req) => {
           verificationId = verification.id;
           console.log(`💾 Verification saved with ID: ${verificationId}`);
           
+          // Create public share link for this verification
+          console.log(`📤 Creating public share for verification ${verificationId}`);
+          const shareToken = crypto.randomUUID();
+          const ogTitle = `Trust Score: ${result.confidence}% - Verified by VeriedIT AI`;
+          const ogDescription = result.summary?.substring(0, 160) || 'This content has been verified using AI-powered fact-checking.';
+          
+          const { error: shareError } = await supabase
+            .from('public_verifications')
+            .insert({
+              verification_id: verificationId,
+              user_id: user_id,
+              share_token: shareToken,
+              og_title: ogTitle,
+              og_description: ogDescription,
+              is_active: true,
+            });
+          
+          if (shareError) {
+            console.error('❌ Failed to create public share:', shareError);
+          } else {
+            console.log(`✅ Public share created with token: ${shareToken}`);
+          }
+
           // Link verification to viral claim if provided
           if (viralClaimId && verificationId) {
             console.log(`🔗 Linking verification ${verificationId} to viral claim ${viralClaimId}`);
@@ -309,6 +332,7 @@ serve(async (req) => {
               .from('viral_claims')
               .update({ 
                 verification_id: verificationId,
+                share_token: shareToken,
                 status: 'verified',
                 updated_at: new Date().toISOString()
               })
@@ -317,7 +341,7 @@ serve(async (req) => {
             if (updateError) {
               console.error('❌ Failed to update viral_claims:', updateError);
             } else {
-              console.log(`✅ Viral claim ${viralClaimId} marked as verified`);
+              console.log(`✅ Viral claim ${viralClaimId} marked as verified with share_token`);
             }
           }
           

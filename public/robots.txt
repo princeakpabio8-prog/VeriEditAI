@@ -1,9 +1,8 @@
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://verieditai.com/sitemap.xml
-Sitemap: https://verieditai.com/activity-sitemap.xml
+# Sitemap Index (references all sub-sitemaps)
+Sitemap: https://verieditai.com/api/sitemap?type=index
 
 # RSS Feed
 Allow: /rss/activity-feed.xml

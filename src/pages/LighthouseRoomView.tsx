@@ -14,6 +14,8 @@ import { CreateThreadDialog } from '@/components/lighthouse/CreateThreadDialog';
 import { TruthGarden } from '@/components/lighthouse/TruthGarden';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { DynamicMeta } from '@/components/DynamicMeta';
+import { generateRoomSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
 
 export default function LighthouseRoomView() {
   const { roomId } = useParams();
@@ -69,6 +71,24 @@ export default function LighthouseRoomView() {
     fetchRoom();
   }, [roomId, user]);
 
+  // Inject structured data for SEO
+  useEffect(() => {
+    if (room) {
+      const schema = generateRoomSchema({
+        name: room.name,
+        description: room.description || `Verification room with ${room.member_count} members discussing ${room.thread_count} threads`,
+        url: `https://verieditai.com/lighthouse/${room.id}`,
+        memberCount: room.member_count,
+        threadCount: room.thread_count,
+        trustRating: room.trust_rating,
+        category: room.category,
+      });
+      injectStructuredData(schema, 'room-schema');
+    }
+    
+    return () => removeStructuredData('room-schema');
+  }, [room]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -114,6 +134,13 @@ export default function LighthouseRoomView() {
 
   return (
     <div className="min-h-screen bg-background">
+      <DynamicMeta
+        title={room.name}
+        description={room.description || `Join ${room.member_count} members discussing ${room.thread_count} verification threads in this ${room.category} truth-seeking room`}
+        url={`https://verieditai.com/lighthouse/${roomId}`}
+        type="website"
+        trustScore={Math.round(room.trust_rating || 0)}
+      />
       <Navigation />
       <div className="pt-24 pb-24 md:pb-16 px-4">
         <div className="max-w-4xl mx-auto space-y-8">

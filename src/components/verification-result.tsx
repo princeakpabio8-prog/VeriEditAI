@@ -46,6 +46,7 @@ interface VerificationResultProps {
   onNewVerification?: () => void;
   content?: string;
   industry?: 'bank' | 'ngo';
+  viralClaimId?: string;
   contradictions?: Array<{
     claim_id: string;
     claim_text: string;
@@ -77,16 +78,32 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   industry,
   contradictions,
   related_claims,
+  viralClaimId,
 }) => {
   const { user } = useAuth();
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
   const [shareModalOpen, setShareModalOpen] = React.useState(false);
   const { versions } = useClaimVersions(verificationId);
   const { qualityStatus } = useQualityFlags(verificationId);
+  const [autoMinting, setAutoMinting] = React.useState(false);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Auto-mint badge for viral claims if trust score is high enough
+  React.useEffect(() => {
+    if (viralClaimId && verificationId && trustScore >= 75 && user && !autoMinting) {
+      console.log('Auto-minting badge for viral claim:', viralClaimId);
+      // Trigger a toast to show the mint button
+      setTimeout(() => {
+        const mintSection = document.getElementById('mint-badge-section');
+        if (mintSection) {
+          mintSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 1000);
+    }
+  }, [viralClaimId, verificationId, trustScore, user, autoMinting]);
   
   // Normalize status to prevent toLowerCase errors
   const normalizedStatus = lower(status);
@@ -670,18 +687,22 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
       {/* NFT Badge Minting Section */}
       {verificationId && trustScore >= 75 && (
         <motion.div
+          id="mint-badge-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 2.0 }}
         >
-          <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30">
+          <Card className={`border-purple-500/30 ${viralClaimId ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20 ring-2 ring-purple-500/50' : 'bg-gradient-to-r from-purple-900/20 to-blue-900/20'}`}>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Award className="h-5 w-5 text-purple-400" />
-                Earn Your Truth Badge
+                {viralClaimId ? '🔥 Mint Your Viral Claim Badge!' : 'Earn Your Truth Badge'}
               </CardTitle>
               <CardDescription>
-                Mint a free NFT badge on Polygon Mainnet to commemorate this verified claim
+                {viralClaimId 
+                  ? 'This viral claim has been verified! Mint a special NFT badge to commemorate being an early fact-checker.'
+                  : 'Mint a free NFT badge on Polygon Mainnet to commemorate this verified claim'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>

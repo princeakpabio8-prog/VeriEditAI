@@ -26,6 +26,7 @@ interface VerificationState {
   content?: string;
   result?: any;
   selectedTemplate?: TemplateConfig;
+  viralClaimId?: string;
 }
 
 interface TemplateConfig {
@@ -138,7 +139,8 @@ export default function Verify() {
       setVerificationState({
         stage: 'completed',
         content: data.content,
-        result: normalizedResult || result
+        result: normalizedResult || result,
+        viralClaimId: data.viralClaimId // Store viral claim ID for auto-minting
       });
 
       // Check for achievements after successful verification
@@ -316,6 +318,7 @@ export default function Verify() {
                     industry={verificationState.selectedTemplate?.industry}
                     contradictions={(verificationState.result || result)?.contradictions}
                     related_claims={(verificationState.result || result)?.related_claims}
+                    viralClaimId={verificationState.viralClaimId}
                   />
                   </div>
                 )}

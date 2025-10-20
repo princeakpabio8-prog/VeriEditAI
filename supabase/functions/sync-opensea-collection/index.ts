@@ -46,13 +46,20 @@ serve(async (req) => {
     let listed = 0;
 
     for (const badge of badges) {
-      // Generate OpenSea URL
-      const openSeaUrl = `https://opensea.io/assets/matic/${contractAddress}/${badge.token_id}`;
+      // Ensure token_id is properly formatted (no leading zeros unless needed)
+      const cleanTokenId = badge.token_id.replace(/^0+/, '') || '0';
       
-      // Update badge with OpenSea URL
+      // Generate OpenSea URLs
+      const openSeaUrl = `https://opensea.io/assets/matic/${contractAddress}/${cleanTokenId}`;
+      const openseaMetadataUrl = `https://api.opensea.io/api/v2/chain/matic/contract/${contractAddress}/nfts/${cleanTokenId}`;
+      
+      console.log(`🔗 Syncing badge #${cleanTokenId}: ${openSeaUrl}`);
+      
+      // Update badge with OpenSea URL and proper token ID
       const { error: updateError } = await supabase
         .from('nft_badges')
         .update({
+          token_id: cleanTokenId,  // Ensure clean token ID
           opensea_url: openSeaUrl,
           opensea_listed: true
         })
@@ -63,6 +70,8 @@ serve(async (req) => {
         if (!badge.opensea_listed) {
           listed++;
         }
+      } else {
+        console.error(`Failed to update badge ${badge.id}:`, updateError);
       }
     }
 

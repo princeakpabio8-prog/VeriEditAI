@@ -125,7 +125,7 @@ serve(async (req) => {
       }
     }
     
-    // Get the badge image URL from Supabase Storage
+    // Use a placeholder image URL - will be updated with AI-generated image later
     const badgeImageUrl = `https://sqtkkzdswxazyikcheds.supabase.co/storage/v1/object/public/nft-badge-images/truth-badge-template.png`
     
     // Upload metadata with rarity info
@@ -341,6 +341,28 @@ serve(async (req) => {
       // Don't throw - listing is optional, minting succeeded
     } else {
       console.log(`💰 Auto-listed NFT for ${listingPrice.toFixed(2)} MATIC`)
+    }
+    
+    // Trigger AI image generation in background (non-blocking)
+    try {
+      console.log('🎨 Triggering AI badge image generation...');
+      supabase.functions.invoke('generate-nft-badge-image', {
+        body: {
+          badge_id: badgeData.id,
+          claim_text: verification.content,
+          trust_score: verification.trust_score,
+          rarity_tier: rarityTier
+        }
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Image generation failed:', error);
+        } else {
+          console.log('✅ AI badge image generated:', data);
+        }
+      });
+    } catch (imgError) {
+      console.error('Failed to trigger image generation:', imgError);
+      // Don't throw - minting succeeded, image is optional
     }
     
     return new Response(

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,10 +7,17 @@ import { UserFeedback } from '@/components/user-feedback';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { motion } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
@@ -63,35 +70,74 @@ export const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-6">
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
                 </Link>
-                <Link to="/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Newspaper className="h-4 w-4" />
+                <Link to="/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors">
                   Discover
                 </Link>
-                <Link to="/viral-claims" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Flame className="h-4 w-4" />
+                <Link to="/viral-claims" className="text-muted-foreground hover:text-foreground transition-colors">
                   Hot Claims
                 </Link>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
                   Lighthouse
                 </Link>
-                <Link to="/dashboard?tab=badges" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Award className="h-4 w-4" />
-                  Badges
-                </Link>
-                <Link to="/achievements" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Award className="h-4 w-4" />
-                  Achievements
-                </Link>
-                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About
-                </Link>
+                
+                {/* More Dropdown */}
+                <DropdownMenu open={isMoreOpen} onOpenChange={setIsMoreOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                      More <ChevronDown className="ml-1 h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard?tab=badges" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Award className="h-4 w-4 mr-2" />
+                        Badges
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/achievements" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Award className="h-4 w-4 mr-2" />
+                        Achievements
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard?tab=bulk" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Package className="h-4 w-4 mr-2" />
+                        Bulk Verification
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/find-users" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <User className="h-4 w-4 mr-2" />
+                        Find Users
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/extensions" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Puzzle className="h-4 w-4 mr-2" />
+                        Extensions
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/referrals" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Gift className="h-4 w-4 mr-2" />
+                        Referrals
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/about" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        About
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
@@ -105,12 +151,10 @@ export const Navigation = () => {
                   <Radio className="h-4 w-4" />
                   Lighthouse
                 </Link>
-                <Link to="/auth?next=/dashboard?tab=badges" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Award className="h-4 w-4" />
+                <Link to="/auth?next=/dashboard?tab=badges" className="text-muted-foreground hover:text-foreground transition-colors">
                   Badges
                 </Link>
-                <Link to="/auth?next=/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Newspaper className="h-4 w-4" />
+                <Link to="/auth?next=/dashboard?tab=discover" className="text-muted-foreground hover:text-foreground transition-colors">
                   Discover
                 </Link>
                 <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -142,14 +186,6 @@ export const Navigation = () => {
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-2 z-50">
                     <Link
-                      to="/dashboard"
-                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      Dashboard
-                    </Link>
-                    <Link
                       to="/billing"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}
@@ -174,44 +210,12 @@ export const Navigation = () => {
                       API Hub
                     </Link>
                     <Link
-                      to="/dashboard?tab=bulk"
-                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <Package className="h-4 w-4 mr-2" />
-                      Bulk Verification
-                    </Link>
-                    <Link
-                      to="/find-users"
-                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Find Users
-                    </Link>
-                    <Link
                       to="/profile"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Profile & Settings
-                    </Link>
-                    <Link
-                      to="/extensions"
-                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <Puzzle className="h-4 w-4 mr-2" />
-                      Extensions
-                    </Link>
-                    <Link
-                      to="/referrals"
-                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsProfileOpen(false)}
-                    >
-                      <Gift className="h-4 w-4 mr-2" />
-                      Referrals
                     </Link>
                     {isAdmin && (
                       <Link

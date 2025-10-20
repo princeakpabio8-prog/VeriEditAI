@@ -266,6 +266,37 @@ const Dashboard = () => {
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
+
+  // Auto-fix broken NFT badge images when opening the Badges tab (runs once per session)
+  useEffect(() => {
+    if (activeTab === 'badges') {
+      const key = 'auto_fix_badge_images';
+      if (!sessionStorage.getItem(key)) {
+        (async () => {
+          try {
+            const { data, error } = await supabase.functions.invoke('fix-nft-badge-images');
+            if (error) throw error;
+            toast({
+              title: 'Auto-fix complete',
+              description: `Fixed ${data?.fixed || 0}, skipped ${data?.skipped || 0}, failed ${data?.failed || 0}`,
+            });
+            if ((data?.fixed || 0) > 0) {
+              setTimeout(() => window.location.reload(), 1500);
+            }
+          } catch (e: any) {
+            console.error('Auto-fix error:', e);
+            toast({
+              title: 'Auto-fix error',
+              description: e?.message || 'Failed to auto-fix images',
+              variant: 'destructive',
+            });
+          } finally {
+            sessionStorage.setItem(key, '1');
+          }
+        })();
+      }
+    }
+  }, [activeTab]);
   const [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
 
   useEffect(() => {

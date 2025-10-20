@@ -55,10 +55,9 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "gpt-image-1",
-        prompt: prompt,
+        prompt,
         size: "1024x1024",
         quality: "high",
-        response_format: "b64_json",
         n: 1
       })
     });

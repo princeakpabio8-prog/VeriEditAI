@@ -613,15 +613,17 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
                          article.trust_score >= 75 && 
                          article.verification_id && 
                          user && (
-                          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
-                            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-border/50">
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs w-fit">
                               <Award className="h-3 w-3" />
                               NFT Eligible
                             </Badge>
-                            <MintBadgeButton 
-                              verificationId={article.verification_id} 
-                              trustScore={article.trust_score}
-                            />
+                            <div className="w-full sm:w-auto">
+                              <MintBadgeButton 
+                                verificationId={article.verification_id} 
+                                trustScore={article.trust_score}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

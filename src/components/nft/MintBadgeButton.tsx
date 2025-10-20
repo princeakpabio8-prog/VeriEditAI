@@ -104,23 +104,26 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
   return (
     <>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 w-full">
         {!isConnected && <WalletConnect />}
         
         <Button
           onClick={handleMint}
           disabled={!isConnected || minting || trustScore < 75}
-          className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90"
+          className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full sm:w-auto text-sm"
+          size="sm"
         >
           {minting ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Minting Badge...
+              <span className="hidden sm:inline">Minting Badge...</span>
+              <span className="sm:hidden">Minting...</span>
             </>
           ) : (
             <>
               <Award className="h-4 w-4" />
-              Mint Truth Badge NFT
+              <span className="hidden sm:inline">Mint Truth Badge NFT</span>
+              <span className="sm:hidden">Mint NFT</span>
             </>
           )}
         </Button>

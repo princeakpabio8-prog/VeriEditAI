@@ -17,17 +17,13 @@ serve(async (req) => {
       throw new Error('Claim text is required');
     }
 
-    console.log(`🎨 Generating image for claim: ${claim_text.substring(0, 50)}...`);
-
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Generate a visual representation of the claim
-    const prompt = `Create a professional news-style image representing this claim: "${claim_text}". 
-    Style: Modern, clean, journalistic. No text overlays. 16:9 aspect ratio. 
-    Focus on visual metaphors and symbolic representation.`;
+    // Simplified prompt for faster generation
+    const prompt = `News image for: ${claim_text.substring(0, 150)}. Modern, clean, 16:9, no text.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -53,8 +49,6 @@ serve(async (req) => {
     if (!imageBase64) {
       throw new Error('Failed to generate image');
     }
-
-    console.log(`✅ Image generated successfully`);
 
     // Upload to Supabase Storage
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -95,16 +89,15 @@ serve(async (req) => {
       .from('public-images')
       .getPublicUrl(filePath);
 
-    console.log(`📸 Image uploaded to: ${publicUrl}`);
-
-    // Update viral claim with image URL
+    // Update viral claim with image URL (non-blocking background task)
     if (viral_claim_id) {
-      await supabase
+      // Fire and forget - don't wait for update
+      supabase
         .from('viral_claims')
         .update({ image_url: publicUrl })
-        .eq('id', viral_claim_id);
-      
-      console.log(`✅ Updated viral claim ${viral_claim_id} with image`);
+        .eq('id', viral_claim_id)
+        .then(() => console.log(`✅ Updated claim ${viral_claim_id}`))
+        .catch(e => console.error('Update error:', e));
     }
 
     return new Response(

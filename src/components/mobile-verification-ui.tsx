@@ -29,8 +29,11 @@ import {
   Link as LinkIcon,
   X,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  Award
 } from "lucide-react";
+import { MintBadgeButton } from "./nft/MintBadgeButton";
+import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface MobileVerificationUIProps {
@@ -889,6 +892,33 @@ export function MobileVerificationUI({
                         })}
                       </div>
                     </div>
+                  )}
+
+                  {/* NFT Badge Minting Section */}
+                  {result.id && result.confidence >= 75 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="pt-2"
+                    >
+                      <Card className="border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center gap-2">
+                            <Award className="h-4 w-4 text-purple-400" />
+                            <h4 className="text-sm font-semibold">Mint Your Truth Badge</h4>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Mint a free NFT badge on Polygon to commemorate this verification
+                          </p>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <MintBadgeButton 
+                            verificationId={result.id}
+                            trustScore={result.confidence}
+                          />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   )}
 
                   {/* User Feedback */}

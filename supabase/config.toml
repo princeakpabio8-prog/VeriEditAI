@@ -233,3 +233,6 @@ verify_jwt = false
 
 [functions.update-listing-prices]
 verify_jwt = false
+
+[functions.update-nft-metadata]
+verify_jwt = false

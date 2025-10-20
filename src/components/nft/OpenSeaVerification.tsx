@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 export const OpenSeaVerification = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [badges, setBadges] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -63,6 +64,31 @@ export const OpenSeaVerification = () => {
     }
   };
 
+  const updateMetadata = async () => {
+    setUpdating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('update-nft-metadata');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Metadata updated",
+        description: `Updated ${data?.updated || 0} badges with proper images`,
+      });
+      
+      // Reload badges
+      await checkBadges();
+    } catch (error: any) {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -70,10 +96,14 @@ export const OpenSeaVerification = () => {
         <CardDescription>Verify your NFT badges are properly listed on OpenSea</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button onClick={checkBadges} disabled={loading}>
             {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
             Check Badges
+          </Button>
+          <Button onClick={updateMetadata} disabled={updating} variant="secondary">
+            {updating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+            Fix Images
           </Button>
           <Button onClick={syncCollection} disabled={syncing} variant="outline">
             {syncing ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}

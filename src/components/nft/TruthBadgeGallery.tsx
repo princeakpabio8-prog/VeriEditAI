@@ -102,7 +102,13 @@ export function TruthBadgeGallery() {
 }
 
 function BadgeCard({ badge }: { badge: TruthBadge }) {
-  const { imageUrl, loading } = useNFTImage(badge.metadata_uri, badge.id)
+  const { imageUrl, loading } = useNFTImage(
+    badge.metadata_uri, 
+    badge.id,
+    badge.claim_text,
+    badge.trust_score,
+    badge.rarity_tier || undefined
+  )
   const displayImage = imageUrl || badgeImage
 
   const getRarityColor = (rarity: string | null) => {
@@ -138,21 +144,21 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
   const getRarityGlow = (rarity: string | null) => {
     switch (rarity) {
       case 'LEGENDARY':
-        return 'shadow-[0_0_30px_rgba(251,191,36,0.5)]';
+        return 'shadow-[0_0_60px_rgba(251,191,36,0.7),0_0_30px_rgba(251,191,36,0.5)] nft-legendary-particles';
       case 'EPIC':
-        return 'shadow-[0_0_30px_rgba(168,85,247,0.5)]';
+        return 'shadow-[0_0_60px_rgba(168,85,247,0.7),0_0_30px_rgba(168,85,247,0.5)] nft-epic-particles';
       case 'RARE':
-        return 'shadow-[0_0_30px_rgba(59,130,246,0.5)]';
+        return 'shadow-[0_0_60px_rgba(59,130,246,0.7),0_0_30px_rgba(59,130,246,0.5)]';
       case 'UNCOMMON':
-        return 'shadow-[0_0_30px_rgba(34,197,94,0.5)]';
+        return 'shadow-[0_0_60px_rgba(34,197,94,0.7),0_0_30px_rgba(34,197,94,0.5)]';
       default:
-        return '';
+        return 'shadow-[0_0_30px_rgba(100,116,139,0.4)]';
     }
   };
 
   return (
     <Card 
-      className="group overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 relative"
+      className="group overflow-hidden hover:shadow-2xl hover:scale-[1.05] hover:border-primary/70 transition-all duration-500 relative nft-card-cinematic"
     >
       {/* Rarity Badge Overlay */}
       {badge.rarity_tier && (
@@ -173,16 +179,30 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
       )}
       
       <CardContent className="p-6 space-y-4">
-        <div className="relative">
-          <div className={`absolute inset-0 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-lg blur-xl group-hover:blur-2xl transition-all ${getRarityGlow(badge.rarity_tier)}`} />
+        <div className="relative nft-image-container">
+          {/* Enhanced multi-layer glow */}
+          <div className={`absolute inset-0 bg-gradient-to-br from-primary/30 to-purple-600/30 rounded-lg blur-2xl group-hover:blur-3xl transition-all duration-500 ${getRarityGlow(badge.rarity_tier)}`} />
+          
+          {/* Holographic shimmer overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+          
+          {/* Rotating ring for high rarity */}
+          {(badge.rarity_tier === 'LEGENDARY' || badge.rarity_tier === 'EPIC') && (
+            <div className="absolute inset-0 nft-rotating-ring opacity-60" />
+          )}
+          
           {loading ? (
-            <div className="relative h-40 w-40 mx-auto bg-muted animate-pulse rounded-lg" />
+            <div className="relative h-40 w-40 mx-auto bg-gradient-to-br from-muted to-muted-foreground/20 animate-pulse rounded-lg shimmer" />
           ) : (
-            <img 
-              src={displayImage} 
-              alt="Truth Badge" 
-              className="relative h-40 w-40 mx-auto object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-300"
-            />
+            <div className="relative h-40 w-40 mx-auto nft-image-wrapper">
+              {/* Glass backdrop */}
+              <div className="absolute inset-0 bg-background/30 backdrop-blur-sm rounded-lg" />
+              <img 
+                src={displayImage} 
+                alt="Truth Badge" 
+                className="relative h-full w-full object-contain drop-shadow-2xl group-hover:scale-125 transition-transform duration-700 ease-out nft-badge-entrance"
+              />
+            </div>
           )}
         </div>
 

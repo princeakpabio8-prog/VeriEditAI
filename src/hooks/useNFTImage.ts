@@ -18,7 +18,7 @@ function isTemplateImage(url: string) {
 const POLL_DELAYS_MS = [5000, 15000, 45000]
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-export function useNFTImage(metadataUri: string | null, badgeId?: string) {
+export function useNFTImage(metadataUri: string | null, badgeId?: string, claimText?: string, trustScore?: number, rarityTier?: string) {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -62,12 +62,28 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string) {
         if (!meta?.image) throw new Error('No image in metadata')
 
         if (isTemplateImage(meta.image)) {
-          // Trigger silent background regeneration once per badge
-          if (badgeId && !regenerationAttempted.has(badgeId)) {
+          // Trigger background regeneration with ALL required parameters
+          if (badgeId && claimText && trustScore && !regenerationAttempted.has(badgeId)) {
             regenerationAttempted.add(badgeId)
+            console.log(`🎨 Triggering image generation for badge ${badgeId}`)
+            
             supabase.functions
-              .invoke('generate-nft-badge-image', { body: { badge_id: badgeId } })
-              .catch((err) => console.error('Silent regen failed:', err))
+              .invoke('generate-nft-badge-image', { 
+                body: { 
+                  badge_id: badgeId,
+                  claim_text: claimText,
+                  trust_score: trustScore,
+                  rarity_tier: rarityTier || 'COMMON'
+                } 
+              })
+              .then((result) => {
+                if (result.error) {
+                  console.error('❌ Image generation failed:', result.error)
+                } else {
+                  console.log('✅ Image generation triggered successfully')
+                }
+              })
+              .catch((err) => console.error('❌ Silent regen failed:', err))
           }
 
           // Show current template, but don't cache it
@@ -85,6 +101,7 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string) {
               const refreshed = await fetchAndParse()
               if (refreshed?.image && !isTemplateImage(refreshed.image) && (await headOk(refreshed.image))) {
                 imageCache.set(metadataUri, refreshed.image)
+                console.log('✅ Real image detected, updating display')
                 if (!cancelled) {
                   setImageUrl(refreshed.image)
                   setError(null)
@@ -115,7 +132,7 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string) {
           }
         }
       } catch (err) {
-        console.error('Error fetching NFT metadata:', err)
+        console.error('❌ Error fetching NFT metadata:', err)
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Unknown error')
           setImageUrl(null)
@@ -129,7 +146,7 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string) {
     return () => {
       cancelled = true
     }
-  }, [metadataUri, badgeId])
+  }, [metadataUri, badgeId, claimText, trustScore, rarityTier])
 
   return { imageUrl, loading, error }
 }

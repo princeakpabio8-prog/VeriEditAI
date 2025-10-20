@@ -238,6 +238,54 @@ All colors MUST be HSL.
   .badge-glow {
     @apply shadow-[0_0_15px_rgba(0,186,242,0.3)];
   }
+
+  /* NFT Cinematic Effects */
+  .nft-card-cinematic {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nft-card-cinematic:hover {
+      transform: translateY(-8px) rotateX(2deg);
+    }
+  }
+
+  .nft-image-container {
+    position: relative;
+    overflow: visible;
+  }
+
+  .nft-badge-entrance {
+    animation: nft-reveal 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .nft-rotating-ring {
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 215, 0, 0.4), transparent 70%);
+    animation: rotate-ring 3s linear infinite;
+  }
+
+  /* Particle effects for legendary badges */
+  .nft-legendary-particles::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%);
+    animation: particle-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Particle effects for epic badges */
+  .nft-epic-particles::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+    animation: particle-pulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
 }
 
 @keyframes trust-pulse {
@@ -349,4 +397,38 @@ All colors MUST be HSL.
     radial-gradient(circle at 50% 50%, hsl(var(--ritual-sacred) / 0.1) 0%, transparent 70%);
   animation: shimmer 8s infinite alternate;
   pointer-events: none;
+}
+
+/* NFT Badge Animations */
+@keyframes nft-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotateY(-90deg);
+    filter: blur(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotateY(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes rotate-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes particle-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
 }

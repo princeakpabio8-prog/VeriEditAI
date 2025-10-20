@@ -110,6 +110,25 @@ serve(async (req) => {
 
       updated++;
 
+      // Trigger image generation if not already present
+      if (claim.status === 'monitoring' || claim.status === 'trending') {
+        const { data: claimData } = await supabaseClient
+          .from('viral_claims')
+          .select('image_url')
+          .eq('id', claim.id)
+          .single();
+        
+        if (!claimData?.image_url) {
+          // Fire and forget image generation
+          supabaseClient.functions.invoke('generate-claim-image', {
+            body: {
+              claim_text: claim.claim_text || '',
+              viral_claim_id: claim.id
+            }
+          }).catch(err => console.error('Image gen error:', err));
+        }
+      }
+
       // Check alert thresholds
       if (claim.engagement_score >= 1000) {
         const ageInHours = (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60);

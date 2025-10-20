@@ -138,14 +138,30 @@ export function HotClaimsWidget() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Image generation error:', error);
+        toast({
+          title: "Image Generation Failed",
+          description: "Could not generate visual. AI service may need configuration.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       if (data?.success) {
         fetchHotClaims();
-        // Silent generation - no toast notification
+        toast({
+          title: "Visual Generated",
+          description: "Claim image created successfully",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating image:', error);
+      toast({
+        title: "Generation Error",
+        description: error.message || "Failed to generate image",
+        variant: "destructive"
+      });
     } finally {
       setGeneratingImageIds(prev => {
         const newSet = new Set(prev);
@@ -153,6 +169,10 @@ export function HotClaimsWidget() {
         return newSet;
       });
     }
+  };
+
+  const retryImageGeneration = (claim: HotClaim) => {
+    generateClaimImage(claim);
   };
 
   if (loading) {
@@ -269,12 +289,23 @@ export function HotClaimsWidget() {
                     {generatingImageIds.has(claim.id) ? (
                       <>
                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
-                        <p className="text-sm text-muted-foreground font-medium">Generating race image...</p>
+                        <p className="text-sm text-muted-foreground font-medium">Generating visual...</p>
                       </>
                     ) : (
                       <>
                         <div className="text-6xl animate-bounce">📰</div>
-                        <p className="text-sm text-muted-foreground">Loading visual...</p>
+                        <p className="text-sm text-muted-foreground">No image yet</p>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            retryImageGeneration(claim);
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                        >
+                          Generate Image
+                        </Button>
                       </>
                     )}
                   </div>

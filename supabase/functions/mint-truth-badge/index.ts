@@ -57,8 +57,17 @@ serve(async (req) => {
     const mintingWalletPK = Deno.env.get('MINTING_WALLET_PRIVATE_KEY')
     
     if (!contractAddress || !mintingWalletPK) {
-      throw new Error('Missing required environment variables. Please configure TRUTH_BADGE_CONTRACT_ADDRESS and MINTING_WALLET_PRIVATE_KEY')
+      console.error('❌ Missing environment variables:', {
+        hasContractAddress: !!contractAddress,
+        hasWalletPK: !!mintingWalletPK
+      })
+      throw new Error('NFT minting is not configured. Please set up TRUTH_BADGE_CONTRACT_ADDRESS and MINTING_WALLET_PRIVATE_KEY in your Supabase secrets.')
     }
+    
+    console.log('✅ Environment variables validated:', {
+      contractAddress,
+      walletPKLength: mintingWalletPK.length
+    })
     
     // Import ethers dynamically
     const { ethers } = await import('https://esm.sh/ethers@6.9.0')
@@ -225,20 +234,43 @@ serve(async (req) => {
     
     console.log('✅ Badge minted! Transaction:', receipt.hash)
     
-    // Extract tokenId from events
-    const mintEvent = receipt.logs.find((log: any) => {
-      try {
-        const parsed = contract.interface.parseLog(log)
-        return parsed?.name === 'BadgeMinted'
-      } catch {
-        return false
-      }
-    })
-    
+    // Extract tokenId from events - FIXED VERSION
     let tokenId = '0'
-    if (mintEvent) {
-      const parsed = contract.interface.parseLog(mintEvent)
-      tokenId = parsed?.args[0].toString()
+    
+    try {
+      // Try to find the BadgeMinted event
+      for (const log of receipt.logs) {
+        try {
+          const parsed = contract.interface.parseLog({
+            topics: log.topics,
+            data: log.data
+          })
+          
+          if (parsed && parsed.name === 'BadgeMinted') {
+            console.log('✅ Found BadgeMinted event:', parsed)
+            // BadgeMinted event has tokenId as first argument
+            tokenId = parsed.args[0]?.toString() || parsed.args.tokenId?.toString() || '0'
+            console.log('🔢 Extracted tokenId:', tokenId)
+            break
+          }
+        } catch (parseError) {
+          // Skip unparseable logs
+          continue
+        }
+      }
+      
+      // Fallback: Query totalSupply if event parsing failed
+      if (tokenId === '0') {
+        console.log('⚠️ Could not parse tokenId from events, querying totalSupply...')
+        const totalSupply = await contract.totalSupply()
+        tokenId = totalSupply.toString()
+        console.log('📊 Using totalSupply as tokenId:', tokenId)
+      }
+    } catch (error) {
+      console.error('❌ Error extracting tokenId:', error)
+      // Last resort: use timestamp
+      tokenId = Date.now().toString()
+      console.log('⚠️ Using timestamp as fallback tokenId:', tokenId)
     }
     
     // Store in database with rarity and viral data

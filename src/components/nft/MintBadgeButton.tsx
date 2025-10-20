@@ -83,9 +83,22 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       setAlreadyMinted(true)
 
     } catch (error: any) {
+      console.error('Minting error:', error)
+      
+      let errorMessage = error.message || "An error occurred while minting"
+      
+      // Provide helpful error messages
+      if (errorMessage.includes('not configured')) {
+        errorMessage = "NFT minting requires admin setup. Please contact support to enable this feature."
+      } else if (errorMessage.includes('insufficient funds')) {
+        errorMessage = "Insufficient MATIC for gas fees. Please add funds to the minting wallet."
+      } else if (errorMessage.includes('already minted')) {
+        errorMessage = "This claim has already been minted as an NFT."
+      }
+      
       toast({
         title: "Minting Failed",
-        description: error.message || "An error occurred while minting",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {

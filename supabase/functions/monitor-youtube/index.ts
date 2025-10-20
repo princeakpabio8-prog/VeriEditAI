@@ -109,8 +109,8 @@ Deno.serve(async (req) => {
                 .insert({
                   claim_text: title,
                   claim_hash: claimHash,
-                  platform: 'youtube',
-                  platform_category: 'news',
+                  platform: 'news',
+                  platform_category: 'youtube',
                   source_url: url,
                   author: channel.name,
                   engagement_score: engagementScore,

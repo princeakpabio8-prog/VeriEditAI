@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
                   engagement_score: engagementScore,
                   engagement_velocity: engagementScore / 24, // Assume 24hr window
                   first_seen_at: publishedAt.toISOString(),
+                  status: 'monitoring',
                   metadata: {
                     views,
                     likes,

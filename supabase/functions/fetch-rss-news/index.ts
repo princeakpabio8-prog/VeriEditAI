@@ -686,13 +686,14 @@ serve(async (req) => {
                 .insert({
                   claim_text: article.title,
                   claim_hash: claimHash,
-                  platform: 'rss',
+                  platform: 'news',
                   platform_category: 'news',
                   source_url: article.link,
                   author: article.source,
                   engagement_score: 1000, // Base score for RSS viral claims
                   engagement_velocity: 100,
                   first_seen_at: article.published_at,
+                  status: 'monitoring',
                   metadata: {
                     description: article.summary.substring(0, 500),
                     feed_source: article.source,

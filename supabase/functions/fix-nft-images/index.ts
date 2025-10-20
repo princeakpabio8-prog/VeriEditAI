@@ -23,6 +23,26 @@ serve(async (req) => {
 
     console.log('🔄 Fixing NFT metadata and images...');
 
+    // Ensure template image exists in storage
+    try {
+      const { data: tpl, error: tplErr } = await supabase.storage
+        .from('nft-badge-images')
+        .download('truth-badge-template.png');
+      if (tplErr) throw tplErr;
+      console.log('🖼️ Template image already present in storage.');
+    } catch (_e) {
+      console.log('⬆️ Uploading template image to storage...');
+      const templateUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-template.png';
+      const resp = await fetch(templateUrl);
+      if (!resp.ok) throw new Error(`Failed to fetch template image: ${resp.status}`);
+      const arrayBuf = await resp.arrayBuffer();
+      const { error: uploadTplError } = await supabase.storage
+        .from('nft-badge-images')
+        .upload('truth-badge-template.png', arrayBuf, { contentType: 'image/png', upsert: true });
+      if (uploadTplError) throw uploadTplError;
+      console.log('✅ Template image uploaded to storage.');
+    }
+
     // Get all badges that need fixing
     const { data: badges, error: badgesError } = await supabase
       .from('nft_badges')

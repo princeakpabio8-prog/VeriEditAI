@@ -37,6 +37,7 @@ serve(async (req) => {
     const user_id = body?.user_id;
     const safeContent = String(body?.content ?? '');
     const template = body?.template; // Template metadata from frontend
+    const viralClaimId = body?.viralClaimId; // Viral claim ID from frontend
 
     // Input validation
     if (safeContent.trim().length === 0) {
@@ -300,6 +301,25 @@ serve(async (req) => {
         } else {
           verificationId = verification.id;
           console.log(`💾 Verification saved with ID: ${verificationId}`);
+          
+          // Link verification to viral claim if provided
+          if (viralClaimId && verificationId) {
+            console.log(`🔗 Linking verification ${verificationId} to viral claim ${viralClaimId}`);
+            const { error: updateError } = await supabase
+              .from('viral_claims')
+              .update({ 
+                verification_id: verificationId,
+                status: 'verified',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', viralClaimId);
+            
+            if (updateError) {
+              console.error('❌ Failed to update viral_claims:', updateError);
+            } else {
+              console.log(`✅ Viral claim ${viralClaimId} marked as verified`);
+            }
+          }
           
           // Track verification race if this is a viral claim
           if (viralClaimId && user_id) {

@@ -185,7 +185,8 @@ export function useVerify() {
             user_id: (userId ?? '').toString(),
             deviceType,
             verificationSource: verificationData?.source || 'web',
-            sessionId: verificationData?.sessionId || crypto.randomUUID()
+            sessionId: verificationData?.sessionId || crypto.randomUUID(),
+            viralClaimId: verificationData?.viralClaimId || null
           };
           
           if (verificationData?.contentType === 'image') {

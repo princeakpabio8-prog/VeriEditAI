@@ -21,6 +21,7 @@ interface HotClaim {
   virality_score: number;
   metadata: any;
   verification_id: string | null;
+  updated_at: string;
 }
 
 export function HotClaimsWidget() {
@@ -253,15 +254,23 @@ export function HotClaimsWidget() {
 
                 {/* Verify Button */}
                 {claim.verification_id ? (
-                  <Button
-                    onClick={() => navigate(`/share/${claim.verification_id}`)}
-                    size="sm"
-                    variant="outline"
-                    className="bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                    View Verification
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={() => navigate(`/share/${claim.verification_id}`)}
+                      size="sm"
+                      variant="outline"
+                      className="bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                    >
+                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      View Verification
+                    </Button>
+                    {claim.updated_at && 
+                     (new Date().getTime() - new Date(claim.updated_at).getTime()) < 3600000 && (
+                      <Badge className="bg-green-500 text-white animate-pulse">
+                        NEW
+                      </Badge>
+                    )}
+                  </div>
                 ) : (
                   <Button
                     onClick={() => handleVerifyNow(claim)}

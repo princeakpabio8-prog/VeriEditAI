@@ -261,6 +261,7 @@ export default function ViralClaims() {
                   <Card 
                     key={claim.id} 
                     className={`p-4 transition-all hover:shadow-lg hover:scale-[1.02] ${
+                      claim.verification_id ? 'border-green-500/30 bg-green-50/30 dark:bg-green-950/10' :
                       alertLevel === 'critical' ? 'border-destructive/50 bg-destructive/5' :
                       alertLevel === 'high' ? 'border-yellow-500/50 bg-yellow-500/5' : ''
                     }`}
@@ -284,13 +285,21 @@ export default function ViralClaims() {
                           <Badge variant={claim.status === 'verified' ? 'default' : 'secondary'} className="text-xs">
                             {claim.platform}
                           </Badge>
-                          {alertLevel === 'critical' && (
+                          {claim.verification_id && (
+                            <Badge className="bg-green-500 text-white text-xs">
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              VERIFIED
+                            </Badge>
+                          )}
+                          {alertLevel === 'critical' && !claim.verification_id && (
                             <Badge variant="destructive" className="text-xs">Critical</Badge>
                           )}
-                          {alertLevel === 'high' && (
+                          {alertLevel === 'high' && !claim.verification_id && (
                             <Badge className="bg-yellow-600 text-xs">High Alert</Badge>
                           )}
-                          <Badge variant="outline" className="text-xs">{claim.status}</Badge>
+                          {!claim.verification_id && (
+                            <Badge variant="outline" className="text-xs">{claim.status}</Badge>
+                          )}
                         </div>
 
                         {/* Claim Text */}
@@ -320,8 +329,8 @@ export default function ViralClaims() {
                             <Button 
                               onClick={() => navigate(`/share/${claim.verification_id}`)} 
                               size="sm" 
-                              className="flex-1"
-                              variant="secondary"
+                              className="flex-1 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                              variant="outline"
                             >
                               <CheckCircle className="h-3.5 w-3.5 mr-1" />
                               View Verification

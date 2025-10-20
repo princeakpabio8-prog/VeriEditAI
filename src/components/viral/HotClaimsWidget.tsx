@@ -22,12 +22,14 @@ interface HotClaim {
   metadata: any;
   verification_id: string | null;
   updated_at: string;
+  image_url: string | null;
 }
 
 export function HotClaimsWidget() {
   const [hotClaims, setHotClaims] = useState<HotClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
+  const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -108,6 +110,39 @@ export function HotClaimsWidget() {
     navigate(`/verify?claim=${encodeURIComponent(claim.claim_text)}&viralClaimId=${claim.id}`);
   };
 
+  const generateClaimImage = async (claim: HotClaim) => {
+    if (generatingImageIds.has(claim.id)) return;
+    
+    setGeneratingImageIds(prev => new Set(prev).add(claim.id));
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-claim-image', {
+        body: {
+          claim_text: claim.claim_text,
+          viral_claim_id: claim.id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        fetchHotClaims();
+        toast({
+          title: "Image Generated",
+          description: "AI-generated image added to claim",
+        });
+      }
+    } catch (error) {
+      console.error('Error generating image:', error);
+    } finally {
+      setGeneratingImageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(claim.id);
+        return newSet;
+      });
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -179,78 +214,109 @@ export function HotClaimsWidget() {
           return (
             <div
               key={claim.id}
-              className={`p-4 rounded-lg border-2 ${
+              className={`rounded-lg border-2 overflow-hidden ${
                 index === 0 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : 'border-border'
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-2">
-                  {/* Rank and Rarity Badge */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-muted-foreground">
-                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                    </span>
-                    {claim.rarity_tier && (
-                      <Badge
-                        className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold`}
-                      >
-                        {getRarityIcon(claim.rarity_tier)} {claim.rarity_tier}
+              {/* Claim Image */}
+              {claim.image_url ? (
+                <div className="relative h-48 w-full overflow-hidden">
+                  <img 
+                    src={claim.image_url} 
+                    alt={claim.claim_text}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2">
+                      <Badge className="bg-orange-500 text-white font-bold">
+                        🔥 HOTTEST
                       </Badge>
-                    )}
-                    <Badge variant="outline">
-                      {claim.platform}
-                    </Badge>
-                  </div>
-
-                  {/* Claim Text */}
-                  <p className="font-medium line-clamp-2">
-                    {claim.claim_text}
-                  </p>
-
-                  {/* Metrics */}
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-4 w-4" />
-                      <span>{claim.engagement_score.toLocaleString()} engagement</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Target className="h-4 w-4" />
-                      <span>{Math.round(claim.engagement_velocity)}/hr velocity</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {claim.first_seen_at
-                          ? formatDistanceToNow(new Date(claim.first_seen_at), { addSuffix: true })
-                          : 'Recently'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Velocity Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Virality Velocity</span>
-                      <span>{Math.round(claim.engagement_velocity)}/hr</span>
-                    </div>
-                    <Progress value={velocityPercentage} className="h-2" />
-                  </div>
-
-                  {/* Potential Rarity */}
-                  {claim.rarity_tier && (
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Potential badge rarity: </span>
-                      <span className="font-bold">
-                        {claim.rarity_tier}
-                      </span>
-                      {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
-                        <span className="ml-2 text-orange-500 font-bold">
-                          ⚡ LEGENDARY POTENTIAL!
-                        </span>
-                      )}
                     </div>
                   )}
                 </div>
+              ) : (
+                <div className="relative h-48 w-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
+                  <div className="text-center space-y-2">
+                    <div className="text-4xl">📰</div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateClaimImage(claim)}
+                      disabled={generatingImageIds.has(claim.id)}
+                    >
+                      {generatingImageIds.has(claim.id) ? 'Generating...' : 'Generate Image'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-4 space-y-3">
+                {/* Rank and Rarity Badge */}
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-muted-foreground">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                  </span>
+                  {claim.rarity_tier && (
+                    <Badge
+                      className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold`}
+                    >
+                      {getRarityIcon(claim.rarity_tier)} {claim.rarity_tier}
+                    </Badge>
+                  )}
+                  <Badge variant="outline">
+                    {claim.platform}
+                  </Badge>
+                </div>
+
+                {/* Claim Text */}
+                <p className="font-medium line-clamp-2">
+                  {claim.claim_text}
+                </p>
+
+                {/* Metrics */}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                  <div className="flex items-center gap-1">
+                    <TrendingUp className="h-4 w-4" />
+                    <span>{claim.engagement_score.toLocaleString()} engagement</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Target className="h-4 w-4" />
+                    <span>{Math.round(claim.engagement_velocity)}/hr velocity</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      {claim.first_seen_at
+                        ? formatDistanceToNow(new Date(claim.first_seen_at), { addSuffix: true })
+                        : 'Recently'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Velocity Progress Bar */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Virality Velocity</span>
+                    <span>{Math.round(claim.engagement_velocity)}/hr</span>
+                  </div>
+                  <Progress value={velocityPercentage} className="h-2" />
+                </div>
+
+                {/* Potential Rarity */}
+                {claim.rarity_tier && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Potential badge rarity: </span>
+                    <span className="font-bold">
+                      {claim.rarity_tier}
+                    </span>
+                    {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
+                      <span className="ml-2 text-orange-500 font-bold">
+                        ⚡ LEGENDARY POTENTIAL!
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Verify Button */}
                 {claim.verification_id ? (

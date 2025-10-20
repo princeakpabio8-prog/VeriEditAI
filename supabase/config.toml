@@ -197,3 +197,24 @@ verify_jwt = false
 
 [functions.update-leaderboards]
 verify_jwt = false
+
+[functions.generate-claim-image]
+verify_jwt = false
+
+[functions.calculate-achievements]
+verify_jwt = false
+
+[functions.create-thread-share]
+verify_jwt = true
+
+[functions.track-share]
+verify_jwt = false
+
+[functions.mint-truth-badge]
+verify_jwt = true
+
+[functions.upload-nft-badge-image]
+verify_jwt = true
+
+[functions.generate-og-image]
+verify_jwt = false

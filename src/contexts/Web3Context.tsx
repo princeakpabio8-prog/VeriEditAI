@@ -8,7 +8,7 @@ const config = createConfig({
   connectors: [
     injected(), // MetaMask browser extension
     walletConnect({
-      projectId: 'e8b2c8c0d5f8a4b3c2d1e0f9a8b7c6d5', // Free WalletConnect project ID
+      projectId: 'e8b2c8c0d5f8a4b3c2d1e0f9a8b7c6d5',
       metadata: {
         name: 'VerifiedIT AI',
         description: 'Truth Badge NFT Platform',
@@ -16,6 +16,35 @@ const config = createConfig({
         icons: ['https://verifiedit.ai/favicon.ico']
       },
       showQrModal: true,
+      qrModalOptions: {
+        mobileWallets: [
+          {
+            id: 'metamask',
+            name: 'MetaMask',
+            links: {
+              native: 'metamask://',
+              universal: 'https://metamask.app.link'
+            }
+          },
+          {
+            id: 'trust',
+            name: 'Trust Wallet',
+            links: {
+              native: 'trust://',
+              universal: 'https://link.trustwallet.com'
+            }
+          },
+          {
+            id: 'rainbow',
+            name: 'Rainbow',
+            links: {
+              native: 'rainbow://',
+              universal: 'https://rainbow.me'
+            }
+          }
+        ],
+        enableExplorer: true,
+      },
     }),
   ],
   transports: {

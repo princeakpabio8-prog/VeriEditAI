@@ -232,19 +232,37 @@ serve(async (req) => {
     
     console.log('📦 Metadata uploaded to Supabase Storage:', metadataURI)
     
-    // Mint NFT on blockchain
+    // Mint NFT on blockchain with retry logic
     console.log('🔨 Minting badge on Polygon Mainnet...')
-    const tx = await contract.mintBadge(
-      walletAddress,
-      verificationId,
-      verification.trust_score,
-      metadataURI
-    )
+    let tx
+    let receipt
+    let retries = 3
     
-    console.log('⏳ Waiting for confirmation...')
-    const receipt = await tx.wait()
-    
-    console.log('✅ Badge minted! Transaction:', receipt.hash)
+    while (retries > 0) {
+      try {
+        tx = await contract.mintBadge(
+          walletAddress,
+          verificationId,
+          verification.trust_score,
+          metadataURI
+        )
+        
+        console.log('⏳ Waiting for confirmation...')
+        receipt = await tx.wait()
+        console.log('✅ Badge minted! Transaction:', receipt.hash)
+        break
+      } catch (mintError: any) {
+        retries--
+        console.error(`❌ Mint attempt failed (${3 - retries}/3):`, mintError.message)
+        
+        if (retries === 0) {
+          throw new Error(`Blockchain minting failed after 3 attempts: ${mintError.message}`)
+        }
+        
+        // Wait before retry
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    }
     
     // Resolve tokenId reliably with multiple strategies
     let tokenId = '0'
@@ -340,15 +358,30 @@ serve(async (req) => {
     
     if (insertError) throw insertError
     
-    // CRITICAL: If token_id is still 0, schedule a background fix
+    // CRITICAL: If token_id is still 0, schedule immediate background fix
     if (tokenId === '0') {
-      console.log('⚠️ Token ID is 0, scheduling background correction...')
+      console.log('⚠️ Token ID is 0, triggering immediate background correction...')
       EdgeRuntime.waitUntil(
-        supabase.functions.invoke('fix-token-ids').then(() => {
-          console.log('✅ Background token ID fix completed')
-        }).catch((err) => {
-          console.error('❌ Background fix failed:', err)
-        })
+        (async () => {
+          // Wait 3 seconds for blockchain state to settle
+          await new Promise(r => setTimeout(r, 3000))
+          
+          try {
+            const { error: fixError } = await supabase.functions.invoke('fix-token-ids')
+            if (fixError) {
+              console.error('❌ Background token ID fix failed:', fixError)
+            } else {
+              console.log('✅ Background token ID fix completed successfully')
+              
+              // After fixing token IDs, update images and OpenSea
+              await supabase.functions.invoke('fix-nft-images')
+              await supabase.functions.invoke('sync-opensea-collection')
+              console.log('✅ Full sync completed')
+            }
+          } catch (err) {
+            console.error('❌ Background sync failed:', err)
+          }
+        })()
       )
     }
     
@@ -398,49 +431,79 @@ serve(async (req) => {
       console.log(`💰 Auto-listed NFT for ${listingPrice.toFixed(2)} MATIC`)
     }
     
-    // Background tasks: AI image generation + OpenSea refresh (non-blocking)
+    // Background tasks: AI image generation + OpenSea refresh (non-blocking, with error recovery)
     EdgeRuntime.waitUntil(
       (async () => {
         try {
-          // 1. Generate AI badge image
-          console.log('🎨 Triggering AI badge image generation...')
-          const { error: imgError } = await supabase.functions.invoke('generate-nft-badge-image', {
-            body: {
-              badge_id: badgeData.id,
-              claim_text: verification.content,
-              trust_score: verification.trust_score,
-              rarity_tier: rarityTier
-            }
-          })
-          if (imgError) {
-            console.error('Image generation failed:', imgError)
-          } else {
-            console.log('✅ AI badge image generated')
-          }
-
-          // 2. Wait 2 seconds for blockchain to propagate
+          // Wait for initial blockchain propagation
           await new Promise(r => setTimeout(r, 2000))
-
-          // 3. Refresh OpenSea metadata automatically
-          console.log('🔄 Refreshing OpenSea metadata...')
-          const { error: refreshError } = await supabase.functions.invoke('refresh-opensea-metadata', {
-            body: { token_id: tokenId }
-          })
-          if (refreshError) {
-            console.error('OpenSea refresh failed:', refreshError)
-          } else {
-            console.log('✅ OpenSea metadata refreshed')
+          
+          // 1. Generate AI badge image with retry
+          console.log('🎨 Triggering AI badge image generation...')
+          let imageGenerated = false
+          for (let i = 0; i < 2; i++) {
+            try {
+              const { error: imgError } = await supabase.functions.invoke('generate-nft-badge-image', {
+                body: {
+                  badge_id: badgeData.id,
+                  claim_text: verification.content,
+                  trust_score: verification.trust_score,
+                  rarity_tier: rarityTier
+                }
+              })
+              if (!imgError) {
+                console.log('✅ AI badge image generated')
+                imageGenerated = true
+                break
+              } else {
+                console.error(`Image generation attempt ${i + 1} failed:`, imgError)
+              }
+            } catch (imgErr) {
+              console.error(`Image generation attempt ${i + 1} error:`, imgErr)
+            }
+            if (i < 1) await new Promise(r => setTimeout(r, 1000))
           }
 
-          // 4. Update marketplace listing status
-          await supabase
-            .from('nft_badges')
-            .update({ opensea_listed: true })
-            .eq('id', badgeData.id)
+          // 2. Wait for metadata to be available
+          await new Promise(r => setTimeout(r, 3000))
+
+          // 3. Refresh OpenSea metadata with retry
+          console.log('🔄 Refreshing OpenSea metadata...')
+          let openseaRefreshed = false
+          for (let i = 0; i < 2; i++) {
+            try {
+              const { error: refreshError } = await supabase.functions.invoke('refresh-opensea-metadata', {
+                body: { token_id: tokenId }
+              })
+              if (!refreshError) {
+                console.log('✅ OpenSea metadata refreshed')
+                openseaRefreshed = true
+                break
+              } else {
+                console.error(`OpenSea refresh attempt ${i + 1} failed:`, refreshError)
+              }
+            } catch (refreshErr) {
+              console.error(`OpenSea refresh attempt ${i + 1} error:`, refreshErr)
+            }
+            if (i < 1) await new Promise(r => setTimeout(r, 2000))
+          }
+
+          // 4. Update marketplace listing status if successful
+          if (openseaRefreshed) {
+            await supabase
+              .from('nft_badges')
+              .update({ opensea_listed: true })
+              .eq('id', badgeData.id)
+            console.log('✅ Marketplace status updated')
+          }
           
-          console.log('✅ All background tasks completed')
+          console.log('✅ All background tasks completed', {
+            imageGenerated,
+            openseaRefreshed
+          })
         } catch (bgError) {
-          console.error('Background task error:', bgError)
+          console.error('❌ Background task error:', bgError)
+          // Don't throw - these are optional enhancements
         }
       })()
     )

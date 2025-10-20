@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,7 @@ export default function ViralClaims() {
   const [claims, setClaims] = useState<ViralClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'monitoring'>('all');
+  const [triggering, setTriggering] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -126,6 +127,39 @@ export default function ViralClaims() {
     });
   }
 
+  async function triggerMonitoring() {
+    setTriggering(true);
+    try {
+      const functions = ['monitor-youtube', 'fetch-rss-news', 'calculate-virality'];
+      
+      for (const func of functions) {
+        const { error } = await supabase.functions.invoke(func);
+        if (error) {
+          console.error(`Error invoking ${func}:`, error);
+        }
+      }
+
+      toast({
+        title: 'Monitoring Triggered',
+        description: 'All monitoring functions have been invoked. Claims should populate shortly.',
+      });
+
+      // Refresh claims after a delay
+      setTimeout(() => {
+        fetchViralClaims();
+      }, 3000);
+    } catch (error) {
+      console.error('Error triggering monitoring:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to trigger monitoring functions',
+        variant: 'destructive',
+      });
+    } finally {
+      setTriggering(false);
+    }
+  }
+
   const stats = {
     total: claims.length,
     critical: claims.filter(c => getAlertLevel(c) === 'critical').length,
@@ -138,9 +172,20 @@ export default function ViralClaims() {
       <Navigation />
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Viral Claims Monitor</h1>
-            <p className="text-muted-foreground">Track and verify claims spreading across social media</p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Viral Claims Monitor</h1>
+              <p className="text-muted-foreground">Track and verify claims spreading across social media</p>
+            </div>
+            <Button 
+              onClick={triggerMonitoring} 
+              disabled={triggering}
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${triggering ? 'animate-spin' : ''}`} />
+              {triggering ? 'Updating...' : 'Trigger Monitoring'}
+            </Button>
           </div>
 
           {/* Stats Cards */}

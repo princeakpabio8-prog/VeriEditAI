@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -277,25 +278,36 @@ export function HotClaimsWidget() {
           return (
             <div
               key={claim.id}
-              className={`rounded-lg border-2 overflow-hidden ${
-                index === 0 ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : 'border-border'
-              }`}
+              className={cn(
+                "rounded-lg border-2 overflow-hidden transition-all duration-300",
+                index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
+                claim.status === 'verified' && "border-emerald-500 shadow-lg shadow-emerald-500/20",
+                !claim.status && "border-border"
+              )}
             >
               {/* Claim Image - Hero Size */}
               {claim.image_url ? (
-                <div className="relative h-64 md:h-80 w-full overflow-hidden rounded-t-lg">
-                  <img 
-                    src={
-                      claim.image_url.includes('supabase.co') 
-                        ? claim.image_url 
-                        : claim.image_url.startsWith('http')
-                          ? `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
-                          : claim.image_url
-                    }
-                    alt={claim.claim_text}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="relative h-64 md:h-80 w-full overflow-hidden rounded-t-lg">
+                    <img 
+                      src={
+                        claim.image_url.includes('supabase.co') 
+                          ? claim.image_url 
+                          : claim.image_url.startsWith('http')
+                            ? `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
+                            : claim.image_url
+                      }
+                      alt={claim.claim_text}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    
+                    {/* Verified Badge Overlay */}
+                    {claim.status === 'verified' && (
+                      <div className="absolute top-2 right-2 bg-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 animate-pulse">
+                        <CheckCircle2 size={14} />
+                        VERIFIED
+                      </div>
+                    )}
                   
                   {/* Overlays */}
                   <div className="absolute top-3 left-3 flex gap-2">
@@ -346,9 +358,14 @@ export function HotClaimsWidget() {
                 </div>
 
                 {/* Claim Text - Larger for first */}
-                <p className={`font-semibold ${index === 0 ? 'text-lg' : 'text-base'} line-clamp-2`}>
-                  {claim.claim_text}
-                </p>
+                <div className="flex items-start gap-2">
+                  {claim.status === 'verified' && (
+                    <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0 mt-1" />
+                  )}
+                  <p className={`font-semibold ${index === 0 ? 'text-lg' : 'text-base'} line-clamp-2`}>
+                    {claim.claim_text}
+                  </p>
+                </div>
 
                 {/* Metrics */}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
@@ -400,10 +417,9 @@ export function HotClaimsWidget() {
                     <Button
                       onClick={() => navigate(`/share/${claim.share_token}`)}
                       size="sm"
-                      variant="outline"
-                      className="flex-1 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 border-green-500 text-green-700 dark:text-green-400"
+                      className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg transition-all"
                     >
-                      <CheckCircle2 className="h-4 w-4 mr-1" />
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />
                       View Verification
                     </Button>
                     <Button

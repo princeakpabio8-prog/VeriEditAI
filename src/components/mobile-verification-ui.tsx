@@ -35,6 +35,7 @@ import {
 import { MintBadgeButton } from "./nft/MintBadgeButton";
 import { CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { VerificationStatusBadge } from "./VerificationStatusBadge";
 
 interface MobileVerificationUIProps {
   onVerify: (data: any) => void;
@@ -127,6 +128,11 @@ export function MobileVerificationUI({
         contentType: 'text' as const
       });
 
+      toast({
+        title: "🔍 Verification Started",
+        description: "Analyzing your claim...",
+      });
+
       console.log('Starting text verification:', textContent.slice(0, 50) + '...');
       onVerify({
         type: 'text',
@@ -159,8 +165,8 @@ export function MobileVerificationUI({
       });
 
       toast({
-        title: "Fetching content from URL...",
-        description: "Please wait while we retrieve the page content",
+        title: "🔍 Verification Started",
+        description: "Fetching and analyzing URL content...",
       });
 
       const { supabase } = await import('@/integrations/supabase/client');
@@ -251,6 +257,11 @@ export function MobileVerificationUI({
     }
 
     try {
+      toast({
+        title: "🔍 Verification Started",
+        description: "Analyzing document...",
+      });
+
       const isImage = (selectedFile.type || '').startsWith('image/');
       console.log('Starting file verification:', selectedFile.name, 'isImage:', isImage);
 
@@ -740,6 +751,15 @@ export function MobileVerificationUI({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
+              {/* Prominent Verification Status Badge */}
+              <div className="flex justify-center mb-4">
+                <VerificationStatusBadge 
+                  status="verified" 
+                  confidence={result.confidence}
+                  size="large"
+                />
+              </div>
+              
               <Card className="border-border/50 shadow-lg">
                 <CardContent className="p-4 space-y-4">
                   {/* Header */}

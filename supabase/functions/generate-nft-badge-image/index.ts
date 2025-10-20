@@ -23,7 +23,7 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    console.log(`🎨 Generating NFT badge image for: ${badge_id}`);
+    console.log(`🎨 Generating NFT badge image for: ${badge_id} (Rarity: ${rarity_tier}, Trust: ${trust_score}%)`);
 
     // Create a detailed prompt for high-quality NFT badge image
     const rarityColors = {

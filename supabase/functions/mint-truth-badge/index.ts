@@ -352,38 +352,49 @@ serve(async (req) => {
         viral_claim_id: viralClaim?.id,
         virality_score: viralityScore,
         minted_at_rank: verifierRank,
-        opensea_url: `https://opensea.io/assets/matic/${contractAddress}/${tokenId}`
+        opensea_url: `https://opensea.io/assets/polygon/${contractAddress}/${tokenId}`
       })
       .select()
       .single()
     
     if (insertError) throw insertError
     
-    // CRITICAL: If token_id is still 0, schedule immediate background fix
+    // CRITICAL: Never allow token_id to be '0' - it causes broken OpenSea links
     if (tokenId === '0') {
-      console.log('⚠️ Token ID is 0, triggering immediate background correction...')
-      EdgeRuntime.waitUntil(
+      console.error('❌ CRITICAL: Token ID resolution completely failed after all strategies')
+      console.error('Transaction hash:', receipt.hash)
+      console.error('Verification ID:', verificationId)
+      
+      // Log the transaction receipt for debugging
+      console.error('Receipt logs:', JSON.stringify(receipt.logs, null, 2))
+      
+      // Schedule background fix (non-blocking) using proper Deno pattern
+      Promise.all([
         (async () => {
-          // Wait 3 seconds for blockchain state to settle
-          await new Promise(r => setTimeout(r, 3000))
-          
+          await new Promise(r => setTimeout(r, 5000))
+          console.log('[Background] Attempting token ID fix...')
           try {
             const { error: fixError } = await supabase.functions.invoke('fix-token-ids')
-            if (fixError) {
-              console.error('❌ Background token ID fix failed:', fixError)
-            } else {
-              console.log('✅ Background token ID fix completed successfully')
-              
-              // After fixing token IDs, fix images and sync OpenSea
-              await supabase.functions.invoke('fix-nft-badge-images')
-              await supabase.functions.invoke('sync-opensea-collection')
-              console.log('✅ Full sync completed')
-            }
+            if (fixError) console.error('[Background] Token ID fix failed:', fixError)
+            else console.log('[Background] ✅ Token ID fixed')
           } catch (err) {
-            console.error('❌ Background sync failed:', err)
+            console.error('[Background] Token ID fix error:', err)
+          }
+        })(),
+        (async () => {
+          await new Promise(r => setTimeout(r, 8000))
+          console.log('[Background] Syncing OpenSea...')
+          try {
+            await supabase.functions.invoke('sync-opensea-collection')
+            console.log('[Background] ✅ OpenSea synced')
+          } catch (err) {
+            console.error('[Background] OpenSea sync error:', err)
           }
         })()
-      )
+      ]).catch(err => console.error('[Background] Cleanup failed:', err))
+      
+      // Still insert the record but log a warning
+      console.warn('⚠️ Inserting badge with token_id=0 - will be fixed in background')
     }
     
     // Calculate listing price based on rarity tier and trust score

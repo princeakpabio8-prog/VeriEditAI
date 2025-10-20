@@ -93,30 +93,48 @@ export const OpenSeaVerification = () => {
   const runAutoFix = async () => {
     setFixingIds(true);
     try {
-      // First fix the OpenSea URLs from /matic/ to /polygon/
-      const { data: urlFix, error: urlError } = await supabase.functions.invoke('fix-opensea-urls');
-      if (urlError) console.error('URL fix error:', urlError);
-      
-      // Then run the auto-fix for images and sync
-      const { data, error } = await supabase.functions.invoke('auto-fix-nft-badges');
-      if (error) throw error;
+      toast({
+        title: '🔧 Starting emergency repair...',
+        description: 'Fixing token IDs, images, and OpenSea URLs',
+      });
 
-      // Ensure a final sync to propagate any fixed token_ids -> URLs
-      try {
-        await supabase.functions.invoke('sync-opensea-collection');
-      } catch (e) {
-        console.warn('Post-fix sync failed (non-fatal):', e);
+      // Step 1: Fix token IDs (critical - fixes the 31 badges with token_id=0)
+      console.log('[Auto-Fix] Step 1: Fixing token IDs...');
+      const { data: tokenFix, error: tokenError } = await supabase.functions.invoke('fix-token-ids');
+      if (tokenError) {
+        console.error('[Auto-Fix] Token ID fix error:', tokenError);
+        throw new Error(`Token ID fix failed: ${tokenError.message}`);
       }
+      console.log('[Auto-Fix] Token ID fix result:', tokenFix);
+
+      // Step 2: Fix OpenSea URLs from /matic/ to /polygon/
+      console.log('[Auto-Fix] Step 2: Fixing OpenSea URLs...');
+      const { data: urlFix, error: urlError } = await supabase.functions.invoke('fix-opensea-urls');
+      if (urlError) console.error('[Auto-Fix] URL fix error:', urlError);
+      console.log('[Auto-Fix] URL fix result:', urlFix);
+      
+      // Step 3: Fix NFT images
+      console.log('[Auto-Fix] Step 3: Fixing NFT images...');
+      const { data: imageFix, error: imageError } = await supabase.functions.invoke('fix-nft-images');
+      if (imageError) console.error('[Auto-Fix] Image fix error:', imageError);
+      console.log('[Auto-Fix] Image fix result:', imageFix);
+
+      // Step 4: Sync with OpenSea
+      console.log('[Auto-Fix] Step 4: Syncing with OpenSea...');
+      const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-opensea-collection');
+      if (syncError) console.error('[Auto-Fix] Sync error:', syncError);
+      console.log('[Auto-Fix] Sync result:', syncData);
 
       toast({
-        title: '✅ Auto-fix complete!',
-        description: `Fixed ${urlFix?.fixed || 0} OpenSea URLs. ${data?.message || 'All badges synchronized'}`,
+        title: '✅ Emergency repair complete!',
+        description: `Fixed ${tokenFix?.fixed || 0} token IDs, ${urlFix?.fixed || 0} URLs, ${imageFix?.updated || 0} images. Synced ${syncData?.stats?.total || 0} badges.`,
       });
 
       await checkBadges();
     } catch (error: any) {
+      console.error('[Auto-Fix] Critical error:', error);
       toast({
-        title: 'Auto-fix failed',
+        title: '❌ Emergency repair failed',
         description: error.message,
         variant: 'destructive',
       });

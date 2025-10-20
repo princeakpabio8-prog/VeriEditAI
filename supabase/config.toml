@@ -248,3 +248,9 @@ verify_jwt = false
 
 [functions.fix-opensea-urls]
 verify_jwt = false
+
+[functions.auto-repair-badges]
+verify_jwt = false
+
+[functions.auto-fix-nft-badges]
+verify_jwt = false

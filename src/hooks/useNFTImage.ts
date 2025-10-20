@@ -62,10 +62,23 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
         if (!meta?.image) throw new Error('No image in metadata')
 
         if (isTemplateImage(meta.image)) {
-          // Trigger background regeneration with ALL required parameters
-          if (badgeId && claimText && trustScore && !regenerationAttempted.has(badgeId)) {
+          console.log(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}`)
+          
+          // Validate all required parameters
+          if (!badgeId || !claimText || trustScore === undefined || !rarityTier) {
+            console.error('[NFT Image] ❌ Missing required parameters:', {
+              badgeId: !!badgeId,
+              claimText: !!claimText,
+              trustScore: trustScore !== undefined,
+              rarityTier: !!rarityTier
+            })
+          } else if (!regenerationAttempted.has(badgeId)) {
             regenerationAttempted.add(badgeId)
-            console.log(`🎨 Triggering image generation for badge ${badgeId}`)
+            console.log(`[NFT Image] 🎨 Triggering AI generation for badge ${badgeId}:`, {
+              claimText: claimText.substring(0, 50) + '...',
+              trustScore,
+              rarityTier
+            })
             
             supabase.functions
               .invoke('generate-nft-badge-image', { 
@@ -73,17 +86,19 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
                   badge_id: badgeId,
                   claim_text: claimText,
                   trust_score: trustScore,
-                  rarity_tier: rarityTier || 'COMMON'
+                  rarity_tier: rarityTier
                 } 
               })
               .then((result) => {
                 if (result.error) {
-                  console.error('❌ Image generation failed:', result.error)
+                  console.error('[NFT Image] ❌ AI generation failed:', result.error)
                 } else {
-                  console.log('✅ Image generation triggered successfully')
+                  console.log('[NFT Image] ✅ AI generation triggered:', result.data)
                 }
               })
-              .catch((err) => console.error('❌ Silent regen failed:', err))
+              .catch((err) => console.error('[NFT Image] ❌ Invocation error:', err))
+          } else {
+            console.log(`[NFT Image] ℹ️ Already attempted generation for badge: ${badgeId}`)
           }
 
           // Show current template, but don't cache it

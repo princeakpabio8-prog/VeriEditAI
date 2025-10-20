@@ -61,6 +61,17 @@ export function HotClaimsWidget() {
     };
   }, []);
 
+  // Auto-generate images for claims without images
+  useEffect(() => {
+    if (hotClaims.length === 0) return;
+
+    hotClaims.forEach((claim) => {
+      if (!claim.image_url && !generatingImageIds.has(claim.id)) {
+        generateClaimImage(claim);
+      }
+    });
+  }, [hotClaims]);
+
   const fetchHotClaims = async () => {
     try {
       const { data, error } = await supabase
@@ -242,15 +253,17 @@ export function HotClaimsWidget() {
               ) : (
                 <div className="relative h-48 w-full bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center">
                   <div className="text-center space-y-2">
-                    <div className="text-4xl">📰</div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateClaimImage(claim)}
-                      disabled={generatingImageIds.has(claim.id)}
-                    >
-                      {generatingImageIds.has(claim.id) ? 'Generating...' : 'Generate Image'}
-                    </Button>
+                    {generatingImageIds.has(claim.id) ? (
+                      <>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p className="text-sm text-muted-foreground">Generating image...</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-4xl">📰</div>
+                        <p className="text-xs text-muted-foreground">Preparing visual...</p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

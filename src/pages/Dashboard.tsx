@@ -24,6 +24,7 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TruthBadgeGallery } from '@/components/nft/TruthBadgeGallery';
+import { FixNFTImagesButton } from '@/components/nft/FixNFTImagesButton';
 
 
 import { useSearchParams } from 'react-router-dom';
@@ -647,7 +648,8 @@ const Dashboard = () => {
                   {' '}Images are AI-generated and may take a few moments to appear.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <FixNFTImagesButton />
                 <TruthBadgeGallery />
               </CardContent>
             </Card>

@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Award, ExternalLink } from 'lucide-react'
+import { Award, ExternalLink, RefreshCw } from 'lucide-react'
 import { useNFTImage } from '@/hooks/useNFTImage'
 import { NFTBadgeFallback } from '@/components/nft/NFTBadgeFallback'
 import badgeImage from '@/assets/truth-badge.png'
+import { toast } from 'sonner'
 
 interface TruthBadge {
   id: string
@@ -128,8 +129,31 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
     badge.rarity_tier || undefined
   )
   const [imageFailed, setImageFailed] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const displayImage = imageUrl || badgeImage
   const shouldShowFallback = !imageUrl || imageFailed || error
+
+  const handleRefreshOpenSea = async () => {
+    try {
+      setRefreshing(true);
+      
+      const { data, error } = await supabase.functions.invoke('refresh-opensea-metadata', {
+        body: { token_id: badge.token_id }
+      });
+      
+      if (error) throw error;
+      
+      toast.success('OpenSea refresh requested! Check back in 5-10 minutes.', {
+        description: 'The metadata will update automatically on OpenSea.'
+      });
+    } catch (err: any) {
+      toast.error('Failed to refresh OpenSea metadata', {
+        description: err.message
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const getRarityDisplayName = (rarity: string | null) => {
     switch (rarity) {
@@ -296,23 +320,35 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
                 Minted {new Date(badge.minted_at).toLocaleDateString()}
               </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" />
+              PolygonScan
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => window.open(badge.metadata_uri, '_blank')}
+            >
+              Metadata
+            </Button>
+          </div>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
-            className="flex-1"
-            onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
+            className="w-full"
+            onClick={handleRefreshOpenSea}
+            disabled={refreshing}
           >
-            <ExternalLink className="h-3 w-3 mr-1" />
-            PolygonScan
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => window.open(badge.metadata_uri, '_blank')}
-          >
-            Metadata
+            <RefreshCw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh on OpenSea'}
           </Button>
         </div>
       </CardContent>

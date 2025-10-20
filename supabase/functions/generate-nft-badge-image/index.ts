@@ -190,7 +190,9 @@ TECHNICAL:
         model: "gpt-image-1",
         prompt,
         size: "1024x1024",
-        quality: "high",
+        output_format: "jpeg", // Faster than PNG
+        output_compression: 85, // Balance quality/speed
+        quality: "medium", // Faster than high
         n: 1
       })
     });

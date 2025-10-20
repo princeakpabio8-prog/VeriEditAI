@@ -943,7 +943,10 @@ export type Database = {
           metadata_uri: string
           minted_at: string | null
           minted_at_rank: number | null
+          opensea_image_confirmed: boolean | null
+          opensea_last_refresh: string | null
           opensea_listed: boolean | null
+          opensea_refresh_count: number | null
           opensea_url: string | null
           rarity_tier: string | null
           token_id: string
@@ -966,7 +969,10 @@ export type Database = {
           metadata_uri: string
           minted_at?: string | null
           minted_at_rank?: number | null
+          opensea_image_confirmed?: boolean | null
+          opensea_last_refresh?: string | null
           opensea_listed?: boolean | null
+          opensea_refresh_count?: number | null
           opensea_url?: string | null
           rarity_tier?: string | null
           token_id: string
@@ -989,7 +995,10 @@ export type Database = {
           metadata_uri?: string
           minted_at?: string | null
           minted_at_rank?: number | null
+          opensea_image_confirmed?: boolean | null
+          opensea_last_refresh?: string | null
           opensea_listed?: boolean | null
+          opensea_refresh_count?: number | null
           opensea_url?: string | null
           rarity_tier?: string | null
           token_id?: string

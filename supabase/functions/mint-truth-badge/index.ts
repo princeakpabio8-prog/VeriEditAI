@@ -137,9 +137,42 @@ serve(async (req) => {
       }
     }
     
-    // Use a hosted fallback image - will be replaced with AI-generated image shortly after minting
-    // Using a reliable CDN URL that will always be accessible
-    const badgeImageUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-fallback.png'
+    // Generate AI badge image BEFORE creating metadata
+    console.log('🎨 Generating AI badge image...');
+    let badgeImageUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-fallback.png';
+    
+    try {
+      // Generate with 30s timeout
+      const generateWithTimeout = async (timeoutMs = 30000) => {
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('AI generation timeout')), timeoutMs)
+        );
+        
+        return Promise.race([
+          supabase.functions.invoke('generate-nft-badge-image', {
+            body: {
+              badge_id: verificationId, // Use verification ID temporarily
+              claim_text: verification.content,
+              trust_score: verification.trust_score,
+              rarity_tier: rarityTier
+            }
+          }),
+          timeoutPromise
+        ]);
+      };
+      
+      const { data: imgData, error: imgError } = await generateWithTimeout() as any;
+      
+      if (!imgError && imgData?.image_url) {
+        badgeImageUrl = imgData.image_url;
+        console.log('✅ AI image generated successfully, using in metadata:', badgeImageUrl);
+      } else {
+        console.warn('⚠️ AI generation failed or timeout, using static fallback:', imgError);
+      }
+    } catch (err: any) {
+      console.error('❌ AI generation error:', err.message);
+      console.log('ℹ️ Continuing with static fallback image');
+    }
     
     // Map rarity tier to display name for metadata
     const getRarityDisplayName = (rarity: string) => {
@@ -455,22 +488,61 @@ serve(async (req) => {
       console.log(`💰 Auto-listed NFT for ${listingPrice.toFixed(2)} MATIC`)
     }
     
-    // Background tasks: AI image generation + OpenSea refresh (non-blocking, with error recovery)
+    // Background tasks: Aggressive OpenSea refresh strategy (non-blocking)
     EdgeRuntime.waitUntil(
       (async () => {
         try {
-          // Wait for initial blockchain propagation
-          await new Promise(r => setTimeout(r, 2000))
+          // Wait for blockchain propagation (3s instead of 2s)
+          await new Promise(r => setTimeout(r, 3000));
           
-          // 1. Generate AI badge image with retry
-          console.log('🎨 Triggering AI badge image generation...')
-          let imageGenerated = false
-          for (let i = 0; i < 2; i++) {
-            try {
-              const { error: imgError } = await supabase.functions.invoke('generate-nft-badge-image', {
-                body: {
-                  badge_id: badgeData.id,
-                  claim_text: verification.content,
+          console.log('🔄 Starting aggressive OpenSea refresh sequence...');
+          
+          // First refresh: Immediate (with final metadata)
+          console.log('🔄 First OpenSea refresh (immediate)...');
+          try {
+            await supabase.functions.invoke('refresh-opensea-metadata', {
+              body: { token_id: tokenId }
+            });
+            console.log('✅ First refresh completed');
+          } catch (err) {
+            console.error('❌ First refresh failed:', err);
+          }
+          
+          // Second refresh: After 30s (ensure CDN propagation)
+          await new Promise(r => setTimeout(r, 30000));
+          console.log('🔄 Second OpenSea refresh (30s delay)...');
+          try {
+            await supabase.functions.invoke('refresh-opensea-metadata', {
+              body: { token_id: tokenId }
+            });
+            console.log('✅ Second refresh completed');
+          } catch (err) {
+            console.error('❌ Second refresh failed:', err);
+          }
+          
+          // Third refresh: After 2 minutes (aggressive cache bust)
+          await new Promise(r => setTimeout(r, 120000));
+          console.log('🔄 Third OpenSea refresh (2m delay)...');
+          try {
+            const { data: finalRefresh } = await supabase.functions.invoke('refresh-opensea-metadata', {
+              body: { token_id: tokenId }
+            });
+            console.log('✅ Final refresh completed:', finalRefresh);
+            
+            // Mark as confirmed after final refresh
+            await supabase
+              .from('nft_badges')
+              .update({ opensea_image_confirmed: true })
+              .eq('id', badgeData.id);
+            
+            console.log('📊 Marked OpenSea image as confirmed');
+          } catch (err) {
+            console.error('❌ Final refresh failed:', err);
+          }
+          
+          console.log('🎉 Aggressive refresh sequence complete');
+        } catch (error) {
+          console.error('❌ Background refresh sequence failed:', error)
                   trust_score: verification.trust_score,
                   rarity_tier: rarityTier
                 }

@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { AlertCircle, TrendingUp, CheckCircle, XCircle, ExternalLink, RefreshCw, Flame, Users, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +22,7 @@ interface ViralClaim {
   first_seen_at: string;
   status: string;
   metadata: any;
+  image_url?: string | null;
 }
 
 export default function ViralClaims() {
@@ -228,24 +229,26 @@ export default function ViralClaims() {
             </Card>
           </div>
 
-          {/* Filters */}
-          <Tabs value={filter} onValueChange={(v) => setFilter(v as any)} className="mb-6">
-            <TabsList>
-              <TabsTrigger value="all">All Claims</TabsTrigger>
-              <TabsTrigger value="critical">Critical</TabsTrigger>
-              <TabsTrigger value="high">High Alert</TabsTrigger>
-              <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Filters - Sticky */}
+          <div className="sticky top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pb-4 mb-6">
+            <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
+              <TabsList className="w-full grid grid-cols-4">
+                <TabsTrigger value="all">All Claims</TabsTrigger>
+                <TabsTrigger value="critical">Critical</TabsTrigger>
+                <TabsTrigger value="high">High Alert</TabsTrigger>
+                <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
 
-          {/* Claims List */}
-          <div className="space-y-4">
+          {/* Claims Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {loading ? (
-              <Card className="p-8 text-center">
+              <Card className="p-8 text-center col-span-full">
                 <p className="text-muted-foreground">Loading viral claims...</p>
               </Card>
             ) : claims.length === 0 ? (
-              <Card className="p-8 text-center">
+              <Card className="p-8 text-center col-span-full">
                 <p className="text-muted-foreground">No viral claims found</p>
               </Card>
             ) : (
@@ -256,57 +259,71 @@ export default function ViralClaims() {
                 return (
                   <Card 
                     key={claim.id} 
-                    className={`p-6 ${
+                    className={`p-4 transition-all hover:shadow-lg hover:scale-[1.02] ${
                       alertLevel === 'critical' ? 'border-destructive/50 bg-destructive/5' :
                       alertLevel === 'high' ? 'border-yellow-500/50 bg-yellow-500/5' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant={claim.status === 'verified' ? 'default' : 'secondary'}>
+                    <div className="flex gap-3">
+                      {/* Thumbnail */}
+                      {claim.image_url && (
+                        <div className="flex-shrink-0">
+                          <img 
+                            src={claim.image_url} 
+                            alt="" 
+                            className="w-20 h-20 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Badges */}
+                        <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                          <Badge variant={claim.status === 'verified' ? 'default' : 'secondary'} className="text-xs">
                             {claim.platform}
                           </Badge>
                           {alertLevel === 'critical' && (
-                            <Badge variant="destructive">Critical</Badge>
+                            <Badge variant="destructive" className="text-xs">Critical</Badge>
                           )}
                           {alertLevel === 'high' && (
-                            <Badge className="bg-yellow-600">High Alert</Badge>
+                            <Badge className="bg-yellow-600 text-xs">High Alert</Badge>
                           )}
-                          <Badge variant="outline">{claim.status}</Badge>
+                          <Badge variant="outline" className="text-xs">{claim.status}</Badge>
                         </div>
-                        <p className="text-lg font-medium mb-3">{claim.claim_text}</p>
-                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <div>
-                            <span className="font-medium">Engagement:</span>{' '}
-                            {claim.engagement_score.toLocaleString()}
+
+                        {/* Claim Text */}
+                        <p className="font-medium mb-2 line-clamp-2 text-sm leading-snug">{claim.claim_text}</p>
+
+                        {/* Compact Stats with Icons */}
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {claim.engagement_score >= 1000 
+                              ? `${(claim.engagement_score / 1000).toFixed(1)}k` 
+                              : claim.engagement_score.toLocaleString()}
                           </div>
-                          <div>
-                            <span className="font-medium">Velocity:</span>{' '}
-                            {claim.engagement_velocity > 0 ? `↑${Math.round(claim.engagement_velocity)}/hr` : '—'}
+                          <div className="flex items-center gap-1">
+                            <Flame className="h-3 w-3" />
+                            {claim.engagement_velocity > 0 ? `${Math.round(claim.engagement_velocity)}/hr` : '—'}
                           </div>
-                          <div>
-                            <span className="font-medium">Age:</span>{' '}
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
                             {hoursSinceFirstSeen}h
                           </div>
-                          {claim.metadata?.subreddit && (
-                            <div>
-                              <span className="font-medium">Subreddit:</span>{' '}
-                              r/{claim.metadata.subreddit}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button onClick={() => handleVerifyNow(claim)}>
-                          Verify Now
-                        </Button>
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={claim.source_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            View Source
-                          </a>
-                        </Button>
+
+                        {/* Actions */}
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleVerifyNow(claim)} size="sm" className="flex-1">
+                            Verify Now
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <a href={claim.source_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>

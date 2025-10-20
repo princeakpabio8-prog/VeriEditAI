@@ -110,17 +110,22 @@ serve(async (req) => {
           continue;
         }
 
-        // Refresh OpenSea metadata
+        // Refresh OpenSea metadata with correct token ID
         try {
-          const cleanTokenId = badge.token_id.replace(/^0+/, '') || '0';
-          const refreshUrl = `https://api.opensea.io/api/v2/chain/matic/contract/${contractAddress}/nfts/${cleanTokenId}/refresh`;
-          
-          const OPENSEA_API_KEY = Deno.env.get('OPENSEA_API_KEY');
-          const headers: HeadersInit = { 'Content-Type': 'application/json' };
-          if (OPENSEA_API_KEY) headers['X-API-KEY'] = OPENSEA_API_KEY;
+          // Skip if token_id is 0 (needs fixing first)
+          if (badge.token_id === '0' || badge.token_id === 0) {
+            console.log(`⚠️ Skipping OpenSea refresh for token_id 0 - run fix-token-ids first`);
+          } else {
+            const cleanTokenId = String(badge.token_id).replace(/^0+/, '') || '0';
+            const refreshUrl = `https://api.opensea.io/api/v2/chain/matic/contract/${contractAddress}/nfts/${cleanTokenId}/refresh`;
+            
+            const OPENSEA_API_KEY = Deno.env.get('OPENSEA_API_KEY');
+            const headers: HeadersInit = { 'Content-Type': 'application/json' };
+            if (OPENSEA_API_KEY) headers['X-API-KEY'] = OPENSEA_API_KEY;
 
-          await fetch(refreshUrl, { method: 'POST', headers });
-          console.log(`✅ Refreshed OpenSea for token #${cleanTokenId}`);
+            const refreshResponse = await fetch(refreshUrl, { method: 'POST', headers });
+            console.log(`✅ Refreshed OpenSea for token #${cleanTokenId} (status: ${refreshResponse.status})`);
+          }
         } catch (refreshError) {
           console.log(`⚠️ OpenSea refresh failed (non-critical):`, refreshError);
         }

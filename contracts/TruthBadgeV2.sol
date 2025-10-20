@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract TruthBadge is ERC721, ERC721URIStorage, ERC2981, Ownable {
     uint256 private _tokenIdCounter;
+    uint256 public constant MAX_SUPPLY = 3000;
     
     // Mapping from verification ID to token ID (prevent duplicate badges)
     mapping(string => uint256) public verificationToToken;
@@ -48,6 +49,7 @@ contract TruthBadge is ERC721, ERC721URIStorage, ERC2981, Ownable {
         uint256 trustScore,
         string memory metadataURI
     ) public onlyOwner returns (uint256) {
+        require(_tokenIdCounter < MAX_SUPPLY, "Maximum supply of 3,000 NFTs reached");
         require(trustScore >= 75, "Trust score must be >= 75");
         require(!verificationMinted[verificationId], "Badge already minted for this verification");
         require(to != address(0), "Cannot mint to zero address");

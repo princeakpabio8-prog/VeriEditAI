@@ -80,10 +80,18 @@ serve(async (req) => {
     const contractABI = [
       'function mintBadge(address to, string memory verificationId, uint256 trustScore, string memory metadataURI) public returns (uint256)',
       'function verificationMinted(string memory verificationId) public view returns (bool)',
-      'function totalSupply() public view returns (uint256)'
+      'function totalSupply() public view returns (uint256)',
+      'function verificationToToken(string memory verificationId) public view returns (uint256)'
     ]
     
     const contract = new ethers.Contract(contractAddress, contractABI, wallet)
+    
+    // Check supply cap (3,000 maximum NFTs)
+    const currentSupply = await contract.totalSupply()
+    console.log('📊 Current supply:', currentSupply.toString())
+    if (currentSupply >= 3000n) {
+      throw new Error('Maximum supply of 3,000 NFTs has been reached')
+    }
     
     // Check if already minted on-chain
     const alreadyMinted = await contract.verificationMinted(verificationId)
@@ -234,43 +242,45 @@ serve(async (req) => {
     
     console.log('✅ Badge minted! Transaction:', receipt.hash)
     
-    // Extract tokenId from events - FIXED VERSION
+    // Get tokenId directly from contract mapping (most reliable method)
     let tokenId = '0'
     
     try {
-      // Try to find the BadgeMinted event
-      for (const log of receipt.logs) {
-        try {
-          const parsed = contract.interface.parseLog({
-            topics: log.topics,
-            data: log.data
-          })
-          
-          if (parsed && parsed.name === 'BadgeMinted') {
-            console.log('✅ Found BadgeMinted event:', parsed)
-            // BadgeMinted event has tokenId as first argument
-            tokenId = parsed.args[0]?.toString() || parsed.args.tokenId?.toString() || '0'
-            console.log('🔢 Extracted tokenId:', tokenId)
-            break
+      // Query the on-chain mapping for this verification's token ID
+      const contractTokenId = await contract.verificationToToken(verificationId)
+      tokenId = contractTokenId.toString()
+      console.log('✅ Token ID from contract mapping:', tokenId)
+    } catch (error) {
+      console.error('❌ Error querying tokenId from contract:', error)
+      
+      // Fallback: try parsing events
+      try {
+        for (const log of receipt.logs) {
+          try {
+            const parsed = contract.interface.parseLog({
+              topics: log.topics,
+              data: log.data
+            })
+            
+            if (parsed && parsed.name === 'BadgeMinted') {
+              tokenId = parsed.args[0]?.toString() || parsed.args.tokenId?.toString() || '0'
+              console.log('🔢 Token ID from event:', tokenId)
+              break
+            }
+          } catch (parseError) {
+            continue
           }
-        } catch (parseError) {
-          // Skip unparseable logs
-          continue
         }
+      } catch (eventError) {
+        console.error('❌ Event parsing also failed:', eventError)
       }
       
-      // Fallback: Query totalSupply if event parsing failed
+      // Last resort: query total supply
       if (tokenId === '0') {
-        console.log('⚠️ Could not parse tokenId from events, querying totalSupply...')
         const totalSupply = await contract.totalSupply()
         tokenId = totalSupply.toString()
-        console.log('📊 Using totalSupply as tokenId:', tokenId)
+        console.log('⚠️ Using totalSupply as fallback:', tokenId)
       }
-    } catch (error) {
-      console.error('❌ Error extracting tokenId:', error)
-      // Last resort: use timestamp
-      tokenId = Date.now().toString()
-      console.log('⚠️ Using timestamp as fallback tokenId:', tokenId)
     }
     
     // Store in database with rarity and viral data

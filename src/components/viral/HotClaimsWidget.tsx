@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ShareModal } from '@/components/share-modal';
+import { ClaimImageFallback } from './ClaimImageFallback';
 
 interface HotClaim {
   id: string;
@@ -61,16 +62,16 @@ export function HotClaimsWidget() {
     };
   }, []);
 
-  // Auto-generate images for claims without images
-  useEffect(() => {
-    if (hotClaims.length === 0) return;
+  // Auto-generate images disabled (using static fallbacks for zero-cost premium visuals)
+  // useEffect(() => {
+  //   if (hotClaims.length === 0) return;
 
-    hotClaims.forEach((claim) => {
-      if (!claim.image_url && !generatingImageIds.has(claim.id)) {
-        generateClaimImage(claim);
-      }
-    });
-  }, [hotClaims]);
+  //   hotClaims.forEach((claim) => {
+  //     if (!claim.image_url && !generatingImageIds.has(claim.id)) {
+  //       generateClaimImage(claim);
+  //     }
+  //   });
+  // }, [hotClaims]);
 
   const fetchHotClaims = async () => {
     try {
@@ -140,6 +141,19 @@ export function HotClaimsWidget() {
   const handleVerifyNow = (claim: HotClaim) => {
     setVerifyingIds((prev) => new Set(prev).add(claim.id));
     navigate(`/verify?claim=${encodeURIComponent(claim.claim_text)}&viralClaimId=${claim.id}`);
+  };
+
+  const getClaimRarityForFallback = (claim: HotClaim): string => {
+    // Use explicit rarity if available
+    if (claim.rarity_tier) return claim.rarity_tier;
+    
+    // Otherwise infer from engagement score
+    const score = claim.engagement_score;
+    if (score >= 10000) return 'LEGENDARY';
+    if (score >= 5000) return 'EPIC';
+    if (score >= 2000) return 'RARE';
+    if (score >= 1000) return 'UNCOMMON';
+    return 'COMMON';
   };
 
   const generateClaimImage = async (claim: HotClaim) => {
@@ -271,7 +285,13 @@ export function HotClaimsWidget() {
               {claim.image_url ? (
                 <div className="relative h-64 md:h-80 w-full overflow-hidden rounded-t-lg">
                   <img 
-                    src={claim.image_url.startsWith('http') ? `${window.location.origin}/api/image-proxy?url=${encodeURIComponent(claim.image_url)}` : claim.image_url} 
+                    src={
+                      claim.image_url.includes('supabase.co') 
+                        ? claim.image_url 
+                        : claim.image_url.startsWith('http')
+                          ? `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
+                          : claim.image_url
+                    }
                     alt={claim.claim_text}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
@@ -300,33 +320,22 @@ export function HotClaimsWidget() {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : generatingImageIds.has(claim.id) ? (
                 <div className="relative h-64 md:h-80 w-full bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center rounded-t-lg">
                   <div className="text-center space-y-3">
-                    {generatingImageIds.has(claim.id) ? (
-                      <>
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
-                        <p className="text-sm text-muted-foreground font-medium">Generating visual...</p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-6xl animate-bounce">📰</div>
-                        <p className="text-sm text-muted-foreground">No image yet</p>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            retryImageGeneration(claim);
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="mt-2"
-                        >
-                          Generate Image
-                        </Button>
-                      </>
-                    )}
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+                    <p className="text-sm text-muted-foreground font-medium">Generating visual...</p>
                   </div>
                 </div>
+              ) : (
+                <ClaimImageFallback
+                  claimText={claim.claim_text}
+                  platform={claim.platform}
+                  rarityTier={getClaimRarityForFallback(claim)}
+                  engagementScore={claim.engagement_score}
+                  rank={index + 1}
+                  showRaceBadge={index === 0}
+                />
               )}
               <div className="p-5 space-y-4">
                 {/* Platform Badge */}

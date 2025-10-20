@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ShareModal } from '@/components/share-modal';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ViralClaim {
   id: string;
@@ -32,8 +33,10 @@ export default function ViralClaims() {
   const { user, hasRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [claims, setClaims] = useState<ViralClaim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedVerificationId, setSelectedVerificationId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'monitoring'>('all');
@@ -103,6 +106,30 @@ export default function ViralClaims() {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    
+    // Trigger RSS feed fetch
+    try {
+      await supabase.functions.invoke('fetch-rss-news');
+      await fetchViralClaims();
+      
+      toast({
+        title: 'Refreshed',
+        description: 'Viral claims updated successfully',
+      });
+    } catch (error) {
+      console.error('Error refreshing:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh feeds',
+        variant: 'destructive',
+      });
+      setRefreshing(false);
     }
   }
 
@@ -178,20 +205,35 @@ export default function ViralClaims() {
       <Navigation />
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">Viral Claims Monitor</h1>
-              <p className="text-muted-foreground">Track and verify claims spreading across social media</p>
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Viral Claims Monitor</h1>
+                <p className="text-muted-foreground">Track and verify claims spreading across social media</p>
+              </div>
+              {!isMobile && (
+                <Button 
+                  onClick={triggerMonitoring} 
+                  disabled={triggering}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <RefreshCw className={`h-4 w-4 ${triggering ? 'animate-spin' : ''}`} />
+                  {triggering ? 'Updating...' : 'Trigger Monitoring'}
+                </Button>
+              )}
             </div>
-            <Button 
-              onClick={triggerMonitoring} 
-              disabled={triggering}
-              variant="outline"
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${triggering ? 'animate-spin' : ''}`} />
-              {triggering ? 'Updating...' : 'Trigger Monitoring'}
-            </Button>
+            {isMobile && (
+              <Button 
+                onClick={handleRefresh} 
+                disabled={refreshing || loading}
+                className="w-full gap-2"
+                variant="outline"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing Feeds...' : 'Refresh Latest Claims'}
+              </Button>
+            )}
           </div>
 
           {/* Stats Cards */}

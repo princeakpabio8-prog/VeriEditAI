@@ -681,10 +681,10 @@ serve(async (req) => {
               const hashArray = Array.from(new Uint8Array(hashBuffer));
               const claimHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
               
-              // Insert viral claim
+              // Insert viral claim using upsert
               const { error: viralError } = await supabase
                 .from('viral_claims')
-                .insert({
+                .upsert({
                   claim_text: article.title,
                   claim_hash: claimHash,
                   platform: 'news',
@@ -703,9 +703,10 @@ serve(async (req) => {
                     keywords: viralKeywords.filter(k => text.includes(k)),
                   },
                   media_type: article.image_url ? 'image' : 'text',
-                })
-                .onConflict('claim_hash')
-                .ignoreDuplicates();
+                }, {
+                  onConflict: 'claim_hash',
+                  ignoreDuplicates: true
+                });
               
               if (!viralError) {
                 viralClaims++;

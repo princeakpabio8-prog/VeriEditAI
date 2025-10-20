@@ -542,26 +542,8 @@ serve(async (req) => {
           
           console.log('🎉 Aggressive refresh sequence complete');
         } catch (error) {
-          console.error('❌ Background refresh sequence failed:', error)
-                  trust_score: verification.trust_score,
-                  rarity_tier: rarityTier
-                }
-              })
-              if (!imgError) {
-                console.log('✅ AI badge image generated')
-                imageGenerated = true
-                break
-              } else {
-                console.error(`Image generation attempt ${i + 1} failed:`, imgError)
-              }
-            } catch (imgErr) {
-              console.error(`Image generation attempt ${i + 1} error:`, imgErr)
-            }
-            if (i < 1) await new Promise(r => setTimeout(r, 1000))
-          }
-
-          // 2. Wait for metadata to be available
-          await new Promise(r => setTimeout(r, 3000))
+          console.error('❌ Background refresh sequence failed:', error);
+        }
 
           // 3. Refresh OpenSea metadata with retry
           console.log('🔄 Refreshing OpenSea metadata...')

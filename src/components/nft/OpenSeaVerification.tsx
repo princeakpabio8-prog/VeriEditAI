@@ -9,6 +9,7 @@ export const OpenSeaVerification = () => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [fixingIds, setFixingIds] = useState(false);
   const [badges, setBadges] = useState<any[]>([]);
   const { toast } = useToast();
 
@@ -89,6 +90,37 @@ export const OpenSeaVerification = () => {
     }
   };
 
+  const fixTokenIds = async () => {
+    setFixingIds(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fix-token-ids');
+      if (error) throw error;
+
+      const fixed = data?.stats?.fixed ?? data?.fixed ?? 0;
+      const skipped = data?.stats?.skipped ?? data?.skipped ?? 0;
+      const errors = data?.stats?.errors ?? data?.errors ?? 0;
+
+      toast({
+        title: 'Token IDs corrected',
+        description: `Fixed ${fixed}, skipped ${skipped}, errors ${errors}`,
+      });
+
+      // After fixing IDs, refresh images and sync OpenSea
+      await supabase.functions.invoke('fix-nft-images');
+      await supabase.functions.invoke('sync-opensea-collection');
+
+      await checkBadges();
+    } catch (error: any) {
+      toast({
+        title: 'Fix Token IDs failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setFixingIds(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -100,6 +132,10 @@ export const OpenSeaVerification = () => {
           <Button onClick={checkBadges} disabled={loading}>
             {loading ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
             Check Badges
+          </Button>
+          <Button onClick={fixTokenIds} disabled={fixingIds}>
+            {fixingIds ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
+            Fix Token IDs
           </Button>
           <Button onClick={updateMetadata} disabled={updating} variant="secondary">
             {updating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}

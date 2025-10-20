@@ -80,8 +80,12 @@ serve(async (req) => {
     const contractABI = [
       'function mintBadge(address to, string memory verificationId, uint256 trustScore, string memory metadataURI) public returns (uint256)',
       'function verificationMinted(string memory verificationId) public view returns (bool)',
+      'function isMinted(string memory verificationId) public view returns (bool)',
       'function totalSupply() public view returns (uint256)',
-      'function verificationToToken(string memory verificationId) public view returns (uint256)'
+      'function verificationToToken(string memory verificationId) public view returns (uint256)',
+      'function getTokenId(string memory verificationId) public view returns (uint256)',
+      'event BadgeMinted(uint256 indexed tokenId, address indexed to, string verificationId)',
+      'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
     ]
     
     const contract = new ethers.Contract(contractAddress, contractABI, wallet)
@@ -242,45 +246,73 @@ serve(async (req) => {
     
     console.log('✅ Badge minted! Transaction:', receipt.hash)
     
-    // Get tokenId directly from contract mapping (most reliable method)
+    // Resolve tokenId reliably with multiple strategies
     let tokenId = '0'
-    
+
     try {
-      // Query the on-chain mapping for this verification's token ID
-      const contractTokenId = await contract.verificationToToken(verificationId)
-      tokenId = contractTokenId.toString()
-      console.log('✅ Token ID from contract mapping:', tokenId)
-    } catch (error) {
-      console.error('❌ Error querying tokenId from contract:', error)
-      
-      // Fallback: try parsing events
+      // 1) Prefer explicit getter if available
       try {
+        const viaGetter = await (contract as any).getTokenId?.(verificationId)
+        if (viaGetter) {
+          tokenId = viaGetter.toString()
+          console.log('✅ Token ID from getTokenId:', tokenId)
+        }
+      } catch (e) {
+        console.log('ℹ️ getTokenId not available or failed, will try other methods')
+      }
+
+      // 2) Public mapping getter
+      if (tokenId === '0') {
+        const mapped = await contract.verificationToToken(verificationId)
+        tokenId = mapped.toString()
+        console.log('✅ Token ID from verificationToToken:', tokenId)
+      }
+
+      // 3) Parse emitted events (BadgeMinted or ERC721 Transfer)
+      if (tokenId === '0') {
         for (const log of receipt.logs) {
           try {
-            const parsed = contract.interface.parseLog({
-              topics: log.topics,
-              data: log.data
-            })
-            
-            if (parsed && parsed.name === 'BadgeMinted') {
-              tokenId = parsed.args[0]?.toString() || parsed.args.tokenId?.toString() || '0'
-              console.log('🔢 Token ID from event:', tokenId)
-              break
+            const parsed = contract.interface.parseLog({ topics: log.topics, data: log.data })
+            if (parsed?.name === 'BadgeMinted' || parsed?.name === 'Transfer') {
+              const parsedTokenId =
+                parsed.args?.tokenId?.toString() ||
+                parsed.args?.[2]?.toString() ||
+                parsed.args?.[0]?.toString()
+              if (parsedTokenId) {
+                tokenId = parsedTokenId
+                console.log(`🔢 Token ID from ${parsed.name} event:`, tokenId)
+                break
+              }
             }
-          } catch (parseError) {
-            continue
-          }
+          } catch (_) {/* ignore parse errors */}
         }
-      } catch (eventError) {
-        console.error('❌ Event parsing also failed:', eventError)
       }
-      
-      // Last resort: query total supply
+
+      // 4) Brief delay and retry mapping (in case of propagation delays)
+      if (tokenId === '0') {
+        await new Promise((r) => setTimeout(r, 1500))
+        try {
+          const viaGetter2 = await (contract as any).getTokenId?.(verificationId)
+          if (viaGetter2) tokenId = viaGetter2.toString()
+        } catch (_) {}
+        if (tokenId === '0') {
+          try {
+            const mapped2 = await contract.verificationToToken(verificationId)
+            tokenId = mapped2.toString()
+          } catch (_) {}
+        }
+        if (tokenId !== '0') console.log('🔁 Token ID after retry:', tokenId)
+      }
+
+      // 5) Final fallback: use totalSupply (best-effort)
       if (tokenId === '0') {
         const totalSupply = await contract.totalSupply()
         tokenId = totalSupply.toString()
         console.log('⚠️ Using totalSupply as fallback:', tokenId)
       }
+    } catch (tokenErr) {
+      console.error('❌ Token ID resolution failed:', tokenErr)
+      // keep tokenId as '0' if everything failed
     }
     
     // Store in database with rarity and viral data

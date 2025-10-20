@@ -41,7 +41,7 @@ export default function ViralClaims() {
   const [selectedVerificationId, setSelectedVerificationId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'monitoring'>('all');
   const [triggering, setTriggering] = useState(false);
-
+  const [autoTriggered, setAutoTriggered] = useState(false);
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -96,7 +96,18 @@ export default function ViralClaims() {
       const { data, error } = await query;
 
       if (error) throw error;
-      setClaims(data || []);
+      const results = data || [];
+      setClaims(results);
+
+      // If no claims found, auto-trigger monitoring once
+      if (results.length === 0 && !autoTriggered) {
+        setAutoTriggered(true);
+        try {
+          await triggerMonitoring();
+        } catch (e) {
+          console.error('Auto-trigger monitoring failed', e);
+        }
+      }
     } catch (error) {
       console.error('Error fetching viral claims:', error);
       toast({
@@ -326,6 +337,13 @@ export default function ViralClaims() {
                             }
                             alt="" 
                             className="w-20 h-20 object-cover rounded-md"
+                            onError={(e) => {
+                              // Fallback to direct URL if proxy fails
+                              const original = claim.image_url;
+                              if (original && e.currentTarget.src !== original) {
+                                e.currentTarget.src = original;
+                              }
+                            }}
                           />
                         </div>
                       )}

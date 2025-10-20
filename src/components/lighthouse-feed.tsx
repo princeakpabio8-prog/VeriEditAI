@@ -86,7 +86,11 @@ export function LighthouseFeed({ embedded = false }: { embedded?: boolean }) {
 
   const getProxiedImageUrl = (imageUrl: string | null): string | null => {
     if (!imageUrl) return null;
-    return `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    if (imageUrl.includes('supabase.co')) return imageUrl;
+    if (imageUrl.startsWith('http')) {
+      return `${window.location.origin}/functions/v1/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    }
+    return imageUrl;
   };
 
   useEffect(() => {

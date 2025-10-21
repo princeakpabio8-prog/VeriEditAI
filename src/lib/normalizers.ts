@@ -124,8 +124,10 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
     ? raw.created_at 
     : new Date().toISOString();
 
-  const verificationId = typeof raw.verificationId === 'string' 
+  const verificationId = (typeof raw.verificationId === 'string' && raw.verificationId) 
     ? raw.verificationId 
+    : (typeof raw.verification_id === 'string' && raw.verification_id)
+    ? raw.verification_id
     : null;
 
   // Handle analysis_points (new structured format)

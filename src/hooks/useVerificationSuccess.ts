@@ -35,29 +35,42 @@ export function useVerificationSuccess() {
       };
       localStorage.setItem('user_verified_claims', JSON.stringify(verifiedClaims));
 
-      // Show celebration toast with NFT eligibility
+      // Show celebration toast with NFT eligibility - mobile optimized
       const score = trustScore ? parseInt(trustScore) : 0;
       if (score >= 75) {
         toast.success('🎉 Claim Verified! NFT Badge Eligible!', {
-          description: '💎 Your trust score qualifies for an NFT badge! Scroll down to mint it.',
-          duration: 6000,
+          description: '💎 Trust score qualifies for NFT minting! Redirecting to Hot Claims...',
+          duration: 3000,
+          action: {
+            label: 'View Now',
+            onClick: () => {
+              navigate('/viral-claims', { 
+                state: { 
+                  scrollToVerified: viralClaimId,
+                  justVerified: true,
+                  showNFTPrompt: true
+                } 
+              });
+            }
+          }
         });
       } else {
         toast.success('✅ Claim Verified Successfully!', {
-          description: `Trust score: ${score}%. Need 75%+ for NFT minting.`,
-          duration: 5000,
+          description: `Trust score: ${score}%. Need 75%+ for NFT minting. Redirecting...`,
+          duration: 3000,
         });
       }
 
-      // Navigate back to hot claims with success state
+      // Navigate back to hot claims with success state - reduced delay for mobile
       setTimeout(() => {
         navigate('/viral-claims', { 
           state: { 
             scrollToVerified: viralClaimId,
-            justVerified: true
+            justVerified: true,
+            showNFTPrompt: score >= 75
           } 
         });
-      }, 2000);
+      }, 1000); // Faster redirect for mobile users
     }
   }, [navigate]);
 }

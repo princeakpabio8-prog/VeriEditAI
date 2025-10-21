@@ -914,30 +914,59 @@ export function MobileVerificationUI({
                     </div>
                   )}
 
-                  {/* NFT Badge Minting Section */}
-                  {result.id && result.confidence >= 75 && (
+                  {/* NFT Badge Minting Section - Prominent on Mobile */}
+                  {(result.verificationId || result.id) && result.confidence >= 75 && (
                     <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="pt-2"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3 }}
+                      className="pt-4 border-t-2 border-purple-500/30"
                     >
-                      <Card className="border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center gap-2">
-                            <Award className="h-4 w-4 text-purple-400" />
-                            <h4 className="text-sm font-semibold">Mint Your Truth Badge</h4>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Mint a free NFT badge on Polygon to commemorate this verification
+                      <Card className="border-2 border-purple-500/50 bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-purple-900/30 shadow-lg shadow-purple-500/20">
+                        <CardHeader className="pb-3 text-center">
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", duration: 0.6 }}
+                            className="flex justify-center mb-2"
+                          >
+                            <div className="bg-gradient-to-r from-purple-500 to-blue-500 p-3 rounded-full">
+                              <Award className="h-8 w-8 text-white" />
+                            </div>
+                          </motion.div>
+                          <h3 className="text-lg font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+                            🎉 NFT Badge Eligible!
+                          </h3>
+                          <p className="text-sm text-muted-foreground mt-2">
+                            Trust score: {result.confidence}% ✓
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Mint a free NFT Truth Badge on Polygon to commemorate this verification permanently on the blockchain
                           </p>
                         </CardHeader>
-                        <CardContent className="pt-0">
+                        <CardContent className="pt-0 pb-4">
                           <MintBadgeButton 
-                            verificationId={result.id}
+                            verificationId={result.verificationId || result.id}
                             trustScore={result.confidence}
                           />
                         </CardContent>
                       </Card>
+                    </motion.div>
+                  )}
+                  
+                  {/* Low Trust Score Message */}
+                  {(result.verificationId || result.id) && result.confidence < 75 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="pt-4 border-t border-border/30"
+                    >
+                      <div className="bg-muted/50 border border-border/50 rounded-lg p-3 text-center">
+                        <Info className="h-5 w-5 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-xs text-muted-foreground">
+                          NFT minting requires a trust score of 75% or higher. Current score: {result.confidence}%
+                        </p>
+                      </div>
                     </motion.div>
                   )}
 

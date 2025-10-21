@@ -1046,30 +1046,51 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       console.log(`✅ No refutation detected (AI confidence: ${refutationResult.confidence}%, type: ${refutationResult.refutation_type})`);
     }
     
-    // CRITICAL FIX: Detect if the answer itself refutes the claim (negation detection)
-    const answerRefutesClaimDirectly = detectAnswerNegation(content, answer);
+    // CRITICAL FIX: AI-Powered Semantic Negation Detection
+    console.log('🔍 Running AI-powered negation analysis...');
+    const negationAnalysis = await detectAnswerNegationAI(content, answer, sourcesWithScores);
     
+    console.log('🔍 NEGATION ANALYSIS RESULTS:');
+    console.log(`   - Is Negation: ${negationAnalysis.isNegation}`);
+    console.log(`   - Confidence: ${negationAnalysis.confidence}%`);
+    console.log(`   - Type: ${negationAnalysis.negationType}`);
+    console.log(`   - Reasoning: ${negationAnalysis.reasoning}`);
+    
+    const originalConfidenceBeforeNegation = confidence;
     let status = getStatusFromConfidence(confidence);
     
-    // Force DEBUNKED/FALSE status if:
-    // 1. Answer directly negates the claim (has "not", "no", "false", etc.)
-    // OR
-    // 2. Confirmed refutation detected by AI with low confidence and weak sources
-    
-    if (answerRefutesClaimDirectly) {
-      status = 'debunked';
-      console.log(`❌ Status set to DEBUNKED: Answer directly refutes the claim`);
-    } else if (isRefuted && 
+    // PRIORITY 1: AI Semantic Negation Detection (Most Reliable)
+    // If AI detects refutation with high confidence, override status regardless of source quality
+    if (negationAnalysis.isNegation && negationAnalysis.confidence >= 75) {
+      if (negationAnalysis.negationType === 'direct') {
+        status = 'debunked';
+        confidence = Math.min(confidence, 35); // Cap at 35% for debunked claims
+        console.log(`❌ CLAIM DEBUNKED (AI Semantic Analysis)`);
+        console.log(`   - Original Confidence: ${originalConfidenceBeforeNegation}%`);
+        console.log(`   - Reduced To: ${confidence}%`);
+        console.log(`   - Reasoning: ${negationAnalysis.reasoning}`);
+      } else if (negationAnalysis.negationType === 'partial') {
+        status = 'disputed';
+        confidence = Math.min(confidence, 55); // Cap at 55% for disputed
+        console.log(`⚠️ CLAIM DISPUTED (AI Semantic Analysis)`);
+        console.log(`   - Original Confidence: ${originalConfidenceBeforeNegation}%`);
+        console.log(`   - Reduced To: ${confidence}%`);
+        console.log(`   - Reasoning: ${negationAnalysis.reasoning}`);
+      }
+    }
+    // PRIORITY 2: Legacy Refutation Detection (Backup)
+    // Only apply if AI negation didn't trigger
+    else if (isRefuted && 
         confidence < 40 && 
         refutationType === 'direct' &&
         avgReliability < 65) {
       status = 'false';
-      console.log(`❌ Status set to FALSE due to direct refutation with low confidence and weak sources`);
+      console.log(`❌ Status set to FALSE due to direct refutation with low confidence and weak sources (legacy detection)`);
     }
     
     // Create concise verdict summary
     let verdict = '';
-    if (answerRefutesClaimDirectly) {
+    if (status === 'debunked' || status === 'false') {
       verdict = 'Claim debunked by evidence';
     } else if (confidence >= 80) {
       verdict = 'Highly credible claim';
@@ -1232,32 +1253,152 @@ function getStatusFromConfidence(confidence: number): string {
   return 'false';
 }
 
-// NEW: Detect if the answer negates/refutes the claim
-function detectAnswerNegation(claim: string, answer: string): boolean {
-  const lowerClaim = claim.toLowerCase();
+// AI-Powered Semantic Negation Detection
+async function detectAnswerNegationAI(claim: string, answer: string, sources: any[]): Promise<{
+  isNegation: boolean;
+  confidence: number;
+  reasoning: string;
+  negationType: 'direct' | 'partial' | 'none';
+}> {
+  try {
+    if (!LOVABLE_API_KEY) {
+      console.warn('⚠️ LOVABLE_API_KEY not available, using fallback pattern matching');
+      return detectAnswerNegationFallback(claim, answer);
+    }
+
+    const avgReliability = sources.length > 0 
+      ? sources.reduce((sum: number, s: any) => sum + (s.reliability_score || 50), 0) / sources.length 
+      : 50;
+
+    const systemPrompt = `You are a semantic analysis expert specializing in fact-checking. Your ONLY job is to determine if an answer refutes or contradicts a claim.
+
+CRITICAL ANALYSIS RULES:
+1. A refutation means the answer EXPLICITLY CONTRADICTS the core factual assertion
+2. Look for semantic negation patterns like:
+   - "has not", "did not", "no such", "never announced"
+   - "no evidence", "unsubstantiated", "unfounded", "no official statement"
+   - "contrary to", "contradicts", "false claim", "debunked"
+3. Context matters - "X did not Y" might confirm or refute depending on the claim
+4. Be VERY strict - only mark as refutation if the answer clearly contradicts
+
+EXAMPLES:
+✅ REFUTATION: Claim: "Apple urged users to disable AirPlay" / Answer: "Apple has made no such announcement"
+✅ REFUTATION: Claim: "Vaccine causes autism" / Answer: "No evidence supports this claim"
+❌ NOT REFUTATION: Claim: "Macron reappointed Lecornu" / Answer: "Macron reappointed Lecornu after his resignation"`;
+
+    const userPrompt = `Analyze this verification:
+
+CLAIM: "${claim}"
+
+ANSWER: "${answer}"
+
+SOURCES: ${sources.length} sources (avg reliability: ${avgReliability.toFixed(0)}%)
+
+Does the answer refute or contradict the claim's core assertion?`;
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'analyze_negation',
+            description: 'Analyze whether an answer refutes a claim',
+            parameters: {
+              type: 'object',
+              properties: {
+                is_negation: { type: 'boolean', description: 'True if answer refutes claim' },
+                confidence: { type: 'number', description: 'Confidence 0-100' },
+                reasoning: { type: 'string', description: 'Explanation of the analysis' },
+                negation_type: { type: 'string', enum: ['direct', 'partial', 'none'] }
+              },
+              required: ['is_negation', 'confidence', 'reasoning', 'negation_type'],
+              additionalProperties: false
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'analyze_negation' } }
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`❌ AI Gateway error: ${response.status}`);
+      return detectAnswerNegationFallback(claim, answer);
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall) {
+      console.error('❌ No tool call in AI response');
+      return detectAnswerNegationFallback(claim, answer);
+    }
+    
+    const result = JSON.parse(toolCall.function.arguments);
+    
+    return {
+      isNegation: result.is_negation,
+      confidence: result.confidence,
+      reasoning: result.reasoning,
+      negationType: result.negation_type
+    };
+  } catch (error) {
+    console.error('❌ Error in AI negation detection:', error);
+    return detectAnswerNegationFallback(claim, answer);
+  }
+}
+
+// Fallback pattern-based negation detection
+function detectAnswerNegationFallback(claim: string, answer: string): {
+  isNegation: boolean;
+  confidence: number;
+  reasoning: string;
+  negationType: 'direct' | 'partial' | 'none';
+} {
   const lowerAnswer = answer.toLowerCase();
   
-  // Extract key claim assertion (simplified)
-  const claimWords = lowerClaim.split(' ').filter(w => w.length > 3);
-  
-  // Strong negation patterns in the answer
   const strongNegationPatterns = [
     /\b(has not|have not|did not|does not|do not|is not|are not|was not|were not)\b/,
     /\b(no evidence|no confirmation|not true|not accurate|false claim|debunked|myth)\b/,
-    /\bnever\s+(urged|asked|recommended|advised|confirmed)\b/,
-    /\b(contrary to|opposite of|contradicts|disputes)\b/
+    /\bnever\s+(urged|asked|recommended|advised|confirmed|announced|stated)\b/,
+    /\b(no such|no official|unsubstantiated|unfounded|fabricated|hoax)\b/,
+    /\b(contrary to|opposite of|contradicts|disputes|refutes)\b/,
+    /\b(made no statement|issued no|no announcement)\b/
   ];
   
-  // Check if answer contains strong negation
-  const hasStrongNegation = strongNegationPatterns.some(pattern => pattern.test(lowerAnswer));
+  const matchedPatterns = strongNegationPatterns.filter(pattern => pattern.test(lowerAnswer));
   
-  if (!hasStrongNegation) return false;
+  if (matchedPatterns.length >= 2) {
+    return {
+      isNegation: true,
+      confidence: 85,
+      reasoning: `Multiple negation patterns detected (fallback mode)`,
+      negationType: 'direct'
+    };
+  } else if (matchedPatterns.length === 1) {
+    return {
+      isNegation: true,
+      confidence: 65,
+      reasoning: `Single negation pattern detected (fallback mode)`,
+      negationType: 'partial'
+    };
+  }
   
-  // Verify the negation is about the claim subject
-  // Check if key claim words appear near the negation
-  const claimSubjectInAnswer = claimWords.some(word => lowerAnswer.includes(word));
-  
-  return claimSubjectInAnswer;
+  return {
+    isNegation: false,
+    confidence: 0,
+    reasoning: 'No clear negation patterns found (fallback mode)',
+    negationType: 'none'
+  };
 }
 
 function extractSources(text: string): Array<{ title: string; url: string; snippet?: string; reliability_score?: number }> {

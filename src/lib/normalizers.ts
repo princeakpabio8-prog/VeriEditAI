@@ -77,14 +77,28 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
   const summary = typeof raw.summary === 'string' ? raw.summary : 'No summary available';
   const analysis = typeof raw.analysis === 'string' ? raw.analysis : summary;
 
-  // Heuristic override: if summary/analysis clearly indicate refutation, mark as debunked
-  // This fixes cases where upstream set status by confidence alone but the narrative refutes the claim
+  // Heuristic override (Defense-in-depth): if summary/analysis clearly indicate refutation, mark as debunked
+  // This is a backup safety net in case backend AI detection fails
   if (status !== 'debunked' && status !== 'false') {
     const combined = (summary + ' ' + analysis).toLowerCase();
-    const refuteHints = ['debunked', 'false claim', 'not true', 'no evidence', 'has not', 'did not', 'does not'];
+    
+    const refuteHints = [
+      'debunked', 'false claim', 'not true', 'no evidence', 
+      'has not', 'did not', 'does not', 'have not', 'do not',
+      'no official', 'no such', 'unsubstantiated', 'unfounded',
+      'contrary to', 'contradicts', 'refutes', 'denied',
+      'never said', 'never announced', 'never urged', 'never recommended',
+      'made no statement', 'issued no', 'no confirmation',
+      'misleading', 'fabricated', 'hoax', 'fake news'
+    ];
+    
+    // Count refutation hints for higher confidence
+    const refuteCount = refuteHints.filter(h => combined.includes(h)).length;
+    
     if (['verified', 'likely_accurate', 'inconclusive', 'disputed', 'highly_verified'].includes(status) &&
-        refuteHints.some(h => combined.includes(h))) {
+        refuteCount >= 2) { // Require 2+ refutation hints
       status = 'debunked';
+      console.log(`⚠️ Frontend override: Status changed to debunked (${refuteCount} refutation hints found)`);
     }
   }
 

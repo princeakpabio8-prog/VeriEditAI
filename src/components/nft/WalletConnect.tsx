@@ -1,8 +1,9 @@
 import { useAccount, useConnect, useDisconnect } from 'wagmi'
 import { Button } from '@/components/ui/button'
-import { Wallet, Smartphone } from 'lucide-react'
+import { Wallet, Smartphone, ExternalLink } from 'lucide-react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useToast } from '@/hooks/use-toast'
+import { useState, useEffect } from 'react'
 
 export function WalletConnect() {
   const { address, isConnected } = useAccount()
@@ -10,6 +11,17 @@ export function WalletConnect() {
   const { disconnect } = useDisconnect()
   const isMobile = useIsMobile()
   const { toast } = useToast()
+  const [isAndroid, setIsAndroid] = useState(false)
+  const [isMetaMaskBrowser, setIsMetaMaskBrowser] = useState(false)
+
+  useEffect(() => {
+    // Detect Android
+    const userAgent = navigator.userAgent.toLowerCase()
+    setIsAndroid(/android/.test(userAgent))
+    
+    // Detect MetaMask in-app browser
+    setIsMetaMaskBrowser(typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask)
+  }, [])
 
   if (isConnected) {
     return (
@@ -98,13 +110,48 @@ export function WalletConnect() {
   const buttonText = isMobile ? 'Connect Wallet' : 'Connect MetaMask'
   const ButtonIcon = isMobile ? Smartphone : Wallet
 
+  // Helper to open in MetaMask browser
+  const openInMetaMaskBrowser = () => {
+    const cleanUrl = window.location.href
+      .replace(/^https?:\/\//, '')
+      .replace(/^www\./, '')
+    window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`
+  }
+
   return (
-    <Button
-      onClick={handleConnect}
-      className="flex items-center gap-2"
-    >
-      <ButtonIcon className="h-4 w-4" />
-      {buttonText}
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        onClick={handleConnect}
+        className="flex items-center gap-2"
+      >
+        <ButtonIcon className="h-4 w-4" />
+        {buttonText}
+      </Button>
+      
+      {/* Android-specific help */}
+      {isMobile && isAndroid && !isMetaMaskBrowser && (
+        <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg border">
+          <p className="text-xs text-muted-foreground">
+            💡 <strong>Android Users:</strong> Open this page in MetaMask browser for best experience
+          </p>
+          <Button
+            onClick={openInMetaMaskBrowser}
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Open in MetaMask Browser
+          </Button>
+        </div>
+      )}
+      
+      {/* Success indicator for MetaMask browser */}
+      {isMetaMaskBrowser && (
+        <p className="text-xs text-green-600 dark:text-green-400">
+          ✅ MetaMask detected - ready to connect
+        </p>
+      )}
+    </div>
   )
 }

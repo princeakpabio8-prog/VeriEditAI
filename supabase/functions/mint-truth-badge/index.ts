@@ -547,6 +547,22 @@ serve(async (req) => {
       })()
     )
     
+    // ✅ IMMEDIATE AUTO-REFRESH: Trigger OpenSea sync right after mint
+    console.log('🔄 Triggering immediate OpenSea refresh for token:', tokenId);
+    try {
+      const refreshResult = await supabase.functions.invoke('refresh-opensea-metadata', {
+        body: { token_id: tokenId.toString() }
+      });
+      
+      if (refreshResult.error) {
+        console.error('⚠️ Immediate refresh failed (non-blocking):', refreshResult.error);
+      } else {
+        console.log('✅ Immediate OpenSea refresh triggered successfully');
+      }
+    } catch (refreshErr) {
+      console.error('⚠️ Immediate refresh error (non-blocking):', refreshErr);
+    }
+    
     return new Response(
       JSON.stringify({
         success: true,
@@ -554,6 +570,7 @@ serve(async (req) => {
         transactionHash: receipt.hash,
         metadataUri: metadataURI,
         explorerUrl: `https://polygonscan.com/tx/${receipt.hash}`,
+        opensea_syncing: true,
         listing: {
           price: listingPrice.toFixed(2),
           currency: 'MATIC',

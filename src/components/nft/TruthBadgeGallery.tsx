@@ -21,12 +21,16 @@ interface TruthBadge {
   rarity_tier: string | null
   virality_score: number | null
   minted_at_rank: number | null
+  opensea_image_confirmed: boolean | null
+  opensea_refresh_count: number | null
+  opensea_last_refresh: string | null
 }
 
 export function TruthBadgeGallery() {
   const { user } = useAuth()
   const [badges, setBadges] = useState<TruthBadge[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncingAll, setSyncingAll] = useState(false)
 
   useEffect(() => {
     if (user) fetchBadges()
@@ -35,13 +39,36 @@ export function TruthBadgeGallery() {
   const fetchBadges = async () => {
     const { data, error } = await supabase
       .from('nft_badges')
-      .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank')
+      .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank, opensea_image_confirmed, opensea_refresh_count, opensea_last_refresh')
       .eq('user_id', user!.id)
       .order('minted_at', { ascending: false })
 
     if (!error) setBadges(data || [])
     setLoading(false)
   }
+
+  const handleSyncAllBadges = async () => {
+    try {
+      setSyncingAll(true);
+      
+      const { data, error } = await supabase.functions.invoke('backfill-opensea-sync');
+      
+      if (error) throw error;
+      
+      toast.success(`Synced ${data.synced}/${data.total} badges to OpenSea!`, {
+        description: 'Images will appear on OpenSea within 5-10 minutes.'
+      });
+      
+      // Refresh badge list
+      fetchBadges();
+    } catch (err: any) {
+      toast.error('Failed to sync badges', {
+        description: err.message
+      });
+    } finally {
+      setSyncingAll(false);
+    }
+  };
 
   if (loading) {
     return <div className="flex justify-center py-12">Loading badges...</div>
@@ -109,9 +136,26 @@ export function TruthBadgeGallery() {
     }
   };
 
+  const hasUnsyncedBadges = badges.some(b => !b.opensea_image_confirmed || !b.opensea_last_refresh);
+
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">My Truth Badges</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">My Truth Badges</h2>
+        
+        {hasUnsyncedBadges && (
+          <Button
+            onClick={handleSyncAllBadges}
+            disabled={syncingAll}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${syncingAll ? 'animate-spin' : ''}`} />
+            {syncingAll ? 'Syncing All...' : 'Sync All to OpenSea'}
+          </Button>
+        )}
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {badges.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}
@@ -132,6 +176,10 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
   const [refreshing, setRefreshing] = useState(false)
   const displayImage = imageUrl || badgeImage
   const shouldShowFallback = !imageUrl || imageFailed || error
+  
+  // Sync status indicators
+  const isSyncing = !badge.opensea_image_confirmed || (badge.opensea_refresh_count || 0) === 0
+  const needsRefresh = !badge.opensea_last_refresh
 
   const handleRefreshOpenSea = async () => {
     try {
@@ -319,6 +367,28 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
               <div className="text-xs text-muted-foreground text-center">
                 Minted {new Date(badge.minted_at).toLocaleDateString()}
               </div>
+              
+              {/* OpenSea Sync Status */}
+              <div className="flex items-center justify-center gap-1 text-xs pt-2 border-t">
+                {isSyncing ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
+                    <span className="text-blue-500">🔄 Syncing to OpenSea...</span>
+                  </>
+                ) : badge.opensea_image_confirmed ? (
+                  <>
+                    <span className="text-green-500">✅ Live on OpenSea</span>
+                  </>
+                ) : needsRefresh ? (
+                  <>
+                    <span className="text-yellow-500">⏳ Pending sync</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground">Synced</span>
+                  </>
+                )}
+              </div>
 
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
@@ -340,16 +410,27 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
               Metadata
             </Button>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="w-full"
-            onClick={handleRefreshOpenSea}
-            disabled={refreshing}
-          >
-            <RefreshCw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh on OpenSea'}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="flex-1"
+              onClick={handleRefreshOpenSea}
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Force Refresh'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => window.open(`https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" />
+              OpenSea
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

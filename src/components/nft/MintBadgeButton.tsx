@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Award, Loader2 } from 'lucide-react'
+import { Award, Loader2, RefreshCw } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { WalletConnect } from './WalletConnect'
 import { BadgeRevealModal } from './BadgeRevealModal'
@@ -19,6 +19,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const [alreadyMinted, setAlreadyMinted] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [mintedBadge, setMintedBadge] = useState<any>(null)
+  const [syncing, setSyncing] = useState(false)
 
   useEffect(() => {
     checkExistingBadge()
@@ -88,6 +89,10 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       setShowReveal(true)
       setAlreadyMinted(true)
       setMinting(false)
+      
+      // Show syncing status for 10 seconds
+      setSyncing(true)
+      setTimeout(() => setSyncing(false), 10000)
 
     } catch (error: any) {
       console.error('Minting error:', error)
@@ -151,6 +156,13 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           <p className="text-xs text-muted-foreground">
             ℹ️ Trust score must be ≥70% to mint a badge (currently {trustScore}%)
           </p>
+        )}
+        
+        {syncing && (
+          <div className="flex items-center gap-2 text-xs text-blue-500 bg-blue-50 dark:bg-blue-950 p-2 rounded-md">
+            <RefreshCw className="h-3 w-3 animate-spin" />
+            <span>🔄 Syncing to OpenSea... Check back in 5 minutes!</span>
+          </div>
         )}
       </div>
 

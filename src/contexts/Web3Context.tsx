@@ -6,7 +6,7 @@ import { injected, walletConnect } from 'wagmi/connectors'
 const config = createConfig({
   chains: [polygonMainnet],
   connectors: [
-    injected(), // MetaMask browser extension
+    injected({ shimDisconnect: true }), // MetaMask browser extension
     walletConnect({
       projectId: 'e8b2c8c0d5f8a4b3c2d1e0f9a8b7c6d5',
       metadata: {

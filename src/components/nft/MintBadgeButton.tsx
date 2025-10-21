@@ -44,10 +44,10 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       return
     }
 
-    if (trustScore < 75) {
+    if (trustScore < 70) {
       toast({
         title: "Trust Score Too Low",
-        description: "Trust score must be ≥75% to mint a badge",
+        description: "Trust score must be ≥70% to mint a badge",
         variant: "destructive"
       })
       return
@@ -128,7 +128,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         
         <Button
           onClick={handleMint}
-          disabled={!isConnected || minting || trustScore < 75}
+          disabled={!isConnected || minting || trustScore < 70}
           className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full sm:w-auto text-sm"
           size="sm"
         >
@@ -147,9 +147,9 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           )}
         </Button>
 
-        {trustScore < 75 && (
+        {trustScore < 70 && (
           <p className="text-xs text-muted-foreground">
-            ℹ️ Trust score must be ≥75% to mint a badge (currently {trustScore}%)
+            ℹ️ Trust score must be ≥70% to mint a badge (currently {trustScore}%)
           </p>
         )}
       </div>

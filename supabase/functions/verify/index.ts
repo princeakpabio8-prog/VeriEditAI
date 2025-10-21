@@ -1780,6 +1780,17 @@ function detectFactType(content: string, answer: string): 'established-fact' | '
     }
   }
   
+  // Nationality/basic biography facts (e.g., "Donald Trump is American")
+  const nationalityPattern = /\b(is|was)\s+(an?\s+)?(american|british|canadian|australian|indian|chinese|japanese|german|french|italian|spanish|russian|mexican|nigerian|south african)\b/;
+  if (nationalityPattern.test(lowerContent)) {
+    return 'established-fact';
+  }
+  
+  // US-specific phrasing (e.g., "is from the United States")
+  const usNationalityPattern = /\b(is|was)\s+(from|of)\s+(the\s+)?(united states|usa|u\.s\.a\.)\b/;
+  if (usNationalityPattern.test(lowerContent)) {
+    return 'established-fact';
+  }
   // Sports achievements without explicit year (treat as established if not phrased as current-season)
   const sportsNoYearPattern = /\b(has won|have won|won)\b.*\b(premier league|la liga|serie a|bundesliga|champions league|ucl|fa cup|carabao cup|copa del rey|europa league|world cup|olympics|championship|league title|trophy)\b/i;
   if (sportsNoYearPattern.test(lowerContent) && !currentEventIndicators.test(lowerContent)) {

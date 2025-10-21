@@ -24,7 +24,6 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { TruthBadgeGallery } from '@/components/nft/TruthBadgeGallery';
-import { FixNFTImagesButton } from '@/components/nft/FixNFTImagesButton';
 
 
 import { useSearchParams } from 'react-router-dom';
@@ -644,8 +643,7 @@ const Dashboard = () => {
                   My Truth Badges
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <FixNFTImagesButton />
+              <CardContent>
                 <TruthBadgeGallery />
               </CardContent>
             </Card>

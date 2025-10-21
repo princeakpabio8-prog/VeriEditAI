@@ -44,12 +44,28 @@ serve(async (req) => {
     
     const { data: existingBadge } = await supabase
       .from('nft_badges')
-      .select('id')
+      .select('id, token_id, contract_address, opensea_url')
       .eq('verification_id', verificationId)
       .maybeSingle()
     
     if (existingBadge) {
-      throw new Error('Badge already minted for this verification')
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Badge already minted',
+          message: 'This verification already has a minted NFT badge',
+          badge: {
+            tokenId: existingBadge.token_id,
+            contractAddress: existingBadge.contract_address,
+            openSeaUrl: existingBadge.opensea_url,
+            explorerUrl: `https://polygonscan.com/token/${existingBadge.contract_address}?a=${existingBadge.token_id}`
+          }
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
     }
     
     // Get environment variables for contract interaction

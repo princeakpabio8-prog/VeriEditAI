@@ -6,13 +6,14 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ShareModal } from '@/components/share-modal';
 import { ClaimImageFallback } from './ClaimImageFallback';
 import { MintBadgeButton } from '@/components/nft/MintBadgeButton';
+import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
 
 interface HotClaim {
   id: string;
@@ -40,7 +41,14 @@ export function HotClaimsWidget() {
   const [selectedClaimForShare, setSelectedClaimForShare] = useState<string | null>(null);
   const [userVerifiedClaims, setUserVerifiedClaims] = useState<Set<string>>(new Set());
   const [showFirstTimeHelp, setShowFirstTimeHelp] = useState(false);
+  const [nftMintPrompt, setNftMintPrompt] = useState<{
+    show: boolean;
+    verificationId: string;
+    trustScore: number;
+    claimText: string;
+  } | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   // Load user's verified claims from localStorage
@@ -60,6 +68,29 @@ export function HotClaimsWidget() {
       setShowFirstTimeHelp(true);
     }
   }, []);
+
+  // Check for NFT minting prompt from navigation state
+  useEffect(() => {
+    if (location.state?.showNFTPrompt && location.state?.scrollToVerified) {
+      const viralClaimId = location.state.scrollToVerified;
+      const verificationData = getUserVerificationData(viralClaimId);
+      
+      if (verificationData && verificationData.trustScore >= 75) {
+        // Find the claim to get its text
+        const claim = hotClaims.find(c => c.id === viralClaimId);
+        
+        setNftMintPrompt({
+          show: true,
+          verificationId: verificationData.verificationId,
+          trustScore: verificationData.trustScore,
+          claimText: claim?.claim_text || 'Your verified claim'
+        });
+      }
+      
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, hotClaims]);
 
   // Get user's verification data for a claim
   const getUserVerificationData = (claimId: string) => {
@@ -89,8 +120,14 @@ export function HotClaimsWidget() {
       )
       .subscribe();
 
+    // Auto-refresh every 30 seconds to ensure fresh claims
+    const refreshInterval = setInterval(() => {
+      fetchHotClaims();
+    }, 30000); // 30 seconds
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(refreshInterval);
     };
   }, []);
 
@@ -603,6 +640,16 @@ export function HotClaimsWidget() {
             setShareModalOpen(false);
             setSelectedClaimForShare(null);
           }}
+        />
+      )}
+
+      {nftMintPrompt && (
+        <NFTMintPromptModal
+          isOpen={nftMintPrompt.show}
+          onClose={() => setNftMintPrompt(null)}
+          verificationId={nftMintPrompt.verificationId}
+          trustScore={nftMintPrompt.trustScore}
+          claimText={nftMintPrompt.claimText}
         />
       )}
     </Card>

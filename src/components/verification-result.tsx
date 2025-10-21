@@ -129,13 +129,19 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
     
     const variants = {
       verified: "default",
-      flagged: "secondary", 
+      highly_verified: "default",
+      likely_accurate: "secondary",
+      inconclusive: "secondary",
+      disputed: "secondary",
+      debunked: "destructive",
+      false: "destructive",
       failed: "destructive",
+      flagged: "secondary",
     } as const;
     
     return (
       <Badge variant={variants[safeStatus as keyof typeof variants] || "secondary"}>
-        {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1)}
+        {safeStatus.charAt(0).toUpperCase() + safeStatus.slice(1).replace('_', ' ')}
       </Badge>
     );
   };

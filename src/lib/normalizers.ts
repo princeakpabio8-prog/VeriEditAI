@@ -71,15 +71,22 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
 
   // Normalize string fields with lower - ensure never undefined
   let status = lower(raw.status) || lower(raw.verification_status) || 'unknown';
-  
-  // Map 'debunked' status if present
-  if (status === 'debunked') {
-    status = 'debunked';
-  }
-  
+
+  // Normalize category, summary, analysis first
   const category = lower(raw.category) || 'general';
   const summary = typeof raw.summary === 'string' ? raw.summary : 'No summary available';
   const analysis = typeof raw.analysis === 'string' ? raw.analysis : summary;
+
+  // Heuristic override: if summary/analysis clearly indicate refutation, mark as debunked
+  // This fixes cases where upstream set status by confidence alone but the narrative refutes the claim
+  if (status !== 'debunked' && status !== 'false') {
+    const combined = (summary + ' ' + analysis).toLowerCase();
+    const refuteHints = ['debunked', 'false claim', 'not true', 'no evidence', 'has not', 'did not', 'does not'];
+    if (['verified', 'likely_accurate', 'inconclusive', 'disputed', 'highly_verified'].includes(status) &&
+        refuteHints.some(h => combined.includes(h))) {
+      status = 'debunked';
+    }
+  }
 
   // Normalize sources array
   const sources = Array.isArray(raw.sources) 

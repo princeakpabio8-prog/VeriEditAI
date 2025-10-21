@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ShareModal } from '@/components/share-modal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { HotClaimsWidget } from '@/components/viral/HotClaimsWidget';
+import { useVerificationSuccess } from '@/hooks/useVerificationSuccess';
 
 interface ViralClaim {
   id: string;
@@ -43,6 +45,9 @@ export default function ViralClaims() {
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'monitoring'>('all');
   const [triggering, setTriggering] = useState(false);
   const [autoTriggered, setAutoTriggered] = useState(false);
+  
+  // Handle post-verification success
+  useVerificationSuccess();
   useEffect(() => {
     if (!user) {
       navigate('/auth');
@@ -217,11 +222,16 @@ export default function ViralClaims() {
       <Navigation />
       <div className="pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
+          {/* Hot Claims Widget for all users */}
+          <div className="mb-8">
+            <HotClaimsWidget />
+          </div>
+
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-4xl font-bold mb-2">Viral Claims Monitor</h1>
-                <p className="text-muted-foreground">Track and verify claims spreading across social media</p>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">Viral Claims Monitor</h1>
+                <p className="text-sm md:text-base text-muted-foreground">Track and verify claims spreading across social media</p>
               </div>
               {!isMobile && (
                 <Button 

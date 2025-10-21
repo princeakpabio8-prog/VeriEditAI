@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,8 +37,23 @@ export function HotClaimsWidget() {
   const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedClaimForShare, setSelectedClaimForShare] = useState<string | null>(null);
+  const [userVerifiedClaims, setUserVerifiedClaims] = useState<Set<string>>(new Set());
+  const [showFirstTimeHelp, setShowFirstTimeHelp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Load user's verified claims from localStorage
+  useEffect(() => {
+    const storedVerifications = localStorage.getItem('user_verified_claims');
+    if (storedVerifications) {
+      setUserVerifiedClaims(new Set(JSON.parse(storedVerifications)));
+    }
+    
+    const hasSeenHelp = localStorage.getItem('has_seen_hot_claims_help');
+    if (!hasSeenHelp) {
+      setShowFirstTimeHelp(true);
+    }
+  }, []);
 
   useEffect(() => {
     fetchHotClaims();
@@ -141,7 +157,15 @@ export function HotClaimsWidget() {
 
   const handleVerifyNow = (claim: HotClaim) => {
     setVerifyingIds((prev) => new Set(prev).add(claim.id));
+    // Store context for post-verification navigation
+    sessionStorage.setItem('verification_source', 'hot_claims');
+    sessionStorage.setItem('verifying_claim_id', claim.id);
     navigate(`/verify?claim=${encodeURIComponent(claim.claim_text)}&viralClaimId=${claim.id}`);
+  };
+
+  const dismissFirstTimeHelp = () => {
+    setShowFirstTimeHelp(false);
+    localStorage.setItem('has_seen_hot_claims_help', 'true');
   };
 
   const getClaimRarityForFallback = (claim: HotClaim): string => {
@@ -249,15 +273,27 @@ export function HotClaimsWidget() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
             <CardTitle>🔥 Hot Claims - Race to Verify First!</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">Be the first to verify trending claims and mint rare NFT badges! Higher engagement = rarer badges.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => navigate('/viral-claims')}
-            className="gap-1"
+            className="gap-1 shrink-0"
           >
             View All
             <ArrowRight className="h-4 w-4" />
@@ -266,6 +302,25 @@ export function HotClaimsWidget() {
         <CardDescription>
           Verify trending claims before others to mint rare NFT badges
         </CardDescription>
+        
+        {showFirstTimeHelp && (
+          <div className="mt-4 p-4 bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm mb-1">First time here? Here's how it works!</h3>
+                <p className="text-xs text-muted-foreground mb-2">
+                  🎯 Verify trending claims before anyone else<br/>
+                  💎 Earn rarer badges for higher-engagement claims<br/>
+                  🏆 Compete on the leaderboard and build your reputation
+                </p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={dismissFirstTimeHelp} className="h-6 text-xs shrink-0">
+                Got it
+              </Button>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -281,11 +336,19 @@ export function HotClaimsWidget() {
               <Card
                 key={claim.id}
                 className={cn(
-                  "overflow-hidden transition-all duration-300 flex flex-col min-h-[500px]",
+                  "overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col min-h-[500px] relative",
                   index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
-                  isVerified && "border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20"
+                  isVerified && "border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20",
+                  userVerifiedClaims.has(claim.id) && "ring-2 ring-primary/50"
                 )}
               >
+                {userVerifiedClaims.has(claim.id) && !isVerified && (
+                  <div className="absolute -top-2 -right-2 z-10">
+                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
+                      You Verified This! 🎉
+                    </Badge>
+                  </div>
+                )}
                 {/* Claim Image - Standardized Aspect Ratio */}
                 {claim.image_url ? (
                   <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden">
@@ -445,7 +508,7 @@ export function HotClaimsWidget() {
                       onClick={() => handleVerifyNow(claim)}
                       disabled={verifyingIds.has(claim.id)}
                       className={cn(
-                        "w-full min-h-[40px] font-semibold",
+                        "w-full min-h-[48px] md:min-h-[56px] font-semibold touch-manipulation",
                         index === 0 && "bg-orange-500 hover:bg-orange-600"
                       )}
                     >

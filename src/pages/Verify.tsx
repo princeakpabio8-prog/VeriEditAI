@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { VerificationUpload } from '@/components/verification-upload';
 import { VerificationResult } from '@/components/verification-result';
 import { PerformanceDashboard } from '@/components/performance-dashboard';
@@ -168,11 +169,31 @@ export default function Verify() {
         viralClaimId: data.viralClaimId // Store viral claim ID for auto-minting
       });
 
-      // Store verification context for post-verification flow
+      // Update viral claim with verification ID and mark as verified
       if (data.viralClaimId && normalizedResult?.verificationId) {
-        sessionStorage.setItem('verification_completed', 'true');
-        sessionStorage.setItem('verification_id', normalizedResult.verificationId);
-        sessionStorage.setItem('verification_trust_score', normalizedResult.confidence?.toString() || '0');
+        try {
+          const { error: updateError } = await supabase
+            .from('viral_claims')
+            .update({
+              verification_id: normalizedResult.verificationId,
+              status: 'verified',
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', data.viralClaimId);
+
+          if (updateError) {
+            console.error('Failed to update viral claim:', updateError);
+          } else {
+            console.log('✅ Viral claim marked as verified:', data.viralClaimId);
+          }
+
+          // Store verification context for post-verification flow
+          sessionStorage.setItem('verification_completed', 'true');
+          sessionStorage.setItem('verification_id', normalizedResult.verificationId);
+          sessionStorage.setItem('verification_trust_score', normalizedResult.confidence?.toString() || '0');
+        } catch (error) {
+          console.error('Error updating viral claim:', error);
+        }
       }
 
       // Check for achievements after successful verification

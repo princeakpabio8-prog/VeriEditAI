@@ -894,28 +894,45 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     );
     
     if (isGenericResponse) {
-      console.warn('⚠️ Generic response detected from Tavily. Falling back to Perplexity...');
-      try {
-        const perplexityResult = await verifyWithPerplexity(String(content), template);
-        console.log('✅ Perplexity fallback succeeded with confidence:', perplexityResult.confidence);
-        return perplexityResult;
-      } catch (perplexityError) {
-        console.error('❌ Perplexity fallback also failed:', perplexityError);
-        return {
-          confidence: 55,
-          status: 'INCONCLUSIVE',
-          summary: `**⚡ VERIFICATION INCOMPLETE**\n\nConfidence: 55%\nStatus: INCONCLUSIVE\n\nBoth primary and fallback verification sources returned generic information. This content may require manual fact-checking.`,
-          analysis: 'Unable to obtain specific verification through automated sources. Both Tavily and Perplexity returned insufficient information.',
-          sources: [],
-          source_consensus: 55,
-          verification_method: ['Tavily Generic Response', 'Perplexity Fallback Failed'],
-          category: categorizeContent(safeContent),
-          created_at: new Date().toISOString(),
-          processing_time: Date.now() - startTime
-        };
+      console.warn('⚠️ Generic response detected from Tavily. Considering Perplexity fallback...');
+      const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
+      if (perplexityKey) {
+        try {
+          const perplexityResult = await verifyWithPerplexity(String(content), template);
+          console.log('✅ Perplexity fallback succeeded with confidence:', perplexityResult.confidence);
+          return perplexityResult;
+        } catch (perplexityError) {
+          console.error('❌ Perplexity fallback also failed:', perplexityError);
+          return {
+            confidence: 55,
+            status: 'INCONCLUSIVE',
+            summary: `**⚡ VERIFICATION INCOMPLETE**\n\nConfidence: 55%\nStatus: INCONCLUSIVE\n\nPrimary verification returned generic results and AI fallback failed. This content may require manual fact-checking.`,
+            analysis: 'Automated sources were generic and AI fallback failed. Proceeding without AI.',
+            sources: [],
+            source_consensus: 55,
+            verification_method: ['Tavily Generic Response', 'Perplexity Fallback Failed'],
+            category: categorizeContent(safeContent),
+            created_at: new Date().toISOString(),
+            processing_time: Date.now() - startTime
+          };
+        }
       }
+      // No Perplexity key configured: return conservative, non-AI result instead of failing hard
+      console.warn('ℹ️ Perplexity API key not configured; skipping AI fallback.');
+      return {
+        confidence: 55,
+        status: 'INCONCLUSIVE',
+        summary: `**⚡ VERIFICATION INCOMPLETE**\n\nConfidence: 55%\nStatus: INCONCLUSIVE\n\nPrimary verification returned generic results. AI fallback disabled (no Perplexity key).`,
+        analysis: 'Generic search response; unable to enhance with AI without API key. Consider retrying or adding an API key.',
+        sources: [],
+        source_consensus: 55,
+        verification_method: ['Tavily Generic Response'],
+        category: categorizeContent(safeContent),
+        created_at: new Date().toISOString(),
+        processing_time: Date.now() - startTime
+      };
     }
-    
+
     // Batch process sources with single database call for reliability scores
     console.log(`⚡ Batch processing ${searchResults.length} sources...`);
     const sourceUrls = searchResults.map((r: any) => r.url || '');
@@ -1187,8 +1204,13 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       timestamp: new Date().toISOString()
     });
     
-    // Try Perplexity as fallback
+    // Try Perplexity as fallback only if key configured
     try {
+      const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
+      if (!perplexityKey) {
+        console.warn('ℹ️ PERPLEXITY_API_KEY not set; skipping AI fallback. Returning conservative result.');
+        return await fallbackAnalysis(String(content));
+      }
       console.log('🔄 Falling back to Perplexity API...');
       return await verifyWithPerplexity(content, template);
     } catch (perplexityError) {

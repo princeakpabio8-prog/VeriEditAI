@@ -178,7 +178,7 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
   const shouldShowFallback = !imageUrl || imageFailed || error
   
   // Sync status indicators
-  const isSyncing = !badge.opensea_image_confirmed || (badge.opensea_refresh_count || 0) === 0
+  const isSyncing = badge.opensea_image_confirmed === false
   const needsRefresh = !badge.opensea_last_refresh
 
   const handleRefreshOpenSea = async () => {

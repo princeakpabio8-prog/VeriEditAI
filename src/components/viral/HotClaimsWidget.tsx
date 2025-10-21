@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ShareModal } from '@/components/share-modal';
 import { ClaimImageFallback } from './ClaimImageFallback';
+import { MintBadgeButton } from '@/components/nft/MintBadgeButton';
 
 interface HotClaim {
   id: string;
@@ -46,7 +47,12 @@ export function HotClaimsWidget() {
   useEffect(() => {
     const storedVerifications = localStorage.getItem('user_verified_claims');
     if (storedVerifications) {
-      setUserVerifiedClaims(new Set(JSON.parse(storedVerifications)));
+      const verifiedData = JSON.parse(storedVerifications);
+      // Handle both old array format and new object format
+      const claimIds = Array.isArray(verifiedData) 
+        ? verifiedData 
+        : Object.keys(verifiedData);
+      setUserVerifiedClaims(new Set(claimIds));
     }
     
     const hasSeenHelp = localStorage.getItem('has_seen_hot_claims_help');
@@ -54,6 +60,15 @@ export function HotClaimsWidget() {
       setShowFirstTimeHelp(true);
     }
   }, []);
+
+  // Get user's verification data for a claim
+  const getUserVerificationData = (claimId: string) => {
+    const storedVerifications = localStorage.getItem('user_verified_claims');
+    if (!storedVerifications) return null;
+    
+    const verifiedData = JSON.parse(storedVerifications);
+    return verifiedData[claimId] || null;
+  };
 
   useEffect(() => {
     fetchHotClaims();
@@ -331,6 +346,8 @@ export function HotClaimsWidget() {
             
             const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
             const isVerified = !!claim.verification_id;
+            const userVerificationData = getUserVerificationData(claim.id);
+            const verifiedByUser = userVerifiedClaims.has(claim.id);
 
             return (
               <Card
@@ -342,10 +359,10 @@ export function HotClaimsWidget() {
                   userVerifiedClaims.has(claim.id) && "ring-2 ring-primary/50"
                 )}
               >
-                {userVerifiedClaims.has(claim.id) && !isVerified && (
+                {verifiedByUser && userVerificationData && (
                   <div className="absolute -top-2 -right-2 z-10">
-                    <Badge className="bg-primary text-primary-foreground text-xs px-2 py-0.5">
-                      You Verified This! 🎉
+                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-3 py-1 shadow-lg font-bold">
+                      ✓ Verified by You! 🎉
                     </Badge>
                   </div>
                 )}
@@ -480,9 +497,64 @@ export function HotClaimsWidget() {
                   </div>
                 )}
 
-                {/* Verify Button */}
-                <div className="mt-auto">
-                  {isVerified && claim.share_token ? (
+                {/* Action Buttons */}
+                <div className="mt-auto space-y-3">
+                  {verifiedByUser && userVerificationData ? (
+                    <>
+                      {/* NFT Minting Section for User's Verification */}
+                      <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border-2 border-emerald-500/30 rounded-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                          <span className="font-bold text-sm text-emerald-700 dark:text-emerald-400">
+                            You Verified This Claim!
+                          </span>
+                        </div>
+                        {userVerificationData.trustScore >= 75 ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm mb-2">
+                              <Award className="h-4 w-4 text-purple-600" />
+                              <span className="font-semibold text-purple-700 dark:text-purple-400">
+                                💎 NFT Badge Eligible! (Trust Score: {userVerificationData.trustScore}%)
+                              </span>
+                            </div>
+                            <MintBadgeButton 
+                              verificationId={userVerificationData.verificationId} 
+                              trustScore={userVerificationData.trustScore}
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Trust score: {userVerificationData.trustScore}%. Need 75%+ for NFT minting.
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* View Verification Button */}
+                      {claim.share_token && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => navigate(`/share/${claim.share_token}`)}
+                            variant="outline"
+                            className="flex-1 min-h-[40px]"
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                            View Full Report
+                          </Button>
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedClaimForShare(claim.verification_id);
+                              setShareModalOpen(true);
+                            }}
+                            variant="outline"
+                            className="shrink-0 min-h-[40px]"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  ) : isVerified && claim.share_token ? (
                     <div className="flex items-center gap-2">
                       <Button
                         onClick={() => navigate(`/share/${claim.share_token}`)}

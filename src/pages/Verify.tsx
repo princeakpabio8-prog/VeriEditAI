@@ -168,6 +168,13 @@ export default function Verify() {
         viralClaimId: data.viralClaimId // Store viral claim ID for auto-minting
       });
 
+      // Store verification context for post-verification flow
+      if (data.viralClaimId && normalizedResult?.verificationId) {
+        sessionStorage.setItem('verification_completed', 'true');
+        sessionStorage.setItem('verification_id', normalizedResult.verificationId);
+        sessionStorage.setItem('verification_trust_score', normalizedResult.confidence?.toString() || '0');
+      }
+
       // Check for achievements after successful verification
       await checkAchievementsAfterVerification();
       

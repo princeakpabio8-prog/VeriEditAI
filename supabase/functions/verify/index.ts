@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Lovable AI Gateway key for backend-only usage
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+
 interface VerificationResult {
   confidence: number;
   status: string;
@@ -1105,10 +1108,13 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     }
     
     // Override verdict if AI detected strong refutation
-    if (!answerRefutesClaimDirectly && isRefuted && refutationConfidence > 80 && refutationType === 'direct') {
+    if (
+      (negationAnalysis.isNegation && negationAnalysis.confidence >= 75 && negationAnalysis.negationType === 'direct') ||
+      (isRefuted && refutationConfidence > 80 && refutationType === 'direct')
+    ) {
       verdict = 'Claim refuted by evidence';
     }
-    
+
     const summary = `${verdict} (${confidence}% confidence). ${answer ? answer.split('.')[0] + '.' : `Analyzed ${searchResults.length} sources.`}`;
     
     // Build structured analysis_points

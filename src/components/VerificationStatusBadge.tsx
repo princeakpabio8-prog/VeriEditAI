@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface VerificationStatusBadgeProps {
-  status: 'verified' | 'verifying' | 'failed';
+  status: 'verified' | 'verifying' | 'failed' | 'debunked' | 'false';
   confidence?: number;
   size?: 'small' | 'medium' | 'large';
   className?: string;
@@ -48,10 +48,24 @@ export function VerificationStatusBadge({
       bgClass: 'bg-gradient-to-r from-red-500 to-rose-500',
       textClass: 'text-white',
       shadowClass: 'shadow-lg shadow-red-500/30'
+    },
+    debunked: {
+      icon: AlertCircle,
+      label: 'DEBUNKED',
+      bgClass: 'bg-gradient-to-r from-red-500 to-rose-500',
+      textClass: 'text-white',
+      shadowClass: 'shadow-lg shadow-red-500/30'
+    },
+    false: {
+      icon: AlertCircle,
+      label: 'FALSE',
+      bgClass: 'bg-gradient-to-r from-red-500 to-rose-500',
+      textClass: 'text-white',
+      shadowClass: 'shadow-lg shadow-red-500/30'
     }
   };
 
-  const config = configs[status];
+  const config = configs[status as keyof typeof configs] || configs.failed;
   const Icon = config.icon;
 
   return (
@@ -70,7 +84,7 @@ export function VerificationStatusBadge({
     >
       <Icon size={iconSizes[size]} className="flex-shrink-0" />
       <span>{config.label}</span>
-      {status === 'verified' && confidence !== undefined && (
+      {(status === 'verified' || status === 'debunked' || status === 'false') && confidence !== undefined && (
         <span className="ml-1 opacity-90">• {confidence}%</span>
       )}
     </motion.div>

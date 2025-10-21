@@ -1046,15 +1046,20 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
       console.log(`✅ No refutation detected (AI confidence: ${refutationResult.confidence}%, type: ${refutationResult.refutation_type})`);
     }
     
+    // CRITICAL FIX: Detect if the answer itself refutes the claim (negation detection)
+    const answerRefutesClaimDirectly = detectAnswerNegation(content, answer);
+    
     let status = getStatusFromConfidence(confidence);
     
-    // Only force FALSE status if:
-    // 1. Confirmed refutation detected
-    // 2. Low confidence (<40%)
-    // 3. Refutation type is "direct"
-    // 4. Source reliability is also low (<65%)
+    // Force DEBUNKED/FALSE status if:
+    // 1. Answer directly negates the claim (has "not", "no", "false", etc.)
+    // OR
+    // 2. Confirmed refutation detected by AI with low confidence and weak sources
     
-    if (isRefuted && 
+    if (answerRefutesClaimDirectly) {
+      status = 'debunked';
+      console.log(`❌ Status set to DEBUNKED: Answer directly refutes the claim`);
+    } else if (isRefuted && 
         confidence < 40 && 
         refutationType === 'direct' &&
         avgReliability < 65) {
@@ -1064,14 +1069,22 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     
     // Create concise verdict summary
     let verdict = '';
-    if (confidence >= 80) verdict = 'Highly credible claim';
-    else if (confidence >= 70) verdict = 'Likely accurate claim';
-    else if (confidence >= 55) verdict = 'Inconclusive - mixed evidence';
-    else if (confidence >= 40) verdict = 'Disputed claim';
-    else verdict = 'Likely false claim';
+    if (answerRefutesClaimDirectly) {
+      verdict = 'Claim debunked by evidence';
+    } else if (confidence >= 80) {
+      verdict = 'Highly credible claim';
+    } else if (confidence >= 70) {
+      verdict = 'Likely accurate claim';
+    } else if (confidence >= 55) {
+      verdict = 'Inconclusive - mixed evidence';
+    } else if (confidence >= 40) {
+      verdict = 'Disputed claim';
+    } else {
+      verdict = 'Likely false claim';
+    }
     
-    // Only override verdict if refutation is strong
-    if (isRefuted && refutationConfidence > 80 && refutationType === 'direct') {
+    // Override verdict if AI detected strong refutation
+    if (!answerRefutesClaimDirectly && isRefuted && refutationConfidence > 80 && refutationType === 'direct') {
       verdict = 'Claim refuted by evidence';
     }
     
@@ -1217,6 +1230,34 @@ function getStatusFromConfidence(confidence: number): string {
   if (confidence >= 55) return 'inconclusive';
   if (confidence >= 40) return 'disputed';
   return 'false';
+}
+
+// NEW: Detect if the answer negates/refutes the claim
+function detectAnswerNegation(claim: string, answer: string): boolean {
+  const lowerClaim = claim.toLowerCase();
+  const lowerAnswer = answer.toLowerCase();
+  
+  // Extract key claim assertion (simplified)
+  const claimWords = lowerClaim.split(' ').filter(w => w.length > 3);
+  
+  // Strong negation patterns in the answer
+  const strongNegationPatterns = [
+    /\b(has not|have not|did not|does not|do not|is not|are not|was not|were not)\b/,
+    /\b(no evidence|no confirmation|not true|not accurate|false claim|debunked|myth)\b/,
+    /\bnever\s+(urged|asked|recommended|advised|confirmed)\b/,
+    /\b(contrary to|opposite of|contradicts|disputes)\b/
+  ];
+  
+  // Check if answer contains strong negation
+  const hasStrongNegation = strongNegationPatterns.some(pattern => pattern.test(lowerAnswer));
+  
+  if (!hasStrongNegation) return false;
+  
+  // Verify the negation is about the claim subject
+  // Check if key claim words appear near the negation
+  const claimSubjectInAnswer = claimWords.some(word => lowerAnswer.includes(word));
+  
+  return claimSubjectInAnswer;
 }
 
 function extractSources(text: string): Array<{ title: string; url: string; snippet?: string; reliability_score?: number }> {

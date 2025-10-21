@@ -70,7 +70,13 @@ export function normalizeVerifyResult(raw: any): NormalizedVerificationResult {
   }
 
   // Normalize string fields with lower - ensure never undefined
-  const status = lower(raw.status) || lower(raw.verification_status) || 'unknown';
+  let status = lower(raw.status) || lower(raw.verification_status) || 'unknown';
+  
+  // Map 'debunked' status if present
+  if (status === 'debunked') {
+    status = 'debunked';
+  }
+  
   const category = lower(raw.category) || 'general';
   const summary = typeof raw.summary === 'string' ? raw.summary : 'No summary available';
   const analysis = typeof raw.analysis === 'string' ? raw.analysis : summary;

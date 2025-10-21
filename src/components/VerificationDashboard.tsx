@@ -94,10 +94,11 @@ export default function VerificationDashboard() {
             <h2 className="text-xl font-semibold text-white">Verification Result</h2>
             <div className={`px-3 py-1 rounded-full text-sm font-medium ${
               displayStatus === 'verified' ? 'bg-green-900/30 text-green-400 border border-green-700' :
+              displayStatus === 'debunked' || displayStatus === 'false' ? 'bg-red-900/30 text-red-400 border border-red-700' :
               displayStatus === 'flagged' ? 'bg-red-900/30 text-red-400 border border-red-700' :
               'bg-yellow-900/30 text-yellow-400 border border-yellow-700'
             }`}>
-              {displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).replace('_', ' ')}
+              {displayStatus === 'debunked' ? 'Debunked' : displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1).replace('_', ' ')}
             </div>
           </div>
           

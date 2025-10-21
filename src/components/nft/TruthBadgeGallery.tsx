@@ -353,9 +353,12 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
                     <span className="text-blue-500">🔄 Syncing to OpenSea...</span>
                   </>
                 ) : badge.opensea_image_confirmed ? (
-                  <>
-                    <span className="text-green-500">✅ Live on OpenSea</span>
-                  </>
+                  <button
+                    onClick={() => window.open(`https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
+                    className="text-green-500 hover:text-green-600 hover:underline transition-colors cursor-pointer"
+                  >
+                    ✅ Live on OpenSea
+                  </button>
                 ) : needsRefresh ? (
                   <>
                     <span className="text-yellow-500">⏳ Pending sync</span>

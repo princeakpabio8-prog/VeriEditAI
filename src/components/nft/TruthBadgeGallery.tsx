@@ -173,35 +173,12 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
     badge.rarity_tier || undefined
   )
   const [imageFailed, setImageFailed] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
   const displayImage = imageUrl || badgeImage
   const shouldShowFallback = !imageUrl || imageFailed || error
   
   // Sync status indicators
   const isSyncing = badge.opensea_image_confirmed === false
   const needsRefresh = !badge.opensea_last_refresh
-
-  const handleRefreshOpenSea = async () => {
-    try {
-      setRefreshing(true);
-      
-      const { data, error } = await supabase.functions.invoke('refresh-opensea-metadata', {
-        body: { token_id: badge.token_id }
-      });
-      
-      if (error) throw error;
-      
-      toast.success('OpenSea refresh requested! Check back in 5-10 minutes.', {
-        description: 'The metadata will update automatically on OpenSea.'
-      });
-    } catch (err: any) {
-      toast.error('Failed to refresh OpenSea metadata', {
-        description: err.message
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const getRarityDisplayName = (rarity: string | null) => {
     switch (rarity) {
@@ -390,47 +367,33 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
                 )}
               </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
-            >
-              <ExternalLink className="h-3 w-3 mr-1" />
-              PolygonScan
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => window.open(badge.metadata_uri, '_blank')}
-            >
-              Metadata
-            </Button>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="flex-1"
-              onClick={handleRefreshOpenSea}
-              disabled={refreshing}
-            >
-              <RefreshCw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Force Refresh'}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              onClick={() => window.open(`https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
-            >
-              <ExternalLink className="h-3 w-3 mr-1" />
-              OpenSea
-            </Button>
-          </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => window.open(`https://polygonscan.com/tx/${badge.transaction_hash}`, '_blank')}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            PolygonScan
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => window.open(badge.metadata_uri, '_blank')}
+          >
+            Metadata
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => window.open(`https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
+          >
+            <ExternalLink className="h-3 w-3 mr-1" />
+            OpenSea
+          </Button>
         </div>
       </CardContent>
     </Card>

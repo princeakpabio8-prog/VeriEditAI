@@ -264,6 +264,7 @@ export default function Achievements() {
                       </Badge>
                     </div>
                     <CardTitle className="mt-4">{achievement.name}</CardTitle>
+                    <CardDescription>{achievement.description}</CardDescription>
                   </CardHeader>
 
                   <CardContent>

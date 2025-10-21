@@ -27,95 +27,83 @@ serve(async (req) => {
 
     // Create ultra-premium 3D cinematic prompts for each rarity tier
     const rarityPrompts = {
-      'LEGENDARY': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+      'LEGENDARY': `Ultra-premium 3D NFT badge, cinematic 8K quality, volumetric lighting:
 
-MAIN OBJECT:
-- Majestic golden metallic shield with divine radiance
-- Deep embossed verification checkmark (3D raised chrome element)
-- Ornate beveled edges with mirror-polished reflections
-- Brushed gold texture with realistic specularity and caustics
-- Floating holographic text: "VeriEdit Truth Badge" in elegant metallic serif font
-- Trust Score: ${trust_score}% displayed as glowing holographic numerals
+CENTER BADGE:
+- Majestic hovering golden shield, floating 30° angle
+- Giant 3D chrome verification checkmark, raised 2cm from surface
+- Ornate beveled edges with mirror-polished gold reflections
+- Photorealistic brushed gold metal texture with caustic light patterns
+- Glowing holographic "VeriEdit Truth Badge" text floating above
+- Trust Score ${trust_score}% in bright golden holographic numbers
 
-LIGHTING & EFFECTS:
-- Dramatic studio lighting (3-point cinematic setup)
-- Ray-traced reflections with lens flares and chromatic aberration
-- Volumetric god rays piercing through ethereal fog
-- Phoenix fire particles swirling around badge
-- Golden energy wisps and celestial sparkles
-- Divine aura with light scattering effects
+DRAMATIC LIGHTING:
+- Three professional studio lights with golden accent beams
+- Ray-traced reflections creating lens flares and star bursts
+- Volumetric god rays penetrating mystical fog particles
+- Swirling phoenix fire trails encircling the badge
+- Golden energy wisps and celestial sparkles floating around
+- Divine radiant aura with atmospheric light scattering
 
-BACKGROUND:
-- Dark cinematic gradient (near-black to deep molten gold)
-- Subtle sacred geometry pattern (faded golden mandala)
-- Depth of field blur with bokeh effect
-- Atmospheric smoke with dramatic backlighting
+CINEMATIC BACKGROUND:
+- Deep black to molten gold gradient backdrop
+- Faded sacred geometry mandala pattern (subtle)
+- Shallow depth of field with smooth bokeh circles
+- Atmospheric smoke illuminated by backlighting
 
-TECHNICAL:
-- 8K resolution, ultra-detailed, photorealistic
-- PBR materials (physically-based rendering)
-- Octane Render / Unreal Engine 5 cinematic quality
-- Premium NFT collectible aesthetic, museum-quality presentation`,
+RENDER SPECS: Unreal Engine 5 / Octane quality, PBR materials, 8K resolution, museum-grade collectible NFT`,
 
-      'EPIC': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+      'EPIC': `Ultra-premium 3D NFT badge, cinematic 8K quality, volumetric lighting:
 
-MAIN OBJECT:
-- Mystical purple holographic shield with iridescent sheen
-- Deep embossed verification checkmark (3D raised platinum element)
-- Beveled edges with color-shifting reflections
-- Holographic material with rainbow caustics
-- Floating metallic text: "VeriEdit Truth Badge" in elegant futuristic font
-- Trust Score: ${trust_score}% displayed as glowing purple numerals
+CENTER BADGE:
+- Mystical floating purple holographic shield, tilted 25° perspective
+- Giant 3D platinum verification checkmark, raised embossed design
+- Beveled edges with iridescent color-shifting reflections
+- Holographic material showing rainbow caustic light patterns
+- Glowing "VeriEdit Truth Badge" text in futuristic metallic font
+- Trust Score ${trust_score}% in bright purple holographic display
 
-LIGHTING & EFFECTS:
-- Dramatic studio lighting with purple accent lights
-- Ray-traced reflections with magical shimmer
-- Volumetric purple mist with light rays
-- Magical orbital rings rotating around badge
-- Mystical runes etched into surface with glow effect
-- Particle effects: floating purple crystals and energy wisps
+DRAMATIC LIGHTING:
+- Professional studio lighting with purple and magenta accent beams
+- Ray-traced reflections creating magical shimmer effects
+- Volumetric purple mist with penetrating light rays
+- Three glowing orbital rings rotating cinematically around badge
+- Mystical glowing runes etched into shield surface
+- Floating purple crystal shards and energy wisps
 
-BACKGROUND:
-- Dark cinematic gradient (near-black to deep purple/magenta)
-- Subtle arcane symbols pattern (faded)
-- Depth of field blur with mystical bokeh
-- Atmospheric fog with ethereal glow
+CINEMATIC BACKGROUND:
+- Deep black to vibrant purple/magenta gradient backdrop
+- Faded arcane symbols pattern (very subtle)
+- Shallow depth of field with mystical bokeh
+- Ethereal atmospheric fog with purple glow
 
-TECHNICAL:
-- 8K resolution, ultra-detailed, photorealistic
-- PBR materials with holographic shaders
-- Octane Render / Unreal Engine 5 cinematic quality
-- Premium NFT collectible aesthetic, masterwork presentation`,
+RENDER SPECS: Unreal Engine 5 quality, holographic PBR shaders, 8K resolution, masterwork NFT collectible`,
 
-      'RARE': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
+      'RARE': `Ultra-premium 3D NFT badge, cinematic 8K quality, volumetric lighting:
 
-MAIN OBJECT:
-- Electric blue chrome shield with metallic sheen
-- Deep embossed verification checkmark (3D raised titanium element)
-- Beveled edges with electric reflections
-- Polished chrome texture with realistic specularity
-- Floating metallic text: "VeriEdit Truth Badge" in elegant tech font
-- Trust Score: ${trust_score}% displayed as glowing blue numerals
+CENTER BADGE:
+- Electric blue chrome floating shield, dramatic 20° angle
+- Giant 3D titanium verification checkmark, deeply embossed
+- Beveled edges with electric blue reflections
+- Polished chrome metal with photorealistic specularity
+- Glowing "VeriEdit Truth Badge" text in sleek tech font
+- Trust Score ${trust_score}% in bright electric blue holographic numbers
 
-LIGHTING & EFFECTS:
-- Dramatic studio lighting with electric blue accents
-- Ray-traced reflections with lens flares
-- Volumetric blue energy field surrounding badge
-- Lightning bolt effects crackling around edges
-- Neon glow with light bloom
-- Particle effects: electric sparks and energy trails
+DRAMATIC LIGHTING:
+- Professional studio lighting with electric blue accent beams
+- Ray-traced reflections with blue lens flares
+- Volumetric blue energy field sphere surrounding entire badge
+- Crackling lightning bolts arcing around edges
+- Neon glow with intense light bloom effect
+- Electric sparks and energy trail particles
 
-BACKGROUND:
-- Dark cinematic gradient (near-black to deep electric blue)
-- Subtle circuit pattern (faded)
-- Depth of field blur with bokeh effect
+CINEMATIC BACKGROUND:
+- Deep black to electric blue gradient backdrop
+- Faded circuit board pattern (subtle)
+- Shallow depth of field with blue bokeh circles
 - Atmospheric fog with blue backlighting
 
-TECHNICAL:
-- 8K resolution, ultra-detailed, photorealistic
-- PBR materials (physically-based rendering)
-- Octane Render / Unreal Engine 5 cinematic quality
-- Premium NFT collectible aesthetic, elite presentation`,
+RENDER SPECS: Unreal Engine 5 quality, chrome PBR materials, 8K resolution, elite NFT collectible`,
 
       'UNCOMMON': `Ultra-premium 3D rendered NFT badge, photorealistic cinema quality 8K:
 
@@ -190,9 +178,8 @@ TECHNICAL:
         model: "gpt-image-1",
         prompt,
         size: "1024x1024",
-        output_format: "jpeg", // Faster than PNG
-        output_compression: 85, // Balance quality/speed
-        quality: "medium", // Faster than high
+        output_format: "png",
+        quality: "high", // High quality for cinematic 3D NFTs
         n: 1
       })
     });

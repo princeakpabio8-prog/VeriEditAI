@@ -547,18 +547,20 @@ export function HotClaimsWidget() {
                           </span>
                         </div>
                         {userVerificationData.trustScore >= 75 ? (
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm mb-2">
-                              <Award className="h-4 w-4 text-purple-600" />
-                              <span className="font-semibold text-purple-700 dark:text-purple-400">
-                                💎 NFT Badge Eligible! (Trust Score: {userVerificationData.trustScore}%)
-                              </span>
-                            </div>
-                            <MintBadgeButton 
-                              verificationId={userVerificationData.verificationId} 
-                              trustScore={userVerificationData.trustScore}
-                            />
-                          </div>
+                          <Button
+                            onClick={() => {
+                              setNftMintPrompt({
+                                show: true,
+                                verificationId: userVerificationData.verificationId,
+                                trustScore: userVerificationData.trustScore,
+                                claimText: claim.claim_text
+                              });
+                            }}
+                            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                          >
+                            <Award className="h-4 w-4 mr-2" />
+                            🎉 Mint Your NFT Badge ({userVerificationData.trustScore}%)
+                          </Button>
                         ) : (
                           <p className="text-xs text-muted-foreground">
                             Trust score: {userVerificationData.trustScore}%. Need 75%+ for NFT minting.

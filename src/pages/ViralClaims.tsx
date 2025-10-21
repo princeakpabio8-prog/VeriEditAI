@@ -49,24 +49,6 @@ export default function ViralClaims() {
   // Handle post-verification success
   useVerificationSuccess();
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-
-    const checkAdminAccess = async () => {
-      const isAdmin = await hasRole('admin');
-      if (!isAdmin) {
-        toast({
-          title: 'Access Denied',
-          description: 'This page is only accessible to administrators.',
-          variant: 'destructive',
-        });
-        navigate('/');
-      }
-    };
-
-    checkAdminAccess();
     fetchViralClaims();
 
     // Set up realtime subscription
@@ -80,7 +62,7 @@ export default function ViralClaims() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, navigate, hasRole]);
+  }, []);
 
   async function fetchViralClaims() {
     try {
@@ -168,6 +150,10 @@ export default function ViralClaims() {
   }
 
   function handleVerifyNow(claim: ViralClaim) {
+    if (!user) {
+      navigate('/auth', { state: { from: { pathname: '/viral-claims' } } });
+      return;
+    }
     navigate('/verify', { 
       state: { 
         prefilledContent: claim.claim_text,

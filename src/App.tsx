@@ -139,11 +139,7 @@ const App = () => (
             <Route path="/user/:userId" element={<UserProfile />} />
             <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />
             <Route path="/press" element={<Press />} />
-            <Route path="/viral-claims" element={
-              <ProtectedRoute>
-                <ViralClaims />
-              </ProtectedRoute>
-            } />
+            <Route path="/viral-claims" element={<ViralClaims />} />
             <Route path="/signal-feed" element={<SignalFeed />} />
             <Route path="/achievements" element={
               <ProtectedRoute>

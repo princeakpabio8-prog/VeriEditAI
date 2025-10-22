@@ -13,12 +13,13 @@ const regenerationAttempted = new Set<string>()
 const pollingAttempts = new Map<string, number>()
 
 function isTemplateImage(url: string) {
-  return url.includes('nft-badge-template.png')
+  return url.includes('truth-badge-template.png') || url.includes('nft-badge-template.png')
 }
 
 function isFallbackImage(url: string) {
-  return url.includes('nft-badge-fallback.png')
+  return url.includes('nft-badge-fallback.png') || url.includes('lovableproject.com/nft-badge-fallback.png')
 }
+
 
 const POLL_DELAYS_MS = [3000, 5000, 8000, 12000, 15000]
 const MAX_POLL_ATTEMPTS = 5
@@ -189,11 +190,36 @@ export function useNFTImage(
           return
         }
 
-        // If it's static fallback, start polling for AI image
+        // If it's static fallback, trigger AI generation (if possible) and start polling
         if (isFallbackImage(meta.image)) {
-          console.log(`[NFT Image] 📦 Fallback detected, polling for AI image...`)
+          console.log(`[NFT Image] 📦 Fallback detected for badge: ${badgeId}`)
+
+          // Try to trigger AI generation when we have enough context and haven't tried yet
+          if (badgeId && claimText && trustScore !== undefined && rarityTier && !regenerationAttempted.has(badgeId)) {
+            regenerationAttempted.add(badgeId)
+            console.log(`[NFT Image] 🎨 Triggering AI generation from fallback for badge ${badgeId}`)
+            supabase.functions
+              .invoke('generate-nft-badge-image', {
+                body: {
+                  badge_id: badgeId,
+                  claim_text: claimText,
+                  trust_score: trustScore,
+                  rarity_tier: rarityTier
+                }
+              })
+              .then((result) => {
+                if (result.error) {
+                  console.error('[NFT Image] ❌ AI generation failed (fallback path):', result.error)
+                } else {
+                  console.log('[NFT Image] ✅ AI generation invoked (fallback path):', result.data)
+                }
+              })
+              .catch((err) => console.error('[NFT Image] ❌ Invocation error (fallback path):', err))
+          }
+
+          // Start polling for the AI image to appear in metadata
           pollForAIImage(pollingAttempts.get(metadataUri) || 0)
-          
+
           if (!cancelled) {
             setImageUrl(null)
             setError('Loading AI-generated image...')

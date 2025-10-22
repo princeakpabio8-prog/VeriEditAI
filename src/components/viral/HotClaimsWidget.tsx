@@ -69,11 +69,19 @@ export function HotClaimsWidget() {
     }
   }, []);
 
-  // Check for NFT minting prompt from navigation state
+  // Check for NFT minting prompt from navigation state (only show once per claim)
   useEffect(() => {
     if (location.state?.showNFTPrompt && location.state?.scrollToVerified) {
       const viralClaimId = location.state.scrollToVerified;
       const verificationData = getUserVerificationData(viralClaimId);
+      
+      // Check if we've already shown the prompt for this claim
+      const shownPrompts = sessionStorage.getItem('shown_nft_prompts') || '';
+      if (shownPrompts.includes(viralClaimId)) {
+        console.log('NFT prompt already shown for this claim, skipping');
+        window.history.replaceState({}, document.title);
+        return;
+      }
       
       if (verificationData && verificationData.trustScore >= 75) {
         // Find the claim to get its text
@@ -85,6 +93,9 @@ export function HotClaimsWidget() {
           trustScore: verificationData.trustScore,
           claimText: claim?.claim_text || 'Your verified claim'
         });
+        
+        // Mark this prompt as shown
+        sessionStorage.setItem('shown_nft_prompts', shownPrompts + ',' + viralClaimId);
       }
       
       // Clear the state
@@ -398,8 +409,8 @@ export function HotClaimsWidget() {
               >
                 {verifiedByUser && userVerificationData && (
                   <div className="absolute -top-2 -right-2 z-10">
-                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-3 py-1 shadow-lg font-bold">
-                      ✓ Verified by You! 🎉
+                    <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-4 py-1.5 shadow-2xl font-bold border-2 border-white dark:border-emerald-950">
+                      ✓ Verified {userVerificationData.trustScore >= 75 ? '💎' : '✅'}
                     </Badge>
                   </div>
                 )}
@@ -469,13 +480,23 @@ export function HotClaimsWidget() {
               )}
               <CardContent className="flex-1 flex flex-col justify-between p-5 space-y-4">
                 <div className="space-y-4">
-                  {/* Verified Status Banner */}
-                  {isVerified && (
+                  {/* Verified Status Banner - Different message for user's own verification */}
+                  {verifiedByUser && userVerificationData ? (
+                    <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">✓ YOU VERIFIED THIS!</span>
+                      </div>
+                      <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">
+                        Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible 💎' : ''}
+                      </p>
+                    </div>
+                  ) : isVerified ? (
                     <div className="bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-500 rounded-lg p-3 flex items-center gap-2">
                       <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">VERIFIED CLAIM</span>
+                      <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">VERIFIED BY COMMUNITY</span>
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Platform Badge */}
                   <div className="flex items-center gap-2">

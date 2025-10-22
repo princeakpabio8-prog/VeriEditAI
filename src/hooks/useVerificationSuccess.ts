@@ -18,12 +18,22 @@ export function useVerificationSuccess() {
     const source = sessionStorage.getItem('verification_source');
 
     if (verificationSuccess === 'true' && source === 'hot_claims' && viralClaimId) {
-      // Clear the flags
+      // Clear the flags IMMEDIATELY to prevent re-triggering
       sessionStorage.removeItem('verification_completed');
       sessionStorage.removeItem('verifying_claim_id');
       sessionStorage.removeItem('verification_id');
       sessionStorage.removeItem('verification_trust_score');
       sessionStorage.removeItem('verification_source');
+      
+      // Check if we've already shown the prompt for this verification
+      const shownPrompts = sessionStorage.getItem('shown_nft_prompts') || '';
+      if (shownPrompts.includes(viralClaimId)) {
+        console.log('NFT prompt already shown for this claim, skipping');
+        return;
+      }
+      
+      // Mark this prompt as shown
+      sessionStorage.setItem('shown_nft_prompts', shownPrompts + ',' + viralClaimId);
 
       // Mark claim as verified by user (store with verification details)
       const storedVerifications = localStorage.getItem('user_verified_claims');

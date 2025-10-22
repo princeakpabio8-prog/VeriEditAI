@@ -44,6 +44,7 @@ import Achievements from "./pages/Achievements";
 import NFTMarketplace from "./pages/NFTMarketplace";
 import RoyaltyDashboard from "./pages/RoyaltyDashboard";
 import { AchievementNotification } from "./components/AchievementNotification";
+import TrustOracle from "./pages/TrustOracle";
 
 const queryClient = new QueryClient();
 
@@ -152,6 +153,7 @@ const App = () => (
                 <RoyaltyDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/trust-oracle" element={<TrustOracle />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

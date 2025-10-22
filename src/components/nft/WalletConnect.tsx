@@ -38,85 +38,37 @@ export function WalletConnect() {
 
   const handleConnect = async () => {
     try {
-      const injectedConnector = connectors.find((c) => c.id === 'injected')
+      // Simplified: Always use WalletConnect (works everywhere)
       const walletConnectConnector =
         connectors.find((c) => c.id === 'walletConnect') ||
-        connectors.find((c: any) => c.name?.toLowerCase().includes('walletconnect')) ||
-        connectors.find((c: any) => String(c.id).toLowerCase().includes('wallet'))
+        connectors.find((c: any) => c.name?.toLowerCase().includes('walletconnect'))
 
-      const openMetaMaskDeepLink = () => {
-        const cleanUrl = window.location.href
-          .replace(/^https?:\/\//, '')
-          .replace(/^www\./, '')
-        window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`
-      }
-
-      // Mobile flow
-      if (isMobile) {
-        // If MetaMask injected provider exists (in-app browser), use it directly
-        if (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask && injectedConnector) {
-          await connect({ connector: injectedConnector })
-          return
-        }
-
-        // Otherwise, deep link to MetaMask app immediately for better UX
-        toast({ title: 'Opening MetaMask...', description: 'Switching to your wallet app' })
-        openMetaMaskDeepLink()
-
-        // Fallback: if we remain on page, try WalletConnect after a short delay
-        setTimeout(() => {
-          if (walletConnectConnector) {
-            connect({ connector: walletConnectConnector })
-          } else if (injectedConnector) {
-            connect({ connector: injectedConnector })
-          } else {
-            toast({
-              title: 'Wallet not detected',
-              description: 'Please install MetaMask or open this page in the MetaMask browser.',
-              variant: 'destructive',
-            })
-          }
-        }, 1800)
+      if (!walletConnectConnector) {
+        toast({
+          title: 'Wallet connection unavailable',
+          description: 'Please try again later',
+          variant: 'destructive',
+        })
         return
       }
 
-      // Desktop: prefer injected (MetaMask extension)
-      if (injectedConnector) {
-        await connect({ connector: injectedConnector })
-        return
-      }
-
-      // Desktop fallback
-      if (walletConnectConnector) {
-        await connect({ connector: walletConnectConnector })
-        return
-      }
-
+      await connect({ connector: walletConnectConnector })
       toast({
-        title: 'No wallet found',
-        description: 'Please install MetaMask to continue.',
-        variant: 'destructive',
+        title: 'Wallet Connected',
+        description: 'Successfully connected to your wallet',
       })
     } catch (error) {
       console.error('Connection error:', error)
       toast({
         title: 'Connection Failed',
-        description: 'Please make sure you have MetaMask installed',
+        description: 'Please try again or use a different wallet',
         variant: 'destructive',
       })
     }
   }
 
-  const buttonText = isMobile ? 'Connect Wallet' : 'Connect MetaMask'
-  const ButtonIcon = isMobile ? Smartphone : Wallet
-
-  // Helper to open in MetaMask browser
-  const openInMetaMaskBrowser = () => {
-    const cleanUrl = window.location.href
-      .replace(/^https?:\/\//, '')
-      .replace(/^www\./, '')
-    window.location.href = `https://metamask.app.link/dapp/${cleanUrl}`
-  }
+  const buttonText = 'Connect Wallet'
+  const ButtonIcon = Wallet
 
   return (
     <div className="flex flex-col gap-2">
@@ -128,30 +80,15 @@ export function WalletConnect() {
         {buttonText}
       </Button>
       
-      {/* Android-specific help */}
-      {isMobile && isAndroid && !isMetaMaskBrowser && (
-        <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg border">
-          <p className="text-xs text-muted-foreground">
-            💡 <strong>Android Users:</strong> Open this page in MetaMask browser for best experience
-          </p>
-          <Button
-            onClick={openInMetaMaskBrowser}
-            variant="outline"
-            size="sm"
-            className="gap-2 text-xs"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Open in MetaMask Browser
-          </Button>
-        </div>
-      )}
-      
-      {/* Success indicator for MetaMask browser */}
-      {isMetaMaskBrowser && (
-        <p className="text-xs text-green-600 dark:text-green-400">
-          ✅ MetaMask detected - ready to connect
+      {/* Wallet support info */}
+      <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
+        <p className="text-xs text-foreground mb-1">
+          📱 Works with all major wallets:
         </p>
-      )}
+        <p className="text-xs text-muted-foreground">
+          MetaMask • Trust Wallet • Rainbow • Coinbase Wallet
+        </p>
+      </div>
     </div>
   )
 }

@@ -48,16 +48,16 @@ export const MobileBottomNav = () => {
       activeCheck: (path: string) => path === "/",
     },
     {
-      label: "Lighthouse",
-      icon: Radio,
-      path: "/lighthouse",
-      activeCheck: (path: string) => path.startsWith("/lighthouse"),
-    },
-    {
       label: "Badges",
       icon: Award,
       path: isAuthenticated ? "/dashboard?tab=badges" : "/auth?feature=nft",
       activeCheck: (path: string) => path === "/dashboard" && location.search.includes("tab=badges"),
+    },
+    {
+      label: "Lighthouse",
+      icon: Radio,
+      path: "/lighthouse",
+      activeCheck: (path: string) => path.startsWith("/lighthouse"),
     },
     {
       label: "Discover",

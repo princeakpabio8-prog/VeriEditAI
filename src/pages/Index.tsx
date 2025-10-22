@@ -6,6 +6,7 @@ import { VerificationUpload } from "@/components/verification-upload";
 import { LiveActivityWidget } from "@/components/LiveActivityWidget";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
 import { NFTShowcaseSection } from "@/components/nft-showcase-section";
+import { NFTHeroSection } from "@/components/nft/NFTHeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/ui/footer";
@@ -34,6 +35,9 @@ const Index = () => {
       
       <main>
         <HeroSection />
+        
+        {/* NFT Hero Section - Mobile-first badge discovery */}
+        <NFTHeroSection />
         
         <VideoDemoSection />
         

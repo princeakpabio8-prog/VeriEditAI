@@ -6,6 +6,7 @@ import { Award, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { WalletConnect } from './WalletConnect'
 import { BadgeRevealModal } from './BadgeRevealModal'
+import { BadgePreview } from './BadgePreview'
 
 interface MintBadgeButtonProps {
   verificationId: string
@@ -19,6 +20,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const [alreadyMinted, setAlreadyMinted] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [mintedBadge, setMintedBadge] = useState<any>(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   useEffect(() => {
     checkExistingBadge()
@@ -124,8 +126,29 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   return (
     <>
       <div className="flex flex-col gap-3 w-full">
+        {/* Preview Badge Button (no wallet needed) */}
+        {!isConnected && (
+          <Button
+            onClick={() => setShowPreview(!showPreview)}
+            variant="outline"
+            className="w-full"
+          >
+            {showPreview ? 'Hide Preview' : '👁️ Preview Your Badge'}
+          </Button>
+        )}
+        
+        {/* Badge Preview Modal */}
+        {showPreview && !isConnected && (
+          <BadgePreview 
+            trustScore={trustScore}
+            showMintButton={false}
+          />
+        )}
+        
+        {/* Wallet Connect */}
         {!isConnected && <WalletConnect />}
         
+        {/* Mint Button */}
         <Button
           onClick={handleMint}
           disabled={!isConnected || minting || trustScore < 70}

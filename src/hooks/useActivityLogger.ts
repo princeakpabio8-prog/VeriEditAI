@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useState, useEffect } from 'react';
 
 interface LogActivityParams {
-  activityType: 'verification_complete' | 'thread_created' | 'room_created' | 'room_joined' | 'comment_posted' | 'high_trust_score' | 'user_follow';
+  activityType: 'verification_complete' | 'thread_created' | 'room_created' | 'room_joined' | 'comment_posted' | 'high_trust_score' | 'user_follow' | 'nft_mint' | 'wallet_connect' | 'badge_preview';
   entityId?: string;
   metadata?: {
     username?: string;
@@ -11,6 +11,8 @@ interface LogActivityParams {
     title?: string;
     room_name?: string;
     trust_score?: number;
+    device_type?: 'mobile' | 'tablet' | 'desktop';
+    wallet_address?: string;
     [key: string]: any;
   };
 }

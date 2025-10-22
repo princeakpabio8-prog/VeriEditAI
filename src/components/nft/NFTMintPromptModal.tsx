@@ -64,8 +64,18 @@ export function NFTMintPromptModal({
             </div>
           )}
 
-          <p className="text-sm text-muted-foreground text-center px-4">
-            Mint your unique NFT badge on the Polygon blockchain. This NFT represents your contribution to truth verification!
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Why Mint This Badge?</p>
+            <ul className="text-xs text-muted-foreground space-y-1 px-4">
+              <li>🏆 Proves your contribution to fighting misinformation</li>
+              <li>💎 Tradeable on OpenSea marketplace</li>
+              <li>🔒 Permanent proof stored on blockchain</li>
+              <li>📈 Higher scores = rarer badges = more value</li>
+            </ul>
+          </div>
+
+          <p className="text-xs text-muted-foreground text-center px-4">
+            Minting is free! Only pay minimal gas fees (~$0.02 on Polygon)
           </p>
         </DialogHeader>
         

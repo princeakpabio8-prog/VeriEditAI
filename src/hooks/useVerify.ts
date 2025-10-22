@@ -173,10 +173,21 @@ export function useVerify() {
         try {
           const apiTimer = performanceMonitor.startTiming('tavily_api_call');
           
-          // Detect device type
-          const deviceType = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
-            ? (/tablet|ipad/i.test(navigator.userAgent) ? 'tablet' : 'mobile')
-            : 'desktop';
+          // Detect device type using the same logic as use-mobile hook
+          const userAgent = navigator.userAgent.toLowerCase();
+          const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+          const isSmallScreen = window.innerWidth < 768;
+          const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+          const isTablet = /tablet|ipad/i.test(userAgent);
+          
+          let deviceType: 'mobile' | 'tablet' | 'desktop';
+          if (isTablet) {
+            deviceType = 'tablet';
+          } else if (isSmallScreen || (hasTouch && isMobileUA)) {
+            deviceType = 'mobile';
+          } else {
+            deviceType = 'desktop';
+          }
           
           // Check if this is an image or document verification
           let functionName = 'verify';

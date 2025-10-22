@@ -21,7 +21,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { normalizeVerifyResult } from '@/lib/normalizers';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useVerificationAchievements } from '@/hooks/useVerificationAchievements';
-
+import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
 interface VerificationState {
   stage: 'upload' | 'completed';
   content?: string;
@@ -49,6 +49,12 @@ export default function Verify() {
   const [verificationState, setVerificationState] = useState<VerificationState>({
     stage: 'upload'
   });
+  const [nftMintPrompt, setNftMintPrompt] = useState<{
+    show: boolean;
+    verificationId: string;
+    trustScore: number;
+    claimText?: string;
+  } | null>(null);
 
   // Handle viral claim verification from URL query parameters
   useEffect(() => {
@@ -168,6 +174,28 @@ export default function Verify() {
         result: normalizedResult || result,
         viralClaimId: data.viralClaimId // Store viral claim ID for auto-minting
       });
+
+      // Show NFT mint prompt once per verification (persisted across sessions)
+      if (normalizedResult?.verificationId && (normalizedResult.confidence ?? 0) >= 70) {
+        try {
+          const raw = localStorage.getItem('shown_nft_prompts') || sessionStorage.getItem('shown_nft_prompts') || '{}';
+          const shownMap = JSON.parse(raw);
+          if (!shownMap[normalizedResult.verificationId]) {
+            setNftMintPrompt({
+              show: true,
+              verificationId: normalizedResult.verificationId,
+              trustScore: normalizedResult.confidence || 0,
+              claimText: data.content,
+            });
+            shownMap[normalizedResult.verificationId] = true;
+            const updated = JSON.stringify(shownMap);
+            sessionStorage.setItem('shown_nft_prompts', updated);
+            localStorage.setItem('shown_nft_prompts', updated);
+          }
+        } catch (e) {
+          console.warn('Failed to persist shown NFT prompt status', e);
+        }
+      }
 
       // Update viral claim with verification ID and mark as verified
       if (data.viralClaimId && normalizedResult?.verificationId) {
@@ -476,6 +504,16 @@ export default function Verify() {
             )}
           </FeatureGuard>
         </div>
+
+        {nftMintPrompt && (
+          <NFTMintPromptModal
+            isOpen={nftMintPrompt.show}
+            onClose={() => setNftMintPrompt(null)}
+            verificationId={nftMintPrompt.verificationId}
+            trustScore={nftMintPrompt.trustScore}
+            claimText={nftMintPrompt.claimText}
+          />
+        )}
       </main>
 
       {/* Cache Status Indicator */}

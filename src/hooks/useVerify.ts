@@ -65,7 +65,7 @@ export function useVerify() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VerifyResult | null>(null);
-  const { showCacheHit, showVerificationSuccess, showVerificationError } = useEnhancedToast();
+  const { showCacheHit, showVerificationError } = useEnhancedToast();
   const inFlightKeys = useRef<Set<string>>(new Set());
 
   const verify = useCallback(async (content: string, userId: string, bypassCache = false, verificationData?: any): Promise<VerifyResult | null> => {
@@ -331,8 +331,8 @@ export function useVerify() {
             }).catch(err => console.log('Background analysis queued:', err.message));
           }
 
-          showVerificationSuccess(normalizedData?.confidence ?? 0, processingTime);
-          return normalizedData; // Success, exit the retry loop
+          // Success - NFT modal will show in Verify.tsx if score >= 70
+          return normalizedData;
 
         } catch (err) {
           lastError = err;
@@ -358,7 +358,7 @@ export function useVerify() {
             originalError: lastError?.message
           });
           setResult(normalized as any);
-          showVerificationSuccess(normalized.confidence || 0, Date.now() - startTime);
+          // Fallback result - NFT modal will show if eligible
           return normalized as any;
         }
       }
@@ -461,7 +461,7 @@ export function useVerify() {
       inFlightKeys.current.delete(key);
       setLoading(false);
     }
-  }, [showCacheHit, showVerificationError, showVerificationSuccess]);
+  }, [showCacheHit, showVerificationError]);
 
   // Cleanup on unmount
   useEffect(() => {

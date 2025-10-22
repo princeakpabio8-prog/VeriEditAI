@@ -12,7 +12,8 @@ const imageCache = new Map<string, string>()
 const regenerationAttempted = new Set<string>()
 
 function isTemplateImage(url: string) {
-  return url.includes('nft-badge-template.png') || url.includes('nft-badge-fallback.png')
+  // Only treat the template as invalid, not the fallback
+  return url.includes('nft-badge-template.png')
 }
 
 const POLL_DELAYS_MS = [5000, 15000, 45000]
@@ -66,8 +67,9 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
         const meta = await fetchAndParse()
         if (!meta?.image) throw new Error('No image in metadata')
 
+        // If it's a template (not fallback), trigger AI generation
         if (isTemplateImage(meta.image)) {
-          console.warn(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}, using static fallback`)
+          console.warn(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}, triggering AI generation`)
           
           // Trigger AI generation if params available
           if (badgeId && claimText && trustScore !== undefined && rarityTier && !regenerationAttempted.has(badgeId)) {
@@ -93,10 +95,22 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
               .catch((err) => console.error('[NFT Image] ❌ Invocation error:', err))
           }
 
-          // Don't show template, force fallback component to render
+          // Show fallback component while AI generates
           if (!cancelled) {
             setImageUrl(null)
             setError('Template image - using fallback')
+            setLoading(false)
+          }
+          return
+        }
+
+        // If it's the fallback image URL, use it directly
+        if (meta.image.includes('nft-badge-fallback.png')) {
+          console.log(`[NFT Image] 📦 Using fallback image for badge ${badgeId}`)
+          imageCache.set(metadataUri, meta.image)
+          if (!cancelled) {
+            setImageUrl(meta.image)
+            setError(null)
             setLoading(false)
           }
           return

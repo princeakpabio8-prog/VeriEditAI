@@ -155,7 +155,7 @@ serve(async (req) => {
     
     // Generate AI badge image BEFORE creating metadata
     console.log('🎨 Generating AI badge image...');
-    let badgeImageUrl = 'https://0c43cf4d-e9e1-4158-ae12-b606b1393a45.lovableproject.com/nft-badge-fallback.png';
+    let badgeImageUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/truth-badge-template.png`;
     
     try {
       // Generate with 30s timeout

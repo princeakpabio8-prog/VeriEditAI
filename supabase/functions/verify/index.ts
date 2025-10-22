@@ -143,14 +143,27 @@ serve(async (req) => {
       console.log('💭 Handling opinion content...');
       result = await handleOpinion(safeContent);
     } else {
-      // Factual verification
+      // Factual verification - PRIORITIZE TAVILY API
       const tavilyApiKey = Deno.env.get('TAVILY_API_KEY');
       
-      if (tavilyApiKey) {
-        console.log('🔍 Using Tavily Search API for verification...');
-        result = await verifyWithTavily(safeContent, tavilyApiKey, template);
+      console.log('🔑 Tavily API Key Status:', {
+        exists: !!tavilyApiKey,
+        length: tavilyApiKey?.length || 0,
+        prefix: tavilyApiKey?.substring(0, 10) || 'N/A'
+      });
+      
+      if (tavilyApiKey && tavilyApiKey.trim().length > 0) {
+        console.log('🔍 Using Tavily Search API for verification (PRIMARY SOURCE)...');
+        try {
+          result = await verifyWithTavily(safeContent, tavilyApiKey, template);
+          console.log('✅ Tavily verification completed successfully');
+        } catch (tavilyError) {
+          console.error('❌ Tavily verification error:', tavilyError);
+          console.log('🔄 Attempting fallback verification...');
+          result = await fallbackAnalysis(safeContent);
+        }
       } else {
-        console.log('⚡ Using fallback analysis (no Tavily key)...');
+        console.warn('⚠️ No Tavily API key configured - using fallback');
         result = await fallbackAnalysis(safeContent);
       }
     }
@@ -833,8 +846,21 @@ async function verifyWithPerplexity(content: string, template?: any): Promise<Ve
 async function verifyWithTavily(content: string, apiKey: string, template?: any): Promise<VerificationResult> {
   const startTime = Date.now();
   
+  console.log('🔍 Tavily verification starting...');
+  console.log('📝 Content length:', content?.length || 0);
+  console.log('🔑 API Key present:', !!apiKey);
+  
+  if (!apiKey) {
+    console.error('❌ No Tavily API key provided');
+    throw new Error('Tavily API key is required');
+  }
+  
   try {
     const safeContent = String(content ?? '');
+    
+    if (!safeContent || safeContent.trim().length === 0) {
+      throw new Error('Content is empty or invalid');
+    }
     
     // Initialize Supabase client for category detection and source scoring
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -879,8 +905,12 @@ async function verifyWithTavily(content: string, apiKey: string, template?: any)
     }
     
     // Use retry wrapper for Tavily API call
+    console.log('📡 Calling Tavily API...');
     const data = await callTavilyWithRetry(tavilyRequest);
-    console.log('🔍 Tavily search results received');
+    console.log('✅ Tavily search completed:', {
+      resultsCount: data?.results?.length || 0,
+      hasAnswer: !!data?.answer
+    });
     
     const answer = data.answer || '';
     const searchResults = data.results || [];

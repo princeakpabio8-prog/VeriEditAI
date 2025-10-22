@@ -1,7 +1,9 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Award, Sparkles, X } from 'lucide-react';
+import { Award, Sparkles, X, HelpCircle } from 'lucide-react';
 import { MintBadgeButton } from './MintBadgeButton';
 import { Button } from '@/components/ui/button';
+import { WalletSetupGuide } from './WalletSetupGuide';
+import { useState } from 'react';
 
 interface NFTMintPromptModalProps {
   isOpen: boolean;
@@ -18,6 +20,8 @@ export function NFTMintPromptModal({
   trustScore,
   claimText 
 }: NFTMintPromptModalProps) {
+  const [showWalletGuide, setShowWalletGuide] = useState(false);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[540px] bg-gradient-to-b from-background via-background to-purple-950/10 border-purple-500/20">
@@ -79,11 +83,37 @@ export function NFTMintPromptModal({
           </p>
         </DialogHeader>
         
-        <div className="pt-2 pb-2">
-          <MintBadgeButton 
-            verificationId={verificationId} 
-            trustScore={trustScore}
-          />
+        <div className="pt-2 pb-2 space-y-4">
+          {showWalletGuide ? (
+            <div className="space-y-4">
+              <WalletSetupGuide />
+              <Button
+                variant="outline"
+                onClick={() => setShowWalletGuide(false)}
+                className="w-full"
+              >
+                ← Back to Minting
+              </Button>
+            </div>
+          ) : (
+            <>
+              <MintBadgeButton 
+                verificationId={verificationId} 
+                trustScore={trustScore}
+              />
+              
+              {/* Help Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowWalletGuide(true)}
+                className="w-full gap-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Don't have a wallet? Click here for setup guide
+              </Button>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>

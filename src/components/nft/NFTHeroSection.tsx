@@ -4,19 +4,41 @@ import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { BadgePreview } from './BadgePreview';
-import { useState } from 'react';
+import { NFTOnboardingFlow } from './NFTOnboardingFlow';
+import { useState, useEffect } from 'react';
 
 export function NFTHeroSection() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showPreview, setShowPreview] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Auto-show onboarding for first-time users
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('nft_onboarding_completed');
+    if (!hasSeenOnboarding && !user) {
+      // Delay to not interrupt initial page load
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   const handleGetStarted = () => {
-    if (!user) {
+    const hasSeenOnboarding = localStorage.getItem('nft_onboarding_completed');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    } else if (!user) {
       navigate('/auth?feature=nft');
     } else {
       navigate('/verify');
     }
+  };
+
+  const handleLearnMore = () => {
+    localStorage.removeItem('nft_onboarding_completed'); // Allow re-viewing
+    setShowOnboarding(true);
   };
 
   return (
@@ -61,21 +83,32 @@ export function NFTHeroSection() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 size="lg" 
                 onClick={handleGetStarted}
-                className="bg-gradient-to-r from-primary to-primary/80"
+                className="bg-gradient-to-r from-primary to-primary/80 font-semibold"
               >
-                {user ? 'Verify & Earn Badge' : 'Get Started Free'}
+                {user ? '🚀 Start Earning Badges' : '✨ Get Started Free'}
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                Preview Badge
-              </Button>
+              {!user && (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={handleLearnMore}
+                >
+                  📚 How It Works
+                </Button>
+              )}
+              {user && (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => setShowPreview(!showPreview)}
+                >
+                  👁️ Preview Badge
+                </Button>
+              )}
             </div>
           </div>
 
@@ -134,6 +167,12 @@ export function NFTHeroSection() {
           </Card>
         </div>
       </div>
+
+      {/* Onboarding Flow Modal */}
+      <NFTOnboardingFlow 
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
     </section>
   );
 }

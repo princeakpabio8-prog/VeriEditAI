@@ -42,7 +42,7 @@ const plans: Plan[] = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 200,
+    price: 0,
     currency: 'USD',
     description: 'Advanced features for organizations',
     icon: Crown,
@@ -361,15 +361,19 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4 }}
                   >
-                    ${plan.price}
+                    {plan.price === 0 ? 'Contact us' : `$${plan.price}`}
                   </motion.div>
-                  <div className="text-sm text-muted-foreground">
-                    /{plan.billing || 'month'}
-                  </div>
-                  {plan.billing === 'yearly' && (
-                    <div className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      Save 50% with annual billing
-                    </div>
+                  {plan.price > 0 && (
+                    <>
+                      <div className="text-sm text-muted-foreground">
+                        /{plan.billing || 'month'}
+                      </div>
+                      {plan.billing === 'yearly' && (
+                        <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Save 50% with annual billing
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </CardHeader>
@@ -401,15 +405,24 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
                         : 'bg-gradient-to-r from-primary/90 to-primary hover:from-primary hover:to-primary/80'
                     }`}
                     size="lg"
-                    onClick={() => handleFlutterPayment(plan)}
+                    onClick={() => plan.price === 0 ? window.location.href = 'mailto:contact@verieditai.com?subject=Enterprise Plan Inquiry' : handleFlutterPayment(plan)}
                     disabled={
-                      loading === plan.id || 
-                      !flutterwaveReady ||
-                      !flutterwavePublicKey ||
-                      flutterwavePublicKey.includes("SANDBOXDEMOKEY-X")
+                      plan.price > 0 && (
+                        loading === plan.id || 
+                        !flutterwaveReady ||
+                        !flutterwavePublicKey ||
+                        flutterwavePublicKey.includes("SANDBOXDEMOKEY-X")
+                      )
                     }
                   >
-                    {loading === plan.id ? (
+                    {plan.price === 0 ? (
+                      <motion.span
+                        className="relative z-10"
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        Contact Sales
+                      </motion.span>
+                    ) : loading === plan.id ? (
                       <motion.div
                         className="flex items-center"
                         initial={{ opacity: 0 }}

@@ -117,50 +117,27 @@ const Billing = () => {
       <main className="container mx-auto px-4 py-8 mt-16">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-foreground mb-4">
-              VeriEdit AI Billing & Subscriptions
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground mb-2">
+              Billing & Subscriptions
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Manage your subscription, view usage, and upgrade your plan with secure Flutterwave payments
+            <p className="text-muted-foreground">
+              Choose your plan and manage your subscription
             </p>
           </div>
 
           {/* Current Status Overview */}
           {user && (
-            <Card className="bg-gradient-card border-border/50 mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  Account Overview
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground mb-1">
-                      {getUsageDisplay()}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Verifications this month
-                    </p>
-                  </div>
-                  <div className="text-center">
+            <Card className="bg-gradient-card border-border/50 mb-6">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
                     {getStatusBadge()}
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Current plan
-                    </p>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 mb-1">
-                      <CreditCard className="w-4 h-4 text-green-500" />
-                      <span className="text-sm font-medium text-green-600">
-                        Flutterwave Secure
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Payment processing
-                    </p>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Usage This Month</p>
+                    <p className="text-lg font-semibold">{getUsageDisplay()}</p>
                   </div>
                 </div>
               </CardContent>
@@ -175,14 +152,6 @@ const Billing = () => {
             </TabsList>
 
             <TabsContent value="plans" className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  Choose Your Plan
-                </h2>
-                <p className="text-muted-foreground">
-                  Secure payments powered by Flutterwave - supporting cards, bank transfers, and crypto
-                </p>
-              </div>
 
               {user ? (
                 <FlutterwaveCheckout onSuccess={handleUpgradeSuccess} />
@@ -201,87 +170,6 @@ const Billing = () => {
                 </Card>
               )}
 
-              {/* Feature Comparison */}
-              <div className="mt-12">
-                <h3 className="text-xl font-bold text-center mb-6">Feature Comparison</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card>
-                    <CardHeader className="text-center">
-                      <Shield className="w-8 h-8 mx-auto mb-2 text-gray-500" />
-                      <CardTitle>Free</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Monthly verifications</span>
-                        <span className="font-medium">5</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>PDF Export</span>
-                        <span className="text-red-500">✗</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>API Access</span>
-                        <span className="text-red-500">✗</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Priority Support</span>
-                        <span className="text-red-500">✗</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-primary">
-                    <CardHeader className="text-center">
-                      <Zap className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                      <CardTitle>Pro - $9/month</CardTitle>
-                      <Badge className="bg-blue-100 text-blue-800">Most Popular</Badge>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Monthly verifications</span>
-                        <span className="font-medium text-green-600">Unlimited</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>PDF Export</span>
-                        <span className="text-green-500">✓</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>API Access</span>
-                        <span className="text-red-500">✗</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Priority Support</span>
-                        <span className="text-green-500">✓</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader className="text-center">
-                      <Crown className="w-8 h-8 mx-auto mb-2 text-purple-500" />
-                      <CardTitle>Enterprise - $200/month</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Monthly verifications</span>
-                        <span className="font-medium text-green-600">Unlimited</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>PDF Export</span>
-                        <span className="text-green-500">✓</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>API Access</span>
-                        <span className="text-green-500">✓</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>Priority Support</span>
-                        <span className="text-green-500">✓</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
             </TabsContent>
 
             <TabsContent value="manage" className="space-y-6">
@@ -304,58 +192,6 @@ const Billing = () => {
             </TabsContent>
           </Tabs>
 
-          {/* FAQ Section */}
-          <div className="mt-16">
-            <h2 className="text-2xl font-bold text-center mb-8">
-              Frequently Asked Questions
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Payment Methods Supported</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    We support credit/debit cards, bank transfers, mobile money, and USDT cryptocurrency through Flutterwave's secure platform.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Is my payment information secure?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Yes! We use Flutterwave's PCI DSS compliant platform. Your payment data is encrypted and never stored on our servers.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Can I cancel anytime?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Absolutely! You can cancel your subscription at any time. You'll retain access until the end of your billing period.
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Multi-currency support?</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Yes, we support USD, NGN, GBP, and other major currencies through Flutterwave's global payment network.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
         </div>
       </main>
     </div>

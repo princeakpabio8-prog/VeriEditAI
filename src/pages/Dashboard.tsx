@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { LicenseStatus } from '@/components/license-status';
 import { FeatureGuard } from '@/components/feature-guard';
 import { useLicense } from '@/contexts/LicenseContext';
-import { VerificationAnalytics } from '@/components/verification-analytics';
-import { EnhancedAnalyticsDashboard } from '@/components/enhanced-analytics-dashboard';
 import { BulkVerification } from '@/components/bulk-verification';
 import { useVerificationQueue } from '@/hooks/use-verification-queue';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,7 +21,12 @@ import { useNavigate } from 'react-router-dom';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { TruthBadgeGallery } from '@/components/nft/TruthBadgeGallery';
+import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton';
+
+// Lazy load heavy components
+const TruthBadgeGallery = lazy(() => import('@/components/nft/TruthBadgeGallery').then(m => ({ default: m.TruthBadgeGallery })));
+const VerificationAnalytics = lazy(() => import('@/components/verification-analytics').then(m => ({ default: m.VerificationAnalytics })));
+const EnhancedAnalyticsDashboard = lazy(() => import('@/components/enhanced-analytics-dashboard').then(m => ({ default: m.EnhancedAnalyticsDashboard })));
 
 
 import { useSearchParams } from 'react-router-dom';
@@ -608,19 +611,27 @@ const Dashboard = () => {
           </TabsContent>
 
         <TabsContent key="analytics" value="analytics" className="animate-fade-in">
-          <ErrorBoundary>
-            <VerificationErrorBoundary>
-              <VerificationAnalytics />
-            </VerificationErrorBoundary>
-          </ErrorBoundary>
+          {activeTab === 'analytics' && (
+            <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+              <ErrorBoundary>
+                <VerificationErrorBoundary>
+                  <VerificationAnalytics />
+                </VerificationErrorBoundary>
+              </ErrorBoundary>
+            </Suspense>
+          )}
         </TabsContent>
 
         <TabsContent key="executive" value="executive" className="animate-fade-in">
-          <ErrorBoundary>
-            <VerificationErrorBoundary>
-              <EnhancedAnalyticsDashboard />
-            </VerificationErrorBoundary>
-          </ErrorBoundary>
+          {activeTab === 'executive' && (
+            <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+              <ErrorBoundary>
+                <VerificationErrorBoundary>
+                  <EnhancedAnalyticsDashboard />
+                </VerificationErrorBoundary>
+              </ErrorBoundary>
+            </Suspense>
+          )}
         </TabsContent>
 
           <TabsContent value="bulk" className="animate-fade-in">
@@ -644,13 +655,17 @@ const Dashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TruthBadgeGallery />
+                {activeTab === 'badges' && (
+                  <Suspense fallback={<MobileLoadingSkeleton variant="grid" count={6} />}>
+                    <TruthBadgeGallery />
+                  </Suspense>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="trust-intel" className="space-y-6 animate-fade-in">
-            <TrustIntelTab />
+            {activeTab === 'trust-intel' && <TrustIntelTab />}
           </TabsContent>
         </Tabs>
 

@@ -12,16 +12,19 @@ import { runSwCleanup } from '@/lib/sw-cleanup';
 const BUILD_VERSION = new Date().toISOString();
 (window as any).__BUILD_VERSION__ = BUILD_VERSION;
 
-// CRITICAL: Clean up service workers and caches on app start
+// CRITICAL: Clean up service workers once per session
 // This prevents stale JS bundles from being served on mobile devices
-runSwCleanup().then(() => {
-  console.log(`📱 VeriEdit AI v${BUILD_VERSION.slice(0, 10)} - Ready`);
-  
-  // Warn if SW is still detected after cleanup (shouldn't happen)
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    console.warn('⚠️ Service Worker still active after cleanup - hard reload may be needed');
-  }
-});
+const SW_CLEANUP_KEY = 'sw_cleanup_session';
+const currentSession = sessionStorage.getItem(SW_CLEANUP_KEY);
+
+if (!currentSession) {
+  runSwCleanup().then(() => {
+    sessionStorage.setItem(SW_CLEANUP_KEY, BUILD_VERSION);
+    console.log(`📱 VeriEdit AI v${BUILD_VERSION.slice(0, 10)} - Ready (cleaned)`);
+  });
+} else {
+  console.log(`📱 VeriEdit AI v${BUILD_VERSION.slice(0, 10)} - Ready (cached)`);
+}
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>

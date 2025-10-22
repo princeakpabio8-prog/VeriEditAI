@@ -24,12 +24,25 @@ const POLL_DELAYS_MS = [3000, 5000, 8000, 12000, 15000]
 const MAX_POLL_ATTEMPTS = 5
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-export function useNFTImage(metadataUri: string | null, badgeId?: string, claimText?: string, trustScore?: number, rarityTier?: string) {
+export function useNFTImage(
+  metadataUri: string | null, 
+  badgeId?: string, 
+  claimText?: string, 
+  trustScore?: number, 
+  rarityTier?: string,
+  isVisible: boolean = true // Only fetch/poll when badge is visible
+) {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Skip loading if not visible (virtualized scrolling)
+    if (!isVisible) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false
     let pollTimer: NodeJS.Timeout | null = null
 
@@ -219,7 +232,7 @@ export function useNFTImage(metadataUri: string | null, badgeId?: string, claimT
       cancelled = true
       if (pollTimer) clearTimeout(pollTimer)
     }
-  }, [metadataUri, badgeId, claimText, trustScore, rarityTier])
+  }, [metadataUri, badgeId, claimText, trustScore, rarityTier, isVisible])
 
   return { imageUrl, loading, error }
 }

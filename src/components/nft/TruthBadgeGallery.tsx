@@ -9,6 +9,7 @@ import { useNFTImage } from '@/hooks/useNFTImage'
 import { NFTBadgeFallback } from '@/components/nft/NFTBadgeFallback'
 import badgeImage from '@/assets/truth-badge.png'
 import { toast } from 'sonner'
+import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton'
 
 interface TruthBadge {
   id: string
@@ -31,6 +32,8 @@ export function TruthBadgeGallery() {
   const [badges, setBadges] = useState<TruthBadge[]>([])
   const [loading, setLoading] = useState(true)
   const [syncingAll, setSyncingAll] = useState(false)
+  const [page, setPage] = useState(1)
+  const BADGES_PER_PAGE = 12
 
   useEffect(() => {
     if (user) fetchBadges()
@@ -42,6 +45,7 @@ export function TruthBadgeGallery() {
       .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank, opensea_image_confirmed, opensea_refresh_count, opensea_last_refresh')
       .eq('user_id', user!.id)
       .order('minted_at', { ascending: false })
+      .limit(BADGES_PER_PAGE * page)
 
     if (!error) setBadges(data || [])
     setLoading(false)
@@ -71,7 +75,7 @@ export function TruthBadgeGallery() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-12">Loading badges...</div>
+    return <MobileLoadingSkeleton variant="grid" count={6} />
   }
 
   if (badges.length === 0) {
@@ -137,6 +141,8 @@ export function TruthBadgeGallery() {
   };
 
   const hasUnsyncedBadges = badges.some(b => !b.opensea_image_confirmed || !b.opensea_last_refresh);
+  const displayedBadges = badges.slice(0, BADGES_PER_PAGE * page);
+  const hasMore = badges.length === BADGES_PER_PAGE * page;
 
   return (
     <div className="space-y-4">
@@ -158,8 +164,22 @@ export function TruthBadgeGallery() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {badges.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}
+        {displayedBadges.map((badge) => <BadgeCard key={badge.id} badge={badge} />)}
       </div>
+      
+      {hasMore && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            onClick={() => {
+              setPage(p => p + 1);
+              fetchBadges();
+            }}
+            variant="outline"
+          >
+            Load More
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
@@ -294,7 +314,9 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
               <div className="absolute inset-0 bg-background/30 backdrop-blur-sm rounded-lg" />
               <img 
                 src={displayImage} 
-                alt="Truth Badge" 
+                alt="Truth Badge"
+                loading="lazy"
+                decoding="async"
                 className="relative h-full w-full object-contain drop-shadow-2xl group-hover:scale-125 transition-transform duration-700 ease-out nft-badge-entrance"
                 onError={(e) => {
                   console.error(`❌ Badge image failed to load: ${displayImage}`)

@@ -269,6 +269,8 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
   const [mintedBadges, setMintedBadges] = useState<Set<string>>(new Set());
+  const [totalVerifications, setTotalVerifications] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -301,12 +303,21 @@ const Dashboard = () => {
     }
 
     try {
+      // First, get total count
+      const { count, error: countError } = await supabase
+        .from('verifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (countError) throw countError;
+      setTotalVerifications(count || 0);
+
+      // Then get all verifications (removed limit)
       const { data, error } = await supabase
         .from('verifications')
         .select('*')
-        .eq('user_id', user.id) // ✅ CRITICAL FIX: Filter by user
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setVerifications(data || []);
@@ -504,8 +515,9 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl md:text-3xl font-bold text-primary">
-                    {verifications.length}
+                    {totalVerifications}
                   </div>
+                  <p className="text-xs text-muted-foreground">All-time verifications</p>
                 </CardContent>
               </MobileCard>
 

@@ -257,3 +257,6 @@ verify_jwt = false
 
 [functions.fix-all-badges]
 verify_jwt = false
+
+[functions.upload-nft-badge-templates]
+verify_jwt = false

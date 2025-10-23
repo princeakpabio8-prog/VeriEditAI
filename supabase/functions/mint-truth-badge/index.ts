@@ -153,42 +153,25 @@ serve(async (req) => {
       }
     }
     
-    // Generate AI badge image BEFORE creating metadata
-    console.log('🎨 Generating AI badge image...');
-    let badgeImageUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/truth-badge-template.png`;
+    // Use static badge template based on rarity tier
+    console.log('🎨 Using static badge template for rarity:', rarityTier);
     
-    try {
-      // Generate with 30s timeout
-      const generateWithTimeout = async (timeoutMs = 30000) => {
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('AI generation timeout')), timeoutMs)
-        );
-        
-        return Promise.race([
-          supabase.functions.invoke('generate-nft-badge-image', {
-            body: {
-              badge_id: verificationId, // Use verification ID temporarily
-              claim_text: verification.content,
-              trust_score: verification.trust_score,
-              rarity_tier: rarityTier
-            }
-          }),
-          timeoutPromise
-        ]);
-      };
-      
-      const { data: imgData, error: imgError } = await generateWithTimeout() as any;
-      
-      if (!imgError && imgData?.image_url) {
-        badgeImageUrl = imgData.image_url;
-        console.log('✅ AI image generated successfully, using in metadata:', badgeImageUrl);
-      } else {
-        console.warn('⚠️ AI generation failed or timeout, using static fallback:', imgError);
+    // Map rarity tier to badge filename
+    const getBadgeFileName = (rarity: string) => {
+      switch (rarity) {
+        case 'LEGENDARY': return 'legendary-truth-badge.jpg';
+        case 'EPIC': return 'epic-truth-badge.jpg';
+        case 'RARE': return 'rare-truth-badge.jpg';
+        case 'UNCOMMON': return 'uncommon-truth-badge.jpg';
+        case 'COMMON': return 'common-truth-badge.jpg';
+        default: return 'common-truth-badge.jpg';
       }
-    } catch (err: any) {
-      console.error('❌ AI generation error:', err.message);
-      console.log('ℹ️ Continuing with static fallback image');
     }
+    
+    const badgeFileName = getBadgeFileName(rarityTier);
+    const badgeImageUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/${badgeFileName}`;
+    
+    console.log('✅ Using badge template:', badgeImageUrl);
     
     // Map rarity tier to display name for metadata
     const getRarityDisplayName = (rarity: string) => {

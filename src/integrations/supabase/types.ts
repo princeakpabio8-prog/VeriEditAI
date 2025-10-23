@@ -411,6 +411,44 @@ export type Database = {
           },
         ]
       }
+      content_translations: {
+        Row: {
+          created_at: string | null
+          id: string
+          original_text: string
+          source_language: string | null
+          target_language: string
+          translated_text: string
+          verification_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          original_text: string
+          source_language?: string | null
+          target_language: string
+          translated_text: string
+          verification_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          original_text?: string
+          source_language?: string | null
+          target_language?: string
+          translated_text?: string
+          verification_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_translations_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_digests: {
         Row: {
           created_at: string

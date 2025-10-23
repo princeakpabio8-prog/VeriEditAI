@@ -20,6 +20,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClaimVersions } from '@/hooks/useClaimVersions';
 import { useQualityFlags } from '@/hooks/useQualityFlags';
 import { QualityBadge } from './QualityBadge';
+import { LanguageSelector } from './LanguageSelector';
+import { useTranslation } from '@/hooks/useTranslation';
+import { SentimentBadge } from './SentimentBadge';
+import { ClaimTypeBadge } from './ClaimTypeBadge';
+import { EntityAnalysisCard } from './EntityAnalysisCard';
 
 interface Source {
   id?: string;
@@ -59,6 +64,10 @@ interface VerificationResultProps {
     claim_text: string;
     similarity: number;
   }>;
+  sentimentLabel?: string;
+  sentimentScore?: number;
+  claimType?: string;
+  detectedEntities?: any;
 }
 
 export const VerificationResult: React.FC<VerificationResultProps> = ({
@@ -79,6 +88,10 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   contradictions,
   related_claims,
   viralClaimId,
+  sentimentLabel,
+  sentimentScore,
+  claimType,
+  detectedEntities,
 }) => {
   const { user } = useAuth();
   const [expandedSources, setExpandedSources] = React.useState<Set<number>>(new Set());
@@ -86,6 +99,23 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
   const { versions } = useClaimVersions(verificationId);
   const { qualityStatus } = useQualityFlags(verificationId);
   const [autoMinting, setAutoMinting] = React.useState(false);
+  
+  const { 
+    translateContent, 
+    isTranslating, 
+    currentLanguage, 
+    sourceLanguage, 
+    translatedContent,
+    resetTranslation 
+  } = useTranslation();
+
+  const handleLanguageSelect = async (languageCode: string) => {
+    const textToTranslate = content || summary;
+    await translateContent(textToTranslate, languageCode, verificationId || undefined);
+  };
+
+  const displayContent = translatedContent || content;
+  const displaySummary = translatedContent || summary;
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -171,18 +201,32 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.2 }}
             >
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <motion.div
-                  initial={{ rotate: -180, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                >
-                  <Shield className="h-8 w-8 text-primary" />
-                </motion.div>
-                <CardTitle className="text-2xl font-bold">Verification Complete</CardTitle>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    initial={{ rotate: -180, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                  >
+                    <Shield className="h-8 w-8 text-primary" />
+                  </motion.div>
+                  <CardTitle className="text-2xl font-bold">Verification Complete</CardTitle>
+                </div>
+                <LanguageSelector
+                  onLanguageSelect={handleLanguageSelect}
+                  currentLanguage={currentLanguage}
+                  sourceLanguage={sourceLanguage}
+                  isTranslating={isTranslating}
+                />
               </div>
-              <div className="flex justify-center">
+              <div className="flex justify-center gap-2 flex-wrap">
                 {getStatusBadge(normalizedStatus)}
+                {sentimentLabel && (
+                  <SentimentBadge label={sentimentLabel} score={sentimentScore} />
+                )}
+                {claimType && (
+                  <ClaimTypeBadge type={claimType} />
+                )}
               </div>
             </motion.div>
             <motion.div 
@@ -251,8 +295,13 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
                   <FileText className="h-4 w-4 text-primary" />
                   Executive Summary
                 </h4>
-                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{summary}</p>
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">{displaySummary}</p>
               </div>
+              
+              {/* Entity Analysis */}
+              {detectedEntities && (
+                <EntityAnalysisCard entities={detectedEntities} />
+              )}
               {processingTime && (
                 <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />

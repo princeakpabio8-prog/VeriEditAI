@@ -27,6 +27,7 @@ import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton';
 const TruthBadgeGallery = lazy(() => import('@/components/nft/TruthBadgeGallery').then(m => ({ default: m.TruthBadgeGallery })));
 const VerificationAnalytics = lazy(() => import('@/components/verification-analytics').then(m => ({ default: m.VerificationAnalytics })));
 const EnhancedAnalyticsDashboard = lazy(() => import('@/components/enhanced-analytics-dashboard').then(m => ({ default: m.EnhancedAnalyticsDashboard })));
+const AIAnalyticsDashboard = lazy(() => import('@/components/AIAnalyticsDashboard').then(m => ({ default: m.AIAnalyticsDashboard })));
 
 
 import { useSearchParams } from 'react-router-dom';
@@ -622,11 +623,18 @@ const Dashboard = () => {
             </ErrorBoundary>
           </TabsContent>
 
-        <TabsContent key="analytics" value="analytics" className="animate-fade-in">
+        <TabsContent key="analytics" value="analytics" className="animate-fade-in space-y-6">
           {activeTab === 'analytics' && (
             <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
               <ErrorBoundary>
                 <VerificationErrorBoundary>
+                  {/* AI Analytics Section */}
+                  <div className="mb-8">
+                    <h2 className="text-xl font-bold mb-4">AI Content Analysis</h2>
+                    <AIAnalyticsDashboard />
+                  </div>
+                  
+                  {/* Traditional Analytics */}
                   <VerificationAnalytics />
                 </VerificationErrorBoundary>
               </ErrorBoundary>

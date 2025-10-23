@@ -40,6 +40,11 @@ interface VerifyResult {
     claim_text: string;
     similarity: number;
   }>;
+  // AI Analysis fields
+  sentimentLabel?: string;
+  sentimentScore?: number;
+  claimType?: string;
+  detectedEntities?: any;
 }
 
 // Local minimal fallback analysis to guarantee a result even if API fails
@@ -323,6 +328,26 @@ export function useVerify() {
             category: normalizedData.category || 'general',
             userId
           });
+
+          // Fetch AI analysis data if available (sentiment, entities, claim type)
+          if (data.verification_id) {
+            try {
+              const { data: analysisData } = await supabase
+                .from('verifications')
+                .select('sentiment_label, sentiment_score, claim_type, detected_entities')
+                .eq('id', data.verification_id)
+                .single();
+
+              if (analysisData) {
+                normalizedData.sentimentLabel = analysisData.sentiment_label;
+                normalizedData.sentimentScore = analysisData.sentiment_score;
+                normalizedData.claimType = analysisData.claim_type;
+                normalizedData.detectedEntities = analysisData.detected_entities;
+              }
+            } catch (err) {
+              console.log('AI analysis not yet available:', err);
+            }
+          }
 
           setResult(normalizedData);
 

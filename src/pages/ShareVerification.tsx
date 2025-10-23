@@ -8,6 +8,8 @@ import { TrustScoreDisplay } from '@/components/trust-score-display';
 import { SourceCredibilityAnalysis } from '@/components/source-credibility-analysis';
 import { Separator } from '@/components/ui/separator';
 import { ArrowRight, Eye, Calendar, Shield, ExternalLink } from 'lucide-react';
+import { LanguageSelector } from '@/components/LanguageSelector';
+import { useTranslation } from '@/hooks/useTranslation';
 
 
 interface VerificationData {
@@ -37,6 +39,24 @@ export default function ShareVerification() {
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const { 
+    translateContent, 
+    isTranslating, 
+    currentLanguage, 
+    sourceLanguage, 
+    translatedContent 
+  } = useTranslation();
+
+  const handleLanguageSelect = async (languageCode: string) => {
+    if (data?.verification) {
+      await translateContent(
+        data.verification.content || data.verification.result_summary,
+        languageCode,
+        data.verification.id
+      );
+    }
+  };
 
   useEffect(() => {
     if (shareToken) {
@@ -105,10 +125,18 @@ export default function ShareVerification() {
                 <Shield className="h-6 w-6 text-primary" />
                 <span className="font-bold text-xl">VeriedIT AI</span>
               </div>
-              <Button onClick={() => navigate('/auth')} variant="default">
-                Create Your Own Verification
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <LanguageSelector
+                  onLanguageSelect={handleLanguageSelect}
+                  currentLanguage={currentLanguage}
+                  sourceLanguage={sourceLanguage}
+                  isTranslating={isTranslating}
+                />
+                <Button onClick={() => navigate('/auth')} variant="default">
+                  Create Your Own Verification
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </header>
@@ -137,7 +165,7 @@ export default function ShareVerification() {
               {verification.result_summary && (
                 <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-semibold mb-2">Summary</h3>
-                  <p className="text-muted-foreground">{verification.result_summary}</p>
+                  <p className="text-muted-foreground">{translatedContent || verification.result_summary}</p>
                 </div>
               )}
             </CardContent>

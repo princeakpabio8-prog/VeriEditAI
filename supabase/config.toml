@@ -260,3 +260,6 @@ verify_jwt = false
 
 [functions.upload-nft-badge-templates]
 verify_jwt = false
+
+[functions.translate-content]
+verify_jwt = true

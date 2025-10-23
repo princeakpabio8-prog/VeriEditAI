@@ -13,11 +13,17 @@ const regenerationAttempted = new Set<string>()
 const pollingAttempts = new Map<string, number>()
 
 function isTemplateImage(url: string) {
+  // Legacy template check - these are OLD templates before Canva
   return url.includes('truth-badge-template.png') || url.includes('nft-badge-template.png')
 }
 
 function isFallbackImage(url: string) {
   return url.includes('nft-badge-fallback.png') || url.includes('lovableproject.com/nft-badge-fallback.png')
+}
+
+function isCanvaTemplate(url: string) {
+  // NEW: Check if it's one of our Canva rarity templates
+  return /\/(legendary|epic|rare|uncommon|common)-truth-badge\.jpg$/i.test(url)
 }
 
 
@@ -54,9 +60,18 @@ export function useNFTImage(
           return
         }
 
-        // Check cache first, but never serve cached template or fallback
+        // Check cache first, but never serve cached template or fallback (legacy only)
         const cached = imageCache.get(metadataUri)
         if (cached && !isTemplateImage(cached) && !isFallbackImage(cached)) {
+          if (!cancelled) {
+            setImageUrl(cached)
+            setLoading(false)
+          }
+          return
+        }
+
+        // Canva templates are final - cache them too!
+        if (cached && isCanvaTemplate(cached)) {
           if (!cancelled) {
             setImageUrl(cached)
             setLoading(false)
@@ -138,97 +153,64 @@ export function useNFTImage(
         const meta = await fetchAndParse()
         if (!meta?.image) throw new Error('No image in metadata')
 
-        // If it's a template, trigger AI generation and start polling
-        if (isTemplateImage(meta.image)) {
-          console.warn(`[NFT Image] ⚠️ Template detected for badge: ${badgeId}, triggering AI generation`)
-          
-          if (badgeId && claimText && trustScore !== undefined && rarityTier && !regenerationAttempted.has(badgeId)) {
-            regenerationAttempted.add(badgeId)
-            console.log(`[NFT Image] 🎨 Triggering AI generation for badge ${badgeId}`)
-            
-            supabase.functions
-              .invoke('generate-nft-badge-image', { 
-                body: { 
-                  badge_id: badgeId,
-                  claim_text: claimText,
-                  trust_score: trustScore,
-                  rarity_tier: rarityTier
-                } 
-              })
-              .then((result) => {
-                if (result.error) {
-                  console.error('[NFT Image] ❌ AI generation failed:', result.error)
-                } else {
-                  console.log('[NFT Image] ✅ AI generation complete:', result.data)
-                  // Start polling for the new image
-                  pollForAIImage(0)
-                }
-              })
-              .catch((err) => {
-                console.error('[NFT Image] ❌ Invocation error:', err)
-                if (!cancelled) {
-                  setImageUrl(null)
-                  setError('Failed to generate AI image')
-                  setLoading(false)
-                }
-              })
-            
-            // Show fallback component while generating
+        // Check if it's a rarity-based template image (our new Canva templates)
+        const isRarityTemplate = /\/(legendary|epic|rare|uncommon|common)-truth-badge\.jpg$/i.test(meta.image)
+        
+        // If it's a rarity-based template, it's the final image - use it directly
+        if (isRarityTemplate) {
+          console.log(`[NFT Image] ✅ Using Canva template image: ${meta.image}`)
+          if (await headOk(meta.image)) {
+            imageCache.set(metadataUri, meta.image)
             if (!cancelled) {
-              setImageUrl(null)
-              setError('Generating AI image...')
+              setImageUrl(meta.image)
+              setError(null)
               setLoading(false)
+              
+              // Trigger OpenSea metadata refresh
+              if (badgeId) {
+                console.log('[NFT Image] 🔄 Triggering OpenSea metadata refresh')
+                supabase.functions
+                  .invoke('refresh-opensea-metadata', {
+                    body: { token_id: badgeId }
+                  })
+                  .catch(err => console.warn('[NFT Image] OpenSea refresh error:', err))
+              }
             }
           } else {
-            // No params to regenerate, show fallback
             if (!cancelled) {
               setImageUrl(null)
-              setError('Template image - using fallback')
+              setError('Image not accessible')
               setLoading(false)
             }
           }
           return
         }
 
-        // If it's static fallback, trigger AI generation (if possible) and start polling
-        if (isFallbackImage(meta.image)) {
-          console.log(`[NFT Image] 📦 Fallback detected for badge: ${badgeId}`)
-
-          // Try to trigger AI generation when we have enough context and haven't tried yet
-          if (badgeId && claimText && trustScore !== undefined && rarityTier && !regenerationAttempted.has(badgeId)) {
-            regenerationAttempted.add(badgeId)
-            console.log(`[NFT Image] 🎨 Triggering AI generation from fallback for badge ${badgeId}`)
-            supabase.functions
-              .invoke('generate-nft-badge-image', {
-                body: {
-                  badge_id: badgeId,
-                  claim_text: claimText,
-                  trust_score: trustScore,
-                  rarity_tier: rarityTier
-                }
-              })
-              .then((result) => {
-                if (result.error) {
-                  console.error('[NFT Image] ❌ AI generation failed (fallback path):', result.error)
-                } else {
-                  console.log('[NFT Image] ✅ AI generation invoked (fallback path):', result.data)
-                }
-              })
-              .catch((err) => console.error('[NFT Image] ❌ Invocation error (fallback path):', err))
-          }
-
-          // Start polling for the AI image to appear in metadata
-          pollForAIImage(pollingAttempts.get(metadataUri) || 0)
-
+        // If it's an old template (legacy), DO NOT trigger AI generation - these are deprecated
+        if (isTemplateImage(meta.image)) {
+          console.warn(`[NFT Image] ⚠️ Legacy template detected - this badge was minted before Canva templates`)
+          
           if (!cancelled) {
             setImageUrl(null)
-            setError('Loading AI-generated image...')
+            setError('Legacy badge - using fallback')
             setLoading(false)
           }
           return
         }
 
-        // AI-generated image ready - verify and cache
+        // Legacy fallback handling - DO NOT regenerate for old badges
+        if (isFallbackImage(meta.image)) {
+          console.log(`[NFT Image] 📦 Legacy fallback image - badge minted before Canva templates`)
+
+          if (!cancelled) {
+            setImageUrl(null)
+            setError('Legacy badge - using fallback')
+            setLoading(false)
+          }
+          return
+        }
+
+        // Final image (AI-generated or Canva template) - verify and cache
         if (await headOk(meta.image)) {
           imageCache.set(metadataUri, meta.image)
           if (!cancelled) {

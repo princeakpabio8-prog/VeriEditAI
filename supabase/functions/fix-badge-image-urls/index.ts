@@ -14,15 +14,11 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const openaiKey = Deno.env.get('OPENAI_API_KEY')
-    
-    if (!openaiKey) {
-      console.error('❌ OPENAI_API_KEY not configured')
-    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    console.log('🔧 Fixing badge image URLs...')
+    console.log('🔧 Fixing badge image URLs to use Canva templates...')
+    console.log('✅ OpenAI is no longer used - all badges use Canva templates')
     
     // Get all badges
     const { data: badges, error: fetchError } = await supabase
@@ -36,8 +32,19 @@ serve(async (req) => {
     let failed = 0
     let skipped = 0
     
-    const correctFallbackUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/truth-badge-template.png`
     const brokenUrlPattern = 'lovableproject.com/nft-badge-fallback.png'
+    
+    // Map rarity to Canva template
+    const getCanvaTemplate = (rarity: string | null) => {
+      const rarityMap: Record<string, string> = {
+        'LEGENDARY': 'legendary-truth-badge.jpg',
+        'EPIC': 'epic-truth-badge.jpg',
+        'RARE': 'rare-truth-badge.jpg',
+        'UNCOMMON': 'uncommon-truth-badge.jpg',
+        'COMMON': 'common-truth-badge.jpg'
+      }
+      return rarityMap[rarity || 'COMMON'] || 'common-truth-badge.jpg'
+    }
     
     for (const badge of badges || []) {
       try {
@@ -62,14 +69,21 @@ serve(async (req) => {
         const metadataText = await metadataFile.text()
         const metadata = JSON.parse(metadataText)
         
-        // Check if image URL is broken
-        if (metadata.image && metadata.image.includes(brokenUrlPattern)) {
-          console.log(`🔨 Fixing badge ${badge.id} - broken image URL detected`)
+        // Check if image URL is broken or is a legacy template
+        const isBroken = metadata.image && metadata.image.includes(brokenUrlPattern)
+        const isLegacyTemplate = metadata.image && metadata.image.includes('nft-badge-template')
+        
+        if (isBroken || isLegacyTemplate) {
+          console.log(`🔨 Fixing badge ${badge.id} - ${isBroken ? 'broken' : 'legacy template'} image detected`)
           
-          // Update metadata with correct fallback URL
+          // Get appropriate Canva template for this badge
+          const canvaTemplate = getCanvaTemplate(badge.rarity_tier)
+          const canvaUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/${canvaTemplate}`
+          
+          // Update metadata with Canva template
           const updatedMetadata = {
             ...metadata,
-            image: correctFallbackUrl
+            image: canvaUrl
           }
           
           // Upload updated metadata
@@ -84,31 +98,14 @@ serve(async (req) => {
             console.error(`❌ Failed to update metadata for ${badge.id}:`, uploadError)
             failed++
           } else {
-            console.log(`✅ Fixed metadata for badge ${badge.id}`)
-            
-            // Now trigger AI image generation
-            const { error: genError } = await supabase.functions.invoke('generate-nft-badge-image', {
-              body: {
-                badge_id: badge.id,
-                claim_text: badge.claim_text || 'Truth verification badge',
-                trust_score: badge.trust_score || 75,
-                rarity_tier: badge.rarity_tier || 'COMMON'
-              }
-            })
-            
-            if (genError) {
-              console.error(`⚠️ AI generation queued with warning for ${badge.id}:`, genError)
-            } else {
-              console.log(`🎨 AI generation triggered for badge ${badge.id}`)
-            }
-            
+            console.log(`✅ Updated badge ${badge.id} to use ${canvaTemplate}`)
             fixed++
           }
           
           // Rate limit: wait between updates
           await new Promise(r => setTimeout(r, 500))
         } else {
-          console.log(`✓ Badge ${badge.id} already has valid image URL`)
+          console.log(`✓ Badge ${badge.id} already has valid Canva template`)
           skipped++
         }
       } catch (err) {

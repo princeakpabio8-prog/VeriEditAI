@@ -7,6 +7,14 @@ interface NFTBadgeFallbackProps {
   tokenId?: string
 }
 
+/**
+ * NFTBadgeFallback - Visual fallback for badge display
+ * 
+ * IMPORTANT: This component is for visual display only when image loading fails.
+ * It does NOT trigger AI generation or any background processes.
+ * All badges use Canva templates stored in Supabase Storage.
+ */
+
 export function NFTBadgeFallback({ rarity, trustScore, claimText, tokenId }: NFTBadgeFallbackProps) {
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([])
 

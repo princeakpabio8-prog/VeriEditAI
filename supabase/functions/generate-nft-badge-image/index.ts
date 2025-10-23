@@ -14,16 +14,63 @@ serve(async (req) => {
   try {
     const { badge_id, claim_text, trust_score, rarity_tier } = await req.json();
     
-    if (!badge_id || !claim_text || !trust_score) {
-      throw new Error('Missing required parameters');
+    console.log('🎨 [DEPRECATED] NFT Badge Image Generation Request:', { badge_id, claim_text, trust_score, rarity_tier });
+    console.warn('⚠️ This function is deprecated. All badges now use Canva templates.');
+    
+    if (!badge_id) {
+      throw new Error('badge_id is required');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+    // Check if badge already uses Canva template
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: badge } = await supabase
+      .from('nft_badges')
+      .select('metadata_uri')
+      .eq('id', badge_id)
+      .single();
+
+    if (badge?.metadata_uri) {
+      const fileName = badge.metadata_uri.split('/').pop();
+      if (fileName) {
+        const { data: metadataFile } = await supabase.storage
+          .from('nft-metadata')
+          .download(fileName);
+        
+        if (metadataFile) {
+          const metadata = JSON.parse(await metadataFile.text());
+          const isCanvaTemplate = metadata.image?.includes('truth-badge.jpg');
+          
+          if (isCanvaTemplate) {
+            console.log('✅ Badge already uses Canva template - skipping AI generation');
+            return new Response(
+              JSON.stringify({ 
+                success: true,
+                message: 'Badge already uses Canva template',
+                image_url: metadata.image
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+      }
     }
 
-    console.log(`🎨 Generating NFT badge image for: ${badge_id} (Rarity: ${rarity_tier}, Trust: ${trust_score}%)`);
+    // OpenAI is no longer used - return message
+    console.warn('⚠️ OpenAI generation disabled. Use Canva templates instead.');
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: 'AI generation is deprecated',
+        message: 'This badge system now uses Canva templates exclusively. No AI generation needed.'
+      }),
+      { 
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
 
     // Create ultra-premium 3D cinematic prompts for each rarity tier
     const rarityPrompts = {

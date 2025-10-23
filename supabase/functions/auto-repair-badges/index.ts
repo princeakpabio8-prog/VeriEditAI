@@ -54,45 +54,70 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check for badges with template images
-    const { data: templateBadges, error: templateError } = await supabase
+    // Check for legacy template badges and update to Canva templates
+    const { data: legacyBadges, error: legacyError } = await supabase
       .from('nft_badges')
-      .select('id, metadata_uri, claim_text, trust_score, rarity_tier')
+      .select('id, metadata_uri, rarity_tier')
       .like('metadata_uri', '%nft-badge-template%')
       .limit(50)
 
-    if (templateError) {
-      console.error('[Auto-Repair] Template badge query error:', templateError)
+    if (legacyError) {
+      console.error('[Auto-Repair] Legacy badge query error:', legacyError)
     }
 
-    console.log(`[Auto-Repair] Found ${templateBadges?.length || 0} badges with template images`)
+    console.log(`[Auto-Repair] Found ${legacyBadges?.length || 0} legacy template badges`)
 
-    let imagesTriggered = 0
+    let legacyUpdated = 0
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
 
-    if (templateBadges && templateBadges.length > 0) {
-      // Trigger AI generation for up to 10 badges at a time (rate limiting)
-      const batchSize = 10
-      const batch = templateBadges.slice(0, batchSize)
+    // Map rarity to Canva template filename
+    const getCanvaTemplate = (rarity: string | null) => {
+      const rarityMap: Record<string, string> = {
+        'LEGENDARY': 'legendary-truth-badge.jpg',
+        'EPIC': 'epic-truth-badge.jpg',
+        'RARE': 'rare-truth-badge.jpg',
+        'UNCOMMON': 'uncommon-truth-badge.jpg',
+        'COMMON': 'common-truth-badge.jpg'
+      }
+      return rarityMap[rarity || 'COMMON'] || 'common-truth-badge.jpg'
+    }
 
-      for (const badge of batch) {
+    if (legacyBadges && legacyBadges.length > 0) {
+      for (const badge of legacyBadges) {
         try {
-          console.log(`[Auto-Repair] Triggering AI generation for badge: ${badge.id}`)
+          console.log(`[Auto-Repair] Updating legacy badge ${badge.id} to Canva template`)
           
-          await supabase.functions.invoke('generate-nft-badge-image', {
-            body: {
-              badge_id: badge.id,
-              claim_text: badge.claim_text,
-              trust_score: badge.trust_score,
-              rarity_tier: badge.rarity_tier
-            }
-          })
+          const fileName = badge.metadata_uri.split('/').pop()
+          if (!fileName) continue
 
-          imagesTriggered++
+          // Download current metadata
+          const { data: metadataFile } = await supabase.storage
+            .from('nft-metadata')
+            .download(fileName)
           
-          // Small delay to avoid overwhelming the system
-          await new Promise(r => setTimeout(r, 1000))
+          if (metadataFile) {
+            const metadata = JSON.parse(await metadataFile.text())
+            const canvaTemplate = getCanvaTemplate(badge.rarity_tier)
+            const newImageUrl = `${supabaseUrl}/storage/v1/object/public/nft-badge-images/${canvaTemplate}`
+            
+            // Update metadata with Canva template
+            const updatedMetadata = {
+              ...metadata,
+              image: newImageUrl
+            }
+            
+            await supabase.storage
+              .from('nft-metadata')
+              .update(fileName, JSON.stringify(updatedMetadata, null, 2), {
+                contentType: 'application/json',
+                upsert: true
+              })
+            
+            console.log(`✅ Updated badge ${badge.id} to use ${canvaTemplate}`)
+            legacyUpdated++
+          }
         } catch (err) {
-          console.error(`[Auto-Repair] Image generation failed for badge ${badge.id}:`, err)
+          console.error(`[Auto-Repair] Failed to update badge ${badge.id}:`, err)
         }
       }
     }
@@ -102,14 +127,14 @@ Deno.serve(async (req) => {
       timestamp: new Date().toISOString(),
       badges_checked: {
         broken_token_ids: brokenBadges?.length || 0,
-        template_images: templateBadges?.length || 0
+        legacy_template_images: legacyBadges?.length || 0
       },
       repairs: {
         token_ids_fixed: fixed,
         token_ids_failed: failed,
-        ai_generation_triggered: imagesTriggered
+        legacy_badges_updated: legacyUpdated
       },
-      message: `Health check complete. Fixed ${fixed} token IDs, triggered ${imagesTriggered} AI generations.`
+      message: `Health check complete. Fixed ${fixed} token IDs, updated ${legacyUpdated} legacy badges to Canva templates.`
     }
 
     console.log('[Auto-Repair] Complete:', result)

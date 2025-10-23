@@ -120,16 +120,75 @@ serve(async (req) => {
     }
     
     // Check if verification is linked to a viral claim and get rarity data
-    const { data: viralClaim } = await supabase
+    // Strategy 1: Link by verification_id (most reliable)
+    let viralClaim = null
+    const { data: vcByVerification } = await supabase
       .from('viral_claims')
-      .select('id, rarity_tier, virality_score, engagement_score, engagement_velocity, first_seen_at')
-      .eq('claim_text', verification.content.substring(0, 500))
+      .select('id, rarity_tier, virality_score, engagement_score, engagement_velocity, first_seen_at, verification_id')
+      .eq('verification_id', verificationId)
       .maybeSingle()
+    
+    viralClaim = vcByVerification
+    console.log('🔍 Viral claim by verification_id:', viralClaim?.id || 'not found')
+    
+    // Strategy 2: Fallback to claim_hash matching (handles duplicate claims)
+    if (!viralClaim) {
+      const norm = verification.content.toLowerCase().trim()
+      const encoder = new TextEncoder()
+      const data = encoder.encode(norm)
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const claimHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+      
+      const { data: vcByHash } = await supabase
+        .from('viral_claims')
+        .select('id, rarity_tier, virality_score, engagement_score, engagement_velocity, first_seen_at')
+        .eq('claim_hash', claimHash)
+        .maybeSingle()
+      
+      viralClaim = vcByHash
+      console.log('🔍 Viral claim by claim_hash:', viralClaim?.id || 'not found')
+    }
+    
+    // Strategy 3: Fallback to fuzzy text matching (last resort)
+    if (!viralClaim) {
+      const snippet = verification.content.substring(0, 80)
+      const { data: vcByText } = await supabase
+        .from('viral_claims')
+        .select('id, rarity_tier, virality_score, engagement_score, engagement_velocity, first_seen_at')
+        .ilike('claim_text', `%${snippet}%`)
+        .order('engagement_score', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      
+      viralClaim = vcByText
+      console.log('🔍 Viral claim by text match:', viralClaim?.id || 'not found')
+    }
     
     // Check verification race to see if this is first/second/third verifier
     let verifierRank = null
     let rarityTier = viralClaim?.rarity_tier || 'COMMON'
     let viralityScore = viralClaim?.virality_score || 0
+    
+    // If we found a viral claim but rarity_tier is null, compute local fallback rarity
+    if (viralClaim && (!rarityTier || rarityTier === 'COMMON')) {
+      const hoursSinceFirstSeen = (Date.now() - new Date(viralClaim.first_seen_at).getTime()) / (1000 * 60 * 60)
+      const velocity = viralClaim.engagement_velocity ?? 
+        (hoursSinceFirstSeen > 0 ? viralClaim.engagement_score / Math.max(hoursSinceFirstSeen, 1) : viralClaim.engagement_score)
+      
+      // Apply same thresholds as calculate-virality
+      if (viralClaim.engagement_score >= 25000 && hoursSinceFirstSeen < 24 && velocity > 1000) {
+        rarityTier = 'LEGENDARY'
+      } else if (viralClaim.engagement_score >= 5000 && hoursSinceFirstSeen < 72 && velocity > 100) {
+        rarityTier = 'EPIC'
+      } else if (viralClaim.engagement_score >= 500 && hoursSinceFirstSeen < 96 && velocity > 25) {
+        rarityTier = 'RARE'
+      } else if (viralClaim.engagement_score >= 250) {
+        rarityTier = 'UNCOMMON'
+      }
+      
+      console.log(`💎 Computed fallback rarity: ${rarityTier} (score: ${viralClaim.engagement_score}, velocity: ${velocity.toFixed(0)}/hr, age: ${hoursSinceFirstSeen.toFixed(1)}h)`)
+    }
     
     if (viralClaim) {
       const { data: race } = await supabase

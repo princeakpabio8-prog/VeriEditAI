@@ -22,8 +22,8 @@ serve(async (req) => {
     // Get all active viral claims
     const { data: activeClaims } = await supabaseClient
       .from('viral_claims')
-      .select('id, engagement_score, first_seen_at, claim_hash, platform, status')
-      .eq('status', 'monitoring')
+      .select('id, engagement_score, engagement_velocity, first_seen_at, claim_hash, platform, status, verification_id, claim_text, metadata')
+      .in('status', ['monitoring', 'trending', 'verified', 'detected'])
       .order('engagement_velocity', { ascending: false });
 
     if (!activeClaims || activeClaims.length === 0) {
@@ -46,21 +46,32 @@ serve(async (req) => {
         .order('recorded_at', { ascending: false })
         .limit(2);
 
-      if (!snapshots || snapshots.length < 2) continue;
-
-      const latest = snapshots[0];
-      const previous = snapshots[1];
+      // Calculate velocity with fallback for claims without sufficient snapshots
+      let velocity: number;
+      const hoursSinceFirstSeen = (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60);
       
-      const timeDiff = (new Date(latest.recorded_at).getTime() - 
-                       new Date(previous.recorded_at).getTime()) / (1000 * 60 * 60); // hours
-      
-      if (timeDiff === 0) continue;
-
-      const engagementDiff = latest.total_engagement - previous.total_engagement;
-      const velocity = engagementDiff / timeDiff;
+      if (!snapshots || snapshots.length < 2) {
+        // Fallback: use existing velocity or estimate from total engagement
+        const approx = hoursSinceFirstSeen > 0 ? claim.engagement_score / hoursSinceFirstSeen : claim.engagement_score;
+        velocity = claim.engagement_velocity ?? approx;
+        console.log(`Claim ${claim.id}: Using fallback velocity ${velocity.toFixed(0)}/hr (${snapshots?.length || 0} snapshots)`);
+      } else {
+        const latest = snapshots[0];
+        const previous = snapshots[1];
+        
+        const timeDiff = (new Date(latest.recorded_at).getTime() - 
+                         new Date(previous.recorded_at).getTime()) / (1000 * 60 * 60); // hours
+        
+        if (timeDiff === 0) {
+          const approx = hoursSinceFirstSeen > 0 ? claim.engagement_score / hoursSinceFirstSeen : claim.engagement_score;
+          velocity = claim.engagement_velocity ?? approx;
+        } else {
+          const engagementDiff = latest.total_engagement - previous.total_engagement;
+          velocity = engagementDiff / timeDiff;
+        }
+      }
 
       // Calculate recency factor (newer = higher multiplier)
-      const hoursSinceFirstSeen = (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60);
       const recencyFactor = Math.max(0.5, 1 - (hoursSinceFirstSeen / 48)); // Decay over 48 hours
 
       // Check for cross-platform presence
@@ -92,13 +103,29 @@ serve(async (req) => {
       }
 
       // Check if this claim has been verified and get trust score
-      const { data: verification } = await supabaseClient
-        .from('verifications')
-        .select('trust_score, created_at')
-        .eq('content', claim.claim_text)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+      let verification: { trust_score: number } | null = null;
+      
+      // First try linking by verification_id
+      if (claim.verification_id) {
+        const { data } = await supabaseClient
+          .from('verifications')
+          .select('trust_score')
+          .eq('id', claim.verification_id)
+          .maybeSingle();
+        verification = data;
+      }
+      
+      // Fallback to content match if no verification_id
+      if (!verification && claim.claim_text) {
+        const { data } = await supabaseClient
+          .from('verifications')
+          .select('trust_score')
+          .eq('content', claim.claim_text)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        verification = data;
+      }
 
       // Trust score bonus: exceptional verifications get upgraded rarity
       if (verification?.trust_score) {
@@ -141,6 +168,7 @@ serve(async (req) => {
         })
         .eq('id', claim.id);
 
+      console.log(`✅ Claim ${claim.id}: ${rarityTier} (score: ${claim.engagement_score}, velocity: ${velocity.toFixed(0)}/hr, age: ${hoursSinceFirstSeen.toFixed(1)}h)`);
       updated++;
 
       // Trigger image generation if not already present

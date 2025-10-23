@@ -1469,7 +1469,7 @@ export type Database = {
           accessed_user_id: string
           accessor_user_id: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
         }
         Insert: {
@@ -1479,7 +1479,7 @@ export type Database = {
           accessed_user_id: string
           accessor_user_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
         }
         Update: {
@@ -1489,7 +1489,7 @@ export type Database = {
           accessed_user_id?: string
           accessor_user_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
         }
         Relationships: []
@@ -1576,7 +1576,7 @@ export type Database = {
           created_at: string | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           platform: string | null
           user_agent: string | null
@@ -1587,7 +1587,7 @@ export type Database = {
           created_at?: string | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           platform?: string | null
           user_agent?: string | null
@@ -1598,7 +1598,7 @@ export type Database = {
           created_at?: string | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           platform?: string | null
           user_agent?: string | null
@@ -1981,7 +1981,7 @@ export type Database = {
           content_type: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           platform: string
           referrer: string | null
           share_token: string
@@ -1993,7 +1993,7 @@ export type Database = {
           content_type: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           platform: string
           referrer?: string | null
           share_token: string
@@ -2005,7 +2005,7 @@ export type Database = {
           content_type?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           platform?: string
           referrer?: string | null
           share_token?: string
@@ -3310,48 +3310,23 @@ export type Database = {
     }
     Functions: {
       backfill_source_regions: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           breakdown: Json
           updated_count: number
         }[]
       }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
       }
-      cleanup_old_activities: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_webhook_idempotency: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      clear_user_verifications: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
-      create_trial_license: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
-      ensure_user_workspace: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_license_key: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_referral_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      cleanup_old_activities: { Args: never; Returns: undefined }
+      cleanup_old_webhook_idempotency: { Args: never; Returns: undefined }
+      clear_user_verifications: { Args: { user_uuid: string }; Returns: Json }
+      create_trial_license: { Args: { user_uuid: string }; Returns: Json }
+      ensure_user_workspace: { Args: never; Returns: string }
+      generate_license_key: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
       get_adjusted_source_score: {
         Args: { _base_score: number; _domain: string }
         Returns: number
@@ -3361,7 +3336,7 @@ export type Database = {
         Returns: Json
       }
       get_admin_api_usage_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           active_days: number
           api_key_name: string
@@ -3373,7 +3348,7 @@ export type Database = {
         }[]
       }
       get_admin_popular_analytics: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avg_response_time_ms: number
           endpoint: string
@@ -3383,7 +3358,7 @@ export type Database = {
         }[]
       }
       get_admin_revenue_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avg_transaction: number
           month: string
@@ -3406,7 +3381,7 @@ export type Database = {
         }[]
       }
       get_payment_logs_summary: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           event_type: string
@@ -3415,14 +3390,8 @@ export type Database = {
           status_description: string
         }[]
       }
-      get_payment_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_referral_stats: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
+      get_payment_stats: { Args: never; Returns: Json }
+      get_referral_stats: { Args: { user_uuid: string }; Returns: Json }
       get_source_age_distribution: {
         Args: { verification_uuid: string }
         Returns: Json
@@ -3440,22 +3409,6 @@ export type Database = {
       get_verification_quality_status: {
         Args: { verification_uuid: string }
         Returns: Json
-      }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
       handle_failed_payment: {
         Args: { failure_reason?: string; payment_id: string; user_uuid: string }
@@ -3477,22 +3430,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       increment_license_usage: {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
@@ -3501,38 +3438,9 @@ export type Database = {
         Args: { username_to_check: string }
         Returns: boolean
       }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
-      }
-      refresh_engagement_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      refresh_leaderboards: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      reset_monthly_usage_for_free_users: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      refresh_engagement_analytics: { Args: never; Returns: undefined }
+      refresh_leaderboards: { Args: never; Returns: undefined }
+      reset_monthly_usage_for_free_users: { Args: never; Returns: Json }
       search_users: {
         Args: { limit_count?: number; search_query: string }
         Returns: {
@@ -3541,18 +3449,6 @@ export type Database = {
           user_id: string
           username: string
         }[]
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
       update_verification_streak: {
         Args: { p_user_id: string }
@@ -3567,34 +3463,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      validate_license: {
-        Args: { user_uuid: string }
-        Returns: Json
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
+      validate_license: { Args: { user_uuid: string }; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "user"

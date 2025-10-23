@@ -76,18 +76,51 @@ serve(async (req) => {
 
       const viralityScore = velocity * recencyFactor * crossPlatformMultiplier;
 
-      // Calculate rarity tier based on engagement metrics
+      // Calculate rarity tier based on engagement metrics (UPDATED THRESHOLDS)
       const ageInHours = hoursSinceFirstSeen;
       let rarityTier = 'COMMON';
       
-      if (claim.engagement_score >= 10000 && ageInHours < 6 && velocity > 1500) {
+      // More accessible thresholds for rare badges
+      if (claim.engagement_score >= 50000 && ageInHours < 12 && velocity > 2000) {
         rarityTier = 'LEGENDARY';
-      } else if (claim.engagement_score >= 5000 && ageInHours < 24 && velocity > 500) {
+      } else if (claim.engagement_score >= 10000 && ageInHours < 48 && velocity > 200) {
         rarityTier = 'EPIC';
-      } else if (claim.engagement_score >= 2000 && ageInHours < 48 && velocity > 100) {
+      } else if (claim.engagement_score >= 1000 && ageInHours < 72 && velocity > 50) {
         rarityTier = 'RARE';
-      } else if (claim.engagement_score >= 1000) {
+      } else if (claim.engagement_score >= 500) {
         rarityTier = 'UNCOMMON';
+      }
+
+      // Check if this claim has been verified and get trust score
+      const { data: verification } = await supabaseClient
+        .from('verifications')
+        .select('trust_score, created_at')
+        .eq('content', claim.claim_text)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      // Trust score bonus: exceptional verifications get upgraded rarity
+      if (verification?.trust_score) {
+        if (verification.trust_score === 100 && rarityTier !== 'LEGENDARY') {
+          // Perfect score: upgrade by 2 tiers
+          const tierUpgrade: Record<string, string> = {
+            'COMMON': 'RARE',
+            'UNCOMMON': 'EPIC',
+            'RARE': 'LEGENDARY',
+            'EPIC': 'LEGENDARY'
+          };
+          rarityTier = tierUpgrade[rarityTier] || rarityTier;
+        } else if (verification.trust_score >= 95 && rarityTier !== 'LEGENDARY') {
+          // High score: upgrade by 1 tier
+          const tierUpgrade: Record<string, string> = {
+            'COMMON': 'UNCOMMON',
+            'UNCOMMON': 'RARE',
+            'RARE': 'EPIC',
+            'EPIC': 'LEGENDARY'
+          };
+          rarityTier = tierUpgrade[rarityTier] || rarityTier;
+        }
       }
 
       // Update claim with new velocity, virality score, and rarity tier

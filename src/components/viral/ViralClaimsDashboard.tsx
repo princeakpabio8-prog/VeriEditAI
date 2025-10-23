@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, AlertTriangle, CheckCircle, Clock, Activity } from 'lucide-react';
+import { TrendingUp, AlertTriangle, CheckCircle, Clock, Activity, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +9,28 @@ import { Button } from '@/components/ui/button';
 import { useViralClaims } from '@/hooks/useViralClaims';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function ViralClaimsDashboard() {
   const [status, setStatus] = useState<'detected' | 'trending' | undefined>('trending');
   const { viralClaims, isLoading } = useViralClaims(status);
   const navigate = useNavigate();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke('calculate-virality');
+      if (error) throw error;
+      toast.success('Viral claims refreshed successfully!');
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast.error('Failed to refresh viral claims');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -52,13 +69,27 @@ export function ViralClaimsDashboard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Activity className="h-5 w-5 text-red-500" />
-          Viral Claims Detection
-        </CardTitle>
-        <CardDescription>
-          Real-time tracking of trending misinformation
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-red-500" />
+              Viral Claims Detection
+            </CardTitle>
+            <CardDescription>
+              Real-time tracking of trending misinformation
+            </CardDescription>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Tabs value={status || 'all'} onValueChange={(v) => setStatus(v === 'all' ? undefined : v as any)}>

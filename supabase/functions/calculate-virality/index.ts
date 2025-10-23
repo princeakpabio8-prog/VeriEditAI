@@ -76,18 +76,18 @@ serve(async (req) => {
 
       const viralityScore = velocity * recencyFactor * crossPlatformMultiplier;
 
-      // Calculate rarity tier based on engagement metrics (UPDATED THRESHOLDS)
+      // Calculate rarity tier based on engagement metrics (REDUCED THRESHOLDS)
       const ageInHours = hoursSinceFirstSeen;
       let rarityTier = 'COMMON';
       
       // More accessible thresholds for rare badges
-      if (claim.engagement_score >= 50000 && ageInHours < 12 && velocity > 2000) {
+      if (claim.engagement_score >= 25000 && ageInHours < 24 && velocity > 1000) {
         rarityTier = 'LEGENDARY';
-      } else if (claim.engagement_score >= 10000 && ageInHours < 48 && velocity > 200) {
+      } else if (claim.engagement_score >= 5000 && ageInHours < 72 && velocity > 100) {
         rarityTier = 'EPIC';
-      } else if (claim.engagement_score >= 1000 && ageInHours < 72 && velocity > 50) {
+      } else if (claim.engagement_score >= 500 && ageInHours < 96 && velocity > 25) {
         rarityTier = 'RARE';
-      } else if (claim.engagement_score >= 500) {
+      } else if (claim.engagement_score >= 250) {
         rarityTier = 'UNCOMMON';
       }
 

@@ -29,8 +29,11 @@ serve(async (req) => {
 
     for (const badge of badges) {
       try {
-        // Fetch the badge image from the public folder
-        const imageUrl = `${supabaseUrl}/storage/v1/object/public/public/${badge.fileName}`
+        // Fetch the badge image from the deployment's public assets
+        const baseUrl = supabaseUrl.replace('.supabase.co', '.supabase.co')
+        const imageUrl = `https://sqtkkzdswxazyikcheds.supabase.co/storage/v1/object/public/badges/${badge.fileName}`
+        
+        console.log(`Fetching badge from: ${imageUrl}`)
         const imageResponse = await fetch(imageUrl)
         
         if (!imageResponse.ok) {

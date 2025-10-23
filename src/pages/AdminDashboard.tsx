@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AdminDataLicensingWidget } from "@/components/admin-data-licensing-widget";
 import { TrustBriefsViewer } from "@/components/trust-briefs-viewer";
 import { OpenSeaVerification } from "@/components/nft/OpenSeaVerification";
+import { UploadBadgeTemplates } from "@/components/admin/UploadBadgeTemplates";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -127,9 +128,10 @@ const AdminDashboard = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="subscribers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
             <TabsTrigger value="nft">NFT/OpenSea</TabsTrigger>
+            <TabsTrigger value="badges">Badge Upload</TabsTrigger>
             <TabsTrigger value="licensing">Data Licensing</TabsTrigger>
             <TabsTrigger value="briefs">Trust Briefs</TabsTrigger>
           </TabsList>
@@ -220,6 +222,10 @@ const AdminDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="badges" className="space-y-6">
+            <UploadBadgeTemplates />
           </TabsContent>
 
           <TabsContent value="nft" className="space-y-6">

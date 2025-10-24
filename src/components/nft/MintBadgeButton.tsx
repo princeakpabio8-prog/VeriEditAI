@@ -128,7 +128,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
     <>
       <div className="flex flex-col gap-3 w-full">
         {/* Preview Badge Button (no wallet needed) */}
-        {!isConnected && (
+        {!isReallyConnected && (
           <Button
             onClick={() => setShowPreview(!showPreview)}
             variant="outline"
@@ -139,7 +139,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         )}
         
         {/* Badge Preview Modal */}
-        {showPreview && !isConnected && (
+        {showPreview && !isReallyConnected && (
           <BadgePreview 
             trustScore={trustScore}
             showMintButton={false}
@@ -147,12 +147,12 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         )}
         
         {/* Wallet Connect */}
-        {!isConnected && <WalletConnect />}
+        {!isReallyConnected && <WalletConnect />}
         
         {/* Mint Button */}
         <Button
           onClick={handleMint}
-          disabled={!isConnected || minting || trustScore < 70}
+          disabled={!isReallyConnected || minting || trustScore < 70}
           className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full sm:w-auto text-sm"
           size="sm"
         >

@@ -14,7 +14,8 @@ interface MintBadgeButtonProps {
 }
 
 export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonProps) {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
+  const isReallyConnected = isConnected && !!address
   const { toast } = useToast()
   const [minting, setMinting] = useState(false)
   const [alreadyMinted, setAlreadyMinted] = useState(false)
@@ -37,7 +38,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   }
 
   const handleMint = async () => {
-    if (!isConnected || !address) {
+    if (!isReallyConnected || !address) {
       toast({
         title: "Wallet Not Connected",
         description: "Please connect your MetaMask wallet first",

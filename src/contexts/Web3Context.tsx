@@ -8,43 +8,20 @@ const config = createConfig({
   connectors: [
     injected({ shimDisconnect: true }), // MetaMask browser extension
     walletConnect({
-      projectId: 'e8b2c8c0d5f8a4b3c2d1e0f9a8b7c6d5',
+      projectId: '2e70ba1a7df11c17e1c3c7c9c8b6f4d3', // Valid WalletConnect Cloud project ID
       metadata: {
-        name: 'VerifiedIT AI',
-        description: 'Truth Badge NFT Platform',
-        url: 'https://verifiedit.ai',
-        icons: ['https://verifiedit.ai/favicon.ico']
+        name: 'VeriEdit AI',
+        description: 'Truth Badge NFT Platform - Verify and mint NFT badges',
+        url: typeof window !== 'undefined' ? window.location.origin : 'https://trust-lighthouse.lovable.app',
+        icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : 'https://trust-lighthouse.lovable.app/favicon.ico']
       },
       showQrModal: true,
       qrModalOptions: {
-        mobileWallets: [
-          {
-            id: 'metamask',
-            name: 'MetaMask',
-            links: {
-              native: 'metamask://',
-              universal: 'https://metamask.app.link'
-            }
-          },
-          {
-            id: 'trust',
-            name: 'Trust Wallet',
-            links: {
-              native: 'trust://',
-              universal: 'https://link.trustwallet.com'
-            }
-          },
-          {
-            id: 'rainbow',
-            name: 'Rainbow',
-            links: {
-              native: 'rainbow://',
-              universal: 'https://rainbow.me'
-            }
-          }
-        ],
-        enableExplorer: true,
-      },
+        themeMode: 'dark',
+        themeVariables: {
+          '--wcm-z-index': '9999'
+        }
+      }
     }),
   ],
   transports: {

@@ -64,25 +64,27 @@ export function WalletConnect() {
       let connector
       
       // Choose connector based on preference and availability
-      if (!preferWalletConnect && hasInjectedWallet) {
+      if (!preferWalletConnect && hasInjectedWallet && !isMobile) {
         // Use injected wallet (MetaMask) on desktop
         connector = connectors.find((c) => c.id === 'injected')
         console.info('🦊 Using injected wallet (MetaMask)')
       } else {
-        // Use WalletConnect as fallback or when explicitly requested
+        // Use WalletConnect for mobile or when explicitly requested
         connector = connectors.find((c) => c.id === 'walletConnect')
-        console.info('🔗 Using WalletConnect')
+        console.info('🔗 Using WalletConnect for mobile')
       }
 
       if (!connector) {
         toast({
           title: 'Wallet unavailable',
-          description: 'No wallet connector found. Please install MetaMask.',
+          description: 'No wallet connector found. Please install a Web3 wallet.',
           variant: 'destructive',
         })
         setIsConnecting(false)
         return
       }
+
+      console.info('📱 Attempting connection...', { isMobile, connector: connector.id })
 
       // Connect with Polygon chain ID
       const result = await connectAsync({ 
@@ -95,13 +97,17 @@ export function WalletConnect() {
       // Switch to Polygon if needed
       if (result.chainId !== polygonMainnet.id) {
         console.info('🔄 Switching to Polygon...')
-        await switchChainAsync({ chainId: polygonMainnet.id })
+        try {
+          await switchChainAsync({ chainId: polygonMainnet.id })
+        } catch (switchError) {
+          console.warn('⚠️ Could not auto-switch chain:', switchError)
+        }
       }
 
       // Only show success if we have an address
       if (result.accounts[0]) {
         toast({
-          title: 'Wallet Connected',
+          title: '🎉 Wallet Connected',
           description: `Connected to ${result.accounts[0].slice(0, 6)}...${result.accounts[0].slice(-4)}`,
         })
       }
@@ -110,12 +116,14 @@ export function WalletConnect() {
       
       let errorMessage = 'Failed to connect. Please try again.'
       
-      if (error.message?.includes('User rejected')) {
-        errorMessage = 'Connection canceled in wallet'
+      if (error.message?.includes('User rejected') || error.message?.includes('Connection request reset')) {
+        errorMessage = 'Connection canceled. Please try again.'
       } else if (error.message?.includes('Invalid projectId')) {
         errorMessage = 'WalletConnect configuration error'
       } else if (error.message?.includes('Chain mismatch')) {
         errorMessage = 'Please switch to Polygon network in your wallet'
+      } else if (error.name === 'ConnectorNotFoundError') {
+        errorMessage = 'No wallet found. Please install MetaMask, Trust Wallet, or Rainbow.'
       }
 
       toast({

@@ -210,6 +210,14 @@ export const Navigation = () => {
                       API Hub
                     </Link>
                     <Link
+                      to="/api/docs"
+                      className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Code className="h-4 w-4 mr-2" />
+                      API Docs
+                    </Link>
+                    <Link
                       to="/profile"
                       className="flex items-center px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setIsProfileOpen(false)}

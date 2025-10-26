@@ -17,6 +17,7 @@ import { AdminDataLicensingWidget } from "@/components/admin-data-licensing-widg
 import { TrustBriefsViewer } from "@/components/trust-briefs-viewer";
 import { OpenSeaVerification } from "@/components/nft/OpenSeaVerification";
 import { UploadBadgeTemplates } from "@/components/admin/UploadBadgeTemplates";
+import { DiscoveryBeaconWidget } from "@/components/admin/DiscoveryBeaconWidget";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -128,12 +129,13 @@ const AdminDashboard = () => {
 
         {/* Tabs for different sections */}
         <Tabs defaultValue="subscribers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
             <TabsTrigger value="nft">NFT/OpenSea</TabsTrigger>
             <TabsTrigger value="badges">Badge Upload</TabsTrigger>
             <TabsTrigger value="licensing">Data Licensing</TabsTrigger>
             <TabsTrigger value="briefs">Trust Briefs</TabsTrigger>
+            <TabsTrigger value="discovery">Discovery</TabsTrigger>
           </TabsList>
 
           <TabsContent value="subscribers" className="space-y-6">
@@ -273,6 +275,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="briefs" className="space-y-6">
             <TrustBriefsViewer />
+          </TabsContent>
+
+          <TabsContent value="discovery" className="space-y-6">
+            <DiscoveryBeaconWidget />
           </TabsContent>
         </Tabs>
       </div>

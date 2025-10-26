@@ -263,3 +263,9 @@ verify_jwt = false
 
 [functions.translate-content]
 verify_jwt = true
+
+[functions.api-spec]
+verify_jwt = false
+
+[functions.discovery-beacon]
+verify_jwt = true

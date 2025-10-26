@@ -63,6 +63,7 @@ const ActivityDetail = lazy(() => import("./pages/ActivityDetail"));
 const VerificationDashboard = lazy(() => import("./components/VerificationDashboard"));
 const OrganizationProfile = lazy(() => import("./components/partnership/OrganizationProfile").then(m => ({ default: m.OrganizationProfile })));
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
+const ApiOpenApiDocs = lazy(() => import("./pages/ApiOpenApiDocs"));
 
 const queryClient = new QueryClient();
 
@@ -155,6 +156,7 @@ const App = () => (
               <Route path="/activity-feed" element={<ActivityFeed />} />
               <Route path="/lighthouse/activity/:activityId" element={<ActivityDetail />} />
               <Route path="/api-docs" element={<ApiDocs />} />
+              <Route path="/api/docs" element={<ApiOpenApiDocs />} />
               <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />
               <Route path="/press" element={<Press />} />

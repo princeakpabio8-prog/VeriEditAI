@@ -449,6 +449,33 @@ export type Database = {
           },
         ]
       }
+      discovery_beacon_logs: {
+        Row: {
+          created_at: string
+          id: string
+          indexer_name: string
+          response_body: Json | null
+          response_code: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          indexer_name: string
+          response_body?: Json | null
+          response_code?: number | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          indexer_name?: string
+          response_body?: Json | null
+          response_code?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       email_digests: {
         Row: {
           created_at: string

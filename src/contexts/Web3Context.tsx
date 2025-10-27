@@ -8,7 +8,7 @@ const config = createConfig({
   connectors: [
     injected({ shimDisconnect: true }), // MetaMask browser extension
     walletConnect({
-      projectId: '2e70ba1a7df11c17e1c3c7c9c8b6f4d3', // Valid WalletConnect Cloud project ID
+      projectId: '843739133fe7e0d25cf036467a96623e', // Your verified WalletConnect Cloud project
       metadata: {
         name: 'VeriEdit AI',
         description: 'Truth Badge NFT Platform - Verify and mint NFT badges',

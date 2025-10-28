@@ -14,6 +14,7 @@ import { ShareModal } from '@/components/share-modal';
 import { ClaimImageFallback } from './ClaimImageFallback';
 import { MintBadgeButton } from '@/components/nft/MintBadgeButton';
 import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
+import { ClaimDetailsModal } from './ClaimDetailsModal';
 
 interface HotClaim {
   id: string;
@@ -47,6 +48,8 @@ export function HotClaimsWidget() {
     trustScore: number;
     claimText: string;
   } | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedClaimForDetails, setSelectedClaimForDetails] = useState<HotClaim | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -506,9 +509,21 @@ export function HotClaimsWidget() {
                   </div>
 
                   {/* Claim Text */}
-                  <p className="font-semibold text-base line-clamp-3">
+                  <p className="font-semibold text-base line-clamp-3 mb-2">
                     {claim.claim_text}
                   </p>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedClaimForDetails(claim);
+                      setDetailsModalOpen(true);
+                    }}
+                    className="p-0 h-auto text-xs text-primary hover:underline"
+                  >
+                    Read full details →
+                  </Button>
                 </div>
 
                 {/* Metrics */}
@@ -662,6 +677,21 @@ export function HotClaimsWidget() {
           onClose={() => {
             setShareModalOpen(false);
             setSelectedClaimForShare(null);
+          }}
+        />
+      )}
+
+      {detailsModalOpen && selectedClaimForDetails && (
+        <ClaimDetailsModal
+          claim={selectedClaimForDetails}
+          isOpen={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedClaimForDetails(null);
+          }}
+          onVerify={() => {
+            setDetailsModalOpen(false);
+            handleVerifyNow(selectedClaimForDetails);
           }}
         />
       )}

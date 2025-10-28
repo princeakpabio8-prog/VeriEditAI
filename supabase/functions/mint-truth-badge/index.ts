@@ -200,8 +200,9 @@ serve(async (req) => {
       if (race) {
         if (race.first_verifier_id === user.id) {
           verifierRank = 1
-          // First verifier gets 2x rarity boost
-          if (rarityTier === 'UNCOMMON') rarityTier = 'RARE'
+          // First verifier gets +1 tier boost
+          if (rarityTier === 'COMMON') rarityTier = 'UNCOMMON'
+          else if (rarityTier === 'UNCOMMON') rarityTier = 'RARE'
           else if (rarityTier === 'RARE') rarityTier = 'EPIC'
           else if (rarityTier === 'EPIC') rarityTier = 'LEGENDARY'
         } else if (race.second_verifier_id === user.id) {

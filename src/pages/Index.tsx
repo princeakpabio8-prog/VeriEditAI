@@ -3,15 +3,19 @@ import { Navigation } from "@/components/ui/navigation";
 import { HeroSection } from "@/components/hero-section";
 import { VideoDemoSection } from "@/components/video-demo-section";
 import { VerificationUpload } from "@/components/verification-upload";
-import { LiveActivityWidget } from "@/components/LiveActivityWidget";
 import { TrustScoreDisplay } from "@/components/trust-score-display";
-import { NFTShowcaseSection } from "@/components/nft-showcase-section";
 import { NFTHeroSection } from "@/components/nft/NFTHeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/ui/footer";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load heavy components
+const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").then(m => ({ default: m.LiveActivityWidget })));
+const NFTShowcaseSection = lazy(() => import("@/components/nft-showcase-section").then(m => ({ default: m.NFTShowcaseSection })));
 
 const Index = () => {
   const { user } = useAuth();
@@ -136,7 +140,21 @@ const Index = () => {
         </section>
 
         {/* NFT Showcase Section */}
-        <NFTShowcaseSection />
+        <Suspense fallback={
+          <section className="py-20 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto space-y-8">
+              <Skeleton className="h-12 w-3/4 mx-auto" />
+              <Skeleton className="h-6 w-1/2 mx-auto" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Skeleton className="h-64" />
+                <Skeleton className="h-64" />
+                <Skeleton className="h-64" />
+              </div>
+            </div>
+          </section>
+        }>
+          <NFTShowcaseSection />
+        </Suspense>
 
         {/* Live Activity Widget Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
@@ -150,7 +168,16 @@ const Index = () => {
               </p>
             </div>
             
-            <LiveActivityWidget />
+            <Suspense fallback={
+              <div className="space-y-4">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </div>
+            }>
+              <LiveActivityWidget />
+            </Suspense>
           </div>
         </section>
       </main>

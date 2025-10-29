@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -501,11 +501,34 @@ export function HotClaimsWidget() {
                     </div>
                   ) : null}
 
-                  {/* Platform Badge */}
-                  <div className="flex items-center gap-2">
+                  {/* Platform Badge with External Link */}
+                  <div className="flex items-center justify-between gap-2">
                     <Badge variant="outline" className="text-xs">
                       {claim.platform}
                     </Badge>
+                    
+                    {claim.metadata?.source_url && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(claim.metadata.source_url, '_blank', 'noopener,noreferrer');
+                              }}
+                              className="h-7 w-7 p-0 hover:bg-primary/10"
+                            >
+                              <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">View original source</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                   </div>
 
                   {/* Claim Text */}

@@ -268,6 +268,250 @@ export type Database = {
           },
         ]
       }
+      bounty_auto_pings: {
+        Row: {
+          bounty_id: string
+          category: Database["public"]["Enums"]["bounty_category"]
+          id: string
+          metadata: Json | null
+          recipient_email: string | null
+          recipient_id: string | null
+          recipient_type: string
+          response_received: boolean | null
+          sent_at: string
+          status: string
+        }
+        Insert: {
+          bounty_id: string
+          category: Database["public"]["Enums"]["bounty_category"]
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          recipient_id?: string | null
+          recipient_type: string
+          response_received?: boolean | null
+          sent_at?: string
+          status?: string
+        }
+        Update: {
+          bounty_id?: string
+          category?: Database["public"]["Enums"]["bounty_category"]
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          recipient_id?: string | null
+          recipient_type?: string
+          response_received?: boolean | null
+          sent_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_auto_pings_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "truth_bounties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_claims: {
+        Row: {
+          bounty_id: string
+          claimed_at: string
+          deadline: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          status: string
+          verifier_id: string
+        }
+        Insert: {
+          bounty_id: string
+          claimed_at?: string
+          deadline: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          status?: string
+          verifier_id: string
+        }
+        Update: {
+          bounty_id?: string
+          claimed_at?: string
+          deadline?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          status?: string
+          verifier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_claims_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "truth_bounties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_completions: {
+        Row: {
+          approved_at: string | null
+          approved_by_org: boolean | null
+          bounty_id: string
+          claim_id: string
+          completed_at: string
+          confidence_score: number
+          id: string
+          metadata: Json | null
+          nft_badge_id: string | null
+          nft_minted: boolean | null
+          summary: string
+          verification_id: string | null
+          verified_claim: string
+          verifier_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_org?: boolean | null
+          bounty_id: string
+          claim_id: string
+          completed_at?: string
+          confidence_score: number
+          id?: string
+          metadata?: Json | null
+          nft_badge_id?: string | null
+          nft_minted?: boolean | null
+          summary: string
+          verification_id?: string | null
+          verified_claim: string
+          verifier_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_org?: boolean | null
+          bounty_id?: string
+          claim_id?: string
+          completed_at?: string
+          confidence_score?: number
+          id?: string
+          metadata?: Json | null
+          nft_badge_id?: string | null
+          nft_minted?: boolean | null
+          summary?: string
+          verification_id?: string | null
+          verified_claim?: string
+          verifier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_completions_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: true
+            referencedRelation: "truth_bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_completions_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_claims"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_completions_nft_badge_id_fkey"
+            columns: ["nft_badge_id"]
+            isOneToOne: false
+            referencedRelation: "nft_badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_completions_verification_id_fkey"
+            columns: ["verification_id"]
+            isOneToOne: false
+            referencedRelation: "verifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bounty_earnings: {
+        Row: {
+          bounty_id: string
+          completion_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          organization_id: string
+          paid_at: string | null
+          payment_reference: string | null
+          payment_status: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          reward_amount: number
+          service_fee: number
+          transaction_hash: string | null
+          verifier_id: string
+          verifier_payout: number
+        }
+        Insert: {
+          bounty_id: string
+          completion_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          reward_amount: number
+          service_fee: number
+          transaction_hash?: string | null
+          verifier_id: string
+          verifier_payout: number
+        }
+        Update: {
+          bounty_id?: string
+          completion_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          paid_at?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          reward_amount?: number
+          service_fee?: number
+          transaction_hash?: string | null
+          verifier_id?: string
+          verifier_payout?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bounty_earnings_bounty_id_fkey"
+            columns: ["bounty_id"]
+            isOneToOne: false
+            referencedRelation: "truth_bounties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_earnings_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "bounty_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bounty_earnings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claim_mentions: {
         Row: {
           created_at: string
@@ -2650,6 +2894,83 @@ export type Database = {
         }
         Relationships: []
       }
+      truth_bounties: {
+        Row: {
+          auto_ping_count: number | null
+          auto_ping_sent: boolean | null
+          category: Database["public"]["Enums"]["bounty_category"]
+          claim_to_verify: string
+          created_at: string
+          created_by: string | null
+          description: string
+          expires_at: string
+          id: string
+          metadata: Json | null
+          min_trust_score: number | null
+          organization_id: string
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          required_sources: number | null
+          reward_amount: number
+          reward_currency: string
+          status: Database["public"]["Enums"]["bounty_status"]
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_ping_count?: number | null
+          auto_ping_sent?: boolean | null
+          category?: Database["public"]["Enums"]["bounty_category"]
+          claim_to_verify: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          expires_at: string
+          id?: string
+          metadata?: Json | null
+          min_trust_score?: number | null
+          organization_id: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          required_sources?: number | null
+          reward_amount: number
+          reward_currency?: string
+          status?: Database["public"]["Enums"]["bounty_status"]
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_ping_count?: number | null
+          auto_ping_sent?: boolean | null
+          category?: Database["public"]["Enums"]["bounty_category"]
+          claim_to_verify?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          expires_at?: string
+          id?: string
+          metadata?: Json | null
+          min_trust_score?: number | null
+          organization_id?: string
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          required_sources?: number | null
+          reward_amount?: number
+          reward_currency?: string
+          status?: Database["public"]["Enums"]["bounty_status"]
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "truth_bounties_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -3194,6 +3515,42 @@ export type Database = {
         }
         Relationships: []
       }
+      verifier_preferences: {
+        Row: {
+          auto_ping_enabled: boolean | null
+          created_at: string
+          id: string
+          min_reward_amount: number | null
+          preferred_categories:
+            | Database["public"]["Enums"]["bounty_category"][]
+            | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_ping_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          min_reward_amount?: number | null
+          preferred_categories?:
+            | Database["public"]["Enums"]["bounty_category"][]
+            | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_ping_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          min_reward_amount?: number | null
+          preferred_categories?:
+            | Database["public"]["Enums"]["bounty_category"][]
+            | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       viral_claims: {
         Row: {
           author: string | null
@@ -3381,6 +3738,10 @@ export type Database = {
           updated_count: number
         }[]
       }
+      calculate_service_fee: {
+        Args: { reward_amount: number }
+        Returns: number
+      }
       check_feature_access: {
         Args: { feature_name: string; user_uuid: string }
         Returns: boolean
@@ -3461,6 +3822,20 @@ export type Database = {
         Args: { verification_uuid: string }
         Returns: Json
       }
+      get_top_verifiers_by_category: {
+        Args: {
+          p_category: Database["public"]["Enums"]["bounty_category"]
+          p_limit?: number
+        }
+        Returns: {
+          avg_confidence: number
+          completions: number
+          full_name: string
+          total_earned: number
+          user_id: string
+          username: string
+        }[]
+      }
       get_user_subscription: {
         Args: { user_uuid: string }
         Returns: {
@@ -3538,9 +3913,26 @@ export type Database = {
         | "gold"
         | "platinum"
         | "lighthouse_keeper"
+      bounty_category:
+        | "election"
+        | "ai"
+        | "health"
+        | "policy"
+        | "education"
+        | "climate"
+        | "finance"
+        | "general"
+      bounty_status:
+        | "active"
+        | "claimed"
+        | "in_review"
+        | "completed"
+        | "expired"
+        | "cancelled"
       license_status: "active" | "expired" | "suspended" | "revoked"
       license_type: "trial" | "basic" | "professional" | "enterprise"
       payment_status: "pending" | "successful" | "failed"
+      payment_type: "fiat" | "crypto"
       plan_type: "free" | "pro" | "enterprise"
       room_category:
         | "politics"
@@ -3680,9 +4072,28 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       badge_tier: ["bronze", "silver", "gold", "platinum", "lighthouse_keeper"],
+      bounty_category: [
+        "election",
+        "ai",
+        "health",
+        "policy",
+        "education",
+        "climate",
+        "finance",
+        "general",
+      ],
+      bounty_status: [
+        "active",
+        "claimed",
+        "in_review",
+        "completed",
+        "expired",
+        "cancelled",
+      ],
       license_status: ["active", "expired", "suspended", "revoked"],
       license_type: ["trial", "basic", "professional", "enterprise"],
       payment_status: ["pending", "successful", "failed"],
+      payment_type: ["fiat", "crypto"],
       plan_type: ["free", "pro", "enterprise"],
       room_category: [
         "politics",

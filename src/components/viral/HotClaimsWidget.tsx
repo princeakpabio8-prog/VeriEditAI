@@ -3,14 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
-import { ShareModal } from '@/components/share-modal';
+import { ClaimShareModal } from './ClaimShareModal';
 import { ClaimImageFallback } from './ClaimImageFallback';
 import { MintBadgeButton } from '@/components/nft/MintBadgeButton';
 import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
@@ -31,15 +32,17 @@ interface HotClaim {
   share_token: string | null;
   updated_at: string;
   image_url: string | null;
+  source_url: string | null;
 }
 
 export function HotClaimsWidget() {
   const [hotClaims, setHotClaims] = useState<HotClaim[]>([]);
+  const [filteredClaims, setFilteredClaims] = useState<HotClaim[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [selectedClaimForShare, setSelectedClaimForShare] = useState<string | null>(null);
+  const [selectedClaimForShare, setSelectedClaimForShare] = useState<{ id: string; text: string } | null>(null);
   const [userVerifiedClaims, setUserVerifiedClaims] = useState<Set<string>>(new Set());
   const [showFirstTimeHelp, setShowFirstTimeHelp] = useState(false);
   const [nftMintPrompt, setNftMintPrompt] = useState<{
@@ -50,6 +53,7 @@ export function HotClaimsWidget() {
   } | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedClaimForDetails, setSelectedClaimForDetails] = useState<HotClaim | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -155,6 +159,21 @@ export function HotClaimsWidget() {
   //     }
   //   });
   // }, [hotClaims]);
+
+  // Filter claims based on search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredClaims(hotClaims);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = hotClaims.filter(claim => 
+      claim.claim_text.toLowerCase().includes(query) ||
+      claim.platform.toLowerCase().includes(query)
+    );
+    setFilteredClaims(filtered);
+  }, [searchQuery, hotClaims]);
 
   const fetchHotClaims = async () => {
     try {
@@ -368,6 +387,18 @@ export function HotClaimsWidget() {
         <CardDescription>
           Verify trending claims before others to mint rare NFT badges
         </CardDescription>
+
+        {/* Search Bar */}
+        <div className="relative mt-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search claims by keyword or platform..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
         
         {showFirstTimeHelp && (
           <div className="mt-4 p-4 bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-lg">
@@ -390,7 +421,7 @@ export function HotClaimsWidget() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {hotClaims.map((claim, index) => {
+          {filteredClaims.map((claim, index) => {
             const hoursSinceDetection = claim.first_seen_at
               ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60)
               : 0;
@@ -507,7 +538,7 @@ export function HotClaimsWidget() {
                       {claim.platform}
                     </Badge>
                     
-                    {claim.metadata?.source_url && (
+                    {(claim.source_url || claim.metadata?.source_url) && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -516,7 +547,8 @@ export function HotClaimsWidget() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(claim.metadata.source_url, '_blank', 'noopener,noreferrer');
+                                const url = claim.source_url || claim.metadata?.source_url;
+                                window.open(url, '_blank', 'noopener,noreferrer');
                               }}
                               className="h-7 w-7 p-0 hover:bg-primary/10"
                             >
@@ -524,7 +556,7 @@ export function HotClaimsWidget() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="text-xs">View original source</p>
+                            <p className="text-xs">View original source ({claim.platform})</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -641,7 +673,7 @@ export function HotClaimsWidget() {
                           <Button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setSelectedClaimForShare(claim.verification_id);
+                              setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
                               setShareModalOpen(true);
                             }}
                             variant="outline"
@@ -664,7 +696,7 @@ export function HotClaimsWidget() {
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedClaimForShare(claim.verification_id);
+                          setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
                           setShareModalOpen(true);
                         }}
                         variant="outline"
@@ -694,8 +726,9 @@ export function HotClaimsWidget() {
       </CardContent>
 
       {shareModalOpen && selectedClaimForShare && (
-        <ShareModal
-          verificationId={selectedClaimForShare}
+        <ClaimShareModal
+          viralClaimId={selectedClaimForShare.id}
+          claimText={selectedClaimForShare.text}
           isOpen={shareModalOpen}
           onClose={() => {
             setShareModalOpen(false);

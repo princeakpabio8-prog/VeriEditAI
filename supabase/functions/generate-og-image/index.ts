@@ -28,10 +28,15 @@ function getGradientColors(trustScore?: number): { start: string; end: string } 
 }
 
 async function generatePNG(data: OGImageRequest) {
-  const { contentType, title, trustScore, content, author, stats } = data;
+  const { contentType, title, trustScore, content, author, stats, platform, engagementScore, status } = data;
   const colors = getGradientColors(trustScore);
   const displayTrustScore = trustScore !== undefined ? Math.round(trustScore) : null;
   const contentPreview = content ? content.substring(0, 150) : '';
+  
+  // For viral claims, show different header
+  const headerBadge = contentType === 'viral_claim' 
+    ? `🔥 ${status?.toUpperCase() || 'TRENDING'} on ${platform || 'Social Media'}`
+    : '✓ Verified';
 
   return new ImageResponse(
     {
@@ -72,7 +77,7 @@ async function generatePNG(data: OGImageRequest) {
                       fontWeight: 600,
                       color: 'white',
                     },
-                    children: '✓ Verified',
+                    children: headerBadge,
                   },
                 },
               ],
@@ -88,8 +93,8 @@ async function generatePNG(data: OGImageRequest) {
                 flex: 1,
               },
               children: [
-                // Trust Score Card (if available)
-                displayTrustScore !== null && {
+                // Trust Score Card (if available) or Engagement Score for viral claims
+                (displayTrustScore !== null || (contentType === 'viral_claim' && engagementScore)) && {
                   type: 'div',
                   props: {
                     style: {
@@ -108,14 +113,16 @@ async function generatePNG(data: OGImageRequest) {
                         type: 'div',
                         props: {
                           style: { fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 20 },
-                          children: 'TRUST SCORE',
+                          children: contentType === 'viral_claim' ? 'ENGAGEMENT' : 'TRUST SCORE',
                         },
                       },
                       {
                         type: 'div',
                         props: {
                           style: { fontSize: 80, fontWeight: 700, color: 'white' },
-                          children: `${displayTrustScore}%`,
+                          children: contentType === 'viral_claim' 
+                            ? `${Math.round((engagementScore || 0) / 1000)}K`
+                            : `${displayTrustScore}%`,
                         },
                       },
                     ],

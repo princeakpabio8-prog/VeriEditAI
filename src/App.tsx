@@ -48,6 +48,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Shared pages
 const ShareVerification = lazy(() => import("./pages/ShareVerification"));
 const ShareThread = lazy(() => import("./pages/ShareThread"));
+const ClaimShare = lazy(() => import("./pages/ClaimShare"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 // Lighthouse pages
@@ -150,6 +151,7 @@ const App = () => (
               <Route path="/payment-callback" element={<PaymentCallback />} />
               <Route path="/share/:shareToken" element={<ShareVerification />} />
               <Route path="/thread/share/:shareToken" element={<ShareThread />} />
+              <Route path="/claim/:shareToken" element={<ClaimShare />} />
               <Route path="/lighthouse" element={<LighthouseHub />} />
               <Route path="/lighthouse/:roomId" element={<LighthouseRoomView />} />
               <Route path="/lighthouse/:roomId/thread/:threadId" element={<ThreadView />} />

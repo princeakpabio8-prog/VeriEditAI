@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -81,6 +81,10 @@ export const Navigation = () => {
                 </Link>
                 <Link to="/viral-claims" className="text-muted-foreground hover:text-foreground transition-colors">
                   Hot Claims
+                </Link>
+                <Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  <Target className="h-4 w-4" />
+                  Bounties
                 </Link>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />

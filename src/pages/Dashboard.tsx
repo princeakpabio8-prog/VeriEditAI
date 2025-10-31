@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Navigation } from '@/components/ui/navigation';
 import { VerificationUpload } from '@/components/verification-upload';
 import { TrustScoreDisplay } from '@/components/trust-score-display';
-import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2, Globe, TrendingUp, Award, Coins } from 'lucide-react';
+import { Plus, Clock, CheckCircle, AlertTriangle, FileText, BarChart3, Download, Package, Trash2, Globe, TrendingUp, Award, Coins, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LicenseStatus } from '@/components/license-status';
@@ -28,6 +28,7 @@ const TruthBadgeGallery = lazy(() => import('@/components/nft/TruthBadgeGallery'
 const VerificationAnalytics = lazy(() => import('@/components/verification-analytics').then(m => ({ default: m.VerificationAnalytics })));
 const EnhancedAnalyticsDashboard = lazy(() => import('@/components/enhanced-analytics-dashboard').then(m => ({ default: m.EnhancedAnalyticsDashboard })));
 const AIAnalyticsDashboard = lazy(() => import('@/components/AIAnalyticsDashboard').then(m => ({ default: m.AIAnalyticsDashboard })));
+const MyBountyClaims = lazy(() => import('@/components/bounty/MyBountyClaims').then(m => ({ default: m.MyBountyClaims })));
 
 
 import { useSearchParams } from 'react-router-dom';
@@ -490,9 +491,13 @@ const Dashboard = () => {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/dashboard?tab=${value}`)} className="space-y-6">
-        <TabsList className={isMobile ? "grid w-full grid-cols-5 gap-1" : "grid w-full grid-cols-7"}>
+        <TabsList className={isMobile ? "grid w-full grid-cols-5 gap-1" : "grid w-full grid-cols-8"}>
           <TabsTrigger value="overview" className={isMobile ? "text-xs px-2" : ""}>Overview</TabsTrigger>
           <TabsTrigger value="discover" className={isMobile ? "text-xs px-2" : ""}>Discover</TabsTrigger>
+          <TabsTrigger value="bounties" className={isMobile ? "text-xs px-2" : ""}>
+            {!isMobile && <Target className="h-4 w-4 mr-1" />}
+            Bounties
+          </TabsTrigger>
           <TabsTrigger value="analytics" className={isMobile ? "text-xs px-2" : ""}>Analytics</TabsTrigger>
           {!isMobile && <TabsTrigger value="executive">Executive</TabsTrigger>}
           {!isMobile && <TabsTrigger value="export">Export Data</TabsTrigger>}
@@ -664,6 +669,16 @@ const Dashboard = () => {
             <div className="text-center py-8">
               <p className="text-muted-foreground">Export features available after verifications are completed.</p>
             </div>
+          </TabsContent>
+
+          <TabsContent value="bounties" className="space-y-6 animate-fade-in">
+            {activeTab === 'bounties' && (
+              <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+                <ErrorBoundary>
+                  <MyBountyClaims />
+                </ErrorBoundary>
+              </Suspense>
+            )}
           </TabsContent>
 
           <TabsContent value="badges" className="space-y-6 animate-fade-in">

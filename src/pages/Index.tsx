@@ -16,7 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load heavy components
 const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").then(m => ({ default: m.LiveActivityWidget })));
 const NFTShowcaseSection = lazy(() => import("@/components/nft-showcase-section").then(m => ({ default: m.NFTShowcaseSection })));
-const HotClaimsWidget = lazy(() => import("@/components/viral/HotClaimsWidget").then(m => ({ default: m.HotClaimsWidget })));
 
 const Index = () => {
   const { user } = useAuth();
@@ -43,20 +42,6 @@ const Index = () => {
         
         {/* NFT Hero Section - Mobile-first badge discovery */}
         <NFTHeroSection />
-        
-        {/* Hot Claims Widget - Race to Verify First */}
-        <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-50/50 to-red-50/50 dark:from-orange-950/20 dark:to-red-950/20">
-          <div className="max-w-7xl mx-auto">
-            <Suspense fallback={
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-64" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-            }>
-              <HotClaimsWidget />
-            </Suspense>
-          </div>
-        </section>
         
         <VideoDemoSection />
         

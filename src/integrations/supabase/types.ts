@@ -3565,10 +3565,12 @@ export type Database = {
           last_checked_at: string
           media_type: string | null
           metadata: Json | null
+          og_image_url: string | null
           peak_engagement: number | null
           platform: string
           platform_category: string | null
           rarity_tier: string | null
+          share_count: number | null
           share_token: string | null
           source_url: string
           status: string | null
@@ -3589,10 +3591,12 @@ export type Database = {
           last_checked_at?: string
           media_type?: string | null
           metadata?: Json | null
+          og_image_url?: string | null
           peak_engagement?: number | null
           platform: string
           platform_category?: string | null
           rarity_tier?: string | null
+          share_count?: number | null
           share_token?: string | null
           source_url: string
           status?: string | null
@@ -3613,10 +3617,12 @@ export type Database = {
           last_checked_at?: string
           media_type?: string | null
           metadata?: Json | null
+          og_image_url?: string | null
           peak_engagement?: number | null
           platform?: string
           platform_category?: string | null
           rarity_tier?: string | null
+          share_count?: number | null
           share_token?: string | null
           source_url?: string
           status?: string | null

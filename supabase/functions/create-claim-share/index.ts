@@ -87,12 +87,13 @@ Deno.serve(async (req) => {
       console.error('Error generating OG image:', ogError);
     }
 
-    // Update claim with share token and OG image
+    // Update claim with share token, OG image, and increment share count
     const { error: updateError } = await supabase
       .from('viral_claims')
       .update({
         share_token: shareToken,
         og_image_url: ogImageUrl,
+        share_count: (claim.share_count || 0) + 1,
       })
       .eq('id', viralClaimId);
 

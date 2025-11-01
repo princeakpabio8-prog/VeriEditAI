@@ -7,11 +7,14 @@ const corsHeaders = {
 };
 
 interface OGImageRequest {
-  contentType: 'verification' | 'thread';
+  contentType: 'verification' | 'thread' | 'viral_claim';
   title: string;
   trustScore?: number;
   content?: string;
   author?: string;
+  platform?: string;
+  engagementScore?: number;
+  status?: string;
   stats?: {
     views?: number;
     shares?: number;

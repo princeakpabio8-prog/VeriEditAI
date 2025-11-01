@@ -102,6 +102,7 @@ export default function ClaimShare() {
         title={`🔥 Viral Claim: ${claim.claim_text.substring(0, 60)}...`}
         description={`Trending on ${claim.platform} with ${claim.engagement_score.toLocaleString()} engagement. Race to verify first and earn NFT badges!`}
         image={getFullImageUrl()}
+        url={window.location.href}
         type="article"
       />
       

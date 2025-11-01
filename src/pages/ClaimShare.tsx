@@ -84,12 +84,24 @@ export default function ClaimShare() {
     );
   }
 
+  // Construct full image URL for social sharing
+  const getFullImageUrl = () => {
+    const imageUrl = claim.og_image_url || claim.image_url;
+    if (!imageUrl) return undefined;
+    
+    // If it's already a full URL, return it
+    if (imageUrl.startsWith('http')) return imageUrl;
+    
+    // Otherwise, construct full URL
+    return `${window.location.origin}${imageUrl}`;
+  };
+
   return (
     <>
       <DynamicMeta
-        title={`🔥 Viral Claim: ${claim.claim_text.substring(0, 60)}... - VeriedIT AI`}
-        description={`Trending on ${claim.platform} with ${claim.engagement_score} engagement. Race to verify first!`}
-        image={claim.og_image_url || claim.image_url || undefined}
+        title={`🔥 Viral Claim: ${claim.claim_text.substring(0, 60)}...`}
+        description={`Trending on ${claim.platform} with ${claim.engagement_score.toLocaleString()} engagement. Race to verify first and earn NFT badges!`}
+        image={getFullImageUrl()}
         type="article"
       />
       

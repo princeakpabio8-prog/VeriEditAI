@@ -48,13 +48,19 @@ export function DynamicMeta({
 
     // Open Graph tags
     if (title) {
-      updateMetaTag('og:title', `${title} | VeriEdit AI`, true);
+      updateMetaTag('og:title', title.includes('VeriEdit') ? title : `${title} | VeriEdit AI`, true);
     }
     if (description) {
       updateMetaTag('og:description', description, true);
     }
     if (image) {
-      updateMetaTag('og:image', image, true);
+      // Ensure absolute URL for OG image
+      const absoluteImage = image.startsWith('http') ? image : `${window.location.origin}${image}`;
+      updateMetaTag('og:image', absoluteImage, true);
+      updateMetaTag('og:image:secure_url', absoluteImage, true);
+      updateMetaTag('og:image:width', '1200', true);
+      updateMetaTag('og:image:height', '630', true);
+      updateMetaTag('og:image:type', 'image/png', true);
     }
     if (url) {
       updateMetaTag('og:url', url, true);
@@ -65,13 +71,15 @@ export function DynamicMeta({
     // Twitter Card tags
     updateMetaTag('twitter:card', 'summary_large_image');
     if (title) {
-      updateMetaTag('twitter:title', `${title} | VeriEdit AI`);
+      updateMetaTag('twitter:title', title.includes('VeriEdit') ? title : `${title} | VeriEdit AI`);
     }
     if (description) {
       updateMetaTag('twitter:description', description);
     }
     if (image) {
-      updateMetaTag('twitter:image', image);
+      const absoluteImage = image.startsWith('http') ? image : `${window.location.origin}${image}`;
+      updateMetaTag('twitter:image', absoluteImage);
+      updateMetaTag('twitter:image:src', absoluteImage);
     }
 
     // Trust Score as Twitter data

@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Lazy load heavy components
 const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").then(m => ({ default: m.LiveActivityWidget })));
 const NFTShowcaseSection = lazy(() => import("@/components/nft-showcase-section").then(m => ({ default: m.NFTShowcaseSection })));
+const HotClaimsWidget = lazy(() => import("@/components/viral/HotClaimsWidget").then(m => ({ default: m.HotClaimsWidget })));
 
 const Index = () => {
   const { user } = useAuth();
@@ -44,6 +45,42 @@ const Index = () => {
         <NFTHeroSection />
         
         <VideoDemoSection />
+        
+        {/* Hot Claims - Race to Verify Section */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
+          
+          <div className="max-w-7xl mx-auto relative z-10">
+            <div className="text-center mb-12 fade-in-up">
+              <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+                <span className="text-2xl animate-pulse">🔥</span>
+                <span className="text-sm font-semibold text-primary">TRENDING NOW</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
+                Hot Claims - Race to Verify First!
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
+                These viral claims are spreading across social media right now. Be the first to verify them and earn exclusive NFT badges!
+              </p>
+            </div>
+            
+            <Suspense fallback={
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <Skeleton className="h-80" />
+                  <Skeleton className="h-80" />
+                  <Skeleton className="h-80" />
+                </div>
+              </div>
+            }>
+              <div className="fade-in-up" style={{ animationDelay: '200ms' }}>
+                <HotClaimsWidget />
+              </div>
+            </Suspense>
+          </div>
+        </section>
         
         {/* Verification Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8">

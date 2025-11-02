@@ -42,6 +42,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Fetch verification data if it exists
+    let verification = null;
+    if (claim.verification_id) {
+      const { data: verificationData } = await supabase
+        .from('verifications')
+        .select('trust_score, status, result_summary')
+        .eq('id', claim.verification_id)
+        .single();
+      
+      verification = verificationData;
+    }
+
     // Check if share already exists
     if (claim.share_token) {
       const origin = req.headers.get('origin') || 'https://veriedit-ai.lovable.app';
@@ -76,6 +88,7 @@ Deno.serve(async (req) => {
           platform: claim.platform,
           engagementScore: claim.engagement_score,
           status: claim.status,
+          trustScore: verification?.trust_score, // Include trust score if available
         }),
       });
 

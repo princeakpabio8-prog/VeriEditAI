@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Flame, ExternalLink, Target, TrendingUp } from 'lucide-react';
+import { Flame, ExternalLink, Target, TrendingUp, Check } from 'lucide-react';
 import { DynamicMeta } from '@/components/DynamicMeta';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -21,6 +21,14 @@ interface ViralClaim {
   image_url?: string | null;
   og_image_url?: string | null;
   metadata?: any;
+  verification_id?: string | null;
+  verification?: {
+    trust_score: number;
+    status: string;
+    result_summary?: string;
+    category_confidence?: number;
+    detected_entities?: any;
+  };
 }
 
 export default function ClaimShare() {
@@ -40,7 +48,16 @@ export default function ClaimShare() {
     try {
       const { data, error } = await supabase
         .from('viral_claims')
-        .select('*')
+        .select(`
+          *,
+          verification:verifications(
+            trust_score,
+            status,
+            result_summary,
+            category_confidence,
+            detected_entities
+          )
+        `)
         .eq('share_token', shareToken)
         .single();
 
@@ -100,10 +117,15 @@ export default function ClaimShare() {
     <>
       <DynamicMeta
         title={`🔥 Viral Claim: ${claim.claim_text.substring(0, 60)}...`}
-        description={`Trending on ${claim.platform} with ${claim.engagement_score.toLocaleString()} engagement. Race to verify first and earn NFT badges!`}
+        description={
+          claim.verification 
+            ? `✅ Verified with ${Math.round(claim.verification.trust_score)}% trust score. ${claim.verification.result_summary?.substring(0, 100) || 'Professional fact-checking completed.'}...`
+            : `Trending on ${claim.platform} with ${claim.engagement_score.toLocaleString()} engagement. Race to verify first and earn NFT badges!`
+        }
         image={getFullImageUrl()}
         url={window.location.href}
         type="article"
+        trustScore={claim.verification?.trust_score}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 py-12 px-4">
@@ -169,6 +191,71 @@ export default function ClaimShare() {
                   <div className="text-2xl font-bold capitalize">{claim.status}</div>
                 </div>
               </div>
+
+              {/* Verification Results - NEW SECTION */}
+              {claim.verification && (
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 border-2 border-primary/20">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Check className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">✅ Verified by AI</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Professional fact-checking completed
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Visual Trust Indicator */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <div 
+                      className={`h-3 w-3 rounded-full ${
+                        claim.verification.trust_score >= 70 ? 'bg-green-500' :
+                        claim.verification.trust_score >= 40 ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}
+                    />
+                    <span className="text-sm font-medium">
+                      {claim.verification.trust_score >= 70 ? 'Highly Trustworthy' :
+                       claim.verification.trust_score >= 40 ? 'Partially Verified' :
+                       'Low Trust Score'}
+                    </span>
+                  </div>
+                  
+                  {/* Trust Score Display */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-background/50 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-primary">
+                        {Math.round(claim.verification.trust_score)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Trust Score
+                      </div>
+                    </div>
+                    <div className="bg-background/50 rounded-lg p-4 text-center">
+                      <Badge variant={
+                        claim.verification.status === 'completed' ? 'default' : 'secondary'
+                      } className="text-lg py-1 px-3">
+                        {claim.verification.status}
+                      </Badge>
+                      <div className="text-sm text-muted-foreground mt-2">
+                        Status
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Summary */}
+                  {claim.verification.result_summary && (
+                    <div className="bg-background/50 rounded-lg p-4">
+                      <h4 className="font-semibold mb-2">Verification Summary</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {claim.verification.result_summary}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Source Link */}
               {(claim.source_url || claim.metadata?.source_url) && (

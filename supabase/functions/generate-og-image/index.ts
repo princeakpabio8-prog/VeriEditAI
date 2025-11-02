@@ -96,39 +96,82 @@ async function generatePNG(data: OGImageRequest) {
                 flex: 1,
               },
               children: [
-                // Trust Score Card (if available) or Engagement Score for viral claims
+                // Show both Trust Score and Engagement when both available
                 (displayTrustScore !== null || (contentType === 'viral_claim' && engagementScore)) && {
                   type: 'div',
                   props: {
                     style: {
-                      width: 280,
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: 'rgba(255,255,255,0.15)',
-                      border: '2px solid rgba(255,255,255,0.3)',
-                      borderRadius: 20,
-                      padding: 40,
+                      gap: 20,
+                      width: displayTrustScore !== null && engagementScore ? 280 : 280,
                     },
                     children: [
-                      {
+                      // Trust Score Card (if available)
+                      displayTrustScore !== null && {
                         type: 'div',
                         props: {
-                          style: { fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 20 },
-                          children: contentType === 'viral_claim' ? 'ENGAGEMENT' : 'TRUST SCORE',
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(255,255,255,0.15)',
+                            border: '2px solid rgba(255,255,255,0.3)',
+                            borderRadius: 20,
+                            padding: 30,
+                          },
+                          children: [
+                            {
+                              type: 'div',
+                              props: {
+                                style: { fontSize: 18, fontWeight: 600, color: 'white', marginBottom: 15 },
+                                children: 'TRUST SCORE',
+                              },
+                            },
+                            {
+                              type: 'div',
+                              props: {
+                                style: { fontSize: 60, fontWeight: 700, color: 'white' },
+                                children: `${displayTrustScore}%`,
+                              },
+                            },
+                          ],
                         },
                       },
-                      {
+                      // Engagement Card (for viral claims)
+                      contentType === 'viral_claim' && engagementScore && {
                         type: 'div',
                         props: {
-                          style: { fontSize: 80, fontWeight: 700, color: 'white' },
-                          children: contentType === 'viral_claim' 
-                            ? `${Math.round((engagementScore || 0) / 1000)}K`
-                            : `${displayTrustScore}%`,
+                          style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(255,255,255,0.15)',
+                            border: '2px solid rgba(255,255,255,0.3)',
+                            borderRadius: 20,
+                            padding: 30,
+                          },
+                          children: [
+                            {
+                              type: 'div',
+                              props: {
+                                style: { fontSize: 18, fontWeight: 600, color: 'white', marginBottom: 15 },
+                                children: 'ENGAGEMENT',
+                              },
+                            },
+                            {
+                              type: 'div',
+                              props: {
+                                style: { fontSize: 60, fontWeight: 700, color: 'white' },
+                                children: `${Math.round((engagementScore || 0) / 1000)}K`,
+                              },
+                            },
+                          ],
                         },
                       },
-                    ],
+                    ].filter(Boolean),
                   },
                 },
                 // Content Area

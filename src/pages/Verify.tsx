@@ -145,6 +145,34 @@ export default function Verify() {
       return;
     }
 
+    // RACE CONDITION CHECK: Prevent duplicate verifications
+    if (data.viralClaimId) {
+      try {
+        const { data: claimCheck } = await supabase
+          .from('viral_claims')
+          .select('verification_id, share_token, claim_text')
+          .eq('id', data.viralClaimId)
+          .single();
+        
+        if (claimCheck?.verification_id) {
+          toast.error('🏆 Someone just beat you to it! This claim was verified moments ago.', {
+            description: 'Redirecting to their verification...',
+          });
+          
+          // Redirect to the winning verification
+          if (claimCheck.share_token) {
+            setTimeout(() => {
+              window.location.href = `/claim/${claimCheck.share_token}`;
+            }, 1500);
+          }
+          return; // Stop verification
+        }
+      } catch (error) {
+        console.error('Error checking claim status:', error);
+        // Continue with verification if check fails
+      }
+    }
+
     try {
       console.log('Starting instant verification...', { isMobile });
       

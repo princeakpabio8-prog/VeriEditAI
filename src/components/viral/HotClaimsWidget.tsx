@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink, Search } from 'lucide-react';
+import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink, Search, RefreshCw, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -54,6 +54,9 @@ export function HotClaimsWidget() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedClaimForDetails, setSelectedClaimForDetails] = useState<HotClaim | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [lastFetchTime, setLastFetchTime] = useState<Date>(new Date());
+  const [refreshing, setRefreshing] = useState(false);
+  const [justVerifiedClaims, setJustVerifiedClaims] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -128,11 +131,45 @@ export function HotClaimsWidget() {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'viral_claims',
+          filter: 'verification_id=not.is.null'
+        },
+        (payload) => {
+          const verifiedClaim = payload.new as HotClaim;
+          
+          // Show toast notification
+          toast({
+            title: "🎉 Claim Just Verified!",
+            description: `"${verifiedClaim.claim_text.substring(0, 60)}..." was verified by another user`,
+          });
+          
+          // Mark as "just verified" for animation
+          setJustVerifiedClaims(prev => new Set(prev).add(verifiedClaim.id));
+          
+          // Remove "just verified" badge after 30 seconds
+          setTimeout(() => {
+            setJustVerifiedClaims(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(verifiedClaim.id);
+              return newSet;
+            });
+          }, 30000);
+          
+          // Refresh claims list
+          fetchHotClaims();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
           schema: 'public',
           table: 'viral_claims'
         },
         () => {
+          // New hot claim detected
           fetchHotClaims();
         }
       )
@@ -175,8 +212,10 @@ export function HotClaimsWidget() {
     setFilteredClaims(filtered);
   }, [searchQuery, hotClaims]);
 
-  const fetchHotClaims = async () => {
+  const fetchHotClaims = async (showRefreshToast = false) => {
     try {
+      if (showRefreshToast) setRefreshing(true);
+      
       const { data, error } = await supabase
         .from('viral_claims')
         .select('*')
@@ -186,11 +225,31 @@ export function HotClaimsWidget() {
 
       if (error) throw error;
       setHotClaims(data || []);
+      setLastFetchTime(new Date());
+      
+      if (showRefreshToast) {
+        toast({
+          title: "✅ Feed Refreshed",
+          description: `Found ${data?.length || 0} hot claims`,
+        });
+      }
     } catch (error) {
       console.error('Error fetching hot claims:', error);
+      if (showRefreshToast) {
+        toast({
+          title: "Refresh Failed",
+          description: "Could not refresh feed. Please try again.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+  
+  const handleManualRefresh = () => {
+    fetchHotClaims(true);
   };
 
   const getRarityDisplayName = (rarity: string | null) => {
@@ -384,9 +443,25 @@ export function HotClaimsWidget() {
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
-        <CardDescription>
-          Verify trending claims before others to mint rare NFT badges
-        </CardDescription>
+        <div className="flex items-center justify-between gap-4 mt-2">
+          <CardDescription className="flex items-center gap-2">
+            Verify trending claims before others to mint rare NFT badges
+            <Badge variant="outline" className="ml-2 gap-1">
+              <Clock className="h-3 w-3" />
+              Updated {formatDistanceToNow(lastFetchTime, { addSuffix: true })}
+            </Badge>
+          </CardDescription>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="gap-2 shrink-0"
+          >
+            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
 
         {/* Search Bar */}
         <div className="relative mt-4">
@@ -463,12 +538,22 @@ export function HotClaimsWidget() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     
                     {/* Verified Badge Overlay */}
-                    {isVerified && (
+                    {justVerifiedClaims.has(claim.id) ? (
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
+                        <Sparkles size={16} />
+                        🎉 JUST VERIFIED!
+                      </div>
+                    ) : isVerified ? (
                       <div className="absolute top-3 right-3 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-pulse">
                         <CheckCircle2 size={16} />
                         ✓ VERIFIED
                       </div>
-                    )}
+                    ) : verifyingIds.has(claim.id) ? (
+                      <div className="absolute top-3 right-3 bg-amber-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+                        <Loader2 size={16} className="animate-spin" />
+                        VERIFYING...
+                      </div>
+                    ) : null}
                   
                   {/* Overlays */}
                   <div className="absolute top-3 left-3 flex gap-2">

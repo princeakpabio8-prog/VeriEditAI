@@ -22,6 +22,8 @@ import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
 import { MobileButton, MobileCard } from '@/components/mobile-enhanced-form';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton';
+import { ProfileCompletionWidget } from '@/components/ProfileCompletionWidget';
+import { WelcomeBackModal } from '@/components/WelcomeBackModal';
 
 // Lazy load heavy components
 const TruthBadgeGallery = lazy(() => import('@/components/nft/TruthBadgeGallery').then(m => ({ default: m.TruthBadgeGallery })));
@@ -474,6 +476,10 @@ const Dashboard = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 py-8 pb-20 md:pb-8">
+        {/* Re-engagement Widgets */}
+        <WelcomeBackModal />
+        <ProfileCompletionWidget />
+        
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">

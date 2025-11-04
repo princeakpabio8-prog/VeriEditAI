@@ -24,6 +24,7 @@ const ActivityFeed = lazy(() => import("./pages/ActivityFeed"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const RoyaltyDashboard = lazy(() => import("./pages/RoyaltyDashboard"));
 const BountyMarketplace = lazy(() => import("./pages/BountyMarketplace"));
+const ReengagementAnalytics = lazy(() => import("./pages/ReengagementAnalytics"));
 
 // Medium pages - lazy loaded
 const Profile = lazy(() => import("./pages/Profile"));
@@ -178,6 +179,11 @@ const App = () => (
               } />
               <Route path="/trust-oracle" element={<TrustOracle />} />
               <Route path="/bounties" element={<BountyMarketplace />} />
+              <Route path="/admin/reengagement" element={
+                <ProtectedRoute>
+                  <ReengagementAnalytics />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -512,6 +512,44 @@ export type Database = {
           },
         ]
       }
+      challenge_participants: {
+        Row: {
+          challenge_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_winner: boolean | null
+          progress: number | null
+          user_id: string | null
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_winner?: boolean | null
+          progress?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          challenge_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_winner?: boolean | null
+          progress?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       claim_mentions: {
         Row: {
           created_at: string
@@ -1811,6 +1849,7 @@ export type Database = {
           bonus_verifications: number | null
           company: string | null
           created_at: string
+          email_notifications_enabled: boolean | null
           email_preferences: Json | null
           followers_count: number | null
           following_count: number | null
@@ -1818,6 +1857,8 @@ export type Database = {
           id: string
           monthly_usage: number | null
           payment_method: string | null
+          push_notifications_enabled: boolean | null
+          reengagement_paused_until: string | null
           referral_code: string | null
           referred_by: string | null
           subscription_expires_at: string | null
@@ -1835,6 +1876,7 @@ export type Database = {
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string
+          email_notifications_enabled?: boolean | null
           email_preferences?: Json | null
           followers_count?: number | null
           following_count?: number | null
@@ -1842,6 +1884,8 @@ export type Database = {
           id?: string
           monthly_usage?: number | null
           payment_method?: string | null
+          push_notifications_enabled?: boolean | null
+          reengagement_paused_until?: string | null
           referral_code?: string | null
           referred_by?: string | null
           subscription_expires_at?: string | null
@@ -1859,6 +1903,7 @@ export type Database = {
           bonus_verifications?: number | null
           company?: string | null
           created_at?: string
+          email_notifications_enabled?: boolean | null
           email_preferences?: Json | null
           followers_count?: number | null
           following_count?: number | null
@@ -1866,6 +1911,8 @@ export type Database = {
           id?: string
           monthly_usage?: number | null
           payment_method?: string | null
+          push_notifications_enabled?: boolean | null
+          reengagement_paused_until?: string | null
           referral_code?: string | null
           referred_by?: string | null
           subscription_expires_at?: string | null
@@ -2087,6 +2134,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reengagement_tracking: {
+        Row: {
+          campaign_type: string
+          channel: string
+          clicked_at: string | null
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          opened_at: string | null
+          sent_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_type: string
+          channel: string
+          clicked_at?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_type?: string
+          channel?: string
+          clicked_at?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          opened_at?: string | null
+          sent_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       referrals: {
         Row: {
@@ -3661,6 +3747,48 @@ export type Database = {
           idempotency_key?: string
           processed_at?: string | null
           webhook_type?: string
+        }
+        Relationships: []
+      }
+      weekly_challenges: {
+        Row: {
+          created_at: string | null
+          id: string
+          participation_count: number | null
+          requirements: Json | null
+          reward_type: string
+          reward_value: number | null
+          status: string | null
+          updated_at: string | null
+          week_end_date: string
+          week_start_date: string
+          winner_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          participation_count?: number | null
+          requirements?: Json | null
+          reward_type: string
+          reward_value?: number | null
+          status?: string | null
+          updated_at?: string | null
+          week_end_date: string
+          week_start_date: string
+          winner_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          participation_count?: number | null
+          requirements?: Json | null
+          reward_type?: string
+          reward_value?: number | null
+          status?: string | null
+          updated_at?: string | null
+          week_end_date?: string
+          week_start_date?: string
+          winner_count?: number | null
         }
         Relationships: []
       }

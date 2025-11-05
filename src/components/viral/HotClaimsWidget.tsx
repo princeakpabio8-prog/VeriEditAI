@@ -220,11 +220,17 @@ export function HotClaimsWidget() {
         .from('viral_claims')
         .select('*')
         .in('status', ['detected', 'trending', 'monitoring'])
-        .order('virality_score', { ascending: false })
+        .order('engagement_velocity', { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      setHotClaims(data || []);
+      
+      // Filter out claims with null or zero engagement to show only active ones
+      const activeClaims = (data || []).filter(claim => 
+        claim.engagement_score > 0 || claim.engagement_velocity > 0
+      );
+      
+      setHotClaims(activeClaims);
       setLastFetchTime(new Date());
       
       if (showRefreshToast) {

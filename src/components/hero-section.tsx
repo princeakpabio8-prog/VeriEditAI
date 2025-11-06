@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Award, Users, Radio } from "lucide-react";
+import { ArrowRight, Shield, Award, Users, Radio, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import lighthouseHero from "@/assets/lighthouse-hero.jpg";
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { motion } from "framer-motion";
 
 export const HeroSection = () => {
   const [scrollY, setScrollY] = useState(0);
@@ -111,6 +112,35 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 0.5 }}
+      >
+        <button
+          onClick={() => {
+            const featuresSection = document.getElementById('features');
+            featuresSection?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+          aria-label="Scroll to content"
+        >
+          <span className="text-xs sm:text-sm font-medium">Scroll to explore</span>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <ChevronDown className="h-6 w-6 sm:h-8 sm:w-8" />
+          </motion.div>
+        </button>
+      </motion.div>
     </section>
   );
 };

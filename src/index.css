@@ -138,6 +138,10 @@ All colors MUST be HSL.
     @apply bg-background text-foreground overflow-x-hidden;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   /* Custom scrollbar for dark theme */
   ::-webkit-scrollbar {
     width: 8px;

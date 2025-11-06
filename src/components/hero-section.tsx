@@ -34,6 +34,7 @@ export const HeroSection = () => {
           transform: isMobile 
             ? (mounted ? 'scale(1)' : 'scale(1.1)')
             : `translateY(${scrollY * 0.4}px) scale(${mounted ? 1 : 1.1})`,
+          filter: `blur(${Math.min(scrollY / 100, 8)}px)`,
         }}
       >
         <img

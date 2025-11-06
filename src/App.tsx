@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { AchievementNotification } from "./components/AchievementNotification";
 import { MobileLoadingSkeleton } from "./components/MobileLoadingSkeleton";
+import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
 
 // Critical pages - loaded immediately
 import Index from "./pages/Index";
@@ -79,6 +80,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AchievementNotification />
+          <WalletToastNotifications />
           <MobileBottomNav />
           <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
             <Routes>

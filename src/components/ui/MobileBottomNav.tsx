@@ -8,6 +8,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Button } from "./button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "./sheet";
+import { useState } from "react";
 
 export const MobileBottomNav = () => {
   const location = useLocation();
@@ -19,6 +21,7 @@ export const MobileBottomNav = () => {
   const { address, isConnected } = useAccount();
   const { connectAsync, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const [walletSheetOpen, setWalletSheetOpen] = useState(false);
   
   if (import.meta.env.DEV) {
     console.debug('[MobileBottomNav] Mounted, isMobile:', isMobile, 'Location:', location.pathname);
@@ -45,20 +48,32 @@ export const MobileBottomNav = () => {
     }
   };
 
-  const handleWalletClick = async () => {
+  const openWalletApp = (walletType: 'metamask' | 'trust') => {
+    const deepLinks = {
+      metamask: `https://metamask.app.link/dapp/${window.location.host}`,
+      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`
+    }
+    window.location.href = deepLinks[walletType]
+    setWalletSheetOpen(false)
+  }
+
+  const handleInlineConnect = async () => {
+    try {
+      const injectedConnector = connectors.find((c) => c.id === 'injected')
+      if (injectedConnector) {
+        await connectAsync({ connector: injectedConnector })
+        setWalletSheetOpen(false)
+      }
+    } catch (error) {
+      console.error('Failed to connect wallet:', error)
+    }
+  }
+
+  const handleWalletClick = () => {
     if (isConnected) {
       disconnect();
     } else {
-      try {
-        // Use injected connector only (mobile wallet apps)
-        const injectedConnector = connectors.find((c) => c.id === 'injected');
-        if (injectedConnector) {
-          await connectAsync({ connector: injectedConnector });
-        }
-
-      } catch (error) {
-        console.error('Failed to connect wallet:', error);
-      }
+      setWalletSheetOpen(true);
     }
   };
 
@@ -122,20 +137,55 @@ export const MobileBottomNav = () => {
         })}
         
         {/* Wallet Connect */}
-        <button
-          onClick={handleWalletClick}
-          className={cn(
-            "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
-            isConnected
-              ? "text-primary bg-primary/10"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-          )}
-        >
-          <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
-          <span className="text-xs font-medium">
-            {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
-          </span>
-        </button>
+        <Sheet open={walletSheetOpen} onOpenChange={setWalletSheetOpen}>
+          <SheetTrigger asChild>
+            <button
+              onClick={handleWalletClick}
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
+                isConnected
+                  ? "text-primary bg-primary/10"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
+              <span className="text-xs font-medium">
+                {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
+              </span>
+            </button>
+          </SheetTrigger>
+          
+          <SheetContent side="bottom" className="rounded-t-xl">
+            <SheetHeader>
+              <SheetTitle>Connect Wallet</SheetTitle>
+              <SheetDescription>Choose your preferred wallet to connect</SheetDescription>
+            </SheetHeader>
+            
+            <div className="space-y-3 mt-6 pb-4">
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={() => openWalletApp('metamask')} 
+                  variant="outline" 
+                  className="w-full h-16 flex flex-col gap-1"
+                >
+                  <span className="text-2xl">🦊</span>
+                  <span className="text-xs">MetaMask</span>
+                </Button>
+                <Button 
+                  onClick={() => openWalletApp('trust')} 
+                  variant="outline" 
+                  className="w-full h-16 flex flex-col gap-1"
+                >
+                  <span className="text-2xl">🛡️</span>
+                  <span className="text-xs">Trust Wallet</span>
+                </Button>
+              </div>
+              <Button onClick={handleInlineConnect} variant="default" className="w-full">
+                Other Wallet
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
 
         {/* Notifications */}
         {isAuthenticated && (

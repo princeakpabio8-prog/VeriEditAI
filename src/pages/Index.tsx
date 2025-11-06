@@ -11,7 +11,7 @@ import Footer from "@/components/ui/footer";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { QuickVerifyFAB } from "@/components/ui/QuickVerifyFAB";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-import { LiveChatWidget } from "@/components/ui/LiveChatWidget";
+
 import { MobileWalletStatus } from "@/components/ui/MobileWalletStatus";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -282,10 +282,6 @@ const Index = () => {
       <Footer />
       <BackToTop />
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
-      <LiveChatWidget 
-        platform="crisp"
-        crispWebsiteId={import.meta.env.VITE_CRISP_WEBSITE_ID}
-      />
       <MobileWalletStatus />
     </div>
   );

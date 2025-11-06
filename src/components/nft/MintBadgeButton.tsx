@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useConnect } from 'wagmi'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Award, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { WalletConnect } from './WalletConnect'
+
 import { BadgeRevealModal } from './BadgeRevealModal'
 import { BadgePreview } from './BadgePreview'
 import { MobileNFTMintFlow } from './MobileNFTMintFlow'
@@ -20,6 +20,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const isReallyConnected = isConnected && !!address
   const { toast } = useToast()
   const isMobile = useIsMobile()
+  const { connectAsync, connectors } = useConnect()
   const [minting, setMinting] = useState(false)
   const [alreadyMinted, setAlreadyMinted] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
@@ -54,6 +55,20 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       setShowMobileFlow(true);
     } else {
       handleMint();
+    }
+  }
+
+  const handleInlineConnect = async () => {
+    try {
+      const injectedConnector = connectors.find((c) => c.id === 'injected')
+      if (injectedConnector) {
+        await connectAsync({ connector: injectedConnector })
+      } else {
+        toast({ title: 'Wallet unavailable', description: 'Please install a Web3 wallet app.', variant: 'destructive' })
+      }
+    } catch (error) {
+      console.error('Failed to connect wallet:', error)
+      toast({ title: 'Connection Failed', description: 'Please try again in your wallet app.', variant: 'destructive' })
     }
   }
 
@@ -166,9 +181,12 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           />
         )}
         
-        {/* Wallet Connect */}
-        {!isReallyConnected && <WalletConnect />}
-        
+        {/* Connect Wallet (Injected only) */}
+        {!isReallyConnected && (
+          <Button onClick={handleInlineConnect} variant="default" className="w-full">
+            Connect Wallet
+          </Button>
+        )}
         {/* Mint Button */}
         <Button
           onClick={handleMintClick}

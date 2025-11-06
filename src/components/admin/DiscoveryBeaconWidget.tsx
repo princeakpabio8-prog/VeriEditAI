@@ -72,7 +72,7 @@ export function DiscoveryBeaconWidget() {
       if (error) throw error;
 
       toast.success(
-        `Discovery Beacon completed: ${data.successful}/${data.total} successful submissions`
+        `Submission packages generated: ${data.successful}/${data.total} ready for manual submission`
       );
 
       // Refresh logs
@@ -130,12 +130,12 @@ export function DiscoveryBeaconWidget() {
               Discovery Beacon
             </CardTitle>
             <CardDescription>
-              Auto-submit to AI indexers weekly for discoverability
+              Generate submission packages for API directories and indexers
             </CardDescription>
           </div>
-          <Button onClick={runBeacon} disabled={running} size="sm">
+          <Button onClick={runBeacon} disabled={running} size="sm" className="bg-primary hover:bg-primary/90">
             <RefreshCw className={`w-4 h-4 mr-2 ${running ? 'animate-spin' : ''}`} />
-            Run Beacon
+            Generate Packages
           </Button>
         </div>
       </CardHeader>
@@ -165,16 +165,16 @@ export function DiscoveryBeaconWidget() {
           <h4 className="text-sm font-semibold mb-3">Recent Submissions</h4>
           {logs.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              No beacon runs yet. Click "Run Beacon" to start.
+              No packages generated yet. Click "Generate Packages" to create submission packages.
             </p>
           ) : (
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Indexer</TableHead>
+                    <TableHead>Directory</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Code</TableHead>
+                    <TableHead>Method</TableHead>
                     <TableHead>Time</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -189,8 +189,10 @@ export function DiscoveryBeaconWidget() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {log.response_code ? (
-                          <code className="text-xs">{log.response_code}</code>
+                        {log.response_body?.method ? (
+                          <Badge variant="outline" className="text-xs">
+                            {log.response_body.method}
+                          </Badge>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}

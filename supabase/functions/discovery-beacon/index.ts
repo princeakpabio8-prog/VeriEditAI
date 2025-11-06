@@ -12,78 +12,85 @@ interface IndexerTarget {
   headers?: Record<string, string>;
 }
 
-const indexers: IndexerTarget[] = [
+// Note: Most API directories don't have automated submission endpoints.
+// This function documents the submission process and creates a submission package
+// that can be manually submitted to these directories.
+
+interface DirectoryInfo {
+  name: string;
+  submission_url: string;
+  method: 'GitHub PR' | 'Form' | 'Email';
+  instructions: string;
+}
+
+const directories: DirectoryInfo[] = [
   {
-    name: 'AI Gateway',
-    endpoint: 'https://aigateway.io/api/submit',
-    method: 'POST',
+    name: 'APIs.guru OpenAPI Directory',
+    submission_url: 'https://github.com/APIs-guru/openapi-directory',
+    method: 'GitHub PR',
+    instructions: 'Fork the repo, add your OpenAPI spec to apis/, submit PR',
   },
   {
-    name: 'Public APIs Hub',
-    endpoint: 'https://api.publicapis.org/entries',
-    method: 'POST',
+    name: 'Public APIs List',
+    submission_url: 'https://github.com/public-apis/public-apis',
+    method: 'GitHub PR',
+    instructions: 'Add your API to README.md in the appropriate category, submit PR',
   },
   {
-    name: 'APIs Guru',
-    endpoint: 'https://api.apis.guru/v2/specs',
-    method: 'POST',
+    name: 'RapidAPI Hub',
+    submission_url: 'https://rapidapi.com/hub',
+    method: 'Form',
+    instructions: 'Register as provider, upload OpenAPI spec through dashboard',
   },
   {
-    name: 'OpenAPI Directory',
-    endpoint: 'https://directory.openapi.tools/api/submit',
-    method: 'POST',
+    name: 'Postman Public API Network',
+    submission_url: 'https://www.postman.com/api-network/',
+    method: 'Form',
+    instructions: 'Import OpenAPI spec to Postman, publish to API Network',
   },
 ];
 
-async function submitToIndexer(
-  indexer: IndexerTarget,
+async function generateSubmissionPackage(
+  directory: DirectoryInfo,
   payload: any,
   supabase: any
 ): Promise<{ success: boolean; response_code?: number; response_body?: any }> {
-  console.log(`📡 Submitting to ${indexer.name}...`);
+  console.log(`📦 Generating submission package for ${directory.name}...`);
 
   try {
-    const response = await fetch(indexer.endpoint, {
-      method: indexer.method,
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'VeriEdit-Discovery-Beacon/1.0',
-        ...(indexer.headers || {}),
-      },
-      body: JSON.stringify(payload),
-    });
+    // Create submission package with instructions
+    const submissionPackage = {
+      directory: directory.name,
+      method: directory.method,
+      url: directory.submission_url,
+      instructions: directory.instructions,
+      api_info: payload.api,
+      openapi_spec_url: payload.api.openApiUrl,
+      ready_to_submit: true,
+      notes: `Visit ${directory.submission_url} and follow the ${directory.method} process`,
+    };
 
-    const responseBody = await response.text();
-    let parsedBody;
-    try {
-      parsedBody = JSON.parse(responseBody);
-    } catch {
-      parsedBody = { raw: responseBody };
-    }
-
-    const success = response.status >= 200 && response.status < 300;
-
-    // Log to database
+    // Log successful package creation
     await supabase.from('discovery_beacon_logs').insert({
-      indexer_name: indexer.name,
-      status: success ? 'success' : 'failed',
-      response_code: response.status,
-      response_body: parsedBody,
+      indexer_name: directory.name,
+      status: 'success',
+      response_code: 200,
+      response_body: submissionPackage,
     });
 
-    console.log(`${success ? '✅' : '❌'} ${indexer.name}: ${response.status}`);
+    console.log(`✅ ${directory.name}: Package ready`);
 
     return {
-      success,
-      response_code: response.status,
-      response_body: parsedBody,
+      success: true,
+      response_code: 200,
+      response_body: submissionPackage,
     };
   } catch (error) {
-    console.error(`❌ Error submitting to ${indexer.name}:`, error);
+    console.error(`❌ Error creating package for ${directory.name}:`, error);
 
     // Log failure
     await supabase.from('discovery_beacon_logs').insert({
-      indexer_name: indexer.name,
+      indexer_name: directory.name,
       status: 'failed',
       response_code: null,
       response_body: { error: error.message },
@@ -166,21 +173,23 @@ Deno.serve(async (req) => {
       },
     };
 
-    // Submit to all indexers in parallel
+    // Generate submission packages for all directories
     const submissions = await Promise.all(
-      indexers.map((indexer) => submitToIndexer(indexer, payload, supabase))
+      directories.map((directory) => generateSubmissionPackage(directory, payload, supabase))
     );
 
     // Calculate summary
     const summary = {
-      total: indexers.length,
+      total: directories.length,
       successful: submissions.filter((s) => s.success).length,
       failed: submissions.filter((s) => !s.success).length,
       timestamp: new Date().toISOString(),
-      results: indexers.map((indexer, i) => ({
-        indexer: indexer.name,
+      note: 'Submission packages created. Visit each directory URL to manually submit.',
+      results: directories.map((directory, i) => ({
+        directory: directory.name,
         success: submissions[i].success,
-        status_code: submissions[i].response_code,
+        submission_url: directory.submission_url,
+        method: directory.method,
       })),
     };
 

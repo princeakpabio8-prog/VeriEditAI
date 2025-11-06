@@ -18,6 +18,7 @@ import { ApiKeyManager } from '@/components/api-key-manager';
 import { AvatarUploader } from '@/components/profile/AvatarUploader';
 import { FollowersList } from '@/components/profile/FollowersList';
 import { ProfileAchievements } from '@/components/ProfileAchievements';
+import { WalletBalance } from '@/components/wallet/WalletBalance';
 import { lower } from '@/lib/string';
 
 interface Profile {
@@ -437,6 +438,9 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Wallet Balance Section */}
+            <WalletBalance />
 
             {/* Achievements Section */}
             <ProfileAchievements />

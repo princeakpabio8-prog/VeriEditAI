@@ -23,11 +23,11 @@ export const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="fade-in-up">
-          <h1 className="text-[2.5rem] sm:text-5xl md:text-7xl font-extrabold mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
+          <h1 className="text-[2.5rem] sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
             <span className="bg-gradient-trust bg-clip-text text-transparent block">
               Trust Infrastructure
             </span>
-            <span className="text-foreground block mt-1 font-black">for the AI Era</span>
+            <span className="text-foreground block mt-1">for the AI Era</span>
           </h1>
           
           <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-2xl mx-auto px-2 leading-relaxed">

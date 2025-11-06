@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/ui/footer";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { QuickVerifyFAB } from "@/components/ui/QuickVerifyFAB";
+import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -38,6 +39,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <ScrollProgressBar />
       <Navigation />
       
       <main>

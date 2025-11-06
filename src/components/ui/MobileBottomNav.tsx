@@ -17,7 +17,7 @@ export const MobileBottomNav = () => {
   const isMobile = useIsMobile();
   const isAuthenticated = !!user;
   const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { connectAsync, connectors } = useConnect();
   const { disconnect } = useDisconnect();
   
   if (import.meta.env.DEV) {
@@ -45,14 +45,21 @@ export const MobileBottomNav = () => {
     }
   };
 
-  const handleWalletClick = () => {
+  const handleWalletClick = async () => {
     if (isConnected) {
       disconnect();
     } else {
-      // Connect with injected wallet (MetaMask, Trust Wallet, Rainbow, etc.)
-      const connector = connectors.find(c => c.id === 'injected');
-      if (connector) {
-        connect({ connector });
+      try {
+        // Try injected first (mobile wallet apps), fallback to walletConnect
+        const injectedConnector = connectors.find((c) => c.id === 'injected');
+        const walletConnectConnector = connectors.find((c) => c.id === 'walletConnect');
+        const connector = injectedConnector || walletConnectConnector;
+        
+        if (connector) {
+          await connectAsync({ connector });
+        }
+      } catch (error) {
+        console.error('Failed to connect wallet:', error);
       }
     }
   };

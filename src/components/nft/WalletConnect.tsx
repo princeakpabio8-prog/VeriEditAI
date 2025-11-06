@@ -31,24 +31,27 @@ export function WalletConnect() {
     )
   }
 
-  const handleConnect = async () => {
+  const handleConnect = async (connectorId?: string) => {
     if (isConnecting) return
     setIsConnecting(true)
 
     try {
-      const connector = connectors.find((c) => c.id === 'injected')
+      // Use specified connector or try injected first, then walletConnect
+      let connector = connectorId 
+        ? connectors.find((c) => c.id === connectorId)
+        : connectors.find((c) => c.id === 'injected') || connectors.find((c) => c.id === 'walletConnect')
 
       if (!connector) {
         toast({
           title: 'Wallet unavailable',
-          description: 'Please install MetaMask, Trust Wallet, or Rainbow wallet app.',
+          description: 'Please install a Web3 wallet or use WalletConnect.',
           variant: 'destructive',
         })
         setIsConnecting(false)
         return
       }
 
-      console.info('📱 Connecting wallet...')
+      console.info('📱 Connecting wallet via', connector.name)
 
       const result = await connectAsync({ 
         connector,
@@ -97,22 +100,38 @@ export function WalletConnect() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <Button
-        onClick={handleConnect}
-        disabled={isConnecting}
-        className="flex items-center gap-2"
-      >
-        <Wallet className="h-4 w-4" />
-        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-      </Button>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
+        <Button
+          onClick={() => handleConnect('injected')}
+          disabled={isConnecting}
+          className="flex items-center gap-2"
+          variant="default"
+        >
+          <Wallet className="h-4 w-4" />
+          {isConnecting ? 'Connecting...' : 'Mobile Wallet'}
+        </Button>
+        
+        <Button
+          onClick={() => handleConnect('walletConnect')}
+          disabled={isConnecting}
+          className="flex items-center gap-2"
+          variant="outline"
+        >
+          <Wallet className="h-4 w-4" />
+          {isConnecting ? 'Connecting...' : 'WalletConnect QR'}
+        </Button>
+      </div>
       
       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
         <p className="text-xs text-foreground mb-1">
-          📱 Supported wallets:
+          📱 Choose your connection:
         </p>
         <p className="text-xs text-muted-foreground">
-          MetaMask • Trust Wallet • Rainbow • Coinbase Wallet
+          Mobile Wallet: MetaMask, Trust Wallet, Rainbow apps
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          WalletConnect: Scan QR code with any wallet
         </p>
       </div>
     </div>

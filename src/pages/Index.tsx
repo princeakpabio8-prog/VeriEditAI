@@ -42,16 +42,16 @@ const Index = () => {
         <HeroSection />
         
         {/* Hot Claims - Race to Verify Section - Moved to top for immediate visibility */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
+        <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
           {/* Decorative background elements */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
           
           <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-12 fade-in-up">
-              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            <div className="text-center mb-8 sm:mb-12 fade-in-up">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
                 🔥 Viral Claims - Race to Verify!
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 Be first to verify trending claims and earn exclusive NFT badges. No sign-up required to view!
               </p>
             </div>
@@ -59,10 +59,10 @@ const Index = () => {
             <Suspense fallback={
               <div className="space-y-4">
                 <Skeleton className="h-12 w-full" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <Skeleton className="h-80" />
-                  <Skeleton className="h-80" />
-                  <Skeleton className="h-80" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                  <Skeleton className="h-60 sm:h-80" />
+                  <Skeleton className="h-60 sm:h-80" />
+                  <Skeleton className="h-60 sm:h-80" />
                 </div>
               </div>
             }>

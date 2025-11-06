@@ -49,7 +49,12 @@ export const HeroSection = () => {
       <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-lighthouse-glow rounded-full blur-3xl lighthouse-beam opacity-30" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div 
+        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-opacity duration-300"
+        style={{
+          opacity: Math.max(0, 1 - scrollY / 400),
+        }}
+      >
         <div className="fade-in-up">
           <h1 className="text-[2.5rem] sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
             <span className="bg-gradient-trust bg-clip-text text-transparent block">

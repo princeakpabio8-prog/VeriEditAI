@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast'
 import { WalletConnect } from './WalletConnect'
 import { BadgeRevealModal } from './BadgeRevealModal'
 import { BadgePreview } from './BadgePreview'
+import { MobileNFTMintFlow } from './MobileNFTMintFlow'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface MintBadgeButtonProps {
   verificationId: string
@@ -17,11 +19,13 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const { address, isConnected, chain } = useAccount()
   const isReallyConnected = isConnected && !!address
   const { toast } = useToast()
+  const isMobile = useIsMobile()
   const [minting, setMinting] = useState(false)
   const [alreadyMinted, setAlreadyMinted] = useState(false)
   const [showReveal, setShowReveal] = useState(false)
   const [mintedBadge, setMintedBadge] = useState<any>(null)
   const [showPreview, setShowPreview] = useState(false)
+  const [showMobileFlow, setShowMobileFlow] = useState(false)
 
   useEffect(() => {
     checkExistingBadge()
@@ -35,6 +39,22 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       .maybeSingle()
     
     setAlreadyMinted(!!data)
+  }
+
+  const getBadgeType = (score: number): "common" | "uncommon" | "rare" | "epic" | "legendary" => {
+    if (score >= 95) return "legendary";
+    if (score >= 90) return "epic";
+    if (score >= 85) return "rare";
+    if (score >= 75) return "uncommon";
+    return "common";
+  }
+
+  const handleMintClick = () => {
+    if (isMobile) {
+      setShowMobileFlow(true);
+    } else {
+      handleMint();
+    }
   }
 
   const handleMint = async () => {
@@ -151,7 +171,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         
         {/* Mint Button */}
         <Button
-          onClick={handleMint}
+          onClick={handleMintClick}
           disabled={!isReallyConnected || minting || trustScore < 70}
           className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full sm:w-auto text-sm"
           size="sm"
@@ -183,6 +203,15 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           open={showReveal}
           onClose={() => setShowReveal(false)}
           badgeData={mintedBadge}
+        />
+      )}
+
+      {isMobile && (
+        <MobileNFTMintFlow
+          isOpen={showMobileFlow}
+          onClose={() => setShowMobileFlow(false)}
+          badgeType={getBadgeType(trustScore)}
+          verificationId={verificationId}
         />
       )}
     </>

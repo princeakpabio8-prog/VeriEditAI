@@ -7,7 +7,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HeroSection = () => {
   const [scrollY, setScrollY] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (isMobile) return;
@@ -24,9 +29,11 @@ export const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-24 sm:pt-0 sm:pb-0">
       {/* Background Image with Overlay */}
       <div 
-        className="absolute inset-0 will-change-transform"
+        className="absolute inset-0 will-change-transform transition-transform duration-[1500ms] ease-out"
         style={{
-          transform: isMobile ? 'none' : `translateY(${scrollY * 0.4}px)`,
+          transform: isMobile 
+            ? (mounted ? 'scale(1)' : 'scale(1.1)')
+            : `translateY(${scrollY * 0.4}px) scale(${mounted ? 1 : 1.1})`,
         }}
       >
         <img

@@ -64,16 +64,19 @@ export default function Verify() {
       const viralClaimId = urlParams.get('viralClaimId');
       
       if (claim && viralClaimId) {
-        console.log('Auto-starting verification from URL parameters:', { viralClaimId });
+        console.log('Auto-starting verification from Hot Claims:', { viralClaimId });
         
-        // Auto-start verification with viral claim data
+        // Show immediate feedback
+        toast.loading('Auto-verifying viral claim...', { id: 'auto-verify' });
+        
+        // Auto-start verification with viral claim data (reduced delay for instant feel)
         setTimeout(() => {
           handleVerificationStart({
             content: claim,
             viralClaimId,
             source: 'viral_claim'
           });
-        }, 300);
+        }, 100);
         
         // Clear URL params to prevent re-triggering
         window.history.replaceState({}, document.title, '/verify');
@@ -88,14 +91,17 @@ export default function Verify() {
       if (prefilledContent) {
         console.log('Auto-starting verification from viral claim:', { viralClaimId });
         
-        // Auto-start verification with viral claim data
+        // Show immediate feedback
+        toast.loading('Auto-verifying viral claim...', { id: 'auto-verify' });
+        
+        // Auto-start verification with viral claim data (reduced delay)
         setTimeout(() => {
           handleVerificationStart({
             content: prefilledContent,
             viralClaimId,
             source
           });
-        }, 300);
+        }, 100);
         
         // Clear the state to prevent re-triggering
         window.history.replaceState({}, document.title);
@@ -176,6 +182,9 @@ export default function Verify() {
     try {
       console.log('Starting instant verification...', { isMobile });
       
+      // Dismiss auto-verify loading toast if present
+      toast.dismiss('auto-verify');
+      
       // Add template metadata if a template is selected
       const verificationData = {
         ...data,
@@ -203,18 +212,22 @@ export default function Verify() {
         viralClaimId: data.viralClaimId // Store viral claim ID for auto-minting
       });
 
-      // Show NFT mint prompt once per verification (persisted across sessions)
+      // Show NFT mint prompt for high-trust verifications
       if (normalizedResult?.verificationId && (normalizedResult.confidence ?? 0) >= 70) {
         try {
           const raw = localStorage.getItem('shown_nft_prompts') || sessionStorage.getItem('shown_nft_prompts') || '{}';
           const shownMap = JSON.parse(raw);
           if (!shownMap[normalizedResult.verificationId]) {
-            setNftMintPrompt({
-              show: true,
-              verificationId: normalizedResult.verificationId,
-              trustScore: normalizedResult.confidence || 0,
-              claimText: data.content,
-            });
+            // Show NFT prompt with slight delay to ensure verification result is visible
+            setTimeout(() => {
+              setNftMintPrompt({
+                show: true,
+                verificationId: normalizedResult.verificationId,
+                trustScore: normalizedResult.confidence || 0,
+                claimText: data.content,
+              });
+            }, 800);
+            
             shownMap[normalizedResult.verificationId] = true;
             const updated = JSON.stringify(shownMap);
             sessionStorage.setItem('shown_nft_prompts', updated);

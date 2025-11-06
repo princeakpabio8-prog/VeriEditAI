@@ -3,6 +3,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { polygonMainnet } from '@/lib/web3-config'
 import { injected, walletConnect } from 'wagmi/connectors'
 
+// Resolve correct origin for WalletConnect verification (prevents "Invalid website" on preview domains)
+const getAppOrigin = () => {
+  try {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+  } catch (e) {}
+  return 'https://trust-lighthouse.lovable.app'; // fallback to production
+};
+
+const appOrigin = getAppOrigin();
+
 const config = createConfig({
   chains: [polygonMainnet],
   connectors: [
@@ -12,8 +24,8 @@ const config = createConfig({
       metadata: {
         name: 'VeriEdit AI',
         description: 'Truth Badge NFT Platform - Verify and mint NFT badges',
-        url: 'https://trust-lighthouse.lovable.app',
-        icons: ['https://trust-lighthouse.lovable.app/favicon.ico']
+        url: appOrigin,
+        icons: [`${appOrigin}/favicon.ico`]
       },
       showQrModal: true,
       qrModalOptions: {

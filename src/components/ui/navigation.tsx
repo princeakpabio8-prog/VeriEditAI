@@ -1,11 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
 import { NotificationBell } from '@/components/ui/NotificationBell';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -19,12 +19,24 @@ export const Navigation = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showCTA, setShowCTA] = useState(false);
   const { signOut, user: authUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Derive auth state from hook
   const isAuthenticated = !!authUser;
+
+  // Show CTA button after scrolling past hero section
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show CTA after scrolling 600px (roughly past hero)
+      setShowCTA(window.scrollY > 600);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Check if user is admin
   useEffect(() => {
@@ -196,6 +208,25 @@ export const Navigation = () => {
                 </Link>
               </>
             )}
+            
+            {/* Sticky CTA - appears after scrolling past hero, only on homepage for non-auth users */}
+            <AnimatePresence>
+              {showCTA && !isAuthenticated && location.pathname === '/' && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Link to="/verify">
+                    <Button size="sm" className="group">
+                      <Zap className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform" />
+                      Try Now
+                    </Button>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             {/* Feedback and notifications for authenticated users */}
             {isAuthenticated && (

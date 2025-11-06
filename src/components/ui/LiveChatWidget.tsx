@@ -1,249 +1,155 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, X, Send, Minimize2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { useEffect } from "react";
+import { motion } from "framer-motion";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "support";
-  timestamp: Date;
+// Configuration for different platforms
+export type ChatPlatform = "intercom" | "crisp" | "zendesk" | "tawk";
+
+interface LiveChatWidgetProps {
+  platform?: ChatPlatform;
+  // Platform-specific IDs (add your own)
+  intercomAppId?: string;
+  crispWebsiteId?: string;
+  zendeskKey?: string;
+  tawkPropertyId?: string;
+  tawkWidgetId?: string;
 }
 
-export const LiveChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: "Hi! 👋 How can we help you today?",
-      sender: "support",
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const [hasNewMessages, setHasNewMessages] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+export const LiveChatWidget = ({
+  platform = "crisp",
+  intercomAppId = "",
+  crispWebsiteId = "",
+  zendeskKey = "",
+  tawkPropertyId = "",
+  tawkWidgetId = "",
+}: LiveChatWidgetProps) => {
+  
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Intercom Integration
+    if (platform === "intercom" && intercomAppId) {
+      const initIntercom = () => {
+        (window as any).intercomSettings = {
+          api_base: "https://api-iam.intercom.io",
+          app_id: intercomAppId,
+        };
 
-  useEffect(() => {
-    if (isOpen) {
-      setHasNewMessages(false);
-    }
-  }, [isOpen]);
-
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInputValue("");
-
-    // Simulate support response
-    setTimeout(() => {
-      const supportMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "Thanks for reaching out! Our team will respond shortly.",
-        sender: "support",
-        timestamp: new Date(),
+        const w = window as any;
+        const ic = w.Intercom;
+        if (typeof ic === "function") {
+          ic("reattach_activator");
+          ic("update", w.intercomSettings);
+        } else {
+          const d = document;
+          const i: any = function () {
+            i.c(arguments);
+          };
+          i.q = [];
+          i.c = function (args: any) {
+            i.q.push(args);
+          };
+          w.Intercom = i;
+          
+          const l = function () {
+            const s = d.createElement("script");
+            s.type = "text/javascript";
+            s.async = true;
+            s.src = `https://widget.intercom.io/widget/${intercomAppId}`;
+            const x = d.getElementsByTagName("script")[0];
+            x.parentNode?.insertBefore(s, x);
+          };
+          
+          if (document.readyState === "complete") {
+            l();
+          } else if (w.attachEvent) {
+            w.attachEvent("onload", l);
+          } else {
+            w.addEventListener("load", l, false);
+          }
+        }
       };
-      setMessages((prev) => [...prev, supportMessage]);
-      
-      if (!isOpen) {
-        setHasNewMessages(true);
-        toast({
-          title: "New message",
-          description: "Support has replied to your message",
-        });
-      }
-    }, 1500);
-  };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+      initIntercom();
+      (window as any).Intercom("boot", { app_id: intercomAppId });
+
+      return () => {
+        if ((window as any).Intercom) {
+          (window as any).Intercom("shutdown");
+        }
+      };
     }
-  };
+
+    // Crisp Integration
+    if (platform === "crisp" && crispWebsiteId) {
+      (window as any).$crisp = [];
+      (window as any).CRISP_WEBSITE_ID = crispWebsiteId;
+
+      const d = document;
+      const s = d.createElement("script");
+      s.src = "https://client.crisp.chat/l.js";
+      s.async = true;
+      d.getElementsByTagName("head")[0].appendChild(s);
+
+      return () => {
+        const script = document.querySelector('script[src="https://client.crisp.chat/l.js"]');
+        if (script) {
+          script.remove();
+        }
+        delete (window as any).$crisp;
+        delete (window as any).CRISP_WEBSITE_ID;
+      };
+    }
+
+    // Zendesk Integration
+    if (platform === "zendesk" && zendeskKey) {
+      const script = document.createElement("script");
+      script.id = "ze-snippet";
+      script.src = `https://static.zdassets.com/ekr/snippet.js?key=${zendeskKey}`;
+      script.async = true;
+      document.getElementsByTagName("head")[0].appendChild(script);
+
+      return () => {
+        const script = document.getElementById("ze-snippet");
+        if (script) {
+          script.remove();
+        }
+        if ((window as any).zE) {
+          delete (window as any).zE;
+        }
+      };
+    }
+
+    // Tawk.to Integration
+    if (platform === "tawk" && tawkPropertyId && tawkWidgetId) {
+      const Tawk_API: any = (window as any).Tawk_API || {};
+      const Tawk_LoadStart = new Date();
+      
+      (window as any).Tawk_API = Tawk_API;
+      (window as any).Tawk_LoadStart = Tawk_LoadStart;
+
+      const s1 = document.createElement("script");
+      const s0 = document.getElementsByTagName("script")[0];
+      s1.async = true;
+      s1.src = `https://embed.tawk.to/${tawkPropertyId}/${tawkWidgetId}`;
+      s1.charset = "UTF-8";
+      s1.setAttribute("crossorigin", "*");
+      s0.parentNode?.insertBefore(s1, s0);
+
+      return () => {
+        const script = document.querySelector(`script[src*="embed.tawk.to"]`);
+        if (script) {
+          script.remove();
+        }
+        delete (window as any).Tawk_API;
+        delete (window as any).Tawk_LoadStart;
+      };
+    }
+  }, [platform, intercomAppId, crispWebsiteId, zendeskKey, tawkPropertyId, tawkWidgetId]);
 
   return (
-    <>
-      {/* Chat Window */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[380px] max-w-[calc(100vw-3rem)]"
-          >
-            <Card className="flex flex-col h-[500px] max-h-[calc(100vh-8rem)] shadow-2xl border-2">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground rounded-t-lg">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9 bg-primary-foreground/10">
-                    <AvatarFallback className="text-primary-foreground font-semibold">
-                      CS
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-sm">Customer Support</h3>
-                    <p className="text-xs opacity-90">We're here to help</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/10"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${
-                        message.sender === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[75%] rounded-lg px-4 py-2 ${
-                          message.sender === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <p className="text-sm">{message.text}</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            message.sender === "user"
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {message.timestamp.toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              </ScrollArea>
-
-              {/* Input */}
-              <div className="p-4 border-t bg-background">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Type your message..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  We typically reply within a few minutes
-                </p>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Button */}
-      <motion.div
-        className="fixed bottom-6 right-6 z-50"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-      >
-        <Button
-          size="lg"
-          onClick={() => setIsOpen(!isOpen)}
-          className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl relative group"
-        >
-          <AnimatePresence mode="wait">
-            {isOpen ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <X className="h-6 w-6" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="chat"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <MessageCircle className="h-6 w-6" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
-          {/* New message indicator */}
-          {hasNewMessages && !isOpen && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-1 -right-1 h-5 w-5 bg-destructive rounded-full border-2 border-background flex items-center justify-center"
-            >
-              <span className="text-xs text-destructive-foreground font-bold">1</span>
-            </motion.span>
-          )}
-          
-          {/* Pulse animation */}
-          <span className="absolute inset-0 rounded-full bg-primary opacity-0 group-hover:opacity-20 animate-pulse" />
-        </Button>
-      </motion.div>
-    </>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1 }}
+      className="live-chat-widget"
+    />
   );
 };

@@ -276,7 +276,10 @@ const Index = () => {
       <Footer />
       <BackToTop />
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
-      <LiveChatWidget />
+      <LiveChatWidget 
+        platform="crisp"
+        crispWebsiteId="YOUR_CRISP_WEBSITE_ID"
+      />
     </div>
   );
 };

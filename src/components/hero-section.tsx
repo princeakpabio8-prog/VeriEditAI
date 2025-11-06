@@ -2,12 +2,33 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield, Award, Users, Radio } from "lucide-react";
 import { Link } from "react-router-dom";
 import lighthouseHero from "@/assets/lighthouse-hero.jpg";
+import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HeroSection = () => {
+  const [scrollY, setScrollY] = useState(0);
+  const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isMobile]);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-24 sm:pt-0 sm:pb-0">
       {/* Background Image with Overlay */}
-      <div className="absolute inset-0">
+      <div 
+        className="absolute inset-0 will-change-transform"
+        style={{
+          transform: isMobile ? 'none' : `translateY(${scrollY * 0.4}px)`,
+        }}
+      >
         <img
           src={lighthouseHero}
           alt="Lighthouse beacon representing truth and verification"

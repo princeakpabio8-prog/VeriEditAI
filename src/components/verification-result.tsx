@@ -11,6 +11,7 @@ import { ContradictionAlert } from './ContradictionAlert';
 import { SourceFreshnessDisplay } from './SourceFreshnessDisplay';
 import { ReverseImageSearchResults } from './ReverseImageSearchResults';
 import { MintBadgeButton } from './nft/MintBadgeButton';
+import { SocialShareButtons } from './SocialShareButtons';
 import { ExternalLink, Clock, FileText, Activity, Shield, Share2, Award } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
@@ -666,11 +667,25 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
         </motion.div>
       )}
 
-      {/* Export and Share Section */}
+      {/* Social Media Quick Share */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 2.3 }}
+      >
+        <SocialShareButtons
+          content={displayContent || displaySummary}
+          trustScore={trustScore}
+          verificationId={verificationId}
+          status={normalizedStatus}
+        />
+      </motion.div>
+
+      {/* Export and Share Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 2.4 }}
         className="space-y-4"
       >
         <VerificationExport

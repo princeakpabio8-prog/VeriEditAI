@@ -740,36 +740,71 @@ export const VerificationResult: React.FC<VerificationResultProps> = ({
       </motion.div>
 
       {/* NFT Badge Minting Section */}
-      {verificationId && trustScore >= 75 && (
+      {verificationId && (
         <motion.div
           id="mint-badge-section"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 2.0 }}
         >
-          <Card className={`border-purple-500/30 ${viralClaimId ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20 ring-2 ring-purple-500/50' : 'bg-gradient-to-r from-purple-900/20 to-blue-900/20'}`}>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Award className="h-5 w-5 text-purple-400" />
-                {viralClaimId ? '🔥 Mint Your Viral Claim Badge!' : 'Earn Your Truth Badge'}
-              </CardTitle>
-              <CardDescription>
-                {viralClaimId 
-                  ? 'This viral claim has been verified! Mint a special NFT badge to commemorate being an early fact-checker.'
-                  : 'Mint a free NFT badge on Polygon Mainnet to commemorate this verified claim'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <MintBadgeButton 
-                verificationId={verificationId}
-                trustScore={trustScore}
-              />
-              <p className="text-xs text-muted-foreground mt-3">
-                🪙 These badges are minted on Polygon Mainnet and can be traded or showcased as proof of your verification work
-              </p>
-            </CardContent>
-          </Card>
+          {trustScore >= 75 ? (
+            <Card className={`border-purple-500/30 ${viralClaimId ? 'bg-gradient-to-r from-purple-900/20 to-blue-900/20 ring-2 ring-purple-500/50' : 'bg-gradient-to-r from-purple-900/20 to-blue-900/20'}`}>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Award className="h-5 w-5 text-purple-400" />
+                  {viralClaimId ? '🔥 Mint Your Viral Claim Badge!' : 'Earn Your Truth Badge'}
+                </CardTitle>
+                <CardDescription>
+                  {viralClaimId 
+                    ? 'This viral claim has been verified! Mint a special NFT badge to commemorate being an early fact-checker.'
+                    : 'Mint a free NFT badge on Polygon Mainnet to commemorate this verified claim'
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MintBadgeButton 
+                  verificationId={verificationId}
+                  trustScore={trustScore}
+                />
+                <p className="text-xs text-muted-foreground mt-3">
+                  🪙 These badges are minted on Polygon Mainnet and can be traded or showcased as proof of your verification work
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-border/50 bg-muted/20">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Award className="h-5 w-5 text-muted-foreground" />
+                  Verification Complete
+                </CardTitle>
+                <CardDescription>
+                  {viralClaimId 
+                    ? 'You successfully verified this viral claim!'
+                    : 'Your verification has been recorded'
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="p-4 rounded-lg bg-background border border-border">
+                  <p className="text-sm text-foreground mb-2">
+                    ✅ <strong>Claim Verified!</strong>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Your verification has been recorded with a trust score of <strong>{trustScore}%</strong>.
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+                    <strong>NFT Badge Not Available</strong>
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">
+                    NFT badges are only available for claims with a trust score of 75% or higher. This helps maintain the value and credibility of Truth Badges.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
       )}
 

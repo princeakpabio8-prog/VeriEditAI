@@ -295,6 +295,38 @@ export function HotClaimsWidget() {
     }
   };
 
+  const handleNativeShare = async (claim: HotClaim) => {
+    // Check if Web Share API is available
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `🔥 Viral Claim - ${claim.platform}`,
+          text: `${claim.claim_text}\n\n📊 Engagement: ${claim.engagement_score.toLocaleString()} | ⚡ Velocity: ${Math.round(claim.engagement_velocity)}/hr\n\nVerify this claim:`,
+          url: claim.share_token 
+            ? `${window.location.origin}/claim/${claim.share_token}`
+            : `${window.location.origin}/viral-claims?claim=${claim.id}`
+        });
+        
+        toast({
+          title: "✅ Claim Shared!",
+          description: "Successfully shared via native share menu 🎉",
+        });
+      } catch (error: any) {
+        // User cancelled or error occurred
+        if (error.name !== 'AbortError') {
+          console.error('Share failed:', error);
+          // Fall back to modal
+          setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
+          setShareModalOpen(true);
+        }
+      }
+    } else {
+      // Web Share API not available, use modal
+      setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
+      setShareModalOpen(true);
+    }
+  };
+
   // Render individual claim card (shared between mobile carousel and desktop grid)
   const renderClaimCard = (
     claim: HotClaim, 
@@ -876,18 +908,26 @@ export function HotClaimsWidget() {
                       >
                         {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
                       </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
-                          setShareModalOpen(true);
-                        }}
-                        className="min-h-[48px] min-w-[48px]"
-                      >
-                        <Share2 className="h-5 w-5" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNativeShare(claim);
+                              }}
+                              className="min-h-[48px] min-w-[48px]"
+                            >
+                              <Share2 className="h-5 w-5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Share this claim</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </CardContent>
                 </Card>

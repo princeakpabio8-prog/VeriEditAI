@@ -589,17 +589,26 @@ export function HotClaimsWidget() {
                     ) : null}
                   
                   {/* Overlays */}
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    {index === 0 && (
-                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
-                        🔥 RACE TO VERIFY
-                      </Badge>
-                    )}
-                    {claim.rarity_tier && (
-                      <Badge
-                        className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
-                      >
-                        {getRarityIcon(claim.rarity_tier)} {getRarityDisplayName(claim.rarity_tier)}
+                  <div className="absolute top-3 left-3 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      {index === 0 && (
+                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
+                          🔥 RACE TO VERIFY
+                        </Badge>
+                      )}
+                      {claim.rarity_tier && (
+                        <Badge
+                          className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
+                        >
+                          {getRarityIcon(claim.rarity_tier)} {getRarityDisplayName(claim.rarity_tier)}
+                        </Badge>
+                      )}
+                    </div>
+                    {/* Trending Now Badge - Shows on top 3 claims by velocity */}
+                    {index < 3 && claim.engagement_velocity > 100 && !isVerified && (
+                      <Badge className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-bold text-xs px-3 py-1.5 shadow-lg animate-pulse flex items-center gap-1.5 w-fit">
+                        <TrendingUp className="h-3 w-3" />
+                        TRENDING NOW
                       </Badge>
                     )}
                   </div>

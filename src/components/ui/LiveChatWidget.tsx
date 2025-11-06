@@ -16,12 +16,22 @@ interface LiveChatWidgetProps {
 
 export const LiveChatWidget = ({
   platform = "crisp",
-  intercomAppId = "",
-  crispWebsiteId = "",
-  zendeskKey = "",
-  tawkPropertyId = "",
-  tawkWidgetId = "",
+  intercomAppId,
+  crispWebsiteId,
+  zendeskKey,
+  tawkPropertyId,
+  tawkWidgetId,
 }: LiveChatWidgetProps) => {
+  // Don't render if no platform ID is configured
+  const hasValidConfig = 
+    (platform === "crisp" && crispWebsiteId) ||
+    (platform === "intercom" && intercomAppId) ||
+    (platform === "zendesk" && zendeskKey) ||
+    (platform === "tawk" && tawkPropertyId && tawkWidgetId);
+
+  if (!hasValidConfig) {
+    return null;
+  }
   
   useEffect(() => {
     // Intercom Integration

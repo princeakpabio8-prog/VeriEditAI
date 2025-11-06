@@ -284,8 +284,9 @@ const Index = () => {
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
       <LiveChatWidget 
         platform="crisp"
-        crispWebsiteId="YOUR_CRISP_WEBSITE_ID"
+        crispWebsiteId={import.meta.env.VITE_CRISP_WEBSITE_ID}
       />
+      <MobileWalletStatus />
     </div>
   );
 };

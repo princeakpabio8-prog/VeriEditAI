@@ -12,6 +12,7 @@ import { BackToTop } from "@/components/ui/BackToTop";
 import { QuickVerifyFAB } from "@/components/ui/QuickVerifyFAB";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
 import { LiveChatWidget } from "@/components/ui/LiveChatWidget";
+import { MobileWalletStatus } from "@/components/ui/MobileWalletStatus";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -70,6 +71,11 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <ScrollProgressBar />
       <Navigation />
+      
+      {/* Mobile Wallet Status Indicator */}
+      <div className="pt-16">
+        <MobileWalletStatus />
+      </div>
       
       <motion.main
         variants={containerVariants}

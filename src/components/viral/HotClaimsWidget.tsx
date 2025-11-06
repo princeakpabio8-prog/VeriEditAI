@@ -864,8 +864,31 @@ export function HotClaimsWidget() {
                   <ClaimImageFallback claimText={claim.claim_text} platform={claim.platform} rarityTier={getClaimRarityForFallback(claim)} engagementScore={claim.engagement_score} rank={index + 1} showRaceBadge={index === 0} />
                   <CardContent className="p-5 space-y-3">
                     <p className="font-semibold text-base line-clamp-3">{claim.claim_text}</p>
-                    <div className="text-sm text-muted-foreground">{claim.platform} • {Math.round(claim.engagement_velocity)}/hr velocity</div>
-                    <Button onClick={() => handleVerifyNow(claim)} disabled={verifyingIds.has(claim.id)} className={cn("w-full min-h-[48px] font-semibold", index === 0 && "bg-orange-500 hover:bg-orange-600")}>{verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}</Button>
+                    <div className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span>{claim.platform}</span>
+                      <span>{Math.round(claim.engagement_velocity)}/hr velocity</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => handleVerifyNow(claim)} 
+                        disabled={verifyingIds.has(claim.id)} 
+                        className={cn("flex-1 min-h-[48px] font-semibold", index === 0 && "bg-orange-500 hover:bg-orange-600")}
+                      >
+                        {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
+                          setShareModalOpen(true);
+                        }}
+                        className="min-h-[48px] min-w-[48px]"
+                      >
+                        <Share2 className="h-5 w-5" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );

@@ -41,23 +41,18 @@ const Index = () => {
       <main>
         <HeroSection />
         
-        {/* NFT Hero Section - Mobile-first badge discovery */}
-        <NFTHeroSection />
-        
-        <VideoDemoSection />
-        
-        {/* Hot Claims - Race to Verify Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
+        {/* Hot Claims - Race to Verify Section - Moved to top for immediate visibility */}
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
           {/* Decorative background elements */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
           
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center mb-12 fade-in-up">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Viral Claims to Verify
+                🔥 Viral Claims - Race to Verify!
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Be first to verify trending claims and earn exclusive NFT badges
+                Be first to verify trending claims and earn exclusive NFT badges. No sign-up required to view!
               </p>
             </div>
             
@@ -77,6 +72,11 @@ const Index = () => {
             </Suspense>
           </div>
         </section>
+        
+        {/* NFT Hero Section - Mobile-first badge discovery */}
+        <NFTHeroSection />
+        
+        <VideoDemoSection />
         
         {/* Verification Section */}
         <section className="py-20 px-4 sm:px-6 lg:px-8">

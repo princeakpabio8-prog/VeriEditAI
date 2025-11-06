@@ -5,7 +5,7 @@ import lighthouseHero from "@/assets/lighthouse-hero.jpg";
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-0">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-24 sm:pt-0 sm:pb-0">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
@@ -21,58 +21,58 @@ export const HeroSection = () => {
       <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-lighthouse-glow rounded-full blur-3xl lighthouse-beam opacity-30" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-8 sm:py-0">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="fade-in-up">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-[1.15] sm:leading-tight tracking-tight">
+          <h1 className="text-[2.5rem] sm:text-5xl md:text-7xl font-extrabold mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
             <span className="bg-gradient-trust bg-clip-text text-transparent block">
               Trust Infrastructure
             </span>
             <span className="text-foreground block mt-1 font-black">for the AI Era</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-2xl mx-auto px-2 leading-relaxed">
             AI-powered verification that delivers instant trust scores and comprehensive evidence for any digital content.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link to="/verify">
-              <Button size="lg" className="text-lg px-8 py-6 group">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10 sm:mb-16 px-4">
+            <Link to="/verify" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 group">
                 Start Verification
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link to="/lighthouse">
-              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
-                <Radio className="mr-2 h-5 w-5" />
+            <Link to="/lighthouse" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6">
+                <Radio className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 Explore Lighthouse
               </Button>
             </Link>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto px-2">
             <div className="text-center trust-pulse">
-              <div className="flex items-center justify-center mb-2">
-                <Shield className="h-8 w-8 text-primary" />
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-1">99.9%</h3>
-              <p className="text-sm text-muted-foreground">Accuracy Rate</p>
+              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">99.9%</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Accuracy</p>
             </div>
             
             <div className="text-center trust-pulse" style={{ animationDelay: "0.2s" }}>
-              <div className="flex items-center justify-center mb-2">
-                <Users className="h-8 w-8 text-primary" />
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-1">10K+</h3>
-              <p className="text-sm text-muted-foreground">Trusted Users</p>
+              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">10K+</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Users</p>
             </div>
             
             <div className="text-center trust-pulse" style={{ animationDelay: "0.4s" }}>
-              <div className="flex items-center justify-center mb-2">
-                <Award className="h-8 w-8 text-primary" />
+              <div className="flex items-center justify-center mb-1 sm:mb-2">
+                <Award className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-1">3K+</h3>
-              <p className="text-sm text-muted-foreground">NFT Badges Minted</p>
+              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">3K+</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Badges</p>
             </div>
           </div>
         </div>

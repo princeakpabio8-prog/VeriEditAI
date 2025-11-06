@@ -8,6 +8,7 @@ import { NFTHeroSection } from "@/components/nft/NFTHeroSection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Footer from "@/components/ui/footer";
+import { BackToTop } from "@/components/ui/BackToTop";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
@@ -217,6 +218,7 @@ const Index = () => {
         </section>
       </main>
       <Footer />
+      <BackToTop />
     </div>
   );
 };

@@ -1,9 +1,8 @@
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { Button } from '@/components/ui/button'
-import { Wallet, QrCode, RefreshCw } from 'lucide-react'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { Wallet } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { polygonMainnet } from '@/lib/web3-config'
 
 export function WalletConnect() {
@@ -11,32 +10,8 @@ export function WalletConnect() {
   const { connectAsync, connectors } = useConnect()
   const { disconnect } = useDisconnect()
   const { switchChainAsync } = useSwitchChain()
-  const isMobile = useIsMobile()
   const { toast } = useToast()
   const [isConnecting, setIsConnecting] = useState(false)
-  const [hasInjectedWallet, setHasInjectedWallet] = useState(false)
-
-  useEffect(() => {
-    // Detect injected wallet (MetaMask, etc.)
-    setHasInjectedWallet(typeof window !== 'undefined' && !!(window as any).ethereum)
-  }, [])
-
-  const handleResetWallet = () => {
-    disconnect()
-    // Clear WalletConnect v2 storage
-    const wcKeys = ['wc@2:client', 'wc@2:core', 'walletconnect', 'WALLETCONNECT_DEEPLINK_CHOICE']
-    wcKeys.forEach(key => {
-      try {
-        localStorage.removeItem(key)
-      } catch (e) {
-        console.error('Failed to clear storage:', e)
-      }
-    })
-    toast({
-      title: 'Wallet Reset',
-      description: 'Please try connecting again',
-    })
-  }
 
   if (isConnected && address) {
     return (
@@ -56,37 +31,25 @@ export function WalletConnect() {
     )
   }
 
-  const handleConnect = async (preferWalletConnect = false) => {
+  const handleConnect = async () => {
     if (isConnecting) return
     setIsConnecting(true)
 
     try {
-      let connector
-      
-      // Choose connector based on preference and availability
-      if (!preferWalletConnect && hasInjectedWallet && !isMobile) {
-        // Use injected wallet (MetaMask) on desktop
-        connector = connectors.find((c) => c.id === 'injected')
-        console.info('🦊 Using injected wallet (MetaMask)')
-      } else {
-        // Use WalletConnect for mobile or when explicitly requested
-        connector = connectors.find((c) => c.id === 'walletConnect')
-        console.info('🔗 Using WalletConnect for mobile')
-      }
+      const connector = connectors.find((c) => c.id === 'injected')
 
       if (!connector) {
         toast({
           title: 'Wallet unavailable',
-          description: 'No wallet connector found. Please install a Web3 wallet.',
+          description: 'Please install MetaMask, Trust Wallet, or Rainbow wallet app.',
           variant: 'destructive',
         })
         setIsConnecting(false)
         return
       }
 
-      console.info('📱 Attempting connection...', { isMobile, connector: connector.id })
+      console.info('📱 Connecting wallet...')
 
-      // Connect with Polygon chain ID
       const result = await connectAsync({ 
         connector,
         chainId: polygonMainnet.id 
@@ -104,7 +67,6 @@ export function WalletConnect() {
         }
       }
 
-      // Only show success if we have an address
       if (result.accounts[0]) {
         toast({
           title: '🎉 Wallet Connected',
@@ -118,12 +80,10 @@ export function WalletConnect() {
       
       if (error.message?.includes('User rejected') || error.message?.includes('Connection request reset')) {
         errorMessage = 'Connection canceled. Please try again.'
-      } else if (error.message?.includes('Invalid projectId')) {
-        errorMessage = 'WalletConnect configuration error'
       } else if (error.message?.includes('Chain mismatch')) {
         errorMessage = 'Please switch to Polygon network in your wallet'
       } else if (error.name === 'ConnectorNotFoundError') {
-        errorMessage = 'No wallet found. Please install MetaMask, Trust Wallet, or Rainbow.'
+        errorMessage = 'No wallet found. Please install a Web3 wallet app.'
       }
 
       toast({
@@ -138,45 +98,13 @@ export function WalletConnect() {
 
   return (
     <div className="flex flex-col gap-2">
-      {hasInjectedWallet && !isMobile ? (
-        <>
-          <Button
-            onClick={() => handleConnect(false)}
-            disabled={isConnecting}
-            className="flex items-center gap-2"
-          >
-            <Wallet className="h-4 w-4" />
-            {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
-          </Button>
-          <Button
-            onClick={() => handleConnect(true)}
-            disabled={isConnecting}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <QrCode className="h-4 w-4" />
-            WalletConnect (QR Code)
-          </Button>
-        </>
-      ) : (
-        <Button
-          onClick={() => handleConnect(true)}
-          disabled={isConnecting}
-          className="flex items-center gap-2"
-        >
-          <Wallet className="h-4 w-4" />
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-        </Button>
-      )}
-
       <Button
-        onClick={handleResetWallet}
-        variant="ghost"
-        size="sm"
-        className="flex items-center gap-2 text-xs"
+        onClick={handleConnect}
+        disabled={isConnecting}
+        className="flex items-center gap-2"
       >
-        <RefreshCw className="h-3 w-3" />
-        Reset Wallet Session
+        <Wallet className="h-4 w-4" />
+        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
       </Button>
       
       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">

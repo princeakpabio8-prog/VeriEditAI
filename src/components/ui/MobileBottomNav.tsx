@@ -49,8 +49,8 @@ export const MobileBottomNav = () => {
     if (isConnected) {
       disconnect();
     } else {
-      // Connect with the first available connector (usually MetaMask/injected or WalletConnect)
-      const connector = connectors[0];
+      // Connect with injected wallet (MetaMask, Trust Wallet, Rainbow, etc.)
+      const connector = connectors.find(c => c.id === 'injected');
       if (connector) {
         connect({ connector });
       }

@@ -96,8 +96,8 @@ serve(async (req) => {
           JSON.stringify({
             confidence: 0,
             status: 'failed',
-            summary: '**🚫 VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying content.',
-            analysis: 'Verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+            summary: '**🚫 VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit of 10 free verifications. Please upgrade your plan to continue verifying content.',
+            analysis: 'Verification blocked due to usage limit exceeded. Upgrade to a paid plan for unlimited verifications.',
             sources: [],
             source_consensus: 0,
             verification_method: ['Quota Check'],
@@ -106,7 +106,8 @@ serve(async (req) => {
             processing_time: 0,
             metadata: { 
               quota_exceeded: true, 
-              limit: quotaResult?.limit || 5,
+              limit: quotaResult?.limit || 10,
+              current: quotaResult?.current || 10,
               error_type: 'quota_limit'
             }
           }),

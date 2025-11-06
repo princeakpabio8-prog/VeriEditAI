@@ -292,7 +292,7 @@ export function useVerify() {
           // Check for quota exceeded responses
           if (data.metadata?.quota_exceeded) {
             console.log('Quota exceeded response received');
-            showVerificationError(`🚫 Verification Limit Reached\n\nYou've reached your monthly limit of ${data.metadata.limit || 5} verifications. Upgrade for unlimited access.`);
+            showVerificationError(`🚫 Verification Limit Reached\n\nYou've reached your monthly limit of ${data.metadata.limit || 10} free verifications. Upgrade for unlimited access.`);
             setError('Verification limit exceeded. Please upgrade your plan.');
             
             // Normalize quota result to ensure safe types

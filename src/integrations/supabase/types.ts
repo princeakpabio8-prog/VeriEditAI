@@ -1116,6 +1116,7 @@ export type Database = {
           expires_at: string | null
           features: Json
           id: string
+          last_reset_at: string | null
           license_key: string
           license_type: Database["public"]["Enums"]["license_type"]
           max_usage: number | null
@@ -1131,6 +1132,7 @@ export type Database = {
           expires_at?: string | null
           features?: Json
           id?: string
+          last_reset_at?: string | null
           license_key: string
           license_type?: Database["public"]["Enums"]["license_type"]
           max_usage?: number | null
@@ -1146,6 +1148,7 @@ export type Database = {
           expires_at?: string | null
           features?: Json
           id?: string
+          last_reset_at?: string | null
           license_key?: string
           license_type?: Database["public"]["Enums"]["license_type"]
           max_usage?: number | null
@@ -3883,7 +3886,6 @@ export type Database = {
       cleanup_old_activities: { Args: never; Returns: undefined }
       cleanup_old_webhook_idempotency: { Args: never; Returns: undefined }
       clear_user_verifications: { Args: { user_uuid: string }; Returns: Json }
-      create_trial_license: { Args: { user_uuid: string }; Returns: Json }
       ensure_user_workspace: { Args: never; Returns: string }
       generate_license_key: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }

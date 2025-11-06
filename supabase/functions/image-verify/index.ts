@@ -72,8 +72,8 @@ serve(async (req) => {
           JSON.stringify({
             confidence: 0,
             status: 'failed',
-            summary: '**🚫 IMAGE VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit. Please upgrade your plan to continue verifying images.',
-            analysis: 'Image verification blocked due to usage limit exceeded. Please upgrade to a paid plan for unlimited verifications.',
+            summary: '**🚫 IMAGE VERIFICATION LIMIT REACHED**\n\nYou have reached your monthly verification limit of 10 free verifications. Please upgrade your plan to continue verifying images.',
+            analysis: 'Image verification blocked due to usage limit exceeded. Upgrade to a paid plan for unlimited verifications.',
             sources: [],
             source_consensus: 0,
             verification_method: ['Quota Check'],
@@ -81,7 +81,9 @@ serve(async (req) => {
             created_at: new Date().toISOString(),
             processing_time: 0,
             metadata: { 
-              quota_exceeded: true, 
+              quota_exceeded: true,
+              limit: data?.limit || 10,
+              current: data?.current || 10,
               limit: data?.limit || 5,
               error_type: 'quota_limit'
             }

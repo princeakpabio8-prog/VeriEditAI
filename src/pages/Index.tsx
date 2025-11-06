@@ -47,21 +47,17 @@ const Index = () => {
         <VideoDemoSection />
         
         {/* Hot Claims - Race to Verify Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
+        <section className="py-32 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-background to-background relative overflow-hidden">
           {/* Decorative background elements */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
           
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-12 fade-in-up">
-              <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-                <span className="text-2xl animate-pulse">🔥</span>
-                <span className="text-sm font-semibold text-primary">TRENDING NOW</span>
-              </div>
-              <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
-                Hot Claims - Race to Verify First!
+          <div className="max-w-5xl mx-auto relative z-10">
+            <div className="text-center mb-16 fade-in-up">
+              <h2 className="font-display text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
+                Viral Claims to Verify
               </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-6">
-                These viral claims are spreading across social media right now. Be the first to verify them and earn exclusive NFT badges!
+              <p className="text-lg text-muted-foreground/80 max-w-2xl mx-auto font-light">
+                Be first to verify trending claims and earn exclusive NFT badges
               </p>
             </div>
             
@@ -83,14 +79,14 @@ const Index = () => {
         </section>
         
         {/* Verification Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 fade-in-up">
-                Start Your Verification
+        <section className="py-32 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-20">
+              <h2 className="font-display text-4xl md:text-6xl font-bold text-foreground mb-6 fade-in-up tracking-tight">
+                Start Verification
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto fade-in-up" style={{ animationDelay: '100ms' }}>
-                Get instant trust scores and detailed evidence for any digital content
+              <p className="text-lg text-muted-foreground/80 max-w-2xl mx-auto fade-in-up font-light" style={{ animationDelay: '100ms' }}>
+                Instant trust scores with comprehensive evidence
               </p>
             </div>
             
@@ -101,74 +97,74 @@ const Index = () => {
         </section>
 
         {/* Trust Score Preview */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 fade-in-up">
+        <section className="py-32 px-4 sm:px-6 lg:px-8 bg-muted/30">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-20">
+              <h2 className="font-display text-4xl md:text-6xl font-bold text-foreground mb-6 fade-in-up tracking-tight">
                 AI-Powered Trust Scoring
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto fade-in-up" style={{ animationDelay: '100ms' }}>
-                Our advanced algorithms analyze multiple factors to give you a comprehensive trust score
+              <p className="text-lg text-muted-foreground/80 max-w-2xl mx-auto fade-in-up font-light" style={{ animationDelay: '100ms' }}>
+                Advanced algorithms analyze multiple factors for comprehensive trust scores
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-               <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '0ms' }}>
-                <CardHeader>
+               <Card className="relative z-0 text-center backdrop-blur-md bg-card/50 border-border/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-normal fade-in-up">
+                <CardHeader className="pb-4">
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={85} showAnimation />
                   </div>
-                  <CardTitle className="text-lg">High Trust Content</CardTitle>
+                  <CardTitle className="font-display text-lg tracking-tight">High Trust</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <CheckCircle className="h-4 w-4 text-trust-high" />
-                    <Badge variant="secondary" className="text-trust-high border-trust-high/20">
-                      Verified Sources
+                    <Badge variant="secondary" className="text-trust-high border-trust-high/20 font-light">
+                      Verified
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Multiple credible sources confirm the information with consistent facts and data.
+                  <p className="text-sm text-muted-foreground/80 font-light leading-relaxed">
+                    Multiple credible sources confirm information with consistent data.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '150ms' }}>
-                <CardHeader>
+              <Card className="relative z-0 text-center backdrop-blur-md bg-card/50 border-border/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-normal fade-in-up" style={{ animationDelay: '150ms' }}>
+                <CardHeader className="pb-4">
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={65} showAnimation />
                   </div>
-                  <CardTitle className="text-lg">Moderate Trust</CardTitle>
+                  <CardTitle className="font-display text-lg tracking-tight">Moderate Trust</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Clock className="h-4 w-4 text-trust-medium" />
-                    <Badge variant="secondary" className="text-trust-medium border-trust-medium/20">
-                      Needs Review
+                    <Badge variant="secondary" className="text-trust-medium border-trust-medium/20 font-light">
+                      Review
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Some sources found but additional verification recommended for complete accuracy.
+                  <p className="text-sm text-muted-foreground/80 font-light leading-relaxed">
+                    Additional verification recommended for accuracy.
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="relative z-0 text-center bg-gradient-card border-border/50 card-hover-lift fade-in-up" style={{ animationDelay: typeof window !== 'undefined' && window.innerWidth < 768 ? '0ms' : '300ms' }}>
-                <CardHeader>
+              <Card className="relative z-0 text-center backdrop-blur-md bg-card/50 border-border/50 hover:shadow-2xl hover:scale-[1.02] transition-all duration-normal fade-in-up" style={{ animationDelay: '300ms' }}>
+                <CardHeader className="pb-4">
                   <div className="flex justify-center mb-4">
                     <TrustScoreDisplay score={25} showAnimation />
                   </div>
-                  <CardTitle className="text-lg">Low Trust Content</CardTitle>
+                  <CardTitle className="font-display text-lg tracking-tight">Low Trust</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <AlertTriangle className="h-4 w-4 text-trust-low" />
-                    <Badge variant="secondary" className="text-trust-low border-trust-low/20">
-                      Potentially Misleading
+                    <Badge variant="secondary" className="text-trust-low border-trust-low/20 font-light">
+                      Caution
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Limited or conflicting sources detected. Exercise caution with this content.
+                  <p className="text-sm text-muted-foreground/80 font-light leading-relaxed">
+                    Limited sources detected. Exercise caution.
                   </p>
                 </CardContent>
               </Card>
@@ -194,14 +190,14 @@ const Index = () => {
         </Suspense>
 
         {/* Live Activity Widget Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <section className="py-32 px-4 sm:px-6 lg:px-8 bg-background">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Real-Time Verification Happening Now
+            <div className="text-center mb-16">
+              <h2 className="font-display text-4xl md:text-6xl font-bold text-foreground mb-6 tracking-tight">
+                Live Verification
               </h2>
-              <p className="text-xl text-muted-foreground">
-                Join thousands of users fighting misinformation together
+              <p className="text-lg text-muted-foreground/80 font-light">
+                Join the fight against misinformation
               </p>
             </div>
             

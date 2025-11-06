@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useEstimateGas, useBalance, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import { CheckCircle, Circle, Loader2, AlertTriangle, ExternalLink, Sparkles, Wa
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { polygonMainnet } from "@/lib/web3-config";
+import { haptics } from "@/lib/haptics";
 
 interface MobileNFTMintFlowProps {
   isOpen: boolean;
@@ -90,8 +91,22 @@ export const MobileNFTMintFlow = ({
     complete: 100,
   }[currentStep];
 
+  // Trigger haptic feedback when step changes
+  useEffect(() => {
+    if (currentStep === "approve") {
+      haptics.medium();
+    } else if (currentStep === "minting") {
+      haptics.progress();
+    } else if (currentStep === "confirming") {
+      haptics.progress();
+    } else if (currentStep === "complete") {
+      haptics.success();
+    }
+  }, [currentStep]);
+
   const handleMint = async () => {
     if (!isConnected || !address) {
+      haptics.error();
       toast({
         title: "Wallet not connected",
         description: "Please connect your wallet first",
@@ -100,6 +115,7 @@ export const MobileNFTMintFlow = ({
       return;
     }
 
+    haptics.light(); // Light tap on mint button press
     setCurrentStep("approve");
 
     try {
@@ -124,14 +140,9 @@ export const MobileNFTMintFlow = ({
       await new Promise(resolve => setTimeout(resolve, 3000));
       setCurrentStep("complete");
 
-      toast({
-        title: "✅ Badge Minted!",
-        description: "Your NFT badge has been successfully minted",
-        className: "border-primary/50 bg-primary/10",
-      });
-
     } catch (error) {
       console.error("Minting error:", error);
+      haptics.error(); // Error vibration pattern
       toast({
         title: "Minting Failed",
         description: "There was an error minting your badge",
@@ -142,6 +153,7 @@ export const MobileNFTMintFlow = ({
   };
 
   const handleClose = () => {
+    haptics.light();
     setCurrentStep("review");
     setTxHash(undefined);
     onClose();
@@ -251,7 +263,10 @@ export const MobileNFTMintFlow = ({
             )}
 
             <Button
-              onClick={handleMint}
+              onClick={() => {
+                haptics.medium();
+                handleMint();
+              }}
               className="w-full h-12 text-base font-semibold"
               disabled={!isConnected}
             >
@@ -379,11 +394,15 @@ export const MobileNFTMintFlow = ({
             )}
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleClose} className="flex-1">
+              <Button variant="outline" onClick={() => {
+                haptics.light();
+                handleClose();
+              }} className="flex-1">
                 Close
               </Button>
               <Button
                 onClick={() => {
+                  haptics.medium();
                   // Navigate to marketplace or collection
                   window.location.href = "/nft-marketplace";
                 }}

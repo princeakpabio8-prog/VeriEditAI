@@ -141,7 +141,6 @@ export const MobileNFTMintFlow = ({
       setCurrentStep("complete");
 
     } catch (error) {
-      console.error("Minting error:", error);
       haptics.error(); // Error vibration pattern
       toast({
         title: "Minting Failed",

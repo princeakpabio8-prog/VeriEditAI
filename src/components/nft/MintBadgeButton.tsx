@@ -72,6 +72,14 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
     }
   }
 
+  const openWalletApp = (walletType: 'metamask' | 'trust') => {
+    const deepLinks = {
+      metamask: `https://metamask.app.link/dapp/${window.location.host}`,
+      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`
+    }
+    window.location.href = deepLinks[walletType]
+  }
+
   const handleMint = async () => {
     if (!isReallyConnected || !address) {
       toast({
@@ -183,9 +191,29 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
         
         {/* Connect Wallet (Injected only) */}
         {!isReallyConnected && (
-          <Button onClick={handleInlineConnect} variant="default" className="w-full">
-            Connect Wallet
-          </Button>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                onClick={() => openWalletApp('metamask')} 
+                variant="outline" 
+                className="w-full"
+                size="sm"
+              >
+                🦊 MetaMask
+              </Button>
+              <Button 
+                onClick={() => openWalletApp('trust')} 
+                variant="outline" 
+                className="w-full"
+                size="sm"
+              >
+                🛡️ Trust Wallet
+              </Button>
+            </div>
+            <Button onClick={handleInlineConnect} variant="default" className="w-full">
+              Other Wallet
+            </Button>
+          </div>
         )}
         {/* Mint Button */}
         <Button

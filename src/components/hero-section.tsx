@@ -5,7 +5,7 @@ import lighthouseHero from "@/assets/lighthouse-hero.jpg";
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 sm:pt-0">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
@@ -21,14 +21,13 @@ export const HeroSection = () => {
       <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-lighthouse-glow rounded-full blur-3xl lighthouse-beam opacity-30" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-20 sm:pt-0">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-8 sm:py-0">
         <div className="fade-in-up">
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            <span className="bg-gradient-trust bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 leading-[1.2] sm:leading-tight">
+            <span className="bg-gradient-trust bg-clip-text text-transparent block">
               Trust Infrastructure
             </span>
-            <br />
-            <span className="text-foreground">for the AI Era</span>
+            <span className="text-foreground block mt-2">for the AI Era</span>
           </h1>
           
           <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">

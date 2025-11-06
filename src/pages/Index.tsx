@@ -15,6 +15,7 @@ import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 // Lazy load heavy components
 const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").then(m => ({ default: m.LiveActivityWidget })));
@@ -24,6 +25,33 @@ const HotClaimsWidget = lazy(() => import("@/components/viral/HotClaimsWidget").
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Animation variants for sequential fade-in
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+        delayChildren: 0.3
+      }
+    }
+  };
+
+  const sectionVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30 
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut" as const
+      }
+    }
+  };
 
   const handleVerificationStart = (data: any) => {
     if (!user) {
@@ -42,11 +70,21 @@ const Index = () => {
       <ScrollProgressBar />
       <Navigation />
       
-      <main>
-        <HeroSection />
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={sectionVariants}>
+          <HeroSection />
+        </motion.div>
         
         {/* Hot Claims - Race to Verify Section - Moved to top for immediate visibility */}
-        <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
+        <motion.section 
+          variants={sectionVariants}
+          id="features" 
+          className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden"
+        >
           {/* Decorative background elements */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
           
@@ -75,17 +113,23 @@ const Index = () => {
               </div>
             </Suspense>
           </div>
-        </section>
+        </motion.section>
         
         {/* NFT Hero Section - Mobile-first badge discovery */}
-        <section id="badges">
+        <motion.section variants={sectionVariants} id="badges">
           <NFTHeroSection />
-        </section>
+        </motion.section>
         
-        <VideoDemoSection />
+        <motion.div variants={sectionVariants}>
+          <VideoDemoSection />
+        </motion.div>
         
         {/* Verification Section */}
-        <section id="verify" className="py-20 px-4 sm:px-6 lg:px-8">
+        <motion.section 
+          variants={sectionVariants}
+          id="verify" 
+          className="py-20 px-4 sm:px-6 lg:px-8"
+        >
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 fade-in-up">
@@ -100,10 +144,14 @@ const Index = () => {
               <VerificationUpload onVerificationStart={handleVerificationStart} />
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* Trust Score Preview */}
-        <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <motion.section 
+          variants={sectionVariants}
+          id="pricing" 
+          className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30"
+        >
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 fade-in-up">
@@ -176,7 +224,7 @@ const Index = () => {
               </Card>
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* NFT Showcase Section */}
         <Suspense fallback={
@@ -196,7 +244,11 @@ const Index = () => {
         </Suspense>
 
         {/* Live Activity Widget Section */}
-        <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <motion.section 
+          variants={sectionVariants}
+          id="about" 
+          className="py-20 px-4 sm:px-6 lg:px-8 bg-background"
+        >
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -218,8 +270,8 @@ const Index = () => {
               <LiveActivityWidget />
             </Suspense>
           </div>
-        </section>
-      </main>
+        </motion.section>
+      </motion.main>
       <Footer />
       <BackToTop />
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />

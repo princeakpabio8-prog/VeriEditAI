@@ -850,26 +850,30 @@ export function HotClaimsWidget() {
         )}
       </CardHeader>
       <CardContent>
-        <div className={cn(isMobile ? "" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4")}>
-          {isMobile ? (
-            <HotClaimsCarousel>
-              {filteredClaims.map((claim, index) => {
-                const hoursSinceDetection = claim.first_seen_at ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60) : 0;
-                const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
-                const isVerified = !!claim.verification_id;
-                const userVerificationData = getUserVerificationData(claim.id);
-                const verifiedByUser = userVerifiedClaims.has(claim.id);
+        {isMobile ? (
+          <HotClaimsCarousel>
+            {filteredClaims.map((claim, index) => {
+              const hoursSinceDetection = claim.first_seen_at ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60) : 0;
+              const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
+              const isVerified = !!claim.verification_id;
+              const userVerificationData = getUserVerificationData(claim.id);
+              const verifiedByUser = userVerifiedClaims.has(claim.id);
                 
-                return (
-                  <Card key={claim.id} className={cn("overflow-hidden flex flex-col min-h-[500px] relative", index === 0 && "border-orange-500", isVerified && "border-2 border-emerald-500", verifiedByUser && "ring-2 ring-primary/50")}>
-                    <ClaimImageFallback claimText={claim.claim_text} platform={claim.platform} rarityTier={getClaimRarityForFallback(claim)} engagementScore={claim.engagement_score} rank={index + 1} showRaceBadge={index === 0} />
-                    <CardContent className="p-5"><p className="font-semibold line-clamp-3">{claim.claim_text}</p><Button onClick={() => handleVerifyNow(claim)} className="w-full mt-4">{index === 0 ? '🏁 Verify Now!' : 'Verify'}</Button></CardContent>
-                  </Card>
-                );
-              })}
-            </HotClaimsCarousel>
-          ) : (
-            filteredClaims.map((claim, index) => {
+              return (
+                <Card key={claim.id} className={cn("overflow-hidden flex flex-col min-h-[500px] relative", index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20", isVerified && "border-2 border-emerald-500", verifiedByUser && "ring-2 ring-primary/50")}>
+                  <ClaimImageFallback claimText={claim.claim_text} platform={claim.platform} rarityTier={getClaimRarityForFallback(claim)} engagementScore={claim.engagement_score} rank={index + 1} showRaceBadge={index === 0} />
+                  <CardContent className="p-5 space-y-3">
+                    <p className="font-semibold text-base line-clamp-3">{claim.claim_text}</p>
+                    <div className="text-sm text-muted-foreground">{claim.platform} • {Math.round(claim.engagement_velocity)}/hr velocity</div>
+                    <Button onClick={() => handleVerifyNow(claim)} disabled={verifyingIds.has(claim.id)} className={cn("w-full min-h-[48px] font-semibold", index === 0 && "bg-orange-500 hover:bg-orange-600")}>{verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}</Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </HotClaimsCarousel>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredClaims.map((claim, index) => {
             const hoursSinceDetection = claim.first_seen_at
               ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60)
               : 0;
@@ -1188,7 +1192,9 @@ export function HotClaimsWidget() {
               </CardContent>
             </Card>
           );
-        }))}
+        })}
+        </div>
+        )}
       </CardContent>
 
       {shareModalOpen && selectedClaimForShare && (

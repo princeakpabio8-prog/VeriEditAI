@@ -16,6 +16,8 @@ import { ClaimImageFallback } from './ClaimImageFallback';
 import { MintBadgeButton } from '@/components/nft/MintBadgeButton';
 import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
 import { ClaimDetailsModal } from './ClaimDetailsModal';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { HotClaimsCarousel } from './HotClaimsCarousel';
 
 interface HotClaim {
   id: string;
@@ -61,6 +63,7 @@ export function HotClaimsWidget() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Check authentication status
   useEffect(() => {
@@ -291,6 +294,325 @@ export function HotClaimsWidget() {
         return 'VERIFIED';
     }
   };
+
+  // Render individual claim card (shared between mobile carousel and desktop grid)
+  const renderClaimCard = (
+    claim: HotClaim, 
+    index: number, 
+    hoursSinceDetection: number, 
+    velocityPercentage: number, 
+    isVerified: boolean, 
+    userVerificationData: any, 
+    verifiedByUser: boolean
+  ) => (
+    <Card
+      key={claim.id}
+      className={cn(
+        "overflow-hidden transition-all duration-300 hover:scale-[1.02] flex flex-col min-h-[500px] relative",
+        index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20",
+        isVerified && "border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20",
+        userVerifiedClaims.has(claim.id) && "ring-2 ring-primary/50"
+      )}
+    >
+      {verifiedByUser && userVerificationData && (
+        <div className="absolute -top-2 -right-2 z-10">
+          <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-4 py-1.5 shadow-2xl font-bold border-2 border-white dark:border-emerald-950">
+            ✓ Verified {userVerificationData.trustScore >= 75 ? '💎' : '✅'}
+          </Badge>
+        </div>
+      )}
+      {/* Claim Image - Standardized Aspect Ratio */}
+      {claim.image_url ? (
+        <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden">
+          <img 
+            src={claim.image_url}
+            alt={claim.claim_text}
+            className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          
+          {/* Verified Badge Overlay */}
+          {justVerifiedClaims.has(claim.id) ? (
+            <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
+              <Sparkles size={16} />
+              🎉 JUST VERIFIED!
+            </div>
+          ) : isVerified ? (
+            <div className="absolute top-3 right-3 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-pulse">
+              <CheckCircle2 size={16} />
+              ✓ VERIFIED
+            </div>
+          ) : verifyingIds.has(claim.id) ? (
+            <div className="absolute top-3 right-3 bg-amber-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              <Loader2 size={16} className="animate-spin" />
+              VERIFYING...
+            </div>
+          ) : null}
+        
+          {/* Overlays */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            <div className="flex gap-2">
+              {index === 0 && (
+                <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
+                  🔥 RACE TO VERIFY
+                </Badge>
+              )}
+              {claim.rarity_tier && (
+                <Badge
+                  className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
+                >
+                  {getRarityIcon(claim.rarity_tier)} {getRarityDisplayName(claim.rarity_tier)}
+                </Badge>
+              )}
+            </div>
+            {/* Trending Now Badge - Shows on top 3 claims by velocity */}
+            {index < 3 && claim.engagement_velocity > 100 && !isVerified && (
+              <Badge className="bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white font-bold text-xs px-3 py-1.5 shadow-lg animate-pulse flex items-center gap-1.5 w-fit">
+                <TrendingUp className="h-3 w-3" />
+                TRENDING NOW
+              </Badge>
+            )}
+          </div>
+          
+          {/* Rank Badge - Only show if not verified */}
+          {!isVerified && (
+            <div className="absolute bottom-3 right-3">
+              <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
+                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : generatingImageIds.has(claim.id) ? (
+        <div className="relative w-full aspect-[16/9] max-h-[300px] bg-gradient-to-br from-purple-500/20 via-pink-500/20 to-orange-500/20 flex items-center justify-center">
+          <div className="text-center space-y-3">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
+            <p className="text-sm text-muted-foreground font-medium">Generating visual...</p>
+          </div>
+        </div>
+      ) : (
+        <ClaimImageFallback
+          claimText={claim.claim_text}
+          platform={claim.platform}
+          rarityTier={getClaimRarityForFallback(claim)}
+          engagementScore={claim.engagement_score}
+          rank={index + 1}
+          showRaceBadge={index === 0}
+        />
+      )}
+      <CardContent className="flex-1 flex flex-col justify-between p-5 space-y-4">
+        <div className="space-y-4">
+          {/* Verified Status Banner - Different message for user's own verification */}
+          {verifiedByUser && userVerificationData ? (
+            <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">✓ YOU VERIFIED THIS!</span>
+              </div>
+              <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">
+                Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible 💎' : ''}
+              </p>
+            </div>
+          ) : isVerified ? (
+            <div className="bg-emerald-100 dark:bg-emerald-900/30 border border-emerald-500 rounded-lg p-3 flex items-center gap-2">
+              <CheckCircle2 size={20} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">VERIFIED BY COMMUNITY</span>
+            </div>
+          ) : null}
+
+          {/* Platform Badge with External Link */}
+          <div className="flex items-center justify-between gap-2">
+            <Badge variant="outline" className="text-xs">
+              {claim.platform}
+            </Badge>
+            
+            {(claim.source_url || claim.metadata?.source_url) && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const url = claim.source_url || claim.metadata?.source_url;
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      }}
+                      className="h-7 w-7 p-0 hover:bg-primary/10"
+                    >
+                      <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">View original source ({claim.platform})</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+
+          {/* Claim Text */}
+          <p className="font-semibold text-base line-clamp-3 mb-2">
+            {claim.claim_text}
+          </p>
+          <Button
+            variant="link"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedClaimForDetails(claim);
+              setDetailsModalOpen(true);
+            }}
+            className="p-0 h-auto text-xs text-primary hover:underline"
+          >
+            Read full details →
+          </Button>
+        </div>
+
+        {/* Metrics */}
+        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1">
+            <TrendingUp className="h-4 w-4" />
+            <span>{claim.engagement_score.toLocaleString()} engagement</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Target className="h-4 w-4" />
+            <span>{Math.round(claim.engagement_velocity)}/hr velocity</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>
+              {claim.first_seen_at
+                ? formatDistanceToNow(new Date(claim.first_seen_at), { addSuffix: true })
+                : 'Recently'}
+            </span>
+          </div>
+        </div>
+
+        {/* Velocity Progress Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Virality Velocity</span>
+            <span>{Math.round(claim.engagement_velocity)}/hr</span>
+          </div>
+          <Progress value={velocityPercentage} className="h-2" />
+        </div>
+
+        {/* Potential Rarity */}
+        {claim.rarity_tier && (
+          <div className="text-sm">
+            <span className="text-muted-foreground">Potential badge tier: </span>
+            <span className="font-bold">
+              {getRarityDisplayName(claim.rarity_tier)}
+            </span>
+            {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
+              <span className="ml-2 text-orange-500 font-bold">
+                ⚡ MYTHIC POTENTIAL!
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="mt-auto space-y-3">
+          {verifiedByUser && userVerificationData ? (
+            <>
+              {/* NFT Minting Section for User's Verification */}
+              <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-green-500/10 border-2 border-emerald-500/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <span className="font-bold text-sm text-emerald-700 dark:text-emerald-400">
+                    You Verified This Claim!
+                  </span>
+                </div>
+                {userVerificationData.trustScore >= 75 ? (
+                  <Button
+                    onClick={() => {
+                      setNftMintPrompt({
+                        show: true,
+                        verificationId: userVerificationData.verificationId,
+                        trustScore: userVerificationData.trustScore,
+                        claimText: claim.claim_text
+                      });
+                    }}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+                  >
+                    <Award className="h-4 w-4 mr-2" />
+                    🎉 Mint Your NFT Badge ({userVerificationData.trustScore}%)
+                  </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Trust score: {userVerificationData.trustScore}%. Need 75%+ for NFT minting.
+                  </p>
+                )}
+              </div>
+              
+              {/* View Verification Button */}
+              {claim.share_token && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => navigate(`/share/${claim.share_token}`)}
+                    variant="outline"
+                    className="flex-1 min-h-[40px]"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                    View Full Report
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
+                      setShareModalOpen(true);
+                    }}
+                    variant="outline"
+                    className="shrink-0 min-h-[40px]"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : isVerified && claim.share_token ? (
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => navigate(`/share/${claim.share_token}`)}
+                className="flex-1 min-h-[40px] bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                View Verification
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedClaimForShare({ id: claim.id, text: claim.claim_text });
+                  setShareModalOpen(true);
+                }}
+                variant="outline"
+                className="shrink-0 min-h-[40px]"
+              >
+                <Share2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => handleVerifyNow(claim)}
+              disabled={verifyingIds.has(claim.id)}
+              className={cn(
+                "w-full min-h-[48px] md:min-h-[56px] font-semibold touch-manipulation",
+                index === 0 && "bg-orange-500 hover:bg-orange-600"
+              )}
+            >
+              {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   const getRarityColor = (rarity: string | null) => {
     switch (rarity) {
@@ -528,8 +850,26 @@ export function HotClaimsWidget() {
         )}
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClaims.map((claim, index) => {
+        <div className={cn(isMobile ? "" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4")}>
+          {isMobile ? (
+            <HotClaimsCarousel>
+              {filteredClaims.map((claim, index) => {
+                const hoursSinceDetection = claim.first_seen_at ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60) : 0;
+                const velocityPercentage = Math.min(100, (claim.engagement_velocity / 2000) * 100);
+                const isVerified = !!claim.verification_id;
+                const userVerificationData = getUserVerificationData(claim.id);
+                const verifiedByUser = userVerifiedClaims.has(claim.id);
+                
+                return (
+                  <Card key={claim.id} className={cn("overflow-hidden flex flex-col min-h-[500px] relative", index === 0 && "border-orange-500", isVerified && "border-2 border-emerald-500", verifiedByUser && "ring-2 ring-primary/50")}>
+                    <ClaimImageFallback claimText={claim.claim_text} platform={claim.platform} rarityTier={getClaimRarityForFallback(claim)} engagementScore={claim.engagement_score} rank={index + 1} showRaceBadge={index === 0} />
+                    <CardContent className="p-5"><p className="font-semibold line-clamp-3">{claim.claim_text}</p><Button onClick={() => handleVerifyNow(claim)} className="w-full mt-4">{index === 0 ? '🏁 Verify Now!' : 'Verify'}</Button></CardContent>
+                  </Card>
+                );
+              })}
+            </HotClaimsCarousel>
+          ) : (
+            filteredClaims.map((claim, index) => {
             const hoursSinceDetection = claim.first_seen_at
               ? (Date.now() - new Date(claim.first_seen_at).getTime()) / (1000 * 60 * 60)
               : 0;
@@ -848,8 +1188,7 @@ export function HotClaimsWidget() {
               </CardContent>
             </Card>
           );
-        })}
-        </div>
+        }))}
       </CardContent>
 
       {shareModalOpen && selectedClaimForShare && (

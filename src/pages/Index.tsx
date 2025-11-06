@@ -11,7 +11,6 @@ import Footer from "@/components/ui/footer";
 import { BackToTop } from "@/components/ui/BackToTop";
 import { QuickVerifyFAB } from "@/components/ui/QuickVerifyFAB";
 import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-import { CookieConsent } from "@/components/ui/CookieConsent";
 import { LiveChatWidget } from "@/components/ui/LiveChatWidget";
 import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -277,7 +276,6 @@ const Index = () => {
       <Footer />
       <BackToTop />
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
-      <CookieConsent />
       <LiveChatWidget />
     </div>
   );

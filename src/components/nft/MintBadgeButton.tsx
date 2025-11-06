@@ -73,11 +73,28 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   }
 
   const openWalletApp = (walletType: 'metamask' | 'trust') => {
-    const deepLinks = {
-      metamask: `https://metamask.app.link/dapp/${window.location.host}`,
-      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(window.location.href)}`
+    const { host, pathname, search } = window.location
+    const dappUrl = `https://${host}${pathname}${search}`
+
+    const schemes = {
+      metamask: `metamask://dapp/${host}${pathname}${search}`,
+      trust: `trust://browser_open_url?url=${encodeURIComponent(dappUrl)}`,
     }
-    window.location.href = deepLinks[walletType]
+    const fallbacks = {
+      metamask: `https://metamask.app.link/dapp/${host}${pathname}${search}`,
+      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(dappUrl)}`,
+    }
+
+    const scheme = schemes[walletType]
+    const fallback = fallbacks[walletType]
+
+    // Try native scheme first; if app isn't installed, fallback to universal link
+    window.location.href = scheme
+    setTimeout(() => {
+      if (document.visibilityState === 'visible') {
+        window.location.href = fallback
+      }
+    }, 800)
   }
 
   const handleMint = async () => {

@@ -50,14 +50,12 @@ export const MobileBottomNav = () => {
       disconnect();
     } else {
       try {
-        // Try injected first (mobile wallet apps), fallback to walletConnect
+        // Use injected connector only (mobile wallet apps)
         const injectedConnector = connectors.find((c) => c.id === 'injected');
-        const walletConnectConnector = connectors.find((c) => c.id === 'walletConnect');
-        const connector = injectedConnector || walletConnectConnector;
-        
-        if (connector) {
-          await connectAsync({ connector });
+        if (injectedConnector) {
+          await connectAsync({ connector: injectedConnector });
         }
+
       } catch (error) {
         console.error('Failed to connect wallet:', error);
       }

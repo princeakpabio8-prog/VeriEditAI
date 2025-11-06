@@ -36,15 +36,13 @@ export function WalletConnect() {
     setIsConnecting(true)
 
     try {
-      // Use specified connector or try injected first, then walletConnect
-      let connector = connectorId 
-        ? connectors.find((c) => c.id === connectorId)
-        : connectors.find((c) => c.id === 'injected') || connectors.find((c) => c.id === 'walletConnect')
+      // Use injected connector only (mobile wallet apps)
+      const connector = connectors.find((c) => c.id === 'injected')
 
       if (!connector) {
         toast({
           title: 'Wallet unavailable',
-          description: 'Please install a Web3 wallet or use WalletConnect.',
+          description: 'Please install a Web3 wallet app.',
           variant: 'destructive',
         })
         setIsConnecting(false)
@@ -112,15 +110,6 @@ export function WalletConnect() {
           {isConnecting ? 'Connecting...' : 'Mobile Wallet'}
         </Button>
         
-        <Button
-          onClick={() => handleConnect('walletConnect')}
-          disabled={isConnecting}
-          className="flex items-center gap-2"
-          variant="outline"
-        >
-          <Wallet className="h-4 w-4" />
-          {isConnecting ? 'Connecting...' : 'WalletConnect QR'}
-        </Button>
       </div>
       
       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
@@ -129,9 +118,6 @@ export function WalletConnect() {
         </p>
         <p className="text-xs text-muted-foreground">
           Mobile Wallet: MetaMask, Trust Wallet, Rainbow apps
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">
-          WalletConnect: Scan QR code with any wallet
         </p>
       </div>
     </div>

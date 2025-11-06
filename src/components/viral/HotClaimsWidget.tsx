@@ -57,9 +57,25 @@ export function HotClaimsWidget() {
   const [lastFetchTime, setLastFetchTime] = useState<Date>(new Date());
   const [refreshing, setRefreshing] = useState(false);
   const [justVerifiedClaims, setJustVerifiedClaims] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Load user's verified claims from localStorage
   useEffect(() => {
@@ -223,20 +239,21 @@ export function HotClaimsWidget() {
         .order('engagement_velocity', { ascending: false })
         .limit(10);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching hot claims:', error);
+        throw error;
+      }
       
-      // Filter out claims with null or zero engagement to show only active ones
-      const activeClaims = (data || []).filter(claim => 
-        claim.engagement_score > 0 || claim.engagement_velocity > 0
-      );
+      console.log('Fetched viral claims:', data?.length || 0, 'claims');
       
-      setHotClaims(activeClaims);
+      // Show ALL active claims regardless of engagement (data is already filtered server-side)
+      setHotClaims(data || []);
       setLastFetchTime(new Date());
       
-      if (showRefreshToast) {
+      if (showRefreshToast && data) {
         toast({
           title: "✅ Feed Refreshed",
-          description: `Found ${data?.length || 0} hot claims`,
+          description: `Found ${data.length} hot claims`,
         });
       }
     } catch (error) {
@@ -306,6 +323,16 @@ export function HotClaimsWidget() {
   };
 
   const handleVerifyNow = (claim: HotClaim) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      toast({
+        title: "Sign Up Required",
+        description: "Please sign up or log in to verify claims and mint NFT badges",
+      });
+      navigate('/auth');
+      return;
+    }
+    
     setVerifyingIds((prev) => new Set(prev).add(claim.id));
     // Store context for post-verification navigation
     sessionStorage.setItem('verification_source', 'hot_claims');

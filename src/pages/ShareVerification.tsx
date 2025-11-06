@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowRight, Eye, Calendar, Shield, ExternalLink } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
+import { DynamicMeta } from '@/components/DynamicMeta';
+import { useOGImage } from '@/hooks/useOGImage';
 
 
 interface VerificationData {
@@ -39,6 +41,17 @@ export default function ShareVerification() {
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Generate OG image for social media sharing
+  const { imageUrl: ogImageUrl } = useOGImage(
+    data ? {
+      contentType: 'verification',
+      title: data.share?.og_title || 'Fact-Check Result',
+      trustScore: data.verification.trust_score,
+      content: data.verification.content || data.verification.result_summary,
+      status: data.verification.status,
+    } : null
+  );
   
   const { 
     translateContent, 
@@ -114,9 +127,24 @@ export default function ShareVerification() {
   }
 
   const { verification, sources, share } = data;
+  
+  // Prepare meta data
+  const pageTitle = share?.og_title || `Fact-Check: ${verification.content?.substring(0, 60)}...`;
+  const pageDescription = share?.og_description || verification.result_summary?.substring(0, 160);
+  const pageUrl = `${window.location.origin}/share/${shareToken}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Dynamic Meta Tags for Social Sharing */}
+      <DynamicMeta
+        title={pageTitle}
+        description={pageDescription}
+        image={ogImageUrl || undefined}
+        url={pageUrl}
+        type="article"
+        trustScore={verification.trust_score}
+        publishedTime={verification.created_at}
+      />
         {/* Header */}
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">

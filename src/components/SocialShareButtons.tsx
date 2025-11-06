@@ -3,6 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Share2, Twitter, Facebook, Linkedin, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { haptics } from '@/lib/haptics';
+import { useOGImage } from '@/hooks/useOGImage';
+import { OGImagePreview } from './OGImagePreview';
 
 interface SocialShareButtonsProps {
   content: string;
@@ -18,6 +20,17 @@ export function SocialShareButtons({
   status 
 }: SocialShareButtonsProps) {
   const { toast } = useToast();
+  
+  // Generate OG image for better social media previews
+  const { imageUrl: ogImageUrl, generating: generatingImage, regenerate } = useOGImage(
+    verificationId ? {
+      contentType: 'verification',
+      title: content.length > 60 ? content.substring(0, 60) + '...' : content,
+      trustScore: trustScore,
+      content: content,
+      status: status,
+    } : null
+  );
   
   // Generate share URL
   const shareUrl = verificationId 
@@ -140,18 +153,33 @@ export function SocialShareButtons({
   };
 
   return (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          <div className="text-center">
-            <h3 className="font-semibold text-lg mb-1 flex items-center justify-center gap-2">
-              <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-              Share Your Verification
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Help fight misinformation by sharing this fact-check
-            </p>
-          </div>
+    <>
+      {/* OG Image Preview */}
+      <OGImagePreview
+        imageUrl={ogImageUrl}
+        generating={generatingImage}
+        title={content}
+        trustScore={trustScore}
+        onRegenerate={regenerate}
+      />
+
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div className="text-center">
+              <h3 className="font-semibold text-lg mb-1 flex items-center justify-center gap-2">
+                <Share2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Share Your Verification
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Help fight misinformation by sharing this fact-check
+              </p>
+              {generatingImage && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  🎨 Generating shareable preview image...
+                </p>
+              )}
+            </div>
 
           {/* Native Share Button (Mobile First) */}
           {navigator.share && (
@@ -212,5 +240,6 @@ export function SocialShareButtons({
         </div>
       </CardContent>
     </Card>
+    </>
   );
 }

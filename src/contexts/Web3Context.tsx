@@ -8,12 +8,12 @@ const config = createConfig({
   connectors: [
     injected({ shimDisconnect: true }), // MetaMask browser extension
     walletConnect({
-      projectId: '843739133fe7e0d25cf036467a96623e', // Your verified WalletConnect Cloud project
+      projectId: '843739133fe7e0d25cf036467a96623e',
       metadata: {
         name: 'VeriEdit AI',
         description: 'Truth Badge NFT Platform - Verify and mint NFT badges',
-        url: typeof window !== 'undefined' ? window.location.origin : 'https://trust-lighthouse.lovable.app',
-        icons: [typeof window !== 'undefined' ? `${window.location.origin}/favicon.ico` : 'https://trust-lighthouse.lovable.app/favicon.ico']
+        url: 'https://trust-lighthouse.lovable.app',
+        icons: ['https://trust-lighthouse.lovable.app/favicon.ico']
       },
       showQrModal: true,
       qrModalOptions: {

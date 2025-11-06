@@ -112,9 +112,8 @@ export const Navigation = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/dashboard?tab=bulk" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
-                        <Package className="h-4 w-4 mr-2" />
-                        Bulk Verification
+                      <Link to="/about" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        About
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
@@ -136,8 +135,9 @@ export const Navigation = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/about" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
-                        About
+                      <Link to="/dashboard?tab=bulk" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Package className="h-4 w-4 mr-2" />
+                        Bulk Verification
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -352,14 +352,13 @@ export const Navigation = () => {
                   Referrals
                 </Link>
                 <Link
-                  to="/dashboard?tab=bulk"
-                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
-                    location.search.includes('tab=bulk') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  to="/about"
+                  className={`block px-4 py-3 transition-colors ${
+                    location.pathname === '/about' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Package className="h-4 w-4" />
-                  Bulk Verification
+                  About
                 </Link>
                 <Link
                   to="/billing"
@@ -371,13 +370,14 @@ export const Navigation = () => {
                   Billing
                 </Link>
                 <Link
-                  to="/about"
-                  className={`block px-4 py-3 transition-colors ${
-                    location.pathname === '/about' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  to="/dashboard?tab=bulk"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.search.includes('tab=bulk') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  About
+                  <Package className="h-4 w-4" />
+                  Bulk Verification
                 </Link>
               </>
             ) : (

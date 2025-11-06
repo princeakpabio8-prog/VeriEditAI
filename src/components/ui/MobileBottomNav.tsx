@@ -1,4 +1,4 @@
-import { Home, Radio, Newspaper, User, Award, Info } from "lucide-react";
+import { Home, Radio, Newspaper, User, Award, Wallet } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,8 @@ import { NotificationBell } from "./NotificationBell";
 import { Badge } from "./badge";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { Button } from "./button";
 
 export const MobileBottomNav = () => {
   const location = useLocation();
@@ -14,6 +16,9 @@ export const MobileBottomNav = () => {
   const { unreadCount } = useNotifications();
   const isMobile = useIsMobile();
   const isAuthenticated = !!user;
+  const { address, isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
+  const { disconnect } = useDisconnect();
   
   if (import.meta.env.DEV) {
     console.debug('[MobileBottomNav] Mounted, isMobile:', isMobile, 'Location:', location.pathname);
@@ -37,6 +42,18 @@ export const MobileBottomNav = () => {
       setTimeout(() => toast.remove(), 2000);
       
       navigate('/auth?next=/dashboard?tab=discover');
+    }
+  };
+
+  const handleWalletClick = () => {
+    if (isConnected) {
+      disconnect();
+    } else {
+      // Connect with the first available connector (usually MetaMask/injected or WalletConnect)
+      const connector = connectors[0];
+      if (connector) {
+        connect({ connector });
+      }
     }
   };
 
@@ -76,7 +93,7 @@ export const MobileBottomNav = () => {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div className="grid grid-cols-6 items-center h-16 px-2 py-1">
+      <div className="grid items-center h-16 px-2 py-1" style={{ gridTemplateColumns: `repeat(${isAuthenticated ? 6 : 5}, minmax(0, 1fr))` }}>
         {navItems.map((item) => {
           const isActive = item.activeCheck(location.pathname);
           const Icon = item.icon;
@@ -99,6 +116,22 @@ export const MobileBottomNav = () => {
           );
         })}
         
+        {/* Wallet Connect */}
+        <button
+          onClick={handleWalletClick}
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
+            isConnected
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
+          <span className="text-xs font-medium">
+            {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
+          </span>
+        </button>
+
         {/* Notifications */}
         {isAuthenticated && (
           <div className="flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg relative">

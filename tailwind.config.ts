@@ -13,14 +13,6 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Space Grotesk', 'Inter', 'sans-serif'],
-      },
-      letterSpacing: {
-        tighter: '-0.05em',
-        wide: '0.02em',
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -104,19 +96,10 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "trust-pulse": "trust-pulse 2s ease-in-out infinite",
         "lighthouse-beam": "lighthouse-beam 4s ease-in-out infinite",
-        "fade-in-up": "fade-in-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-        "fade-in": "fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-        "trust-score-reveal": "trust-score-reveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards",
+        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
+        "trust-score-reveal": "trust-score-reveal 1.2s ease-out forwards",
         "shimmer": "shimmer 2s infinite",
         "float": "float 3s ease-in-out infinite",
-      },
-      transitionTimingFunction: {
-        'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
-      },
-      transitionDuration: {
-        'fast': '150ms',
-        'normal': '300ms',
-        'slow': '600ms',
       },
       backgroundImage: {
         "gradient-hero": "var(--gradient-hero)",

@@ -135,10 +135,7 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground overflow-x-hidden font-sans;
-    font-feature-settings: 'liga' 1, 'calt' 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
 
   /* Custom scrollbar for dark theme */

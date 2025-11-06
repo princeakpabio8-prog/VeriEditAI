@@ -72,7 +72,7 @@ export const HeroSection = () => {
               <div className="flex items-center justify-center mb-2">
                 <Award className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-1">50K+</h3>
+              <h3 className="text-3xl font-bold text-foreground mb-1">3K+</h3>
               <p className="text-sm text-muted-foreground">NFT Badges Minted</p>
             </div>
           </div>

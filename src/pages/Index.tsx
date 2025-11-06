@@ -42,7 +42,7 @@ const Index = () => {
         <HeroSection />
         
         {/* Hot Claims - Race to Verify Section - Moved to top for immediate visibility */}
-        <section className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
+        <section id="features" className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden">
           {/* Decorative background elements */}
           <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
           
@@ -74,12 +74,14 @@ const Index = () => {
         </section>
         
         {/* NFT Hero Section - Mobile-first badge discovery */}
-        <NFTHeroSection />
+        <section id="badges">
+          <NFTHeroSection />
+        </section>
         
         <VideoDemoSection />
         
         {/* Verification Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <section id="verify" className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 fade-in-up">
@@ -97,7 +99,7 @@ const Index = () => {
         </section>
 
         {/* Trust Score Preview */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+        <section id="pricing" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 fade-in-up">
@@ -190,7 +192,7 @@ const Index = () => {
         </Suspense>
 
         {/* Live Activity Widget Section */}
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
+        <section id="about" className="py-20 px-4 sm:px-6 lg:px-8 bg-background">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">

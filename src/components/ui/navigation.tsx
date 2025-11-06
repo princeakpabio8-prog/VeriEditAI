@@ -145,11 +145,41 @@ export const Navigation = () => {
               </>
             ) : (
               <>
-                <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                <a 
+                  href={location.pathname === '/' ? '#features' : '/#features'} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
                   Features
                 </a>
-                <a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">
+                <a 
+                  href={location.pathname === '/' ? '#pricing' : '/#pricing'} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
                   Pricing
+                </a>
+                <a 
+                  href={location.pathname === '/' ? '#about' : '/#about'} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  About
                 </a>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
@@ -383,18 +413,43 @@ export const Navigation = () => {
             ) : (
               <>
                 <a
-                  href="#features"
+                  href={location.pathname === '/' ? '#features' : '/#features'}
                   className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    setIsMenuOpen(false);
+                  }}
                 >
                   Features
                 </a>
                 <a
-                  href="#pricing"
+                  href={location.pathname === '/' ? '#pricing' : '/#pricing'}
                   className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    setIsMenuOpen(false);
+                  }}
                 >
                   Pricing
+                </a>
+                <a
+                  href={location.pathname === '/' ? '#about' : '/#about'}
+                  className="block px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={(e) => {
+                    if (location.pathname === '/') {
+                      e.preventDefault();
+                      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+                    }
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  About
                 </a>
                 <Link
                   to="/lighthouse"

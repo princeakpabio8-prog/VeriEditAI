@@ -205,16 +205,22 @@ export function HotClaimsWidget() {
     };
   }, []);
 
-  // Auto-generate images disabled (using static fallbacks for zero-cost premium visuals)
-  // useEffect(() => {
-  //   if (hotClaims.length === 0) return;
+  // Auto-generate images for high-engagement claims (EPIC+ tier)
+  useEffect(() => {
+    if (hotClaims.length === 0) return;
 
-  //   hotClaims.forEach((claim) => {
-  //     if (!claim.image_url && !generatingImageIds.has(claim.id)) {
-  //       generateClaimImage(claim);
-  //     }
-  //   });
-  // }, [hotClaims]);
+    hotClaims.forEach((claim) => {
+      // Only generate for high-engagement claims without images
+      const shouldGenerate = !claim.image_url && 
+                            !generatingImageIds.has(claim.id) &&
+                            claim.engagement_score > 10000 && // High engagement threshold
+                            (claim.rarity_tier === 'EPIC' || claim.rarity_tier === 'LEGENDARY');
+      
+      if (shouldGenerate) {
+        generateClaimImage(claim);
+      }
+    });
+  }, [hotClaims]);
 
   // Filter claims based on search
   useEffect(() => {

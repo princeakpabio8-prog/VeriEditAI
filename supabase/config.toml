@@ -269,3 +269,6 @@ verify_jwt = false
 
 [functions.discovery-beacon]
 verify_jwt = true
+
+[functions.enrich-claim-images]
+verify_jwt = false

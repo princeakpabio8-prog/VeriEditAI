@@ -424,9 +424,19 @@ function getVideoFromMediaContent(item: any, baseUrl: string): string | null {
   return null;
 }
 
-// Extract from HTML content (support srcset, data-src, single quotes)
+// Extract from HTML content (support srcset, data-src, single quotes, og:image)
 function getFromHtml(html: string, baseUrl: string): string | null {
   if (!html) return null;
+  
+  // Try Open Graph image first (highest quality)
+  const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+                  html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+  if (ogMatch) return resolveUrl(baseUrl, ogMatch[1]);
+  
+  // Try Twitter card image
+  const twitterMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+                       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i);
+  if (twitterMatch) return resolveUrl(baseUrl, twitterMatch[1]);
   
   // Try srcset first (pick largest)
   const srcsetMatch = html.match(/srcset=["']([^"']+)["']/i);

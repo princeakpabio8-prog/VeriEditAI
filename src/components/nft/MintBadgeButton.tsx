@@ -58,43 +58,34 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
     }
   }
 
-  const handleInlineConnect = async () => {
+  const handleConnectWallet = async () => {
     try {
+      // Try WalletConnect first (opens modal with all wallet options)
+      const walletConnectConnector = connectors.find((c) => c.id === 'walletConnect')
+      if (walletConnectConnector) {
+        await connectAsync({ connector: walletConnectConnector })
+        return
+      }
+
+      // Fallback to injected
       const injectedConnector = connectors.find((c) => c.id === 'injected')
       if (injectedConnector) {
         await connectAsync({ connector: injectedConnector })
       } else {
-        toast({ title: 'Wallet unavailable', description: 'Please install a Web3 wallet app.', variant: 'destructive' })
+        toast({ 
+          title: 'No wallet found', 
+          description: 'Please open this page in your wallet app browser.', 
+          variant: 'destructive' 
+        })
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error)
-      toast({ title: 'Connection Failed', description: 'Please try again in your wallet app.', variant: 'destructive' })
+      toast({ 
+        title: 'Connection Failed', 
+        description: 'Please try again.', 
+        variant: 'destructive' 
+      })
     }
-  }
-
-  const openWalletApp = (walletType: 'metamask' | 'trust') => {
-    const { host, pathname, search } = window.location
-    const dappUrl = `https://${host}${pathname}${search}`
-
-    const schemes = {
-      metamask: `metamask://dapp/${host}${pathname}${search}`,
-      trust: `trust://browser_open_url?url=${encodeURIComponent(dappUrl)}`,
-    }
-    const fallbacks = {
-      metamask: `https://metamask.app.link/dapp/${host}${pathname}${search}`,
-      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(dappUrl)}`,
-    }
-
-    const scheme = schemes[walletType]
-    const fallback = fallbacks[walletType]
-
-    // Try native scheme first; if app isn't installed, fallback to universal link
-    window.location.href = scheme
-    setTimeout(() => {
-      if (document.visibilityState === 'visible') {
-        window.location.href = fallback
-      }
-    }, 800)
   }
 
   const handleMint = async () => {
@@ -206,31 +197,15 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           />
         )}
         
-        {/* Connect Wallet (Injected only) */}
+        {/* Connect Wallet */}
         {!isReallyConnected && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                onClick={() => openWalletApp('metamask')} 
-                variant="outline" 
-                className="w-full"
-                size="sm"
-              >
-                🦊 MetaMask
-              </Button>
-              <Button 
-                onClick={() => openWalletApp('trust')} 
-                variant="outline" 
-                className="w-full"
-                size="sm"
-              >
-                🛡️ Trust Wallet
-              </Button>
-            </div>
-            <Button onClick={handleInlineConnect} variant="default" className="w-full">
-              Other Wallet
-            </Button>
-          </div>
+          <Button 
+            onClick={handleConnectWallet} 
+            variant="default" 
+            className="w-full"
+          >
+            🔗 Connect Wallet
+          </Button>
         )}
         {/* Mint Button */}
         <Button

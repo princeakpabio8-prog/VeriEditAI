@@ -48,34 +48,23 @@ export const MobileBottomNav = () => {
     }
   };
 
-  const openWalletApp = (walletType: 'metamask' | 'trust') => {
-    const { host, pathname, search } = window.location
-    const dappUrl = `https://${host}${pathname}${search}`
-
-    const schemes = {
-      metamask: `metamask://dapp/${host}${pathname}${search}`,
-      trust: `trust://browser_open_url?url=${encodeURIComponent(dappUrl)}`,
-    }
-    const fallbacks = {
-      metamask: `https://metamask.app.link/dapp/${host}${pathname}${search}`,
-      trust: `https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(dappUrl)}`,
+  const handleWalletConnect = async () => {
+    if (isConnected) {
+      disconnect();
+      setWalletSheetOpen(false);
+      return;
     }
 
-    const scheme = schemes[walletType]
-    const fallback = fallbacks[walletType]
-
-    setWalletSheetOpen(false)
-    // Try native scheme first; if app isn't installed, fallback to universal link
-    window.location.href = scheme
-    setTimeout(() => {
-      if (document.visibilityState === 'visible') {
-        window.location.href = fallback
-      }
-    }, 800)
-  }
-
-  const handleInlineConnect = async () => {
     try {
+      // Try WalletConnect first (opens modal with all wallet options)
+      const walletConnectConnector = connectors.find((c) => c.id === 'walletConnect')
+      if (walletConnectConnector) {
+        await connectAsync({ connector: walletConnectConnector })
+        setWalletSheetOpen(false)
+        return
+      }
+
+      // Fallback to injected if WalletConnect not available
       const injectedConnector = connectors.find((c) => c.id === 'injected')
       if (injectedConnector) {
         await connectAsync({ connector: injectedConnector })
@@ -83,14 +72,7 @@ export const MobileBottomNav = () => {
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error)
-    }
-  }
-
-  const handleWalletClick = () => {
-    if (isConnected) {
-      disconnect();
-    } else {
-      setWalletSheetOpen(true);
+      setWalletSheetOpen(false)
     }
   };
 
@@ -154,55 +136,20 @@ export const MobileBottomNav = () => {
         })}
         
         {/* Wallet Connect */}
-        <Sheet open={walletSheetOpen} onOpenChange={setWalletSheetOpen}>
-          <SheetTrigger asChild>
-            <button
-              onClick={handleWalletClick}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
-                isConnected
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
-              <span className="text-xs font-medium">
-                {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
-              </span>
-            </button>
-          </SheetTrigger>
-          
-          <SheetContent side="bottom" className="rounded-t-xl">
-            <SheetHeader>
-              <SheetTitle>Connect Wallet</SheetTitle>
-              <SheetDescription>Choose your preferred wallet to connect</SheetDescription>
-            </SheetHeader>
-            
-            <div className="space-y-3 mt-6 pb-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  onClick={() => openWalletApp('metamask')} 
-                  variant="outline" 
-                  className="w-full h-16 flex flex-col gap-1"
-                >
-                  <span className="text-2xl">🦊</span>
-                  <span className="text-xs">MetaMask</span>
-                </Button>
-                <Button 
-                  onClick={() => openWalletApp('trust')} 
-                  variant="outline" 
-                  className="w-full h-16 flex flex-col gap-1"
-                >
-                  <span className="text-2xl">🛡️</span>
-                  <span className="text-xs">Trust Wallet</span>
-                </Button>
-              </div>
-              <Button onClick={handleInlineConnect} variant="default" className="w-full">
-                Other Wallet
-              </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
+        <button
+          onClick={handleWalletConnect}
+          className={cn(
+            "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
+            isConnected
+              ? "text-primary bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          )}
+        >
+          <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
+          <span className="text-xs font-medium">
+            {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
+          </span>
+        </button>
 
         {/* Notifications */}
         {isAuthenticated && (

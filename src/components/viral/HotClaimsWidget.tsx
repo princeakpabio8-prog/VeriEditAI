@@ -362,13 +362,34 @@ export function HotClaimsWidget() {
       {/* Claim Image - Standardized Aspect Ratio */}
       {claim.image_url ? (
         <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden">
+          {(claim.source_url || claim.metadata?.source_url) && (
+            <a
+              href={(claim.source_url || claim.metadata?.source_url) as string}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 z-10"
+              aria-label={`Open original on ${claim.platform}`}
+            />
+          )}
           <img 
-            src={claim.image_url}
+            src={
+              isMobile && claim.image_url
+                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
+                : claim.image_url
+            }
             alt={claim.claim_text}
             className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+            loading={isMobile ? 'eager' : 'lazy'}
+            decoding="async"
+            referrerPolicy="no-referrer"
             onError={(e) => {
-              e.currentTarget.style.display = 'none';
+              const proxied = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url || '')}`
+              const img = e.currentTarget as HTMLImageElement
+              if (img.src !== proxied && claim.image_url) {
+                img.src = proxied
+              } else {
+                img.style.display = 'none'
+              }
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink, Search, RefreshCw, Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,7 @@ import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
 import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { HotClaimsCarousel } from './HotClaimsCarousel';
+import { imageCache } from '@/lib/image-cache';
 
 interface HotClaim {
   id: string;
@@ -45,6 +47,8 @@ export function HotClaimsWidget() {
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
   const [imageStates, setImageStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
+  const [cachedImageUrls, setCachedImageUrls] = useState<Record<string, string>>({});
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedClaimForShare, setSelectedClaimForShare] = useState<{ id: string; text: string } | null>(null);
   const [userVerifiedClaims, setUserVerifiedClaims] = useState<Set<string>>(new Set());
@@ -66,6 +70,20 @@ export function HotClaimsWidget() {
   const location = useLocation();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Check authentication status
   useEffect(() => {
@@ -239,15 +257,55 @@ export function HotClaimsWidget() {
     setFilteredClaims(filtered);
   }, [searchQuery, hotClaims]);
 
-  const handleImageLoad = (claimId: string) => {
+  const handleImageLoad = async (claimId: string, imageUrl: string) => {
     setImageStates(prev => ({ ...prev, [claimId]: 'loaded' }));
+    
+    // Cache the image for offline access
+    if (isOnline) {
+      try {
+        await imageCache.cacheImage(imageUrl, claimId);
+        console.log('Image cached for offline viewing:', imageUrl);
+      } catch (error) {
+        console.error('Failed to cache image:', error);
+      }
+    }
   };
 
   const handleImageError = (claimId: string) => {
     setImageStates(prev => ({ ...prev, [claimId]: 'error' }));
   };
 
+  // Load cached images on mount and when offline
+  useEffect(() => {
+    const loadCachedImages = async () => {
+      const cached: Record<string, string> = {};
+      
+      for (const claim of hotClaims) {
+        if (claim.image_url) {
+          const cachedDataUrl = await imageCache.get(claim.image_url);
+          if (cachedDataUrl) {
+            cached[claim.id] = cachedDataUrl;
+          }
+        }
+      }
+      
+      setCachedImageUrls(cached);
+    };
+
+    loadCachedImages();
+  }, [hotClaims, isOnline]);
+
   const fetchHotClaims = async (showRefreshToast = false) => {
+    // Don't fetch if offline
+    if (!isOnline && hotClaims.length > 0) {
+      toast({
+        title: "Offline Mode",
+        description: "Showing cached claims. Reconnect to see updates.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       if (showRefreshToast) setRefreshing(true);
       
@@ -392,7 +450,10 @@ export function HotClaimsWidget() {
           
           <img 
             src={
-              isMobile && claim.image_url
+              // Use cached image if offline or if cached version exists
+              !isOnline && cachedImageUrls[claim.id]
+                ? cachedImageUrls[claim.id]
+                : isMobile && claim.image_url
                 ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
                 : claim.image_url
             }
@@ -403,11 +464,11 @@ export function HotClaimsWidget() {
             loading={isMobile ? 'eager' : 'lazy'}
             decoding="async"
             referrerPolicy="no-referrer"
-            onLoad={() => handleImageLoad(claim.id)}
+            onLoad={() => handleImageLoad(claim.id, claim.image_url || '')}
             onError={(e) => {
               const proxied = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url || '')}`
               const img = e.currentTarget as HTMLImageElement
-              if (img.src !== proxied && claim.image_url) {
+              if (img.src !== proxied && claim.image_url && isOnline) {
                 img.src = proxied
               } else {
                 handleImageError(claim.id)
@@ -850,86 +911,88 @@ export function HotClaimsWidget() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-1">
-            <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
-            <CardTitle>🔥 Hot Claims - Race to Verify First!</CardTitle>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-sm">Be the first to verify trending claims and mint rare NFT badges! Higher engagement = rarer badges.</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigate('/viral-claims')}
-            className="gap-1 shrink-0"
-          >
-            View All
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex items-center justify-between gap-4 mt-2">
-          <CardDescription className="flex items-center gap-2">
-            Verify trending claims before others to mint rare NFT badges
-            <Badge variant="outline" className="ml-2 gap-1">
-              <Clock className="h-3 w-3" />
-              Updated {formatDistanceToNow(lastFetchTime, { addSuffix: true })}
-            </Badge>
-          </CardDescription>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleManualRefresh}
-            disabled={refreshing}
-            className="gap-2 shrink-0"
-          >
-            <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </Button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative mt-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search claims by keyword or platform..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        
-        {showFirstTimeHelp && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-lg">
-            <div className="flex items-start gap-3">
-              <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="font-semibold text-sm mb-1">First time here? Here's how it works!</h3>
-                <p className="text-xs text-muted-foreground mb-2">
-                  🎯 Verify trending claims before anyone else<br/>
-                  💎 Earn rarer badges for higher-engagement claims<br/>
-                  🏆 Compete on the leaderboard and build your reputation
-                </p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={dismissFirstTimeHelp} className="h-6 text-xs shrink-0">
-                Got it
-              </Button>
+    <>
+      <OfflineIndicator />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 flex-1">
+              <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
+              <CardTitle>🔥 Hot Claims - Race to Verify First!</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-sm">Be the first to verify trending claims and mint rare NFT badges! Higher engagement = rarer badges.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/viral-claims')}
+              className="gap-1 shrink-0"
+            >
+              View All
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </div>
-        )}
-      </CardHeader>
+          <div className="flex items-center justify-between gap-4 mt-2">
+            <CardDescription className="flex items-center gap-2">
+              Verify trending claims before others to mint rare NFT badges
+              <Badge variant="outline" className="ml-2 gap-1">
+                <Clock className="h-3 w-3" />
+                Updated {formatDistanceToNow(lastFetchTime, { addSuffix: true })}
+              </Badge>
+            </CardDescription>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleManualRefresh}
+              disabled={refreshing || !isOnline}
+              className="gap-2 shrink-0"
+            >
+              <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative mt-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search claims by keyword or platform..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          
+          {showFirstTimeHelp && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-orange-500/10 to-pink-500/10 border border-orange-500/20 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm mb-1">First time here? Here's how it works!</h3>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    🎯 Verify trending claims before anyone else<br/>
+                    💎 Earn rarer badges for higher-engagement claims<br/>
+                    🏆 Compete on the leaderboard and build your reputation
+                  </p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={dismissFirstTimeHelp} className="h-6 text-xs shrink-0">
+                  Got it
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardHeader>
       <CardContent>
         {isMobile ? (
           <HotClaimsCarousel>
@@ -1346,5 +1409,6 @@ export function HotClaimsWidget() {
         />
       )}
     </Card>
+    </>
   );
 }

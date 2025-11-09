@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Flame, TrendingUp, Clock, Target, ArrowRight, CheckCircle2, Share2, Info, Sparkles, Award, ExternalLink, Search, RefreshCw, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +44,7 @@ export function HotClaimsWidget() {
   const [loading, setLoading] = useState(true);
   const [verifyingIds, setVerifyingIds] = useState<Set<string>>(new Set());
   const [generatingImageIds, setGeneratingImageIds] = useState<Set<string>>(new Set());
+  const [imageStates, setImageStates] = useState<Record<string, 'loading' | 'loaded' | 'error'>>({});
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedClaimForShare, setSelectedClaimForShare] = useState<{ id: string; text: string } | null>(null);
   const [userVerifiedClaims, setUserVerifiedClaims] = useState<Set<string>>(new Set());
@@ -237,6 +239,14 @@ export function HotClaimsWidget() {
     setFilteredClaims(filtered);
   }, [searchQuery, hotClaims]);
 
+  const handleImageLoad = (claimId: string) => {
+    setImageStates(prev => ({ ...prev, [claimId]: 'loaded' }));
+  };
+
+  const handleImageError = (claimId: string) => {
+    setImageStates(prev => ({ ...prev, [claimId]: 'error' }));
+  };
+
   const fetchHotClaims = async (showRefreshToast = false) => {
     try {
       if (showRefreshToast) setRefreshing(true);
@@ -360,8 +370,16 @@ export function HotClaimsWidget() {
         </div>
       )}
       {/* Claim Image - Standardized Aspect Ratio */}
-      {claim.image_url ? (
-        <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden">
+      {claim.image_url && imageStates[claim.id] !== 'error' ? (
+        <div className="relative w-full aspect-[16/9] max-h-[300px] overflow-hidden bg-muted">
+          {/* Loading placeholder with blur effect */}
+          {(!imageStates[claim.id] || imageStates[claim.id] === 'loading') && (
+            <div className="absolute inset-0 z-0">
+              <Skeleton className="w-full h-full" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 animate-pulse" />
+            </div>
+          )}
+          
           {(claim.source_url || claim.metadata?.source_url) && (
             <a
               href={(claim.source_url || claim.metadata?.source_url) as string}
@@ -371,6 +389,7 @@ export function HotClaimsWidget() {
               aria-label={`Open original on ${claim.platform}`}
             />
           )}
+          
           <img 
             src={
               isMobile && claim.image_url
@@ -378,17 +397,20 @@ export function HotClaimsWidget() {
                 : claim.image_url
             }
             alt={claim.claim_text}
-            className="w-full h-full object-cover object-center hover:scale-105 transition-transform duration-300"
+            className={`w-full h-full object-cover object-center hover:scale-105 transition-all duration-500 ${
+              imageStates[claim.id] === 'loaded' ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'
+            }`}
             loading={isMobile ? 'eager' : 'lazy'}
             decoding="async"
             referrerPolicy="no-referrer"
+            onLoad={() => handleImageLoad(claim.id)}
             onError={(e) => {
               const proxied = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url || '')}`
               const img = e.currentTarget as HTMLImageElement
               if (img.src !== proxied && claim.image_url) {
                 img.src = proxied
               } else {
-                img.style.display = 'none'
+                handleImageError(claim.id)
               }
             }}
           />

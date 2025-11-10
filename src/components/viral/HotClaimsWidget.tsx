@@ -438,15 +438,18 @@ export function HotClaimsWidget() {
             </div>
           )}
           
-          {(claim.source_url || claim.metadata?.source_url) && (
-            <a
-              href={(claim.source_url || claim.metadata?.source_url) as string}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute inset-0 z-10"
-              aria-label={`Open original on ${claim.platform}`}
-            />
-          )}
+          {(() => {
+            const srcUrl = claim.source_url || claim.metadata?.source_url || claim.metadata?.url || claim.metadata?.link;
+            return srcUrl ? (
+              <a
+                href={srcUrl as string}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute inset-0 z-10"
+                aria-label={`Open original on ${claim.platform}`}
+              />
+            ) : null;
+          })()}
           
           <img 
             src={
@@ -454,8 +457,8 @@ export function HotClaimsWidget() {
               !isOnline && cachedImageUrls[claim.id]
                 ? cachedImageUrls[claim.id]
                 : isMobile && claim.image_url
-                ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url)}`
-                : claim.image_url
+                ? `https://sqtkkzdswxazyikcheds.functions.supabase.co/image-proxy?url=${encodeURIComponent(claim.image_url)}`
+                : (claim.image_url || '')
             }
             alt={claim.claim_text}
             className={`w-full h-full object-cover object-center hover:scale-105 transition-all duration-500 ${
@@ -466,12 +469,12 @@ export function HotClaimsWidget() {
             referrerPolicy="no-referrer"
             onLoad={() => handleImageLoad(claim.id, claim.image_url || '')}
             onError={(e) => {
-              const proxied = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/image-proxy?url=${encodeURIComponent(claim.image_url || '')}`
-              const img = e.currentTarget as HTMLImageElement
+              const proxied = `https://sqtkkzdswxazyikcheds.functions.supabase.co/image-proxy?url=${encodeURIComponent(claim.image_url || '')}`;
+              const img = e.currentTarget as HTMLImageElement;
               if (img.src !== proxied && claim.image_url && isOnline) {
-                img.src = proxied
+                img.src = proxied;
               } else {
-                handleImageError(claim.id)
+                handleImageError(claim.id);
               }
             }}
           />
@@ -572,29 +575,31 @@ export function HotClaimsWidget() {
               {claim.platform}
             </Badge>
             
-            {(claim.source_url || claim.metadata?.source_url) && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const url = claim.source_url || claim.metadata?.source_url;
-                        window.open(url, '_blank', 'noopener,noreferrer');
-                      }}
-                      className="h-7 w-7 p-0 hover:bg-primary/10"
-                    >
-                      <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs">View original source ({claim.platform})</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            {(() => {
+              const url = claim.source_url || claim.metadata?.source_url || claim.metadata?.url || claim.metadata?.link;
+              return url ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(url as string, '_blank', 'noopener,noreferrer');
+                        }}
+                        className={cn("h-7 w-7 p-0 hover:bg-primary/10", isMobile && "min-h-[48px] min-w-[48px] h-12 w-12")}
+                      >
+                        <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">View original source ({claim.platform})</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : null;
+            })()}
           </div>
 
           {/* Claim Text */}
@@ -1002,47 +1007,15 @@ export function HotClaimsWidget() {
               const isVerified = !!claim.verification_id;
               const userVerificationData = getUserVerificationData(claim.id);
               const verifiedByUser = userVerifiedClaims.has(claim.id);
-                
-              return (
-                <Card key={claim.id} className={cn("overflow-hidden flex flex-col min-h-[500px] relative", index === 0 && "border-orange-500 bg-orange-50 dark:bg-orange-950/20", isVerified && "border-2 border-emerald-500", verifiedByUser && "ring-2 ring-primary/50")}>
-                  <ClaimImageFallback claimText={claim.claim_text} platform={claim.platform} rarityTier={getClaimRarityForFallback(claim)} engagementScore={claim.engagement_score} rank={index + 1} showRaceBadge={index === 0} />
-                  <CardContent className="p-5 space-y-3">
-                    <p className="font-semibold text-base line-clamp-3">{claim.claim_text}</p>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span>{claim.platform}</span>
-                      <span>{Math.round(claim.engagement_velocity)}/hr velocity</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={() => handleVerifyNow(claim)} 
-                        disabled={verifyingIds.has(claim.id)} 
-                        className={cn("flex-1 min-h-[48px] font-semibold", index === 0 && "bg-orange-500 hover:bg-orange-600")}
-                      >
-                        {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
-                      </Button>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleNativeShare(claim);
-                              }}
-                              className="min-h-[48px] min-w-[48px]"
-                            >
-                              <Share2 className="h-5 w-5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">Share this claim</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                  </CardContent>
-                </Card>
+              
+              return renderClaimCard(
+                claim,
+                index,
+                hoursSinceDetection,
+                velocityPercentage,
+                isVerified,
+                userVerificationData,
+                verifiedByUser
               );
             })}
           </HotClaimsCarousel>
@@ -1184,29 +1157,31 @@ export function HotClaimsWidget() {
                       {claim.platform}
                     </Badge>
                     
-                    {(claim.source_url || claim.metadata?.source_url) && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const url = claim.source_url || claim.metadata?.source_url;
-                                window.open(url, '_blank', 'noopener,noreferrer');
-                              }}
-                              className="h-7 w-7 p-0 hover:bg-primary/10"
-                            >
-                              <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">View original source ({claim.platform})</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                    {(() => {
+                      const url = claim.source_url || claim.metadata?.source_url || claim.metadata?.url || claim.metadata?.link;
+                      return url ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.open(url as string, '_blank', 'noopener,noreferrer');
+                                }}
+                                className={cn("h-7 w-7 p-0 hover:bg-primary/10", isMobile && "min-h-[48px] min-w-[48px] h-12 w-12")}
+                              >
+                                <ExternalLink className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs">View original source ({claim.platform})</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : null;
+                    })()}
                   </div>
 
                   {/* Claim Text */}

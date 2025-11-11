@@ -181,18 +181,9 @@ export const Navigation = () => {
                 >
                   Pricing
                 </a>
-                <a 
-                  href={location.pathname === '/' ? '#about' : '/#about'} 
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  onClick={(e) => {
-                    if (location.pathname === '/') {
-                      e.preventDefault();
-                      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                >
+                <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
-                </a>
+                </Link>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
                   Lighthouse

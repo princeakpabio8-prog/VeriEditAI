@@ -4042,7 +4042,7 @@ export type Database = {
       validate_license: { Args: { user_uuid: string }; Returns: Json }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "enterprise"
       badge_tier:
         | "bronze"
         | "silver"
@@ -4206,7 +4206,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "enterprise"],
       badge_tier: ["bronze", "silver", "gold", "platinum", "lighthouse_keeper"],
       bounty_category: [
         "election",

@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, ArrowLeft, Gift } from 'lucide-react';
+import { Shield, ArrowLeft, Gift, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { passwordSchema } from '@/lib/validation';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -22,6 +23,7 @@ const Auth = () => {
   const [resetMode, setResetMode] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     const refCode = searchParams.get('ref');
@@ -150,6 +152,39 @@ const Auth = () => {
     }
     
     setLoading('');
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResendingVerification(true);
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+
+    if (error) {
+      toast({
+        title: "Resend failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Verification email sent!",
+        description: "Check your email (including spam/promotions folder).",
+      });
+    }
+
+    setResendingVerification(false);
   };
 
   if (resetMode) {
@@ -341,6 +376,17 @@ const Auth = () => {
                   
                   <Button type="submit" className="w-full" disabled={loading === 'signup'}>
                     {loading === 'signup' ? "Creating account..." : "Create Account"}
+                  </Button>
+
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={handleResendVerification}
+                    disabled={resendingVerification || !email}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    {resendingVerification ? "Sending..." : "Resend Verification Email"}
                   </Button>
                   
                   <p className="text-xs text-muted-foreground text-center">

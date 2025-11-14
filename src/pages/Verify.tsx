@@ -23,6 +23,7 @@ import { normalizeVerifyResult } from '@/lib/normalizers';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useVerificationAchievements } from '@/hooks/useVerificationAchievements';
 import { NFTMintPromptModal } from '@/components/nft/NFTMintPromptModal';
+import { VerifyPageTutorial } from '@/components/tutorials/VerifyPageTutorial';
 interface VerificationState {
   stage: 'upload' | 'completed';
   content?: string;
@@ -56,6 +57,18 @@ export default function Verify() {
     trustScore: number;
     claimText?: string;
   } | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Check if user is coming from onboarding or is first-time user
+  useEffect(() => {
+    const fromOnboarding = location.state?.fromOnboarding;
+    const tutorialCompleted = localStorage.getItem('verify_tutorial_completed');
+    
+    if (fromOnboarding || !tutorialCompleted) {
+      // Show tutorial after a brief delay for UI to render
+      setTimeout(() => setShowTutorial(true), 500);
+    }
+  }, [location.state]);
 
   // Handle viral claim verification from URL query parameters
   useEffect(() => {
@@ -470,7 +483,7 @@ export default function Verify() {
                 )}
                 
                 {(verificationState.stage === 'completed' || result) && (
-                  <div className="fade-in-up">
+                  <div className="fade-in-up" data-tutorial="results-area">
                     <VerificationResult
                     verificationId={(verificationState.result || result)?.verificationId || null}
                     trustScore={(verificationState.result || result)?.confidence || 0}
@@ -608,6 +621,22 @@ export default function Verify() {
             claimText={nftMintPrompt.claimText}
           />
         )}
+
+        <VerifyPageTutorial
+          isActive={showTutorial}
+          onComplete={() => {
+            setShowTutorial(false);
+            localStorage.setItem('verify_tutorial_completed', 'true');
+            toast.success('Tutorial completed! You\'re ready to start verifying.', {
+              duration: 4000,
+            });
+          }}
+          onSkip={() => {
+            setShowTutorial(false);
+            localStorage.setItem('verify_tutorial_completed', 'true');
+            toast.info('Tutorial skipped. You can always ask for help!');
+          }}
+        />
       </main>
 
       {/* Cache Status Indicator */}

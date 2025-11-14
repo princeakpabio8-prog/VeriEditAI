@@ -465,7 +465,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
           </Card>
         )}
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" data-tutorial="content-tabs">
           <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="text" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
@@ -501,6 +501,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
               <Label htmlFor="text-content">Text Content</Label>
               <Textarea
                 id="text-content"
+                data-tutorial="text-input"
                 placeholder={selectedTemplate ? selectedTemplate.suggestedContent : "Paste the text content you want to verify..."}
                 value={textContent}
                 onChange={(e) => {
@@ -519,6 +520,7 @@ export const VerificationUpload = ({ onVerificationStart, isLoading = false, sel
               onClick={handleVerifyText} 
               disabled={isLoading || !textContent.trim()}
               className="w-full"
+              data-tutorial="verify-button"
             >
               {isLoading ? (
                 <>

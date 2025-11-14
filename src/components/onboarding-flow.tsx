@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ArrowRight, Shield, User, CreditCard } from 'lucide-react';
+import { CheckCircle, ArrowRight, Shield, User, CreditCard, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface OnboardingProps {
@@ -77,7 +77,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
     {
       id: 'license',
       title: 'Your Trial License',
-      description: 'Start with 20 free verifications',
+      description: 'Start with 10 free verifications',
       icon: <CreditCard className="h-8 w-8 text-primary" />,
       content: (
         <div className="space-y-4">
@@ -86,15 +86,57 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
               Trial License Active
             </h4>
             <ul className="space-y-1 text-blue-700 dark:text-blue-300 text-sm">
-              <li>• 20 free verifications per month</li>
-              <li>• Basic content analysis</li>
+              <li>• 10 free verifications per month</li>
+              <li>• AI-powered content analysis</li>
               <li>• Trust score reports</li>
-              <li>• 30-day trial period</li>
+              <li>• Source credibility checking</li>
             </ul>
           </div>
           <p className="text-muted-foreground text-center">
             Upgrade anytime for unlimited verifications and advanced features.
           </p>
+        </div>
+      )
+    },
+    {
+      id: 'first-verification',
+      title: 'Try Your First Verification',
+      description: 'Let\'s verify some content together',
+      icon: <Sparkles className="h-8 w-8 text-primary" />,
+      content: (
+        <div className="space-y-4">
+          <p className="text-muted-foreground text-center">
+            Ready to see VeriEdit AI in action? Let's verify your first piece of content!
+          </p>
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 rounded-lg border border-primary/20">
+            <h4 className="font-medium mb-3 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              What You Can Verify:
+            </h4>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span><strong>Text Claims:</strong> Fact-check statements, news, or information</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span><strong>URLs:</strong> Analyze website credibility and content authenticity</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span><strong>Documents:</strong> Review PDFs and uploaded files</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <span><strong>Images:</strong> Detect manipulated or AI-generated images</span>
+              </li>
+            </ul>
+          </div>
+          <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+            <p className="text-amber-800 dark:text-amber-200 text-sm">
+              💡 <strong>Pro Tip:</strong> Start with a simple claim or news article URL to see how our AI analyzes credibility, sources, and provides a trust score.
+            </p>
+          </div>
         </div>
       )
     }
@@ -115,7 +157,8 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
     // Mark onboarding as complete in localStorage
     localStorage.setItem('onboarding_completed', 'true');
     onComplete?.();
-    navigate('/dashboard');
+    // Navigate to verify page for first verification
+    navigate('/verify', { state: { fromOnboarding: true } });
   };
 
   const handleSkip = () => {
@@ -155,7 +198,7 @@ export const OnboardingFlow: React.FC<OnboardingProps> = ({ onComplete }) => {
             </Button>
             
             <Button onClick={handleNext} className="gap-2">
-              {currentStep === steps.length - 1 ? 'Get Started' : 'Next'}
+              {currentStep === steps.length - 1 ? 'Start Verifying' : 'Next'}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>

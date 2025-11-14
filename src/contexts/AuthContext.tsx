@@ -35,13 +35,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
-
-        // Create profile if user signs up
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            createUserProfile(session.user);
-          }, 0);
-        }
       }
     );
 
@@ -54,27 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const createUserProfile = async (user: User) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          full_name: user.user_metadata?.full_name || '',
-          company: user.user_metadata?.company || '',
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: true
-        });
-      
-      if (error && error.code !== '23505') { // Ignore duplicate key errors
-        console.error('Error creating profile:', error);
-      }
-    } catch (error) {
-      console.error('Profile creation failed:', error);
-    }
-  };
 
   const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
     const redirectUrl = `${window.location.origin}/`;

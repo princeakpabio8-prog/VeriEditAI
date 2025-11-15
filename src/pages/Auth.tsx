@@ -24,6 +24,20 @@ const Auth = () => {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
+  const [emailCooldown, setEmailCooldown] = useState(0);
+
+  // Detect Supabase email send throttle
+  const isEmailRateLimit = (err?: any) => {
+    const msg = (err?.message || '').toLowerCase();
+    return err?.status === 429 || msg.includes('rate limit') || msg.includes('too many') || msg.includes('request a new') || msg.includes('otp');
+  };
+
+  // Countdown for resend/signup throttle window
+  useEffect(() => {
+    if (emailCooldown <= 0) return;
+    const t = setInterval(() => setEmailCooldown((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [emailCooldown]);
 
   useEffect(() => {
     const refCode = searchParams.get('ref');
@@ -116,11 +130,20 @@ const Auth = () => {
     const { error } = await signUp(email, password, Object.keys(metadata).length > 0 ? metadata : undefined);
     
     if (error) {
-      toast({
-        title: "Sign up failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      if (isEmailRateLimit(error)) {
+        setEmailCooldown(60);
+        toast({
+          title: "Too many attempts",
+          description: "You've requested too many verification emails. Please try again in ~60s.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Account created!",

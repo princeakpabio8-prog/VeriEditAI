@@ -61,7 +61,7 @@ export default function PaymentCallback() {
         
         toast({
           title: "Payment Verification Failed",
-          description: "Please contact support if your payment was successful.",
+          description: "Please contact support at hello@verieditai.com if your payment was successful.",
           variant: "destructive"
         });
       }

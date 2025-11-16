@@ -150,7 +150,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       
       // Provide helpful error messages
       if (errorMessage.includes('not configured')) {
-        errorMessage = "NFT minting requires admin setup. Please contact support to enable this feature."
+        errorMessage = "NFT minting requires admin setup. Please contact support at hello@verieditai.com to enable this feature."
       } else if (errorMessage.includes('insufficient funds')) {
         errorMessage = "Insufficient MATIC for gas fees. Please add funds to the minting wallet."
       } else if (errorMessage.includes('already minted')) {

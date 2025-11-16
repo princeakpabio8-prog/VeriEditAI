@@ -40,8 +40,8 @@ export const LicenseStatus: React.FC<LicenseStatusProps> = ({
         </CardHeader>
         {showActions && (
           <CardContent>
-            <Button variant="destructive" size="sm">
-              Contact Support
+            <Button variant="destructive" size="sm" asChild>
+              <a href="mailto:hello@verieditai.com">Contact Support</a>
             </Button>
           </CardContent>
         )}

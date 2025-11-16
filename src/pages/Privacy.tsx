@@ -130,7 +130,7 @@ export default function Privacy() {
               <li><strong>Withdraw Consent:</strong> Revoke permissions at any time</li>
             </ul>
             <p className="text-muted-foreground mt-4">
-              To exercise these rights, contact us at <a href="mailto:support@veriedit-ai.com" className="text-primary hover:underline">support@veriedit-ai.com</a>
+              To exercise these rights, contact us at <a href="mailto:hello@verieditai.com" className="text-primary hover:underline">hello@verieditai.com</a>
             </p>
           </section>
 
@@ -182,8 +182,8 @@ export default function Privacy() {
             </p>
             <div className="bg-muted p-6 rounded-lg">
               <p className="font-medium mb-2">VeriedIT AI Support</p>
-              <p className="text-muted-foreground">Email: <a href="mailto:support@veriedit-ai.com" className="text-primary hover:underline">support@veriedit-ai.com</a></p>
-              <p className="text-muted-foreground">Website: <a href="https://sqtkkzdswxazyikcheds.supabase.co" className="text-primary hover:underline">https://sqtkkzdswxazyikcheds.supabase.co</a></p>
+              <p className="text-muted-foreground">Email: <a href="mailto:hello@verieditai.com" className="text-primary hover:underline">hello@verieditai.com</a></p>
+              <p className="text-muted-foreground">Website: <a href="https://www.verieditai.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.verieditai.com</a></p>
             </div>
           </section>
 

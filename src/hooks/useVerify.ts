@@ -269,7 +269,7 @@ export function useVerify() {
             } else if (fnError.message?.includes('429') || fnError.message?.includes('Rate limit')) {
               userFacingError = '⏳ Rate Limited\n\nToo many requests. Please wait a moment and try again.';
             } else if (fnError.message?.includes('402') || fnError.message?.includes('Payment')) {
-              userFacingError = '💳 Payment Required\n\nAPI credits exhausted. Please contact support.';
+              userFacingError = '💳 Payment Required\n\nAPI credits exhausted. Please contact support at hello@verieditai.com';
             }
             
             throw new Error(userFacingError);

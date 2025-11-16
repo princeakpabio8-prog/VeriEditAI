@@ -99,7 +99,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
         console.error("❌ Failed to load Flutterwave config:", error);
         toast({
           title: "Configuration Error",
-          description: "Payment system not configured. Please contact support.",
+          description: "Payment system not configured. Please contact support at hello@verieditai.com",
           variant: "destructive",
         });
       }
@@ -273,7 +273,7 @@ export const FlutterwaveCheckout = ({ onSuccess }: FlutterwaveCheckoutProps) => 
               console.error('Payment processing error:', error);
               toast({
                 title: "Payment Processing Error",
-                description: "There was an issue processing your payment. Please contact support.",
+                description: "There was an issue processing your payment. Please contact support at hello@verieditai.com",
                 variant: "destructive"
               });
             }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLicense } from '@/contexts/LicenseContext';
 import { supabase } from '@/integrations/supabase/client';
 import confetti from 'canvas-confetti';
 import { VerificationUpload } from '@/components/verification-upload';
@@ -44,6 +45,7 @@ interface TemplateConfig {
 
 export default function Verify() {
   const { user } = useAuth();
+  const { incrementUsage } = useLicense();
   const location = useLocation();
   const { verify, loading, error, result } = useVerify();
   const isMobile = useIsMobile();
@@ -191,6 +193,19 @@ export default function Verify() {
         console.error('Error checking claim status:', error);
         // Continue with verification if check fails
       }
+    }
+
+    // CHECK LICENSE USAGE BEFORE VERIFICATION
+    const usageResult = await incrementUsage(1);
+    if (!usageResult.success) {
+      const errorMsg = usageResult.error === 'limit_reached' 
+        ? `You've reached your monthly limit of ${usageResult.limit || 10} free verifications. Upgrade for unlimited access.`
+        : usageResult.error || 'Unable to verify content at this time.';
+      
+      toast.error('Verification Limit Reached', {
+        description: errorMsg,
+      });
+      return;
     }
 
     try {

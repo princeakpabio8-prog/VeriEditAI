@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
 import { NotificationBell } from '@/components/ui/NotificationBell';
+import { LicenseStatusWidget } from '@/components/ui/LicenseStatusWidget';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -102,6 +103,8 @@ export const Navigation = () => {
                   <Radio className="h-4 w-4" />
                   Lighthouse
                 </Link>
+                
+                <LicenseStatusWidget />
                 
                 {/* More Dropdown */}
                 <DropdownMenu open={isMoreOpen} onOpenChange={setIsMoreOpen}>

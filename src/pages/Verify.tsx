@@ -15,6 +15,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, FileText, Shield, TrendingUp, Activity, Briefcase, RefreshCw } from 'lucide-react';
+import { VerificationLoading } from '@/components/ui/LoadingState';
+import { VerificationErrorState } from '@/components/ui/ErrorState';
+import { InlineHelp } from '@/components/ui/InlineHelp';
 import { toast } from 'sonner';
 import { useVerify } from '@/hooks/useVerify';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
@@ -198,12 +201,14 @@ export default function Verify() {
     // CHECK LICENSE USAGE BEFORE VERIFICATION
     const usageResult = await incrementUsage(1);
     if (!usageResult.success) {
-      const errorMsg = usageResult.error === 'limit_reached' 
-        ? `You've reached your monthly limit of ${usageResult.limit || 10} free verifications. Upgrade for unlimited access.`
-        : usageResult.error || 'Unable to verify content at this time.';
+      const limit = usageResult.limit || 10;
       
-      toast.error('Verification Limit Reached', {
-        description: errorMsg,
+      toast.error(`You've used all ${limit} free verifications`, {
+        description: 'Upgrade to continue verifying claims',
+        action: {
+          label: 'Upgrade Now',
+          onClick: () => window.location.href = '/billing'
+        }
       });
       return;
     }
@@ -436,10 +441,16 @@ export default function Verify() {
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Content Verification
-          </h1>
+        <div className="mb-8 text-center space-y-4">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-4xl font-bold text-foreground">
+              Content Verification
+            </h1>
+            <InlineHelp 
+              content="Our AI analyzes claims against multiple credible sources, checks for contradictions, and provides a trust score based on source reliability and consensus."
+              side="bottom"
+            />
+          </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Submit your content for AI-powered fact-checking and trust analysis
           </p>
@@ -476,7 +487,19 @@ export default function Verify() {
               </TabsList>
 
               <TabsContent value="verify" className="animate-fade-in">
-                {verificationState.stage === 'upload' && (
+                {loading && (
+                  <VerificationLoading stage="analyzing" />
+                )}
+                
+                {error && !loading && (
+                  <VerificationErrorState 
+                    error={error}
+                    onRetry={() => window.location.reload()}
+                    onTryDifferentClaim={() => setVerificationState({ stage: 'upload' })}
+                  />
+                )}
+                
+                {verificationState.stage === 'upload' && !loading && (
                   <>
                     <VerificationUpload 
                       onVerificationStart={handleVerificationStart} 

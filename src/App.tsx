@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ErrorBoundary } from "@/components/error-boundary";
+import { EnhancedErrorBoundary } from "@/components/EnhancedErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { AchievementNotification } from "./components/AchievementNotification";
@@ -198,7 +198,7 @@ const AppContent = () => {
   };
 
 const App = () => (
-  <ErrorBoundary>
+  <EnhancedErrorBoundary maxRetries={3}>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
@@ -210,7 +210,7 @@ const App = () => (
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
-  </ErrorBoundary>
+  </EnhancedErrorBoundary>
 );
 
 export default App;

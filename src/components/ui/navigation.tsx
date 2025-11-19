@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UserFeedback } from '@/components/user-feedback';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { LicenseStatusWidget } from '@/components/ui/LicenseStatusWidget';
+import { QuickActionsMenu } from '@/components/QuickActionsMenu';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -104,6 +105,7 @@ export const Navigation = () => {
                   Lighthouse
                 </Link>
                 
+                <QuickActionsMenu />
                 <LicenseStatusWidget />
                 
                 {/* More Dropdown */}

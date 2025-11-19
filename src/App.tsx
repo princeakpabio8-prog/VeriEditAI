@@ -12,6 +12,8 @@ import { AchievementNotification } from "./components/AchievementNotification";
 import { MobileLoadingSkeleton } from "./components/MobileLoadingSkeleton";
 import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
+import { useOnboarding } from "@/hooks/useOnboarding";
+import { UnifiedOnboarding } from "@/components/UnifiedOnboarding";
 
 // Critical pages - loaded immediately
 import Index from "./pages/Index";
@@ -72,19 +74,19 @@ const ApiOpenApiDocs = lazy(() => import("./pages/ApiOpenApiDocs"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <WrongNetworkBanner />
-          <AchievementNotification />
-          <WalletToastNotifications />
-          <MobileBottomNav />
-          <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+const AppContent = () => {
+  const { showOnboarding, completeOnboarding } = useOnboarding();
+  
+  return (
+    <>
+      {showOnboarding && (
+        <UnifiedOnboarding open={showOnboarding} onComplete={completeOnboarding} />
+      )}
+      <WrongNetworkBanner />
+      <AchievementNotification />
+      <WalletToastNotifications />
+      <MobileBottomNav />
+      <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -191,10 +193,23 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+      </>
+    );
+  };
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   </ErrorBoundary>
 );
 

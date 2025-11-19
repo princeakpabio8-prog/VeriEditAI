@@ -18,6 +18,7 @@ import { CheckCircle, FileText, Shield, TrendingUp, Activity, Briefcase, Refresh
 import { VerificationLoading } from '@/components/ui/LoadingState';
 import { VerificationErrorState } from '@/components/ui/ErrorState';
 import { InlineHelp } from '@/components/ui/InlineHelp';
+import { PostVerificationSuggestions } from '@/components/PostVerificationSuggestions';
 import { toast } from 'sonner';
 import { useVerify } from '@/hooks/useVerify';
 import { MobileOptimizedUI } from '@/components/mobile-optimized-ui';
@@ -521,31 +522,40 @@ export default function Verify() {
                 )}
                 
                 {(verificationState.stage === 'completed' || result) && (
-                  <div className="fade-in-up" data-tutorial="results-area">
-                    <VerificationResult
-                    verificationId={(verificationState.result || result)?.verificationId || null}
-                    trustScore={(verificationState.result || result)?.confidence || 0}
-                    status={(verificationState.result || result)?.status || 'unknown'}
-                    summary={(verificationState.result || result)?.summary || 'No summary available'}
-                    analysis={(verificationState.result || result)?.analysis || 'No analysis available'}
-                    sources={((verificationState.result || result)?.sources || []).map((s: any) => ({
-                      id: s.id || Math.random().toString(),
-                      title: s.title || 'Unknown Source',
-                      url: s.url || '#',
-                      content_snippet: s.content_snippet || s.snippet || '',
-                      reliability_score: s.reliability_score || undefined,
-                    }))}
-                    sourceConsensus={(verificationState.result || result)?.source_consensus || 0}
-                    methods={(verificationState.result || result)?.verification_method || ['AI Analysis']}
-                    category={(verificationState.result || result)?.category || 'general'}
-                    processingTime={1500}
-                    onNewVerification={handleNewVerification}
-                    content={verificationState.content || 'No content'}
-                    industry={verificationState.selectedTemplate?.industry}
-                    contradictions={(verificationState.result || result)?.contradictions}
-                    related_claims={(verificationState.result || result)?.related_claims}
-                    viralClaimId={verificationState.viralClaimId}
-                  />
+                  <div className="space-y-4">
+                    <div className="fade-in-up" data-tutorial="results-area">
+                      <VerificationResult
+                      verificationId={(verificationState.result || result)?.verificationId || null}
+                      trustScore={(verificationState.result || result)?.confidence || 0}
+                      status={(verificationState.result || result)?.status || 'unknown'}
+                      summary={(verificationState.result || result)?.summary || 'No summary available'}
+                      analysis={(verificationState.result || result)?.analysis || 'No analysis available'}
+                      sources={((verificationState.result || result)?.sources || []).map((s: any) => ({
+                        id: s.id || Math.random().toString(),
+                        title: s.title || 'Unknown Source',
+                        url: s.url || '#',
+                        content_snippet: s.content_snippet || s.snippet || '',
+                        reliability_score: s.reliability_score || undefined,
+                      }))}
+                      sourceConsensus={(verificationState.result || result)?.source_consensus || 0}
+                      methods={(verificationState.result || result)?.verification_method || ['AI Analysis']}
+                      category={(verificationState.result || result)?.category || 'general'}
+                      processingTime={1500}
+                      onNewVerification={handleNewVerification}
+                      content={verificationState.content || 'No content'}
+                      industry={verificationState.selectedTemplate?.industry}
+                      contradictions={(verificationState.result || result)?.contradictions}
+                      related_claims={(verificationState.result || result)?.related_claims}
+                      viralClaimId={verificationState.viralClaimId}
+                    />
+                    </div>
+
+                    {/* Post-Verification Suggestions */}
+                    <PostVerificationSuggestions
+                      verificationId={(verificationState.result || result)?.verificationId || ''}
+                      trustScore={(verificationState.result || result)?.confidence || 0}
+                      onVerifyAnother={handleNewVerification}
+                    />
                   </div>
                 )}
 

@@ -70,6 +70,8 @@ export const LicenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const checkFeatureAccess = (feature: string): boolean => {
     if (!license?.valid) return false;
+    // Admins have unlimited access to all features
+    if (license.features?.unlimited_verifications) return true;
     return license.features?.[feature] || false;
   };
 

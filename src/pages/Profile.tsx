@@ -170,7 +170,19 @@ const Profile = () => {
         })
         .eq('user_id', user?.id);
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate username error
+        if (error.code === '23505' && error.message.includes('username')) {
+          toast({
+            title: "Username already taken",
+            description: "This username is already in use. Please choose a different one.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       toast({
         title: "Profile updated",

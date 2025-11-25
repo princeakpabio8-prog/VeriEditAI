@@ -35,8 +35,64 @@ export function TruthBadgeGallery() {
   const [page, setPage] = useState(1)
   const BADGES_PER_PAGE = 12
 
+  // Fetch badges on mount and when user changes
   useEffect(() => {
     if (user) fetchBadges()
+  }, [user])
+
+  // Realtime subscription to auto-update when new badges are minted
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('nft-badges-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'nft_badges',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('New badge minted, refreshing list...');
+          fetchBadges();
+          toast.success('🎉 New badge detected!', {
+            description: 'Your minted badge is now in your collection'
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'nft_badges',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Badge updated, refreshing list...');
+          fetchBadges();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user])
+
+  // Refetch badges when page becomes visible (e.g., returning from another tab or app)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        console.log('Page visible, refreshing badges...');
+        fetchBadges();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [user])
 
   const fetchBadges = async () => {

@@ -143,6 +143,11 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
       setAlreadyMinted(true)
       setMinting(false)
 
+      // Trigger gallery refresh via custom event
+      window.dispatchEvent(new CustomEvent('nft-badge-minted', { 
+        detail: { tokenId: data.tokenId, verificationId } 
+      }))
+
     } catch (error: any) {
       console.error('Minting error:', error)
       

@@ -10,6 +10,8 @@ import { NFTBadgeFallback } from '@/components/nft/NFTBadgeFallback'
 import badgeImage from '@/assets/truth-badge.png'
 import { toast } from 'sonner'
 import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton'
+import { PullToRefresh } from '@/components/PullToRefresh'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 interface TruthBadge {
   id: string
@@ -29,6 +31,7 @@ interface TruthBadge {
 
 export function TruthBadgeGallery() {
   const { user } = useAuth()
+  const isMobile = useIsMobile()
   const [badges, setBadges] = useState<TruthBadge[]>([])
   const [loading, setLoading] = useState(true)
   const [syncingAll, setSyncingAll] = useState(false)
@@ -95,6 +98,20 @@ export function TruthBadgeGallery() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [user])
 
+  // Listen for manual mint events from MintBadgeButton
+  useEffect(() => {
+    const handleMintEvent = (event: CustomEvent) => {
+      console.log('Badge minted event received:', event.detail);
+      fetchBadges();
+      toast.success('🎉 New badge added!', {
+        description: 'Your freshly minted badge is now in your collection'
+      });
+    };
+
+    window.addEventListener('nft-badge-minted', handleMintEvent as EventListener);
+    return () => window.removeEventListener('nft-badge-minted', handleMintEvent as EventListener);
+  }, [user])
+
   const fetchBadges = async () => {
     const { data, error } = await supabase
       .from('nft_badges')
@@ -105,6 +122,10 @@ export function TruthBadgeGallery() {
 
     if (!error) setBadges(data || [])
     setLoading(false)
+  }
+
+  const handleRefresh = async () => {
+    await fetchBadges()
   }
 
   const handleSyncAllBadges = async () => {
@@ -200,7 +221,7 @@ export function TruthBadgeGallery() {
   const displayedBadges = badges.slice(0, BADGES_PER_PAGE * page);
   const hasMore = badges.length === BADGES_PER_PAGE * page;
 
-  return (
+  const galleryContent = (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">My Truth Badges</h2>
@@ -238,6 +259,17 @@ export function TruthBadgeGallery() {
       )}
     </div>
   )
+
+  // Wrap with pull-to-refresh on mobile
+  if (isMobile) {
+    return (
+      <PullToRefresh onRefresh={handleRefresh}>
+        {galleryContent}
+      </PullToRefresh>
+    )
+  }
+
+  return galleryContent
 }
 
 function BadgeCard({ badge }: { badge: TruthBadge }) {

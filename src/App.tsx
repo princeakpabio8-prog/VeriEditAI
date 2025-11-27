@@ -65,6 +65,7 @@ const SignalFeed = lazy(() => import("./pages/SignalFeed"));
 // User pages
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const ActivityDetail = lazy(() => import("./pages/ActivityDetail"));
+const YouTubeIntelligence = lazy(() => import("./pages/YouTubeIntelligence"));
 
 // Component pages
 const VerificationDashboard = lazy(() => import("./components/VerificationDashboard"));
@@ -188,6 +189,11 @@ const AppContent = () => {
               <Route path="/admin/reengagement" element={
                 <ProtectedRoute>
                   <ReengagementAnalytics />
+                </ProtectedRoute>
+              } />
+              <Route path="/youtube-intelligence" element={
+                <ProtectedRoute>
+                  <YouTubeIntelligence />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

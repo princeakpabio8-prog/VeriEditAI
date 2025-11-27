@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap, Youtube } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -155,6 +155,12 @@ export const Navigation = () => {
                       <Link to="/dashboard?tab=bulk" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
                         <Package className="h-4 w-4 mr-2" />
                         Bulk Verification
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/youtube-intelligence" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Youtube className="h-4 w-4 mr-2" />
+                        YouTube Intelligence
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -435,6 +441,16 @@ export const Navigation = () => {
                 >
                   <Package className="h-4 w-4" />
                   Bulk Verification
+                </Link>
+                <Link
+                  to="/youtube-intelligence"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname === '/youtube-intelligence' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Youtube className="h-4 w-4" />
+                  YouTube Intelligence
                 </Link>
               </>
             ) : (

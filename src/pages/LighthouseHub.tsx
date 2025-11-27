@@ -5,7 +5,7 @@ import Footer from '@/components/ui/footer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Radio, Newspaper, Handshake, Building2, TrendingUp, Briefcase, Users } from 'lucide-react';
+import { Radio, Newspaper, Handshake, Building2, TrendingUp, Briefcase, Users, Youtube } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { RoomsTab } from '@/components/lighthouse/tabs/RoomsTab';
@@ -13,6 +13,7 @@ import { FeedTab } from '@/components/lighthouse/tabs/FeedTab';
 import { PartnershipsTab } from '@/components/lighthouse/tabs/PartnershipsTab';
 import { OrganizationsTab } from '@/components/lighthouse/tabs/OrganizationsTab';
 import { SignalsTab } from '@/components/lighthouse/tabs/SignalsTab';
+import { YouTubeIntelligenceTab } from '@/components/lighthouse/tabs/YouTubeIntelligenceTab';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { FloatingWorkspaceButton } from '@/components/lighthouse/FloatingWorkspaceButton';
@@ -245,6 +246,14 @@ export default function LighthouseHub() {
                   <TrendingUp className="h-4 w-4" />
                   <span className="hidden sm:inline">Signals</span>
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="youtube" 
+                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
+                  title="YouTube Intelligence - Analyze video comments"
+                >
+                  <Youtube className="h-4 w-4" />
+                  <span className="hidden sm:inline">YouTube</span>
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -266,6 +275,10 @@ export default function LighthouseHub() {
 
             <TabsContent value="signals" className="mt-6 animate-fade-in">
               <SignalsTab />
+            </TabsContent>
+
+            <TabsContent value="youtube" className="mt-6 animate-fade-in">
+              <YouTubeIntelligenceTab />
             </TabsContent>
           </Tabs>
         </div>

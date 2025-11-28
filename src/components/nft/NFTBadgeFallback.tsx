@@ -17,6 +17,37 @@ interface NFTBadgeFallbackProps {
 
 export function NFTBadgeFallback({ rarity, trustScore, claimText, tokenId }: NFTBadgeFallbackProps) {
   const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([])
+  const [imageLoaded, setImageLoaded] = useState(false)
+
+  // Use Canva template based on rarity tier - ensure all 5 tiers are supported
+  const getBadgeImagePath = (rarityTier: string | null): string => {
+    const tier = (rarityTier || 'COMMON').toUpperCase();
+    
+    switch (tier) {
+      case 'LEGENDARY':
+        return '/badges/legendary-badge.jpg';
+      case 'EPIC':
+        return '/badges/epic-badge.jpg';
+      case 'RARE':
+        return '/badges/rare-badge.jpg';
+      case 'UNCOMMON':
+        return '/badges/uncommon-badge.jpg';
+      case 'COMMON':
+      default:
+        return '/badges/common-badge.jpg';
+    }
+  };
+
+  const badgeImagePath = getBadgeImagePath(rarity);
+  console.log(`🎨 NFTBadgeFallback rendering for rarity: ${rarity} (using ${badgeImagePath})`);
+
+  useEffect(() => {
+    // Preload the badge image
+    const img = new Image();
+    img.src = badgeImagePath;
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => console.error(`Failed to load badge image: ${badgeImagePath}`);
+  }, [badgeImagePath]);
 
   useEffect(() => {
     // Generate particles for high-tier rarities
@@ -67,62 +98,74 @@ export function NFTBadgeFallback({ rarity, trustScore, claimText, tokenId }: NFT
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-lg">
-      {/* Animated gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${getRarityGradient(rarity)} animate-gradient`} />
-      
-      {/* Particles for high-tier rarities */}
-      {(rarity === 'LEGENDARY' || rarity === 'EPIC') && (
-        <div className="absolute inset-0">
-          {particles.map((particle) => (
-            <div
-              key={particle.id}
-              className="absolute w-1 h-1 bg-white rounded-full animate-float"
-              style={{
-                left: `${particle.x}%`,
-                top: `${particle.y}%`,
-                animationDelay: `${particle.delay}s`,
-                opacity: 0.6
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Show Canva template image if loaded */}
+      {imageLoaded ? (
+        <img 
+          src={badgeImagePath} 
+          alt={`${rarity || 'COMMON'} Truth Badge`}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="eager"
+        />
+      ) : (
+        <>
+          {/* Animated gradient background */}
+          <div className={`absolute inset-0 bg-gradient-to-br ${getRarityGradient(rarity)} animate-gradient`} />
+          
+          {/* Particles for high-tier rarities */}
+          {(rarity === 'LEGENDARY' || rarity === 'EPIC') && (
+            <div className="absolute inset-0">
+              {particles.map((particle) => (
+                <div
+                  key={particle.id}
+                  className="absolute w-1 h-1 bg-white rounded-full animate-float"
+                  style={{
+                    left: `${particle.x}%`,
+                    top: `${particle.y}%`,
+                    animationDelay: `${particle.delay}s`,
+                    opacity: 0.6
+                  }}
+                />
+              ))}
+            </div>
+          )}
 
-      {/* Overlay pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
-      
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-3">
-        {/* Icon */}
-        <div className="text-6xl animate-pulse">
-          {getRarityIcon(rarity)}
-        </div>
-        
-        {/* Trust Score */}
-        <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border-2 border-white/40">
-          <span className="text-white font-bold text-2xl">{trustScore}%</span>
-        </div>
-        
-        {/* Token ID */}
-        {tokenId && (
-          <div className="text-white/90 text-xs font-mono">
-            #{tokenId}
+          {/* Overlay pattern */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+          
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center justify-center p-6 text-center space-y-3">
+            {/* Icon */}
+            <div className="text-6xl animate-pulse">
+              {getRarityIcon(rarity)}
+            </div>
+            
+            {/* Trust Score */}
+            <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 border-2 border-white/40">
+              <span className="text-white font-bold text-2xl">{trustScore}%</span>
+            </div>
+            
+            {/* Token ID */}
+            {tokenId && (
+              <div className="text-white/90 text-xs font-mono">
+                #{tokenId}
+              </div>
+            )}
+            
+            {/* Claim preview */}
+            <div className="text-white/80 text-xs max-w-[80%] line-clamp-2 font-medium">
+              {truncateText(claimText, 60)}
+            </div>
+            
+            {/* Badge label */}
+            <div className="text-white/60 text-[10px] uppercase tracking-wider">
+              Truth Badge
+            </div>
           </div>
-        )}
-        
-        {/* Claim preview */}
-        <div className="text-white/80 text-xs max-w-[80%] line-clamp-2 font-medium">
-          {truncateText(claimText, 60)}
-        </div>
-        
-        {/* Badge label */}
-        <div className="text-white/60 text-[10px] uppercase tracking-wider">
-          Truth Badge
-        </div>
-      </div>
 
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
+        </>
+      )}
       
       <style>{`
         @keyframes gradient {

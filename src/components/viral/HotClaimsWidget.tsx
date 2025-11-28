@@ -102,20 +102,46 @@ export function HotClaimsWidget() {
 
   // Load user's verified claims from localStorage
   useEffect(() => {
-    const storedVerifications = localStorage.getItem('user_verified_claims');
-    if (storedVerifications) {
-      const verifiedData = JSON.parse(storedVerifications);
-      // Handle both old array format and new object format
-      const claimIds = Array.isArray(verifiedData) 
-        ? verifiedData 
-        : Object.keys(verifiedData);
-      setUserVerifiedClaims(new Set(claimIds));
-    }
+    const loadVerifiedClaims = () => {
+      const storedVerifications = localStorage.getItem('user_verified_claims');
+      if (storedVerifications) {
+        const verifiedData = JSON.parse(storedVerifications);
+        // Handle both old array format and new object format
+        const claimIds = Array.isArray(verifiedData) 
+          ? verifiedData 
+          : Object.keys(verifiedData);
+        setUserVerifiedClaims(new Set(claimIds));
+      }
+    };
+
+    loadVerifiedClaims();
     
     const hasSeenHelp = localStorage.getItem('has_seen_hot_claims_help');
     if (!hasSeenHelp) {
       setShowFirstTimeHelp(true);
     }
+
+    // Listen for storage changes (when verification completes)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user_verified_claims') {
+        console.log('🔄 Verified claims updated, refreshing state...');
+        loadVerifiedClaims();
+      }
+    };
+
+    // Listen for custom event from verification page
+    const handleVerificationComplete = () => {
+      console.log('🎉 Verification completed, refreshing state...');
+      loadVerifiedClaims();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('verification-completed', handleVerificationComplete);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('verification-completed', handleVerificationComplete);
+    };
   }, []);
 
   // Check for NFT minting prompt from navigation state (only show once per claim)

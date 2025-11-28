@@ -343,10 +343,25 @@ export default function Verify() {
             console.log('✅ Viral claim marked as verified:', data.viralClaimId);
           }
 
+          // Store verification in localStorage immediately
+          const storedVerifications = localStorage.getItem('user_verified_claims');
+          const verifiedClaims = storedVerifications ? JSON.parse(storedVerifications) : {};
+          verifiedClaims[data.viralClaimId] = {
+            verificationId: normalizedResult.verificationId,
+            trustScore: normalizedResult.confidence || 0,
+            timestamp: Date.now()
+          };
+          localStorage.setItem('user_verified_claims', JSON.stringify(verifiedClaims));
+
+          // Dispatch custom event to notify HotClaimsWidget
+          window.dispatchEvent(new Event('verification-completed'));
+
           // Store verification context for post-verification flow
           sessionStorage.setItem('verification_completed', 'true');
           sessionStorage.setItem('verification_id', normalizedResult.verificationId);
           sessionStorage.setItem('verification_trust_score', normalizedResult.confidence?.toString() || '0');
+          sessionStorage.setItem('verifying_claim_id', data.viralClaimId);
+          sessionStorage.setItem('verification_source', 'hot_claims');
         } catch (error) {
           console.error('Error updating viral claim:', error);
         }

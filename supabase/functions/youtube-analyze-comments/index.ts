@@ -74,13 +74,14 @@ serve(async (req) => {
       throw new Error('No comments found on this video');
     }
 
-    // Analyze with Lovable AI
+    // Analyze with AI
     const analysisPrompt = `You are an intelligence analyst for YouTube comments. Analyze these ${allComments.length} comments from the video "${videoTitle}" and provide:
 
 1. **Top 10 FAQs**: Extract the most frequently asked questions with their frequency count
 2. **Comment Clusters**: Group comments into themes (Confusion, Praise, Complaints, Feature Requests, Questions, Off-topic, etc.) with 2-3 sample comments per cluster
 3. **Sentiment Analysis**: Calculate percentages for Positive, Neutral, and Negative sentiment
 4. **Insight Summary**: Write a 4-6 sentence intelligence brief summarizing key viewer sentiment and patterns
+5. **Content Recommendations**: Based on audience questions and pain points, suggest 4-5 video topics/titles that would resonate with this audience
 
 Comments to analyze:
 ${allComments.slice(0, 1000).join('\n---\n')}
@@ -98,7 +99,10 @@ Return ONLY valid JSON in this exact format:
     "neutral": 35,
     "negative": 20
   },
-  "summary": "..."
+  "summary": "...",
+  "contentRecommendations": [
+    {"title": "...", "reasoning": "...", "priority": "high"}
+  ]
 }`;
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

@@ -82,6 +82,16 @@ serve(async (req) => {
 3. **Sentiment Analysis**: Calculate percentages for Positive, Neutral, and Negative sentiment
 4. **Insight Summary**: Write a 4-6 sentence intelligence brief summarizing key viewer sentiment and patterns
 5. **Content Recommendations**: Based on audience questions and pain points, suggest 4-5 video topics/titles that would resonate with this audience
+6. **Misinformation Detection**: Scan comments for potential misinformation and provide:
+   - Truth Health Score (0-100, where 100 = healthy discourse, 0 = heavily polluted with misinformation)
+   - Risk level: "low", "medium", "high", or "critical"
+   - List of flagged comments (up to 10) containing potential misinformation with:
+     - The comment text (truncated if too long)
+     - Type: "conspiracy_theory", "unverified_claim", "medical_misinfo", "political_misinfo", "scam", or "fake_news"
+     - Severity: "low", "medium", or "high"
+     - Brief reasoning why it was flagged
+   - Common misinformation themes detected (e.g., "anti-vax", "election fraud", "financial scams")
+   - Suggested fact-check topics with relevant fact-checker URLs (Snopes, PolitiFact, FactCheck.org, etc.)
 
 Comments to analyze:
 ${allComments.slice(0, 1000).join('\n---\n')}
@@ -102,7 +112,20 @@ Return ONLY valid JSON in this exact format:
   "summary": "...",
   "contentRecommendations": [
     {"title": "...", "reasoning": "...", "priority": "high"}
-  ]
+  ],
+  "misinformationAnalysis": {
+    "truthHealthScore": 78,
+    "riskLevel": "low",
+    "flaggedComments": [
+      {"comment": "...", "type": "conspiracy_theory", "severity": "medium", "reasoning": "..."}
+    ],
+    "commonThemes": [
+      {"theme": "Medical misinformation", "count": 5}
+    ],
+    "suggestedFactChecks": [
+      {"topic": "COVID-19 vaccine safety", "relevance": "Multiple comments spreading vaccine misinformation", "factCheckUrl": "https://www.snopes.com/tag/covid-19-vaccine/"}
+    ]
+  }
 }`;
 
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {

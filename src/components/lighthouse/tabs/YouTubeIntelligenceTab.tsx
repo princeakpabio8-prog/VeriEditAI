@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Youtube, Search, AlertCircle } from "lucide-react";
+import { Youtube, Search, AlertCircle, Lightbulb } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -25,11 +25,18 @@ interface Sentiment {
   negative: number;
 }
 
+interface ContentRecommendation {
+  title: string;
+  reasoning: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
 interface Analysis {
   faqs: FAQ[];
   clusters: Cluster[];
   sentiment: Sentiment;
   summary: string;
+  contentRecommendations?: ContentRecommendation[];
 }
 
 interface YouTubeReport {
@@ -205,6 +212,34 @@ export function YouTubeIntelligenceTab() {
               <p className="text-sm leading-relaxed">{report.analysis.summary}</p>
             </CardContent>
           </Card>
+
+          {report.analysis.contentRecommendations && report.analysis.contentRecommendations.length > 0 && (
+            <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Content Ideas</CardTitle>
+                <CardDescription>Video topics that would resonate with this audience</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {report.analysis.contentRecommendations.map((rec, idx) => (
+                    <div key={idx} className="space-y-2 p-3 rounded-lg border border-border/50 bg-background/40">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-medium text-sm flex-1">{rec.title}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full shrink-0 ${
+                          rec.priority === 'high' ? 'bg-primary/10 text-primary' :
+                          rec.priority === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {rec.priority}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{rec.reasoning}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
 

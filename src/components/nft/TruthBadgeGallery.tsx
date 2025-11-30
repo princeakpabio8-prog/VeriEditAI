@@ -27,6 +27,7 @@ interface TruthBadge {
   opensea_image_confirmed: boolean | null
   opensea_refresh_count: number | null
   opensea_last_refresh: string | null
+  opensea_url: string | null
 }
 
 export function TruthBadgeGallery() {
@@ -115,7 +116,7 @@ export function TruthBadgeGallery() {
   const fetchBadges = async () => {
     const { data, error } = await supabase
       .from('nft_badges')
-      .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank, opensea_image_confirmed, opensea_refresh_count, opensea_last_refresh')
+      .select('id, token_id, transaction_hash, claim_text, trust_score, minted_at, metadata_uri, rarity_tier, virality_score, minted_at_rank, opensea_image_confirmed, opensea_refresh_count, opensea_last_refresh, opensea_url')
       .eq('user_id', user!.id)
       .order('minted_at', { ascending: false })
       .limit(BADGES_PER_PAGE * page)
@@ -464,7 +465,7 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
                   </>
                 ) : badge.opensea_image_confirmed ? (
                   <button
-                    onClick={() => window.open(`https://opensea.io/assets/matic/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
+                    onClick={() => window.open(badge.opensea_url || `https://opensea.io/assets/polygon/0x66911176b4eC70086C50b3155b04dEe433652673/${badge.token_id}`, '_blank')}
                     className="text-green-500 hover:text-green-600 hover:underline transition-colors cursor-pointer"
                   >
                     ✅ Live on OpenSea

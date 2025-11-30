@@ -163,15 +163,15 @@ export const MobileNFTMintFlow = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-lg font-bold">
             Mint NFT Badge
           </DialogTitle>
         </DialogHeader>
 
         {/* Progress Bar */}
-        <div className="space-y-2 mb-6">
+        <div className="space-y-2 mb-4 px-6 shrink-0">
           <Progress value={progressPercentage} className="h-2" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{STEP_INFO[currentStep].title}</span>
@@ -180,7 +180,7 @@ export const MobileNFTMintFlow = ({
         </div>
 
         {/* Step Indicators */}
-        <div className="flex justify-between mb-6">
+        <div className="flex justify-between mb-4 px-6 shrink-0">
           {steps.slice(0, -1).map((step, index) => {
             const StepIcon = STEP_INFO[step].icon;
             const isActive = index === currentStepIndex;
@@ -213,54 +213,200 @@ export const MobileNFTMintFlow = ({
           })}
         </div>
 
-        {/* Content based on current step */}
-        {currentStep === "review" && (
-          <div className="space-y-4">
-            {/* Badge Preview */}
-            <div className={cn(
-              "relative rounded-lg p-6 bg-gradient-to-br",
-              badge.color,
-              "overflow-hidden"
-            )}>
-              <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-              <div className="relative text-center text-white">
-                <Sparkles className="h-12 w-12 mx-auto mb-3" />
-                <h3 className="font-bold text-lg mb-1">{badge.name}</h3>
-                <Badge variant="secondary" className="bg-white/20 text-white">
-                  {badge.rarity}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Gas Fee Estimate */}
-            <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold text-sm flex items-center gap-2">
-                <Fuel className="h-4 w-4 text-primary" />
-                Gas Fee Estimate
-              </h4>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Network Fee</span>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{estimatedGasFee} MATIC</p>
-                  <p className="text-xs text-muted-foreground">{estimatedGasFeeUSD}</p>
+        {/* Scrollable Content Container */}
+        <div className="flex-1 overflow-y-auto px-6 pb-4">
+          {/* Content based on current step */}
+          {currentStep === "review" && (
+            <div className="space-y-3">
+              {/* Badge Preview */}
+              <div className={cn(
+                "relative rounded-lg p-5 bg-gradient-to-br",
+                badge.color,
+                "overflow-hidden"
+              )}>
+                <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+                <div className="relative text-center text-white">
+                  <Sparkles className="h-10 w-10 mx-auto mb-2" />
+                  <h3 className="font-bold text-base mb-1">{badge.name}</h3>
+                  <Badge variant="secondary" className="bg-white/20 text-white text-xs">
+                    {badge.rarity}
+                  </Badge>
                 </div>
               </div>
-              <div className="flex justify-between items-center pt-2 border-t border-border">
-                <span className="text-sm font-medium">Your Balance</span>
-                <p className="text-sm font-semibold">
-                  {balance ? parseFloat(formatEther(balance.value)).toFixed(4) : "0.0000"} MATIC
+
+              {/* Gas Fee Estimate */}
+              <div className="bg-card border border-border rounded-lg p-3 space-y-2">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Fuel className="h-4 w-4 text-primary" />
+                  Gas Fee Estimate
+                </h4>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Network Fee</span>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold">{estimatedGasFee} MATIC</p>
+                    <p className="text-xs text-muted-foreground">{estimatedGasFeeUSD}</p>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-border">
+                  <span className="text-xs font-medium">Your Balance</span>
+                  <p className="text-sm font-semibold">
+                    {balance ? parseFloat(formatEther(balance.value)).toFixed(4) : "0.0000"} MATIC
+                  </p>
+                </div>
+              </div>
+
+              {/* Verification Details */}
+              {verificationId && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Verification ID</p>
+                  <p className="text-xs font-mono font-medium truncate">{verificationId}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === "approve" && (
+            <div className="space-y-4 text-center py-6">
+              <div className="relative">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <WalletIcon className="h-8 w-8 text-primary animate-pulse" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Approve in Your Wallet</h3>
+                <p className="text-sm text-muted-foreground">
+                  Check your wallet extension or app to approve this transaction
                 </p>
               </div>
-            </div>
-
-            {/* Verification Details */}
-            {verificationId && (
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Verification ID</p>
-                <p className="text-xs font-mono font-medium truncate">{verificationId}</p>
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Waiting for approval...</span>
               </div>
-            )}
+            </div>
+          )}
 
+          {currentStep === "minting" && (
+            <div className="space-y-4 text-center py-6">
+              <div className="relative">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Fuel className="h-8 w-8 text-primary" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-20 w-20 animate-spin text-primary opacity-20" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Minting Your Badge</h3>
+                <p className="text-sm text-muted-foreground">
+                  Creating your NFT on the Polygon blockchain
+                </p>
+              </div>
+              <div className="bg-primary/5 rounded-lg p-3">
+                <p className="text-xs text-muted-foreground">This usually takes 10-30 seconds</p>
+              </div>
+            </div>
+          )}
+
+          {currentStep === "confirming" && (
+            <div className="space-y-4 text-center py-6">
+              <div className="relative">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <Shield className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Confirming Transaction</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Waiting for blockchain confirmation
+                </p>
+                {txHash && (
+                  <a
+                    href={`https://polygonscan.com/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    View on PolygonScan
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Confirming...</span>
+              </div>
+            </div>
+          )}
+
+          {currentStep === "complete" && (
+            <div className="space-y-4 text-center py-6">
+              <div className="relative">
+                <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-10 w-10 text-primary" />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-24 h-24 border-4 border-primary/20 rounded-full animate-ping" />
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="font-bold text-xl mb-2">🎉 Mint Successful!</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your {badge.name} has been minted
+                </p>
+              </div>
+
+              <div className={cn(
+                "relative rounded-lg p-5 bg-gradient-to-br",
+                badge.color,
+                "overflow-hidden"
+              )}>
+                <div className="absolute inset-0 bg-grid-pattern opacity-10" />
+                <div className="relative text-center text-white">
+                  <Sparkles className="h-10 w-10 mx-auto mb-2" />
+                  <h3 className="font-bold text-base">{badge.name}</h3>
+                </div>
+              </div>
+
+              {txHash && (
+                <div className="space-y-2">
+                  <a
+                    href={`https://polygonscan.com/tx/${txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    View Transaction
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => {
+                  haptics.light();
+                  handleClose();
+                }} className="flex-1">
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    haptics.medium();
+                    // Navigate to marketplace or collection
+                    window.location.href = "/nft-marketplace";
+                  }}
+                  className="flex-1"
+                >
+                  View Collection
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Sticky Bottom Button for Review Step */}
+        {currentStep === "review" && (
+          <div className="shrink-0 px-6 py-4 border-t bg-background">
             <Button
               onClick={() => {
                 haptics.medium();
@@ -272,144 +418,6 @@ export const MobileNFTMintFlow = ({
               <Sparkles className="h-5 w-5 mr-2" />
               Start Minting
             </Button>
-          </div>
-        )}
-
-        {currentStep === "approve" && (
-          <div className="space-y-4 text-center py-8">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <WalletIcon className="h-8 w-8 text-primary animate-pulse" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Approve in Your Wallet</h3>
-              <p className="text-sm text-muted-foreground">
-                Check your wallet extension or app to approve this transaction
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Waiting for approval...</span>
-            </div>
-          </div>
-        )}
-
-        {currentStep === "minting" && (
-          <div className="space-y-4 text-center py-8">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Fuel className="h-8 w-8 text-primary" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="h-20 w-20 animate-spin text-primary opacity-20" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Minting Your Badge</h3>
-              <p className="text-sm text-muted-foreground">
-                Creating your NFT on the Polygon blockchain
-              </p>
-            </div>
-            <div className="bg-primary/5 rounded-lg p-4">
-              <p className="text-xs text-muted-foreground">This usually takes 10-30 seconds</p>
-            </div>
-          </div>
-        )}
-
-        {currentStep === "confirming" && (
-          <div className="space-y-4 text-center py-8">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <Shield className="h-8 w-8 text-primary" />
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg mb-2">Confirming Transaction</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Waiting for blockchain confirmation
-              </p>
-              {txHash && (
-                <a
-                  href={`https://polygonscan.com/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  View on PolygonScan
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
-            <div className="flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">Confirming...</span>
-            </div>
-          </div>
-        )}
-
-        {currentStep === "complete" && (
-          <div className="space-y-6 text-center py-8">
-            <div className="relative">
-              <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-10 w-10 text-primary" />
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 border-4 border-primary/20 rounded-full animate-ping" />
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-bold text-xl mb-2">🎉 Mint Successful!</h3>
-              <p className="text-sm text-muted-foreground">
-                Your {badge.name} has been minted
-              </p>
-            </div>
-
-            <div className={cn(
-              "relative rounded-lg p-6 bg-gradient-to-br",
-              badge.color,
-              "overflow-hidden mx-4"
-            )}>
-              <div className="absolute inset-0 bg-grid-pattern opacity-10" />
-              <div className="relative text-center text-white">
-                <Sparkles className="h-10 w-10 mx-auto mb-2" />
-                <h3 className="font-bold text-base">{badge.name}</h3>
-              </div>
-            </div>
-
-            {txHash && (
-              <div className="space-y-2">
-                <a
-                  href={`https://polygonscan.com/tx/${txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                >
-                  View Transaction
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => {
-                haptics.light();
-                handleClose();
-              }} className="flex-1">
-                Close
-              </Button>
-              <Button
-                onClick={() => {
-                  haptics.medium();
-                  // Navigate to marketplace or collection
-                  window.location.href = "/nft-marketplace";
-                }}
-                className="flex-1"
-              >
-                View Collection
-              </Button>
-            </div>
           </div>
         )}
       </DialogContent>

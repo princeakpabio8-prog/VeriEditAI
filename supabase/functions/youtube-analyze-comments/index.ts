@@ -21,12 +21,37 @@ serve(async (req) => {
       throw new Error('Required API keys not configured');
     }
 
-    // Extract video ID from various YouTube URL formats
-    const videoIdMatch = youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-    if (!videoIdMatch) {
-      throw new Error('Invalid YouTube URL');
+    // Extract video ID from various YouTube URL formats (handle all common variations)
+    let videoId: string | null = null;
+    
+    // Try to extract video ID from URL
+    const url = youtubeUrl.trim();
+    
+    // Method 1: Extract from v= parameter (handles youtube.com, www.youtube.com, m.youtube.com, etc.)
+    const vParamMatch = url.match(/[?&]v=([^&#]+)/);
+    if (vParamMatch) {
+      videoId = vParamMatch[1];
     }
-    const videoId = videoIdMatch[1];
+    
+    // Method 2: Short URLs (youtu.be/VIDEO_ID)
+    if (!videoId) {
+      const shortMatch = url.match(/youtu\.be\/([^?&#]+)/);
+      if (shortMatch) {
+        videoId = shortMatch[1];
+      }
+    }
+    
+    // Method 3: Embed URLs (youtube.com/embed/VIDEO_ID)
+    if (!videoId) {
+      const embedMatch = url.match(/youtube\.com\/embed\/([^?&#]+)/);
+      if (embedMatch) {
+        videoId = embedMatch[1];
+      }
+    }
+    
+    if (!videoId) {
+      throw new Error('Invalid YouTube URL. Please use a valid YouTube video URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID or https://youtu.be/VIDEO_ID)');
+    }
     console.log('Analyzing video:', videoId);
 
     // Fetch video metadata

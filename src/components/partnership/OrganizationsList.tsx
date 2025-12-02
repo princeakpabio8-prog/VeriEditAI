@@ -37,7 +37,14 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
     return matchesSearch && matchesIndustry;
   });
 
-  const getTrustColor = (score: number) => {
+  // Strip HTML tags from description for safety
+  const stripHtml = (html: string | null) => {
+    if (!html) return null;
+    return html.replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+  };
+
+  const getTrustColor = (score: number | null) => {
+    if (!score) return "text-muted-foreground";
     if (score >= 81) return "text-green-500";
     if (score >= 61) return "text-yellow-500";
     if (score >= 41) return "text-orange-500";
@@ -135,7 +142,7 @@ export const OrganizationsList = ({ embedded = false }: { embedded?: boolean }) 
                     </p>
                     {org.description && (
                       <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                        {org.description}
+                        {stripHtml(org.description)}
                       </p>
                     )}
                   </div>

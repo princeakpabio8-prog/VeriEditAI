@@ -773,7 +773,7 @@ async function verifyWithPerplexity(content: string, template?: any): Promise<Ve
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-large-128k-chat',
+        model: 'sonar',
         messages: [
           {
             role: 'system',

@@ -343,7 +343,7 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
       case 'EPIC':
         return 'shadow-[0_0_60px_rgba(168,85,247,0.7),0_0_30px_rgba(168,85,247,0.5)] nft-epic-particles';
       case 'RARE':
-        return 'shadow-[0_0_60px_rgba(59,130,246,0.7),0_0_30px_rgba(59,130,246,0.5)]';
+        return 'shadow-[0_0_60px_rgba(59,130,246,0.7),0_0_30px_rgba(59,130,246,0.5)] nft-rare-particles';
       case 'UNCOMMON':
         return 'shadow-[0_0_60px_rgba(34,197,94,0.7),0_0_30px_rgba(34,197,94,0.5)]';
       default:
@@ -384,6 +384,9 @@ function BadgeCard({ badge }: { badge: TruthBadge }) {
           {/* Rotating ring for high rarity */}
           {(badge.rarity_tier === 'LEGENDARY' || badge.rarity_tier === 'EPIC') && (
             <div className="absolute inset-0 nft-rotating-ring opacity-60" />
+          )}
+          {badge.rarity_tier === 'RARE' && (
+            <div className="absolute inset-0 nft-rotating-ring-blue opacity-60" />
           )}
           
           {loading ? (

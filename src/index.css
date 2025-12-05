@@ -289,6 +289,24 @@ All colors MUST be HSL.
     animation: particle-pulse 2.5s ease-in-out infinite;
     pointer-events: none;
   }
+
+  /* Particle effects for rare badges (blue glow) */
+  .nft-rare-particles::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    animation: particle-pulse 2s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Blue rotating ring for rare badges */
+  .nft-rotating-ring-blue {
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(45deg, transparent 30%, rgba(59, 130, 246, 0.5), transparent 70%);
+    animation: rotate-ring 3s linear infinite;
+  }
 }
 
 @keyframes trust-pulse {

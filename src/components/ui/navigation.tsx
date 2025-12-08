@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap, Youtube } from "lucide-react";
+import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap, Youtube, Heart, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,6 +163,19 @@ export const Navigation = () => {
                         YouTube Intelligence
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <a 
+                        href="https://asclepius-tele-connect.lovable.app/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center cursor-pointer"
+                        onClick={() => setIsMoreOpen(false)}
+                      >
+                        <Heart className="h-4 w-4 mr-2 text-pink-500" />
+                        HealLink
+                        <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                      </a>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
@@ -208,6 +221,15 @@ export const Navigation = () => {
                 <Link to="/extensions" className="text-muted-foreground hover:text-foreground transition-colors">
                   Extensions
                 </Link>
+                <a 
+                  href="https://asclepius-tele-connect.lovable.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  <Heart className="h-4 w-4 text-pink-500" />
+                  HealLink
+                </a>
               </>
             )}
             
@@ -452,6 +474,17 @@ export const Navigation = () => {
                   <Youtube className="h-4 w-4" />
                   YouTube Intelligence
                 </Link>
+                <a
+                  href="https://asclepius-tele-connect.lovable.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Heart className="h-4 w-4 text-pink-500" />
+                  HealLink
+                  <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                </a>
               </>
             ) : (
               <>
@@ -524,6 +557,17 @@ export const Navigation = () => {
                 >
                   About
                 </Link>
+                <a
+                  href="https://asclepius-tele-connect.lovable.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Heart className="h-4 w-4 text-pink-500" />
+                  HealLink
+                  <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                </a>
               </>
             )}
             

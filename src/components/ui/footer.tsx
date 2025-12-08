@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Heart } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -40,6 +40,15 @@ const Footer = () => {
               <Link to="/about" className="block text-muted-foreground hover:text-foreground transition-colors">
                 About Us
               </Link>
+              <a 
+                href="https://asclepius-tele-connect.lovable.app/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Heart className="h-3 w-3 text-pink-500" />
+                HealLink <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           </div>
 

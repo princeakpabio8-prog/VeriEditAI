@@ -96,10 +96,16 @@ export const Navigation = () => {
                 <Link to="/viral-claims" className="text-muted-foreground hover:text-foreground transition-colors">
                   Hot Claims
                 </Link>
-                <Link to="/bounties" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  <Target className="h-4 w-4" />
-                  Bounties
-                </Link>
+                <a 
+                  href="https://asclepius-tele-connect.lovable.app/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  <Heart className="h-4 w-4 text-pink-500" />
+                  HealLink
+                  <ExternalLink className="h-3 w-3 opacity-50" />
+                </a>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />
                   Lighthouse

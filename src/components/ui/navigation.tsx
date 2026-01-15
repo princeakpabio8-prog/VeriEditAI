@@ -97,8 +97,8 @@ export const Navigation = () => {
                   Hot Claims
                 </Link>
                 <a 
-                  href="https://asclepius-tele-connect.lovable.app/" 
-                  target="_blank" 
+                  href="https://heallink-app.lovable.app" 
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
@@ -171,8 +171,8 @@ export const Navigation = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <a 
-                        href="https://asclepius-tele-connect.lovable.app/" 
-                        target="_blank" 
+                        href="https://heallink-app.lovable.app" 
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center cursor-pointer"
                         onClick={() => setIsMoreOpen(false)}
@@ -228,8 +228,8 @@ export const Navigation = () => {
                   Extensions
                 </Link>
                 <a 
-                  href="https://asclepius-tele-connect.lovable.app/" 
-                  target="_blank" 
+                  href="https://heallink-app.lovable.app" 
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
@@ -481,7 +481,7 @@ export const Navigation = () => {
                   YouTube Intelligence
                 </Link>
                 <a
-                  href="https://asclepius-tele-connect.lovable.app/"
+                  href="https://heallink-app.lovable.app"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
@@ -564,7 +564,7 @@ export const Navigation = () => {
                   About
                 </Link>
                 <a
-                  href="https://asclepius-tele-connect.lovable.app/"
+                  href="https://heallink-app.lovable.app"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"

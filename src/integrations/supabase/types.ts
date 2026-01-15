@@ -1067,6 +1067,177 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_claim_verifications: {
+        Row: {
+          claim: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at: string
+          evidence: string
+          id: string
+          incident_id: string
+          status: Database["public"]["Enums"]["verification_status"]
+        }
+        Insert: {
+          claim: string
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          evidence: string
+          id?: string
+          incident_id: string
+          status: Database["public"]["Enums"]["verification_status"]
+        }
+        Update: {
+          claim?: string
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          evidence?: string
+          id?: string
+          incident_id?: string
+          status?: Database["public"]["Enums"]["verification_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_claim_verifications_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_evidence: {
+        Row: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at: string
+          description: string
+          id: string
+          incident_id: string
+          source: string
+          type: string
+        }
+        Insert: {
+          confidence: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          description: string
+          id?: string
+          incident_id: string
+          source: string
+          type: string
+        }
+        Update: {
+          confidence?: Database["public"]["Enums"]["confidence_level"]
+          created_at?: string
+          description?: string
+          id?: string
+          incident_id?: string
+          source?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_evidence_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incident_timeline_events: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          incident_id: string
+          is_deviation: boolean | null
+          source: string
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          incident_id: string
+          is_deviation?: boolean | null
+          source: string
+          timestamp: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          incident_id?: string
+          is_deviation?: boolean | null
+          source?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_timeline_events_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          affected_entity: string
+          affected_entity_type: Database["public"]["Enums"]["affected_entity_type"]
+          contributing_factors: string[] | null
+          created_at: string
+          data_source: string | null
+          description: string | null
+          id: string
+          narrative: string | null
+          root_cause: Database["public"]["Enums"]["root_cause_category"] | null
+          severity: Database["public"]["Enums"]["incident_severity"]
+          status: Database["public"]["Enums"]["incident_status"]
+          timestamp: string
+          title: string
+          type: Database["public"]["Enums"]["incident_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          affected_entity: string
+          affected_entity_type?: Database["public"]["Enums"]["affected_entity_type"]
+          contributing_factors?: string[] | null
+          created_at?: string
+          data_source?: string | null
+          description?: string | null
+          id?: string
+          narrative?: string | null
+          root_cause?: Database["public"]["Enums"]["root_cause_category"] | null
+          severity: Database["public"]["Enums"]["incident_severity"]
+          status?: Database["public"]["Enums"]["incident_status"]
+          timestamp?: string
+          title: string
+          type: Database["public"]["Enums"]["incident_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          affected_entity?: string
+          affected_entity_type?: Database["public"]["Enums"]["affected_entity_type"]
+          contributing_factors?: string[] | null
+          created_at?: string
+          data_source?: string | null
+          description?: string | null
+          id?: string
+          narrative?: string | null
+          root_cause?: Database["public"]["Enums"]["root_cause_category"] | null
+          severity?: Database["public"]["Enums"]["incident_severity"]
+          status?: Database["public"]["Enums"]["incident_status"]
+          timestamp?: string
+          title?: string
+          type?: Database["public"]["Enums"]["incident_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       leaderboard_entries: {
         Row: {
           created_at: string
@@ -4042,6 +4213,7 @@ export type Database = {
       validate_license: { Args: { user_uuid: string }; Returns: Json }
     }
     Enums: {
+      affected_entity_type: "customer" | "route" | "operation"
       app_role: "admin" | "user" | "enterprise"
       badge_tier:
         | "bronze"
@@ -4065,6 +4237,16 @@ export type Database = {
         | "completed"
         | "expired"
         | "cancelled"
+      confidence_level: "low" | "medium" | "high"
+      incident_severity: "low" | "medium" | "high"
+      incident_status: "open" | "under-review" | "verified" | "resolved"
+      incident_type:
+        | "late-delivery"
+        | "missed-pickup"
+        | "sla-breach"
+        | "service-failure"
+        | "damage"
+        | "other"
       license_status: "active" | "expired" | "suspended" | "revoked"
       license_type: "trial" | "basic" | "professional" | "enterprise"
       payment_status: "pending" | "successful" | "failed"
@@ -4078,7 +4260,9 @@ export type Database = {
         | "media"
         | "general"
       room_type: "public" | "private" | "workspace"
+      root_cause_category: "systemic" | "external" | "planning" | "execution"
       thread_status: "active" | "verified" | "disputed" | "archived"
+      verification_status: "supported" | "not-supported" | "inconclusive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4206,6 +4390,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      affected_entity_type: ["customer", "route", "operation"],
       app_role: ["admin", "user", "enterprise"],
       badge_tier: ["bronze", "silver", "gold", "platinum", "lighthouse_keeper"],
       bounty_category: [
@@ -4226,6 +4411,17 @@ export const Constants = {
         "expired",
         "cancelled",
       ],
+      confidence_level: ["low", "medium", "high"],
+      incident_severity: ["low", "medium", "high"],
+      incident_status: ["open", "under-review", "verified", "resolved"],
+      incident_type: [
+        "late-delivery",
+        "missed-pickup",
+        "sla-breach",
+        "service-failure",
+        "damage",
+        "other",
+      ],
       license_status: ["active", "expired", "suspended", "revoked"],
       license_type: ["trial", "basic", "professional", "enterprise"],
       payment_status: ["pending", "successful", "failed"],
@@ -4240,7 +4436,9 @@ export const Constants = {
         "general",
       ],
       room_type: ["public", "private", "workspace"],
+      root_cause_category: ["systemic", "external", "planning", "execution"],
       thread_status: ["active", "verified", "disputed", "archived"],
+      verification_status: ["supported", "not-supported", "inconclusive"],
     },
   },
 } as const

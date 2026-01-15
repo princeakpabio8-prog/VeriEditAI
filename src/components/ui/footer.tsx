@@ -41,8 +41,8 @@ const Footer = () => {
                 About Us
               </Link>
               <a 
-                href="https://asclepius-tele-connect.lovable.app/" 
-                target="_blank" 
+                href="https://heallink-app.lovable.app" 
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
               >

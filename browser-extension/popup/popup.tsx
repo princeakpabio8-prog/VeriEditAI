@@ -98,13 +98,13 @@ const Popup: React.FC = () => {
   const shareOnTwitter = () => {
     if (!result) return;
     const text = `I just verified content with VeriedIT AI! Trust Score: ${result.trustScore}/100. Fight misinformation with AI-powered fact-checking. Get 5 free verifications with code: TWITTER5`;
-    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://sqtkkzdswxazyikcheds.supabase.co')}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://trust-lighthouse.lovable.app')}`;
     chrome.tabs.create({ url });
   };
 
   const shareOnLinkedIn = () => {
     if (!result) return;
-    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://sqtkkzdswxazyikcheds.supabase.co')}`;
+    const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://trust-lighthouse.lovable.app')}`;
     chrome.tabs.create({ url });
   };
 
@@ -118,14 +118,14 @@ const Popup: React.FC = () => {
         <div className="signup-content">
           <p>Get your API key to start verifying content:</p>
           <ol>
-            <li>Visit <a href="https://sqtkkzdswxazyikcheds.supabase.co/auth" target="_blank">VeriedIT AI</a></li>
+          <li>Visit <a href="https://trust-lighthouse.lovable.app/auth" target="_blank">VeriedIT AI</a></li>
             <li>Sign up for a free account</li>
-            <li>Go to your <a href="https://sqtkkzdswxazyikcheds.supabase.co/profile" target="_blank">Profile</a></li>
+            <li>Go to your <a href="https://trust-lighthouse.lovable.app/profile" target="_blank">Profile</a></li>
             <li>Copy your API key</li>
             <li>Paste it in the extension settings</li>
           </ol>
           <p className="bonus-info">💎 Use referral code <strong>CHROME5</strong> for 5 bonus verifications!</p>
-          <button onClick={() => chrome.tabs.create({ url: 'https://sqtkkzdswxazyikcheds.supabase.co/auth?ref=CHROME5' })} className="primary-button">
+          <button onClick={() => chrome.tabs.create({ url: 'https://trust-lighthouse.lovable.app/auth?ref=CHROME5' })} className="primary-button">
             Sign Up Now
           </button>
         </div>

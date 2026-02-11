@@ -89,9 +89,14 @@ serve(async (req) => {
       }
 
       const result = await verifyResponse.json();
+      console.log('Raw verify result keys:', Object.keys(result));
+      console.log('Trust fields:', { confidence: result.confidence, trustScore: result.trustScore, trust_score: result.trust_score });
+
+      // The verify function returns "confidence" as the trust score field
+      const trustScore = result.confidence ?? result.trustScore ?? result.trust_score ?? 50;
 
       return new Response(JSON.stringify({
-        trustScore: result.trustScore || result.trust_score || 50,
+        trustScore: trustScore,
         summary: result.summary || result.result_summary || 'Verification complete',
         status: result.status || 'completed',
         verificationId: result.verificationId || result.id,

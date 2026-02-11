@@ -116,6 +116,30 @@ body {
   margin-bottom: 12px;
 }
 
+.link-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #e2e8f0;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+
+.link-input::placeholder {
+  color: #64748b;
+}
+
+.link-input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .content-input {
   width: 100%;
   padding: 14px 16px;

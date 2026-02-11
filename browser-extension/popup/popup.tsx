@@ -16,6 +16,7 @@ interface VerificationResult {
 
 const Popup: React.FC = () => {
   const [content, setContent] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -35,8 +36,9 @@ const Popup: React.FC = () => {
   };
 
   const handleVerify = async () => {
-    if (!content.trim()) {
-      setError('Please enter content to verify');
+    const verifyContent = content.trim() || (linkUrl.trim() ? `Verify the content at this URL: ${linkUrl.trim()}` : '');
+    if (!verifyContent) {
+      setError('Please enter content or a URL to verify');
       return;
     }
 
@@ -47,7 +49,7 @@ const Popup: React.FC = () => {
     try {
       const response = await chrome.runtime.sendMessage({
         type: 'VERIFY_CONTENT',
-        content: content.trim()
+        content: verifyContent
       });
 
       if (response.success) {
@@ -138,6 +140,13 @@ const Popup: React.FC = () => {
 
       <div className="verify-section">
         <div className="input-wrapper">
+          <input
+            type="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            placeholder="Paste a URL to verify (optional)..."
+            className="link-input"
+          />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -149,7 +158,7 @@ const Popup: React.FC = () => {
         </div>
         <button
           onClick={handleVerify}
-          disabled={loading || !content.trim()}
+          disabled={loading || (!content.trim() && !linkUrl.trim())}
           className="verify-button"
         >
           {loading ? (

@@ -1,6 +1,9 @@
-import { getApiKey, getCachedVerification, setCachedVerification } from '../shared/storage';
+import { getCachedVerification, setCachedVerification } from '../shared/storage';
 import { MessageRequest, MessageResponse, VerificationResult } from '../shared/types';
 import { checkAndAwardAchievements, getVerificationCount } from '../shared/achievements';
+
+const SUPABASE_URL = 'https://sqtkkzdswxazyikcheds.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxdGtremRzd3hhenlpa2NoZWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MDM1NDEsImV4cCI6MjA3MzA3OTU0MX0.1vQ2RDB5dgsmUwfiy9KeVuS0P6gHlKSAUsMVo5-5vto';
 
 // Create context menu
 chrome.runtime.onInstalled.addListener(() => {
@@ -27,22 +30,6 @@ chrome.runtime.onMessage.addListener((message: MessageRequest, sender, sendRespo
     handleVerification(message.content!)
       .then(result => sendResponse({ success: true, data: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Keep channel open for async response
-  }
-  
-  if (message.type === 'GET_API_KEY') {
-    getApiKey()
-      .then(apiKey => sendResponse({ success: true, data: apiKey as any }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true;
-  }
-  
-  if (message.type === 'SAVE_API_KEY') {
-    import('../shared/storage').then(({ saveApiKey }) => {
-      return saveApiKey(message.apiKey!);
-    })
-      .then(() => sendResponse({ success: true }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
     return true;
   }
 });
@@ -55,20 +42,15 @@ async function handleVerification(content: string): Promise<VerificationResult> 
     return cached;
   }
   
-  // Get API key
-  const apiKey = await getApiKey();
-  if (!apiKey) {
-    throw new Error('API key not configured. Please set your API key in the extension settings.');
-  }
-  
-  // Call verification API
+  // Call verification API - no API key needed
   const response = await fetch(
-    'https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/verify-extension',
+    `${SUPABASE_URL}/functions/v1/verify-extension`,
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({ content })
     }

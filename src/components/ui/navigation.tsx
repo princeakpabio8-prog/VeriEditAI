@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap, Youtube, Heart, ExternalLink } from "lucide-react";
+import { Menu, X, LogOut, User, Settings, BarChart3, Lock, UserCog, Puzzle, Gift, Newspaper, Radio, Code, Package, Award, Flame, MoreHorizontal, ChevronDown, Target, Zap, Youtube, Heart, ExternalLink } from "lucide-react";
+import lighthouseLogo from "@/assets/lighthouse-logo.png";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,7 +78,7 @@ export const Navigation = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <Shield className="h-8 w-8 text-primary" />
+            <img src={lighthouseLogo} alt="VeriedIT AI" className="h-9 w-9 rounded-lg" />
             <span className="text-xl font-bold bg-gradient-trust bg-clip-text text-transparent">
               VeriEdit AI
             </span>

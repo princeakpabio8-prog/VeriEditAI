@@ -206,7 +206,7 @@ export function HotClaimsWidget() {
           
           // Show toast notification
           toast({
-            title: "🎉 Claim Just Verified!",
+            title: "Claim Just Verified!",
             description: `"${verifiedClaim.claim_text.substring(0, 60)}..." was verified by another user`,
           });
           
@@ -355,7 +355,7 @@ export function HotClaimsWidget() {
       
       if (showRefreshToast && data) {
         toast({
-          title: "✅ Feed Refreshed",
+          title: "Feed Refreshed",
           description: `Found ${data.length} hot claims`,
         });
       }
@@ -400,7 +400,7 @@ export function HotClaimsWidget() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `🔥 Viral Claim - ${claim.platform}`,
+          title: `Viral Claim — ${claim.platform}`,
           text: `${claim.claim_text}\n\n📊 Engagement: ${claim.engagement_score.toLocaleString()} | ⚡ Velocity: ${Math.round(claim.engagement_velocity)}/hr\n\nVerify this claim:`,
           url: claim.share_token 
             ? `${window.location.origin}/claim/${claim.share_token}`
@@ -408,8 +408,8 @@ export function HotClaimsWidget() {
         });
         
         toast({
-          title: "✅ Claim Shared!",
-          description: "Successfully shared via native share menu 🎉",
+          title: "Claim Shared",
+          description: "Successfully shared via native share menu",
         });
       } catch (error: any) {
         // User cancelled or error occurred
@@ -448,9 +448,9 @@ export function HotClaimsWidget() {
     >
       {verifiedByUser && userVerificationData && (
         <div className="absolute -top-2 -right-2 z-10">
-          <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-4 py-1.5 shadow-2xl font-bold border-2 border-white dark:border-emerald-950">
-            ✓ Verified {userVerificationData.trustScore >= 75 ? '💎' : '✅'}
-          </Badge>
+           <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-4 py-1.5 shadow-2xl font-bold border-2 border-white dark:border-emerald-950">
+             <CheckCircle2 className="h-3 w-3 mr-1 inline" /> Verified
+           </Badge>
         </div>
       )}
       {/* Claim Image - Standardized Aspect Ratio */}
@@ -508,10 +508,10 @@ export function HotClaimsWidget() {
           
           {/* Verified Badge Overlay */}
           {justVerifiedClaims.has(claim.id) ? (
-            <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
-              <Sparkles size={16} />
-              🎉 JUST VERIFIED!
-            </div>
+             <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
+               <Sparkles size={16} />
+               JUST VERIFIED
+             </div>
           ) : isVerified ? (
             <div className="absolute top-3 right-3 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-pulse">
               <CheckCircle2 size={16} />
@@ -528,10 +528,10 @@ export function HotClaimsWidget() {
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             <div className="flex gap-2">
               {index === 0 && (
-                <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
-                  🔥 RACE TO VERIFY
-                </Badge>
-              )}
+                 <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
+                   <Flame className="h-3 w-3 mr-1 inline" /> RACE TO VERIFY
+                 </Badge>
+               )}
               {claim.rarity_tier && (
                 <Badge
                   className={`bg-gradient-to-r ${getRarityColor(claim.rarity_tier)} text-white font-bold shadow-lg`}
@@ -550,12 +550,12 @@ export function HotClaimsWidget() {
           </div>
           
           {/* Rank Badge - Only show if not verified */}
-          {!isVerified && (
-            <div className="absolute bottom-3 right-3">
-              <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
-                {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-              </div>
-            </div>
+           {!isVerified && (
+             <div className="absolute bottom-3 right-3">
+               <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                 #{index + 1}
+               </div>
+             </div>
           )}
         </div>
       ) : generatingImageIds.has(claim.id) ? (
@@ -582,10 +582,10 @@ export function HotClaimsWidget() {
             <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
-                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">✓ YOU VERIFIED THIS!</span>
-              </div>
+                 <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">You Verified This</span>
+               </div>
               <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">
-                Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible 💎' : ''}
+                 Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible' : ''}
               </p>
             </div>
           ) : isVerified ? (
@@ -683,9 +683,9 @@ export function HotClaimsWidget() {
               {getRarityDisplayName(claim.rarity_tier)}
             </span>
             {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
-              <span className="ml-2 text-orange-500 font-bold">
-                ⚡ MYTHIC POTENTIAL!
-              </span>
+               <span className="ml-2 text-orange-500 font-bold">
+                 MYTHIC POTENTIAL
+               </span>
             )}
           </div>
         )}
@@ -714,8 +714,8 @@ export function HotClaimsWidget() {
                     }}
                     className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
-                    <Award className="h-4 w-4 mr-2" />
-                    🎉 Mint Your NFT Badge ({userVerificationData.trustScore}%)
+                     <Award className="h-4 w-4 mr-2" />
+                     Mint Your NFT Badge ({userVerificationData.trustScore}%)
                   </Button>
                 ) : (
                   <p className="text-xs text-muted-foreground">
@@ -779,7 +779,7 @@ export function HotClaimsWidget() {
                 index === 0 && "bg-orange-500 hover:bg-orange-600"
               )}
             >
-              {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
+               {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? 'Verify Now' : 'Verify')}
             </Button>
           )}
         </div>
@@ -805,15 +805,15 @@ export function HotClaimsWidget() {
   const getRarityIcon = (rarity: string | null) => {
     switch (rarity) {
       case 'LEGENDARY':
-        return '⚡';
+        return '★';
       case 'EPIC':
-        return '💎';
+        return '◆';
       case 'RARE':
-        return '🔥';
+        return '▲';
       case 'UNCOMMON':
-        return '✨';
+        return '●';
       default:
-        return '📝';
+        return '○';
     }
   };
 
@@ -949,7 +949,7 @@ export function HotClaimsWidget() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-1">
               <Flame className="h-5 w-5 text-orange-500 animate-pulse" />
-              <CardTitle>🔥 Hot Claims - Race to Verify First!</CardTitle>
+              <CardTitle>Hot Claims — Race to Verify First</CardTitle>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -1010,12 +1010,12 @@ export function HotClaimsWidget() {
               <div className="flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-sm mb-1">First time here? Here's how it works!</h3>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    🎯 Verify trending claims before anyone else<br/>
-                    💎 Earn rarer badges for higher-engagement claims<br/>
-                    🏆 Compete on the leaderboard and build your reputation
-                  </p>
+                   <h3 className="font-semibold text-sm mb-1">First time here? Here's how it works!</h3>
+                   <p className="text-xs text-muted-foreground mb-2">
+                     Verify trending claims before anyone else<br/>
+                     Earn rarer badges for higher-engagement claims<br/>
+                     Compete on the leaderboard and build your reputation
+                   </p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={dismissFirstTimeHelp} className="h-6 text-xs shrink-0">
                   Got it
@@ -1070,7 +1070,7 @@ export function HotClaimsWidget() {
                 {verifiedByUser && userVerificationData && (
                   <div className="absolute -top-2 -right-2 z-10">
                     <Badge className="bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs px-4 py-1.5 shadow-2xl font-bold border-2 border-white dark:border-emerald-950">
-                      ✓ Verified {userVerificationData.trustScore >= 75 ? '💎' : '✅'}
+                      <CheckCircle2 className="h-3 w-3 mr-1 inline" /> Verified
                     </Badge>
                   </div>
                 )}
@@ -1090,10 +1090,10 @@ export function HotClaimsWidget() {
                     
                     {/* Verified Badge Overlay */}
                     {justVerifiedClaims.has(claim.id) ? (
-                      <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
-                        <Sparkles size={16} />
-                        🎉 JUST VERIFIED!
-                      </div>
+                       <div className="absolute top-3 right-3 bg-gradient-to-r from-emerald-400 to-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-bounce">
+                         <Sparkles size={16} />
+                         JUST VERIFIED
+                       </div>
                     ) : isVerified ? (
                       <div className="absolute top-3 right-3 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-2 animate-pulse">
                         <CheckCircle2 size={16} />
@@ -1110,9 +1110,9 @@ export function HotClaimsWidget() {
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
                     <div className="flex gap-2">
                       {index === 0 && (
-                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
-                          🔥 RACE TO VERIFY
-                        </Badge>
+                         <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold text-sm px-3 py-1 shadow-lg animate-pulse">
+                           <Flame className="h-3 w-3 mr-1 inline" /> RACE TO VERIFY
+                         </Badge>
                       )}
                       {claim.rarity_tier && (
                         <Badge
@@ -1133,10 +1133,10 @@ export function HotClaimsWidget() {
                   
                   {/* Rank Badge - Only show if not verified */}
                   {!isVerified && (
-                    <div className="absolute bottom-3 right-3">
-                      <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-2xl shadow-lg">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                      </div>
+                     <div className="absolute bottom-3 right-3">
+                       <div className="bg-black/60 backdrop-blur-sm rounded-full w-12 h-12 flex items-center justify-center text-sm font-bold text-white shadow-lg">
+                         #{index + 1}
+                       </div>
                     </div>
                   )}
                 </div>
@@ -1164,10 +1164,10 @@ export function HotClaimsWidget() {
                     <div className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 border-2 border-emerald-500/50 rounded-lg p-3">
                       <div className="flex items-center justify-center gap-2 mb-1">
                         <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">✓ YOU VERIFIED THIS!</span>
-                      </div>
-                      <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">
-                        Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible 💎' : ''}
+                         <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">You Verified This</span>
+                       </div>
+                       <p className="text-xs text-center text-emerald-600 dark:text-emerald-400">
+                         Score: {userVerificationData.trustScore}% {userVerificationData.trustScore >= 75 ? '• NFT Eligible' : ''}
                       </p>
                     </div>
                   ) : isVerified ? (
@@ -1265,9 +1265,9 @@ export function HotClaimsWidget() {
                       {getRarityDisplayName(claim.rarity_tier)}
                     </span>
                     {hoursSinceDetection < 6 && claim.engagement_score >= 5000 && (
-                      <span className="ml-2 text-orange-500 font-bold">
-                        ⚡ MYTHIC POTENTIAL!
-                      </span>
+                       <span className="ml-2 text-orange-500 font-bold">
+                         MYTHIC POTENTIAL
+                       </span>
                     )}
                   </div>
                 )}
@@ -1297,7 +1297,7 @@ export function HotClaimsWidget() {
                             className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
                           >
                             <Award className="h-4 w-4 mr-2" />
-                            🎉 Mint Your NFT Badge ({userVerificationData.trustScore}%)
+                            Mint Your NFT Badge ({userVerificationData.trustScore}%)
                           </Button>
                         ) : (
                           <p className="text-xs text-muted-foreground">
@@ -1361,7 +1361,7 @@ export function HotClaimsWidget() {
                         index === 0 && "bg-orange-500 hover:bg-orange-600"
                       )}
                     >
-                      {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? '🏁 Verify Now!' : 'Verify')}
+                      {verifyingIds.has(claim.id) ? 'Verifying…' : (index === 0 ? 'Verify Now' : 'Verify')}
                     </Button>
                   )}
                 </div>

@@ -142,11 +142,22 @@ export function LiveActivityStream() {
     }
   };
 
-  const handleActivityClick = (activity: ActivityItem) => {
+  const handleActivityClick = async (activity: ActivityItem) => {
     if (activity.activity_type === 'thread_created' && activity.entity_id) {
-      navigate(`/lighthouse/thread/${activity.entity_id}`);
+      // Look up the thread's room_id to construct the correct route
+      const { data: thread } = await supabase
+        .from('room_threads')
+        .select('room_id')
+        .eq('id', activity.entity_id)
+        .single();
+      
+      if (thread?.room_id) {
+        navigate(`/lighthouse/${thread.room_id}/thread/${activity.entity_id}`);
+      } else {
+        navigate(`/lighthouse/activity/${activity.id}`);
+      }
     } else if (activity.activity_type === 'room_created' && activity.entity_id) {
-      navigate(`/lighthouse/room/${activity.entity_id}`);
+      navigate(`/lighthouse/${activity.entity_id}`);
     }
   };
 

@@ -163,7 +163,7 @@ export const MobileNFTMintFlow = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0">
+      <DialogContent className="max-w-md mx-4 max-h-[92vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-lg font-bold">
             Mint NFT Badge
@@ -350,7 +350,7 @@ export const MobileNFTMintFlow = ({
               </div>
               
               <div>
-                <h3 className="font-bold text-xl mb-2">🎉 Mint Successful!</h3>
+                <h3 className="font-bold text-xl mb-2">Mint Successful!</h3>
                 <p className="text-sm text-muted-foreground">
                   Your {badge.name} has been minted
                 </p>

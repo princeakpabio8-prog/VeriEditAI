@@ -112,7 +112,7 @@ class NotificationManager {
       // Note: You'll need to add your VAPID public key here
       const applicationServerKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       
-      this.subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
+      this.subscription = await (this.serviceWorkerRegistration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey ? this.urlBase64ToUint8Array(applicationServerKey) : undefined
       });

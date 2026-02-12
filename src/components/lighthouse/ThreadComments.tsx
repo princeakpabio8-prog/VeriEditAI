@@ -192,7 +192,8 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
                 user_id: mentionedProfile.user_id,
                 type: 'mention',
                 message: `mentioned you in a comment`,
-                actionUrl: `/threads/${threadId}`,
+                action_url: `/lighthouse/${roomId}/thread/${threadId}`,
+                is_read: false,
                 metadata: {
                   thread_id: threadId,
                   room_id: roomId,

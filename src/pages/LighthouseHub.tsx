@@ -117,11 +117,11 @@ export default function LighthouseHub() {
               <span className="text-sm text-[hsl(var(--lighthouse-beam))]">Truth Verification Hub</span>
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-[hsl(var(--lighthouse-glow))] to-[hsl(var(--lighthouse-signal))] bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-[hsl(var(--lighthouse-glow))] to-[hsl(var(--lighthouse-signal))] bg-clip-text text-transparent leading-tight">
               The Lighthouse Hub
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
               Your central hub for truth verification and collaboration. Signal over noise.
             </p>
           </div>
@@ -205,54 +205,48 @@ export default function LighthouseHub() {
         <div className="max-w-7xl mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 md:pb-0 md:static">
-              <TabsList className="w-full justify-start overflow-x-auto bg-muted/50 scrollbar-hide">
+              <TabsList className="w-full justify-start overflow-x-auto bg-muted/50 scrollbar-hide flex-nowrap">
                 <TabsTrigger 
                   value="rooms" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="Verification Rooms - Collaborative spaces for verifying claims"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <Radio className="h-4 w-4" />
-                  <span className="hidden sm:inline">Rooms</span>
+                  Rooms
                 </TabsTrigger>
                 <TabsTrigger 
                   value="feed" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="News Feed - Latest verified articles"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <Newspaper className="h-4 w-4" />
-                  <span className="hidden sm:inline">Feed</span>
+                  Feed
                 </TabsTrigger>
                 <TabsTrigger 
                   value="partnerships" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="Partnerships - Explore partnership opportunities"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <Handshake className="h-4 w-4" />
-                  <span className="hidden sm:inline">Partnerships</span>
+                  Partners
                 </TabsTrigger>
                 <TabsTrigger 
                   value="organizations" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="Organizations - Browse verified organizations"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <Building2 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Organizations</span>
+                  Orgs
                 </TabsTrigger>
                 <TabsTrigger 
                   value="signals" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="Signals - Trending verification signals"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <TrendingUp className="h-4 w-4" />
-                  <span className="hidden sm:inline">Signals</span>
+                  Signals
                 </TabsTrigger>
                 <TabsTrigger 
                   value="youtube" 
-                  className="gap-2 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10"
-                  title="YouTube Intelligence - Analyze video comments"
+                  className="gap-1.5 data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20 transition-all hover:bg-[hsl(var(--lighthouse-beam))]/10 shrink-0"
                 >
                   <Youtube className="h-4 w-4" />
-                  <span className="hidden sm:inline">YouTube</span>
+                  YouTube
                 </TabsTrigger>
               </TabsList>
             </div>

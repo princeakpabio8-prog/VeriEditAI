@@ -81,7 +81,7 @@ export function UserAvatar({
   );
 
   if (clickable && userId) {
-    return <Link to={`/profile/${userId}`}>{avatarContent}</Link>;
+    return <Link to={`/user/${userId}`}>{avatarContent}</Link>;
   }
 
   return avatarContent;

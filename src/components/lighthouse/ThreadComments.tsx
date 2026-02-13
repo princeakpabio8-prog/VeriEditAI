@@ -298,7 +298,7 @@ export function ThreadComments({ threadId, roomId }: ThreadCommentsProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <Link 
-                    to={`/profile/${comment.author_id}`}
+                    to={`/user/${comment.author_id}`}
                     className={`font-medium hover:text-primary transition-colors ${isMobile ? 'text-base' : ''}`}
                   >
                     {comment.author_name || 'Anonymous'}

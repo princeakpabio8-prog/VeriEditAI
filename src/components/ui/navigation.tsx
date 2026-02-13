@@ -79,9 +79,6 @@ export const Navigation = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <img src={lighthouseLogo} alt="VeriedIT AI" className="h-9 w-9 rounded-lg" />
-            <span className="text-xl font-bold bg-gradient-trust bg-clip-text text-transparent">
-              VeriEdit AI
-            </span>
           </Link>
 
           {/* Desktop Navigation */}

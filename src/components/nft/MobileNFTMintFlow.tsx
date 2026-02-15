@@ -163,7 +163,7 @@ export const MobileNFTMintFlow = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0 overflow-hidden mb-[calc(env(safe-area-inset-bottom,0px)+72px)]">
+      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-lg font-bold">
             Mint NFT Badge

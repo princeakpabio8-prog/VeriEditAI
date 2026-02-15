@@ -176,5 +176,34 @@ export function useLighthouseThreads(roomId: string) {
     }
   };
 
-  return { threads, loading, error, refetch: fetchThreads, createThread };
+  const deleteThread = async (threadId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('room_threads')
+        .delete()
+        .eq('id', threadId)
+        .eq('author_id', user.id);
+
+      if (error) throw error;
+      
+      // Also try deleting as room owner
+      if (error) {
+        const { error: ownerError } = await supabase
+          .from('room_threads')
+          .delete()
+          .eq('id', threadId);
+        if (ownerError) throw ownerError;
+      }
+
+      await fetchThreads();
+    } catch (err) {
+      console.error('Error deleting thread:', err);
+      throw err;
+    }
+  };
+
+  return { threads, loading, error, refetch: fetchThreads, createThread, deleteThread };
 }

@@ -1,17 +1,31 @@
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, ThumbsUp, Shield } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, ThumbsUp, Shield, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Thread {
   id: string;
   room_id: string;
   title: string;
   content: string;
+  author_id?: string;
   author_name?: string | null;
   author_avatar?: string | null;
   trust_score: number | null;
@@ -24,11 +38,32 @@ interface Thread {
 interface LighthouseThreadListProps {
   threads: Thread[];
   loading: boolean;
+  roomCreatorId?: string;
+  onDeleteThread?: (threadId: string) => Promise<void>;
 }
 
-export function LighthouseThreadList({ threads, loading }: LighthouseThreadListProps) {
+export function LighthouseThreadList({ threads, loading, roomCreatorId, onDeleteThread }: LighthouseThreadListProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const canDelete = (thread: Thread) => {
+    if (!user) return false;
+    return thread.author_id === user.id || roomCreatorId === user.id;
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget || !onDeleteThread) return;
+    try {
+      setDeleting(true);
+      await onDeleteThread(deleteTarget);
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -55,63 +90,101 @@ export function LighthouseThreadList({ threads, loading }: LighthouseThreadListP
   }
 
   return (
-    <div className={isMobile ? "space-y-3" : "space-y-4"}>
-      {threads.map((thread) => (
-        <Card
-          key={thread.id}
-          className={`${isMobile ? 'p-4 active:scale-[0.98]' : 'p-6'} hover:shadow-lg transition-all cursor-pointer group touch-manipulation`}
-          onClick={() => navigate(`/lighthouse/${thread.room_id}/thread/${thread.id}`)}
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex-1 min-w-0">
-              {/* Title and badge */}
-              <div className={`flex items-start gap-2 mb-2 ${isMobile ? 'flex-col' : ''}`}>
-                {thread.is_auto_verified && thread.trust_score !== null && (
-                  <Badge variant="secondary" className="gap-1 shrink-0 text-xs">
-                    <Shield className="h-3 w-3" />
-                    {thread.trust_score}%
-                  </Badge>
-                )}
-                <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold group-hover:text-primary transition-colors line-clamp-2`}>
-                  {thread.title}
-                </h3>
-              </div>
+    <>
+      <div className={isMobile ? "space-y-3" : "space-y-4"}>
+        {threads.map((thread) => (
+          <Card
+            key={thread.id}
+            className={`${isMobile ? 'p-4 active:scale-[0.98]' : 'p-6'} hover:shadow-lg transition-all cursor-pointer group touch-manipulation relative`}
+            onClick={() => navigate(`/lighthouse/${thread.room_id}/thread/${thread.id}`)}
+          >
+            {/* Delete button */}
+            {canDelete(thread) && onDeleteThread && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10 z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteTarget(thread.id);
+                }}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
 
-              <p className={`text-muted-foreground ${isMobile ? 'line-clamp-2 text-sm' : 'line-clamp-2'} mb-3`}>
-                {thread.content.substring(0, isMobile ? 120 : 200)}
-                {thread.content.length > (isMobile ? 120 : 200) && '...'}
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className={`flex items-start gap-2 mb-2 ${isMobile ? 'flex-col' : ''}`}>
+                  {thread.is_auto_verified && thread.trust_score !== null && (
+                    <Badge variant="secondary" className="gap-1 shrink-0 text-xs">
+                      <Shield className="h-3 w-3" />
+                      {thread.trust_score}%
+                    </Badge>
+                  )}
+                  <h3 className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold group-hover:text-primary transition-colors line-clamp-2`}>
+                    {thread.title}
+                  </h3>
+                </div>
 
-              <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isMobile ? 'flex-wrap' : ''}`}>
-                <UserAvatar
-                  avatarUrl={thread.author_avatar}
-                  fullName={thread.author_name}
-                  size="xs"
-                  clickable={false}
-                />
-                <span className="truncate max-w-[100px]">
-                  {thread.author_name || 'Anonymous'}
-                </span>
-                <span className="text-muted-foreground/50">·</span>
-                <span className="shrink-0 text-xs">
-                  {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
-                </span>
-                <span className="text-muted-foreground/50">·</span>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp className="h-3.5 w-3.5" />
-                    <span className="text-xs">{thread.upvote_count}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span className="text-xs">{thread.comment_count}</span>
+                <p className={`text-muted-foreground ${isMobile ? 'line-clamp-2 text-sm' : 'line-clamp-2'} mb-3`}>
+                  {thread.content.substring(0, isMobile ? 120 : 200)}
+                  {thread.content.length > (isMobile ? 120 : 200) && '...'}
+                </p>
+
+                <div className={`flex items-center gap-2 text-sm text-muted-foreground ${isMobile ? 'flex-wrap' : ''}`}>
+                  <UserAvatar
+                    avatarUrl={thread.author_avatar}
+                    fullName={thread.author_name}
+                    size="xs"
+                    clickable={false}
+                  />
+                  <span className="truncate max-w-[100px]">
+                    {thread.author_name || 'Anonymous'}
+                  </span>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span className="shrink-0 text-xs">
+                    {formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })}
+                  </span>
+                  <span className="text-muted-foreground/50">·</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp className="h-3.5 w-3.5" />
+                      <span className="text-xs">{thread.upvote_count}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                      <span className="text-xs">{thread.comment_count}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
-      ))}
-    </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Thread</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this thread and all its comments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

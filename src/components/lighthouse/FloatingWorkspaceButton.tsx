@@ -26,7 +26,7 @@ export function FloatingWorkspaceButton() {
           <Button
             onClick={() => navigate(`/lighthouse/${workspaceId}`)}
             size="lg"
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))] hover:scale-110 transition-all duration-300 z-50 group"
+            className="fixed right-4 h-14 w-14 rounded-full shadow-lg bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))] hover:scale-110 transition-all duration-300 z-50 group bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] md:bottom-6 md:right-6"
             aria-label="Go to My Workspace"
           >
             <Briefcase className="w-6 h-6 group-hover:scale-110 transition-transform" />

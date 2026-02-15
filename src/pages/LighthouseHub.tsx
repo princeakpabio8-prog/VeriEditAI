@@ -100,7 +100,7 @@ export default function LighthouseHub() {
       />
       <Navigation />
       
-      <main className="pb-20 md:pb-8">
+      <main className="pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8">
       {/* Hero Section */}
       <section className="relative pt-20 pb-10 md:pt-24 md:pb-12 px-4 overflow-hidden bg-gradient-to-b from-[hsl(var(--lighthouse-deep))]/20 to-background">
         {/* Enhanced Lighthouse beam animation with particles */}
@@ -201,7 +201,7 @@ export default function LighthouseHub() {
       </section>
 
       {/* Tabs Section with sticky navigation on mobile */}
-      <section className="py-8 px-4 pb-20 md:pb-8">
+      <section className="py-8 px-4 pb-4 md:pb-8">
         <div className="max-w-7xl mx-auto">
           <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 md:pb-0 md:static">

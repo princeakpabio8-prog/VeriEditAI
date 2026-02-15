@@ -3,7 +3,7 @@ import { ExternalLink, Heart } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-border bg-background pb-[calc(env(safe-area-inset-bottom,0px)+72px)] md:pb-0">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Company Info */}

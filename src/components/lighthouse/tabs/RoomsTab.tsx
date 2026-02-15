@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 
 const ROOM_CATEGORIES = [
   { value: 'all', label: 'All Rooms', icon: Radio },
+  { value: 'my-rooms', label: 'My Rooms', icon: Lock },
   { value: 'politics', label: 'Politics', icon: Shield },
   { value: 'health', label: 'Health', icon: TrendingUp },
   { value: 'climate', label: 'Climate', icon: TrendingUp },
@@ -28,7 +29,9 @@ export function RoomsTab() {
   const isMobile = useIsMobile();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const { rooms, loading } = useLighthouseRooms(selectedCategory, 'public');
+  const isMyRooms = selectedCategory === 'my-rooms';
+  const publicCategory = isMyRooms ? 'all' : selectedCategory;
+  const { rooms, loading } = useLighthouseRooms(publicCategory, 'public');
 
   // Fetch user's own rooms (all types including workspace)
   const { data: myRooms = [], isLoading: myRoomsLoading } = useQuery({
@@ -66,54 +69,69 @@ export function RoomsTab() {
         </Button>
       </div>
 
-      {/* My Rooms Section */}
-      {user && myRooms.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            My Rooms
-            <Badge variant="secondary" className="text-xs">{myRooms.length}</Badge>
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myRooms.map((room) => (
-              <div key={room.id} className="relative">
-                {room.room_type === 'workspace' && (
-                  <Badge variant="outline" className="absolute top-2 right-2 z-10 text-xs gap-1 bg-background/80 backdrop-blur-sm">
-                    <Lock className="w-3 h-3" />
-                    Workspace
-                  </Badge>
-                )}
-                <RoomCard
-                  id={room.id}
-                  name={room.name}
-                  description={room.description || ''}
-                  category={room.category}
-                  memberCount={room.member_count}
-                  threadCount={room.thread_count}
-                  trustRating={room.trust_rating || 0}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Public Rooms */}
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="bg-[hsl(var(--lighthouse-ocean))]/50">
-          {ROOM_CATEGORIES.map((cat) => (
-            <TabsTrigger 
-              key={cat.value} 
-              value={cat.value}
-              className="data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20"
-            >
-              <cat.icon className="w-4 h-4 mr-2" />
-              {cat.label}
-            </TabsTrigger>
-          ))}
+        <TabsList className="bg-[hsl(var(--lighthouse-ocean))]/50 flex-wrap">
+          {ROOM_CATEGORIES.map((cat) => {
+            if (cat.value === 'my-rooms' && !user) return null;
+            return (
+              <TabsTrigger 
+                key={cat.value} 
+                value={cat.value}
+                className="data-[state=active]:bg-[hsl(var(--lighthouse-beam))]/20"
+              >
+                <cat.icon className="w-4 h-4 mr-2" />
+                {cat.label}
+                {cat.value === 'my-rooms' && myRooms.length > 0 && (
+                  <Badge variant="secondary" className="ml-1.5 text-xs">{myRooms.length}</Badge>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value={selectedCategory} className="mt-6">
-          {loading ? (
+          {isMyRooms ? (
+            myRoomsLoading ? (
+              <MobileLoadingSkeleton variant="card" count={isMobile ? 3 : 6} />
+            ) : myRooms.length === 0 ? (
+              <div className="text-center py-12">
+                <Lock className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-lg font-semibold mb-2">No rooms yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Create your first room to get started!
+                </p>
+                <Button 
+                  onClick={() => setShowCreateDialog(true)}
+                  className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))]"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Room
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myRooms.map((room) => (
+                  <div key={room.id} className="relative">
+                    {room.room_type === 'workspace' && (
+                      <Badge variant="outline" className="absolute top-2 right-2 z-10 text-xs gap-1 bg-background/80 backdrop-blur-sm">
+                        <Lock className="w-3 h-3" />
+                        Workspace
+                      </Badge>
+                    )}
+                    <RoomCard
+                      id={room.id}
+                      name={room.name}
+                      description={room.description || ''}
+                      category={room.category}
+                      memberCount={room.member_count}
+                      threadCount={room.thread_count}
+                      trustRating={room.trust_rating || 0}
+                    />
+                  </div>
+                ))}
+              </div>
+            )
+          ) : loading ? (
             <MobileLoadingSkeleton variant="card" count={isMobile ? 3 : 6} />
           ) : rooms.length === 0 ? (
             <div className="text-center py-12">

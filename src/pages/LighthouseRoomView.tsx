@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, MessageSquare, Star, Plus, ArrowLeft, Briefcase, Trees } from 'lucide-react';
+import { Users, MessageSquare, Star, Plus, ArrowLeft, Briefcase, Trees, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLighthouseThreads } from '@/hooks/useLighthouseThreads';
 import { LighthouseThreadList } from '@/components/lighthouse/LighthouseThreadList';
@@ -16,19 +16,34 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { DynamicMeta } from '@/components/DynamicMeta';
 import { generateRoomSchema, injectStructuredData, removeStructuredData } from '@/lib/structured-data';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function LighthouseRoomView() {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   const [room, setRoom] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isWorkspace, setIsWorkspace] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [pendingThreadId, setPendingThreadId] = useState<string | null>(null);
+  const [showDeleteRoom, setShowDeleteRoom] = useState(false);
+  const [deletingRoom, setDeletingRoom] = useState(false);
   
-  const { threads, loading: threadsLoading, createThread } = useLighthouseThreads(roomId || '');
+  const { threads, loading: threadsLoading, createThread, deleteThread } = useLighthouseThreads(roomId || '');
 
   const handleCreateThread = async (title: string, content: string, autoVerify: boolean) => {
     const thread = await createThread(title, content, autoVerify);
@@ -43,6 +58,79 @@ export default function LighthouseRoomView() {
       navigate(`/lighthouse/${roomId}/thread/${pendingThreadId}`);
       setPendingThreadId(null);
       setCreateDialogOpen(false);
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!roomId) return;
+    try {
+      setDeletingRoom(true);
+      
+      // Delete all thread comments first
+      const { data: threadIds } = await supabase
+        .from('room_threads')
+        .select('id')
+        .eq('room_id', roomId);
+      
+      if (threadIds && threadIds.length > 0) {
+        await supabase
+          .from('thread_comments')
+          .delete()
+          .in('thread_id', threadIds.map(t => t.id));
+      }
+
+      // Delete threads
+      await supabase
+        .from('room_threads')
+        .delete()
+        .eq('room_id', roomId);
+
+      // Delete memberships
+      await supabase
+        .from('room_memberships')
+        .delete()
+        .eq('room_id', roomId);
+
+      // Delete the room
+      const { error } = await supabase
+        .from('lighthouse_rooms')
+        .delete()
+        .eq('id', roomId)
+        .eq('creator_id', user?.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Room deleted',
+        description: 'The room and all its content have been removed.',
+      });
+      navigate('/lighthouse?tab=rooms');
+    } catch (err) {
+      console.error('Error deleting room:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the room. You may not have permission.',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeletingRoom(false);
+      setShowDeleteRoom(false);
+    }
+  };
+
+  const handleDeleteThread = async (threadId: string) => {
+    try {
+      await deleteThread(threadId);
+      toast({
+        title: 'Thread deleted',
+        description: 'The thread has been removed.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the thread.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -61,6 +149,7 @@ export default function LighthouseRoomView() {
         if (error) throw error;
         setRoom(data);
         setIsWorkspace(data?.room_type === 'workspace' && data?.creator_id === user?.id);
+        setIsOwner(data?.creator_id === user?.id);
       } catch (error) {
         console.error('Error fetching room:', error);
       } finally {
@@ -190,6 +279,18 @@ export default function LighthouseRoomView() {
                   <p className={`${isMobile ? 'text-base' : 'text-lg'} text-muted-foreground`}>{room.description}</p>
                 )}
               </div>
+
+              {/* Delete room button for owner */}
+              {isOwner && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                  onClick={() => setShowDeleteRoom(true)}
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+              )}
             </div>
 
             <div className={`flex items-center ${isMobile ? 'flex-wrap gap-3' : 'gap-6'} text-sm text-muted-foreground`}>
@@ -243,7 +344,12 @@ export default function LighthouseRoomView() {
             
             <TabsContent value="discussions" className="space-y-4">
               <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-semibold`}>Discussions</h2>
-              <LighthouseThreadList threads={threads} loading={threadsLoading} />
+              <LighthouseThreadList
+                threads={threads}
+                loading={threadsLoading}
+                roomCreatorId={room.creator_id}
+                onDeleteThread={handleDeleteThread}
+              />
             </TabsContent>
             
             <TabsContent value="garden" className="space-y-4">
@@ -281,6 +387,28 @@ export default function LighthouseRoomView() {
           }
         }}
       />
+
+      {/* Delete Room Confirmation */}
+      <AlertDialog open={showDeleteRoom} onOpenChange={setShowDeleteRoom}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Room</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{room.name}" along with all its threads, comments, and memberships. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingRoom}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteRoom}
+              disabled={deletingRoom}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingRoom ? 'Deleting...' : 'Delete Room'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

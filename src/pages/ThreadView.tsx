@@ -128,7 +128,7 @@ export default function ThreadView() {
       fetchData();
     }
 
-    // Priority 1: Subscribe to real-time upvote updates
+    // Subscribe to real-time upvote updates
     const votesChannel = supabase
       .channel(`thread_votes:${threadId}`)
       .on(
@@ -140,7 +140,6 @@ export default function ThreadView() {
           filter: `thread_id=eq.${threadId}`
         },
         () => {
-          // Refetch upvote count when votes change
           supabase
             .from('room_threads')
             .select('upvote_count')
@@ -155,8 +154,40 @@ export default function ThreadView() {
       )
       .subscribe();
 
+    // Subscribe to real-time thread updates (verification status, trust score)
+    const threadChannel = supabase
+      .channel(`thread_status:${threadId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'room_threads',
+          filter: `id=eq.${threadId}`
+        },
+        async (payload) => {
+          const updated = payload.new as any;
+          setThread((prev: any) => prev ? { ...prev, ...updated, author_name: prev.author_name } : prev);
+          setUpvoteCount(updated.upvote_count || 0);
+
+          // If verification was just added, fetch verification details
+          if (updated.verification_id && (!thread || !thread.verification_id || thread.verification_id !== updated.verification_id)) {
+            const { data: verificationData } = await supabase
+              .from('verifications')
+              .select('*, sources(*)')
+              .eq('id', updated.verification_id)
+              .single();
+            if (verificationData) {
+              setVerification(verificationData);
+            }
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(votesChannel);
+      supabase.removeChannel(threadChannel);
       if (threadId) {
         removeStructuredData(`thread-${threadId}-structured-data`);
       }

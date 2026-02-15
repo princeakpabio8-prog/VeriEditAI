@@ -158,6 +158,29 @@ export default function LighthouseRoomView() {
     };
 
     fetchRoom();
+
+    // Real-time room updates (trust rating, member/thread counts)
+    if (roomId) {
+      const roomChannel = supabase
+        .channel(`room_status:${roomId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'lighthouse_rooms',
+            filter: `id=eq.${roomId}`
+          },
+          (payload) => {
+            setRoom((prev: any) => prev ? { ...prev, ...payload.new } : prev);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(roomChannel);
+      };
+    }
   }, [roomId, user]);
 
   // Inject structured data for SEO

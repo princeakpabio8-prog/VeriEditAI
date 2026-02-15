@@ -2,13 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Radio, Shield, TrendingUp, Users, Plus } from 'lucide-react';
+import { Radio, Shield, TrendingUp, Users, Plus, Lock } from 'lucide-react';
 import { CreateRoomDialog } from '@/components/lighthouse/CreateRoomDialog';
 import { RoomCard } from '@/components/lighthouse/RoomCard';
 import { MobileLoadingSkeleton } from '@/components/MobileLoadingSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLighthouseRooms } from '@/hooks/useLighthouseRooms';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
 
 const ROOM_CATEGORIES = [
   { value: 'all', label: 'All Rooms', icon: Radio },
@@ -26,6 +29,23 @@ export function RoomsTab() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { rooms, loading } = useLighthouseRooms(selectedCategory, 'public');
+
+  // Fetch user's own rooms (all types including workspace)
+  const { data: myRooms = [], isLoading: myRoomsLoading } = useQuery({
+    queryKey: ['my-lighthouse-rooms', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('lighthouse_rooms')
+        .select('*')
+        .eq('creator_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
 
   return (
     <div className="space-y-6">
@@ -46,6 +66,38 @@ export function RoomsTab() {
         </Button>
       </div>
 
+      {/* My Rooms Section */}
+      {user && myRooms.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            My Rooms
+            <Badge variant="secondary" className="text-xs">{myRooms.length}</Badge>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {myRooms.map((room) => (
+              <div key={room.id} className="relative">
+                {room.room_type === 'workspace' && (
+                  <Badge variant="outline" className="absolute top-2 right-2 z-10 text-xs gap-1 bg-background/80 backdrop-blur-sm">
+                    <Lock className="w-3 h-3" />
+                    Workspace
+                  </Badge>
+                )}
+                <RoomCard
+                  id={room.id}
+                  name={room.name}
+                  description={room.description || ''}
+                  category={room.category}
+                  memberCount={room.member_count}
+                  threadCount={room.thread_count}
+                  trustRating={room.trust_rating || 0}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Public Rooms */}
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
         <TabsList className="bg-[hsl(var(--lighthouse-ocean))]/50">
           {ROOM_CATEGORIES.map((cat) => (

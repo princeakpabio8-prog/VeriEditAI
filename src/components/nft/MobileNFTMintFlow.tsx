@@ -163,7 +163,7 @@ export const MobileNFTMintFlow = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4 max-h-[92vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0 overflow-hidden mb-[calc(env(safe-area-inset-bottom,0px)+72px)]">
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-lg font-bold">
             Mint NFT Badge
@@ -406,7 +406,7 @@ export const MobileNFTMintFlow = ({
 
         {/* Sticky Bottom Button for Review Step */}
         {currentStep === "review" && (
-          <div className="shrink-0 px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,16px)+60px)] border-t bg-background">
+          <div className="shrink-0 px-6 pt-4 pb-6 border-t bg-background">
             <Button
               onClick={() => {
                 haptics.medium();

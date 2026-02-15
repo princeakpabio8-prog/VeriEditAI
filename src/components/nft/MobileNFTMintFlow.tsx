@@ -406,13 +406,13 @@ export const MobileNFTMintFlow = ({
 
         {/* Sticky Bottom Button for Review Step */}
         {currentStep === "review" && (
-          <div className="shrink-0 px-6 py-4 border-t bg-background">
+          <div className="shrink-0 px-6 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,16px)+60px)] border-t bg-background">
             <Button
               onClick={() => {
                 haptics.medium();
                 handleMint();
               }}
-              className="w-full h-12 text-base font-semibold"
+              className="w-full h-14 text-base font-semibold"
               disabled={!isConnected}
             >
               <Sparkles className="h-5 w-5 mr-2" />

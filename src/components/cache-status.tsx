@@ -46,7 +46,7 @@ export function CacheStatus() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="fixed bottom-4 right-4 z-50"
+            className="fixed right-4 z-50 bottom-[calc(env(safe-area-inset-bottom,0px)+80px)] md:bottom-4"
           >
             <Badge 
               variant="outline" 

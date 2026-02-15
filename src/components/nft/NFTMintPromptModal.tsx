@@ -122,12 +122,13 @@ export function NFTMintPromptModal({
         <div className={cn(
           "pt-2 pb-2 space-y-4",
           isMobile && [
-            "fixed bottom-0 left-0 right-0",
+            "fixed left-0 right-0",
             "bg-background/95 backdrop-blur-sm",
             "border-t border-border/50",
             "px-6 py-4",
             "shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]",
-            "z-50"
+            "z-50",
+            "bottom-[calc(env(safe-area-inset-bottom,0px)+64px)]"
           ]
         )}>
           {showWalletGuide ? (

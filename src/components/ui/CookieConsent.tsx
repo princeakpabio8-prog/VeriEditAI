@@ -93,7 +93,7 @@ export const CookieConsent = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6"
+            className="fixed left-0 right-0 z-50 p-4 sm:p-6 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] md:bottom-0"
           >
             <Card className="max-w-5xl mx-auto p-4 sm:p-6 bg-card/95 backdrop-blur-lg border-2 shadow-2xl">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">

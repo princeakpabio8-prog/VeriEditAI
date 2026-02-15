@@ -74,7 +74,7 @@ export const QuickActionsMenu = ({
     return (
       <>
         <motion.div
-          className="fixed bottom-20 right-4 z-50"
+          className="fixed right-4 z-50 bottom-[calc(env(safe-area-inset-bottom,0px)+80px)]"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20 }}

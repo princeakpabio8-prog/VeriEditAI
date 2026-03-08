@@ -48,6 +48,9 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const Press = lazy(() => import("./pages/Press"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const BlogEditor = lazy(() => import("./pages/BlogEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Shared pages

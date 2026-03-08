@@ -133,6 +133,12 @@ export const Navigation = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/blog" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Newspaper className="h-4 w-4 mr-2" />
+                        Blog
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/about" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
                         About
                       </Link>

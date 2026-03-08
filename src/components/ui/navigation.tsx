@@ -436,6 +436,16 @@ export const Navigation = () => {
                   Lighthouse
                 </Link>
                 <Link
+                  to="/trust-oracle"
+                  className={`flex items-center gap-2 px-4 py-3 transition-colors ${
+                    location.pathname === '/trust-oracle' ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Target className="h-4 w-4" />
+                  Trust Oracle
+                </Link>
+                <Link
                   to="/dashboard?tab=badges"
                   className={`flex items-center gap-2 px-4 py-3 transition-colors ${
                     location.search.includes('tab=badges') ? 'text-primary bg-primary/10 font-medium' : 'text-muted-foreground hover:text-foreground'

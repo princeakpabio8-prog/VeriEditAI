@@ -121,6 +121,12 @@ export const Navigation = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-card border-border z-50">
                     <DropdownMenuItem asChild>
+                      <Link to="/trust-oracle" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Target className="h-4 w-4 mr-2" />
+                        Trust Oracle
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/dashboard?tab=badges" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
                         <Award className="h-4 w-4 mr-2" />
                         Badges

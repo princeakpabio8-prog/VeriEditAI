@@ -133,6 +133,12 @@ export const Navigation = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/blog" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
+                        <Newspaper className="h-4 w-4 mr-2" />
+                        Blog
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/about" className="flex items-center cursor-pointer" onClick={() => setIsMoreOpen(false)}>
                         About
                       </Link>
@@ -211,6 +217,9 @@ export const Navigation = () => {
                 </a>
                 <Link to="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About
+                </Link>
+                <Link to="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Blog
                 </Link>
                 <Link to="/lighthouse" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Radio className="h-4 w-4" />

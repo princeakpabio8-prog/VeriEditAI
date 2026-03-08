@@ -48,6 +48,9 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
 const RefundPolicy = lazy(() => import("./pages/RefundPolicy"));
 const Press = lazy(() => import("./pages/Press"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
+const BlogEditor = lazy(() => import("./pages/BlogEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Shared pages
@@ -171,6 +174,9 @@ const AppContent = () => {
               <Route path="/user/:userId" element={<UserProfile />} />
               <Route path="/find-users" element={<ProtectedRoute><FindUsers /></ProtectedRoute>} />
               <Route path="/press" element={<Press />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/write" element={<ProtectedRoute><BlogEditor /></ProtectedRoute>} />
+              <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/viral-claims" element={<ViralClaims />} />
               <Route path="/signal-feed" element={<SignalFeed />} />
               <Route path="/achievements" element={

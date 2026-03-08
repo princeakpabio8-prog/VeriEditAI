@@ -13,6 +13,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
+import { MyPostsList } from '@/components/blog/MyPostsList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CATEGORIES = ['all', 'fact-checking', 'technology', 'media-literacy', 'updates', 'general'];
 

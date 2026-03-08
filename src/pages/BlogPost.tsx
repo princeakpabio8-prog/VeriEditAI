@@ -253,6 +253,9 @@ export default function BlogPost() {
         </motion.div>
       </article>
 
+      {/* Floating share button */}
+      <ShareFAB title={post.title} url={shareUrl} text={shareText} />
+
       <Footer />
     </div>
   );

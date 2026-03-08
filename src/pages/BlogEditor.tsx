@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { MarkdownToolbar } from '@/components/blog/MarkdownToolbar';
 
 const CATEGORIES = ['general', 'fact-checking', 'technology', 'media-literacy', 'updates'];
 
@@ -24,6 +25,7 @@ export default function BlogEditor() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const saveMutation = useSaveBlogPost();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -58,14 +60,8 @@ export default function BlogEditor() {
   };
 
   const handleSave = async (status: 'draft' | 'published') => {
-    if (!title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
-    if (!content.trim()) {
-      toast.error('Content is required');
-      return;
-    }
+    if (!title.trim()) { toast.error('Title is required'); return; }
+    if (!content.trim()) { toast.error('Content is required'); return; }
 
     try {
       const post = await saveMutation.mutateAsync({
@@ -80,7 +76,7 @@ export default function BlogEditor() {
         meta_description: metaDescription.trim() || undefined,
       });
 
-      toast.success(status === 'published' ? 'Post published!' : 'Draft saved!');
+      toast.success(status === 'published' ? 'Post published! 🎉' : 'Draft saved!');
       if (status === 'published') {
         navigate(`/blog/${post.slug}`);
       }
@@ -89,35 +85,25 @@ export default function BlogEditor() {
     }
   };
 
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+
   const SettingsContent = () => (
     <div className="space-y-5">
-      {/* Post Settings */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-foreground">Post Settings</h3>
         <div>
           <Label className="text-xs text-muted-foreground">Cover Image URL</Label>
-          <Input
-            placeholder="https://..."
-            value={coverImageUrl}
-            onChange={(e) => setCoverImageUrl(e.target.value)}
-            className="mt-1 bg-secondary border-border text-sm min-h-[44px]"
-          />
+          <Input placeholder="https://..." value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} className="mt-1 bg-secondary border-border text-sm min-h-[44px]" />
         </div>
         <div>
           <Label className="text-xs text-muted-foreground">Excerpt</Label>
-          <Textarea
-            placeholder="Brief summary..."
-            value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
-            className="mt-1 bg-secondary border-border text-sm h-20 resize-none"
-          />
+          <Textarea placeholder="Brief summary..." value={excerpt} onChange={(e) => setExcerpt(e.target.value)} className="mt-1 bg-secondary border-border text-sm h-20 resize-none" />
         </div>
         <div>
           <Label className="text-xs text-muted-foreground">Category</Label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="mt-1 bg-secondary border-border text-sm min-h-[44px]">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="mt-1 bg-secondary border-border text-sm min-h-[44px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               {CATEGORIES.map((c) => (
                 <SelectItem key={c} value={c} className="capitalize min-h-[44px]">{c.replace('-', ' ')}</SelectItem>
@@ -128,13 +114,7 @@ export default function BlogEditor() {
         <div>
           <Label className="text-xs text-muted-foreground">Tags</Label>
           <div className="flex gap-1 mt-1">
-            <Input
-              placeholder="Add tag..."
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-              className="bg-secondary border-border text-sm min-h-[44px]"
-            />
+            <Input placeholder="Add tag..." value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} className="bg-secondary border-border text-sm min-h-[44px]" />
             <Button size="sm" variant="outline" onClick={addTag} className="min-h-[44px] min-w-[44px]"><Plus className="h-4 w-4" /></Button>
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
@@ -147,28 +127,15 @@ export default function BlogEditor() {
         </div>
       </div>
 
-      {/* SEO Settings */}
       <div className="space-y-4 pt-4 border-t border-border">
         <h3 className="text-sm font-semibold text-foreground">SEO Settings</h3>
         <div>
           <Label className="text-xs text-muted-foreground">Meta Title <span className="opacity-50">({(metaTitle || title).length}/60)</span></Label>
-          <Input
-            placeholder={title || 'SEO title...'}
-            value={metaTitle}
-            onChange={(e) => setMetaTitle(e.target.value)}
-            maxLength={60}
-            className="mt-1 bg-secondary border-border text-sm min-h-[44px]"
-          />
+          <Input placeholder={title || 'SEO title...'} value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} maxLength={60} className="mt-1 bg-secondary border-border text-sm min-h-[44px]" />
         </div>
         <div>
           <Label className="text-xs text-muted-foreground">Meta Description <span className="opacity-50">({(metaDescription || excerpt).length}/160)</span></Label>
-          <Textarea
-            placeholder={excerpt || 'SEO description...'}
-            value={metaDescription}
-            onChange={(e) => setMetaDescription(e.target.value)}
-            maxLength={160}
-            className="mt-1 bg-secondary border-border text-sm h-20 resize-none"
-          />
+          <Textarea placeholder={excerpt || 'SEO description...'} value={metaDescription} onChange={(e) => setMetaDescription(e.target.value)} maxLength={160} className="mt-1 bg-secondary border-border text-sm h-20 resize-none" />
         </div>
       </div>
     </div>
@@ -179,12 +146,8 @@ export default function BlogEditor() {
       <Navigation />
 
       <main className="pt-20 sm:pt-24 pb-24 sm:pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto px-4 sm:px-6"
-        >
-          {/* Top bar - responsive */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-4 sm:px-6">
+          {/* Top bar */}
           <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
             <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors min-h-[44px]">
               <ArrowLeft className="h-4 w-4" />
@@ -192,7 +155,6 @@ export default function BlogEditor() {
               <span className="sm:hidden">Back</span>
             </Link>
             <div className="flex gap-1.5 sm:gap-2">
-              {/* Settings sheet for mobile */}
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="sm" className="lg:hidden gap-1 min-h-[44px]">
@@ -201,12 +163,8 @@ export default function BlogEditor() {
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[85vw] max-w-[400px] overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Post Settings</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-4">
-                    <SettingsContent />
-                  </div>
+                  <SheetHeader><SheetTitle>Post Settings</SheetTitle></SheetHeader>
+                  <div className="mt-4"><SettingsContent /></div>
                 </SheetContent>
               </Sheet>
 
@@ -247,21 +205,32 @@ export default function BlogEditor() {
                   onChange={(e) => setTitle(e.target.value)}
                   className="text-xl sm:text-2xl font-bold h-12 sm:h-14 bg-card border-border"
                 />
-                <Textarea
-                  placeholder="Write your post in Markdown..."
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[350px] sm:min-h-[500px] bg-card border-border font-mono text-sm leading-relaxed resize-y"
-                />
+
+                {/* Markdown toolbar + textarea */}
+                <div>
+                  <MarkdownToolbar textareaRef={textareaRef} content={content} onChange={setContent} />
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="Write your post in Markdown..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="min-h-[350px] sm:min-h-[500px] bg-card border-border font-mono text-sm leading-relaxed resize-y rounded-t-none"
+                  />
+                </div>
+
+                {/* Word count bar */}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground px-1">
+                  <span>{wordCount} words</span>
+                  <span>·</span>
+                  <span>~{readTime} min read</span>
+                </div>
               </div>
 
-              {/* Desktop sidebar - hidden on mobile (use sheet instead) */}
+              {/* Desktop sidebar */}
               <div className="hidden lg:block space-y-4">
                 <Card className="bg-card border-border">
                   <CardHeader className="pb-3"><CardTitle className="text-sm">Post Settings</CardTitle></CardHeader>
-                  <CardContent>
-                    <SettingsContent />
-                  </CardContent>
+                  <CardContent><SettingsContent /></CardContent>
                 </Card>
               </div>
             </div>

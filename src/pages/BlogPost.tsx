@@ -11,12 +11,12 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { toast } from 'sonner';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const { data: post, isLoading, error } = useBlogPost(slug || '');
 
-  // Inject Article structured data
   useEffect(() => {
     if (!post) return;
     const schema = {
@@ -54,9 +54,9 @@ export default function BlogPost() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="pt-24 pb-16 max-w-3xl mx-auto px-4">
-          <Skeleton className="h-8 w-2/3 mb-4" />
-          <Skeleton className="h-64 w-full mb-6 rounded-xl" />
+        <main className="pt-20 sm:pt-24 pb-24 sm:pb-16 max-w-3xl mx-auto px-4">
+          <Skeleton className="h-6 sm:h-8 w-2/3 mb-4" />
+          <Skeleton className="h-48 sm:h-64 w-full mb-6 rounded-xl" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-full mb-2" />
           <Skeleton className="h-4 w-3/4" />
@@ -69,9 +69,9 @@ export default function BlogPost() {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <main className="pt-24 pb-16 max-w-3xl mx-auto px-4 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Post Not Found</h1>
-          <p className="text-muted-foreground mb-6">This blog post doesn't exist or has been removed.</p>
+        <main className="pt-20 sm:pt-24 pb-24 sm:pb-16 max-w-3xl mx-auto px-4 text-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4">Post Not Found</h1>
+          <p className="text-muted-foreground mb-6 text-sm sm:text-base">This blog post doesn't exist or has been removed.</p>
           <Link to="/blog">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
@@ -97,45 +97,45 @@ export default function BlogPost() {
       />
       <Navigation />
 
-      <article className="pt-24 pb-16">
+      <article className="pt-20 sm:pt-24 pb-24 sm:pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-3xl mx-auto px-4"
+          className="max-w-3xl mx-auto px-4 sm:px-6"
         >
-          {/* Back link */}
-          <Link to="/blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors mb-8">
+          {/* Back link - larger touch target */}
+          <Link to="/blog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary active:text-primary transition-colors mb-6 sm:mb-8 min-h-[44px]">
             <ArrowLeft className="h-4 w-4" />
             Back to Blog
           </Link>
 
           {/* Header */}
-          <header className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="secondary" className="capitalize">
+          <header className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mb-3 sm:mb-4">
+              <Badge variant="secondary" className="capitalize text-xs">
                 {post.category?.replace('-', ' ') || 'General'}
               </Badge>
-              {post.tags?.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+              {post.tags?.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="outline" className="text-[11px] sm:text-xs">{tag}</Badge>
               ))}
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-3 sm:mb-4 leading-tight">
               {post.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               {post.published_at && (
                 <span className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  {format(new Date(post.published_at), 'MMMM d, yyyy')}
+                  <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {format(new Date(post.published_at), 'MMM d, yyyy')}
                 </span>
               )}
               <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
+                <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {post.reading_time_minutes} min read
               </span>
               <span className="flex items-center gap-1">
-                <Eye className="h-4 w-4" />
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {post.view_count} views
               </span>
             </div>
@@ -143,58 +143,64 @@ export default function BlogPost() {
 
           {/* Cover Image */}
           {post.cover_image_url && (
-            <div className="rounded-xl overflow-hidden mb-8 border border-border">
+            <div className="rounded-lg sm:rounded-xl overflow-hidden mb-6 sm:mb-8 border border-border -mx-4 sm:mx-0">
               <img
                 src={post.cover_image_url}
                 alt={post.title}
-                className="w-full h-auto max-h-[400px] object-cover"
+                className="w-full h-auto max-h-[250px] sm:max-h-[400px] object-cover"
               />
             </div>
           )}
 
-          {/* Content */}
-          <div className="prose prose-invert prose-lg max-w-none
-            prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary
+          {/* Content - mobile optimized prose */}
+          <div className="prose prose-invert prose-base sm:prose-lg max-w-none
+            prose-headings:text-foreground prose-headings:text-lg prose-headings:sm:text-xl
+            prose-h2:text-xl prose-h2:sm:text-2xl
+            prose-p:text-muted-foreground prose-p:text-[15px] prose-p:sm:text-base prose-p:leading-relaxed
+            prose-a:text-primary prose-a:break-words
             prose-strong:text-foreground prose-blockquote:border-primary/30 prose-blockquote:text-muted-foreground
-            prose-code:bg-secondary prose-code:text-primary prose-code:rounded prose-code:px-1.5 prose-code:py-0.5
-            prose-pre:bg-secondary prose-pre:border prose-pre:border-border
-            prose-img:rounded-xl prose-img:border prose-img:border-border
-            prose-li:text-muted-foreground
+            prose-code:bg-secondary prose-code:text-primary prose-code:rounded prose-code:px-1.5 prose-code:py-0.5 prose-code:text-sm
+            prose-pre:bg-secondary prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto prose-pre:text-xs prose-pre:sm:text-sm
+            prose-img:rounded-lg prose-img:sm:rounded-xl prose-img:border prose-img:border-border
+            prose-li:text-muted-foreground prose-li:text-[15px] prose-li:sm:text-base
           ">
             <ReactMarkdown>{post.content}</ReactMarkdown>
           </div>
 
-          {/* Share */}
-          <div className="mt-12 pt-6 border-t border-border">
+          {/* Sticky share bar on mobile */}
+          <div className="mt-8 sm:mt-12 pt-4 sm:pt-6 border-t border-border">
             <p className="text-sm text-muted-foreground mb-3">Share this post</p>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl + '?utm_source=twitter&utm_medium=social&utm_campaign=blog_share')}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="flex-1 sm:flex-none"
               >
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Twitter className="h-4 w-4" /> Twitter
+                <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
+                  <Twitter className="h-4 w-4" /> <span className="sm:inline">Twitter</span>
                 </Button>
               </a>
               <a
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl + '?utm_source=linkedin&utm_medium=social&utm_campaign=blog_share')}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="flex-1 sm:flex-none"
               >
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Linkedin className="h-4 w-4" /> LinkedIn
+                <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
+                  <Linkedin className="h-4 w-4" /> <span className="sm:inline">LinkedIn</span>
                 </Button>
               </a>
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-2"
+                className="gap-2 flex-1 sm:flex-none min-h-[44px]"
                 onClick={() => {
                   navigator.clipboard.writeText(shareUrl);
+                  toast.success('Link copied!');
                 }}
               >
-                <Share2 className="h-4 w-4" /> Copy Link
+                <Share2 className="h-4 w-4" /> <span className="sm:inline">Copy</span>
               </Button>
             </div>
           </div>

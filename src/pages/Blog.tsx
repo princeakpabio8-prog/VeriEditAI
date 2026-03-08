@@ -83,22 +83,29 @@ export default function Blog() {
           </motion.div>
         </section>
 
-        {/* Category Filter - horizontal scroll on mobile */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-6 sm:mb-8">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`px-4 py-2 sm:py-1.5 rounded-full text-sm font-medium transition-colors capitalize whitespace-nowrap snap-start min-h-[44px] sm:min-h-0 ${
-                  category === cat
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-muted-foreground hover:text-foreground active:bg-secondary/80'
-                }`}
-              >
-                {cat === 'all' ? 'All Posts' : cat.replace('-', ' ')}
-              </button>
-            ))}
+        {/* Tabs: Browse / My Posts */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          {user ? (
+            <Tabs defaultValue="browse" className="w-full">
+              <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto">
+                <TabsTrigger value="browse" className="min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Browse</TabsTrigger>
+                <TabsTrigger value="my-posts" className="min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">My Posts</TabsTrigger>
+              </TabsList>
+              <TabsContent value="browse">
+                <CategoryFilter category={category} setCategory={setCategory} />
+                <PostsGrid posts={posts} isLoading={isLoading} user={user} />
+              </TabsContent>
+              <TabsContent value="my-posts">
+                <MyPostsList />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <>
+              <CategoryFilter category={category} setCategory={setCategory} />
+              <PostsGrid posts={posts} isLoading={isLoading} user={user} />
+            </>
+          )}
+        </div>
           </div>
         </div>
 

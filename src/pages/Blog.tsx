@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
@@ -12,9 +12,77 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { MyPostsList } from '@/components/blog/MyPostsList';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CATEGORIES = ['all', 'fact-checking', 'technology', 'media-literacy', 'updates', 'general'];
+
+function CategoryFilter({ category, setCategory }: { category: string; setCategory: (c: string) => void }) {
+  return (
+    <div className="mb-6 sm:mb-8">
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
+        {CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategory(cat)}
+            className={`px-4 py-2 sm:py-1.5 rounded-full text-sm font-medium transition-colors capitalize whitespace-nowrap snap-start min-h-[44px] sm:min-h-0 ${
+              category === cat
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-secondary text-muted-foreground hover:text-foreground active:bg-secondary/80'
+            }`}
+          >
+            {cat === 'all' ? 'All Posts' : cat.replace('-', ' ')}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PostsGrid({ posts, isLoading, user }: { posts: BlogPost[] | undefined; isLoading: boolean; user: any }) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <Card key={i} className="bg-card border-border overflow-hidden">
+            <Skeleton className="h-40 sm:h-48 w-full" />
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (posts && posts.length > 0) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {posts.map((post, index) => (
+          <BlogPostCard key={post.id} post={post} index={index} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center py-12 sm:py-16">
+      <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground/40 mb-4" />
+      <p className="text-muted-foreground text-base sm:text-lg">No posts yet. Check back soon!</p>
+      {user && (
+        <Link to="/blog/write">
+          <Button variant="outline" className="mt-4 gap-2">
+            <PenLine className="h-4 w-4" />
+            Be the first to write
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function Blog() {
   const [category, setCategory] = useState('all');
@@ -28,11 +96,7 @@ export default function Blog() {
       name: 'VeriEdit AI Blog',
       description: 'Insights on fact-checking, media literacy, and truth verification technology.',
       url: `${window.location.origin}/blog`,
-      publisher: {
-        '@type': 'Organization',
-        name: 'VeriEdit AI',
-        url: window.location.origin,
-      },
+      publisher: { '@type': 'Organization', name: 'VeriEdit AI', url: window.location.origin },
     };
     const script = document.createElement('script');
     script.type = 'application/ld+json';
@@ -55,11 +119,7 @@ export default function Blog() {
       <main className="pt-20 sm:pt-24 pb-24 sm:pb-16">
         {/* Hero */}
         <section className="max-w-5xl mx-auto px-4 sm:px-6 mb-8 sm:mb-12 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4 sm:mb-6">
               <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
               <span className="text-xs sm:text-sm text-primary font-medium">VeriEdit Blog</span>
@@ -81,60 +141,27 @@ export default function Blog() {
           </motion.div>
         </section>
 
-        {/* Category Filter - horizontal scroll on mobile */}
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-6 sm:mb-8">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:pb-0">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`px-4 py-2 sm:py-1.5 rounded-full text-sm font-medium transition-colors capitalize whitespace-nowrap snap-start min-h-[44px] sm:min-h-0 ${
-                  category === cat
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-muted-foreground hover:text-foreground active:bg-secondary/80'
-                }`}
-              >
-                {cat === 'all' ? 'All Posts' : cat.replace('-', ' ')}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Posts Grid */}
+        {/* Content */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="bg-card border-border overflow-hidden">
-                  <Skeleton className="h-40 sm:h-48 w-full" />
-                  <CardContent className="p-4 sm:p-5 space-y-3">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-6 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : posts && posts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {posts.map((post, index) => (
-                <BlogPostCard key={post.id} post={post} index={index} />
-              ))}
-            </div>
+          {user ? (
+            <Tabs defaultValue="browse" className="w-full">
+              <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto">
+                <TabsTrigger value="browse" className="min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">Browse</TabsTrigger>
+                <TabsTrigger value="my-posts" className="min-h-[44px] sm:min-h-0 flex-1 sm:flex-none">My Posts</TabsTrigger>
+              </TabsList>
+              <TabsContent value="browse">
+                <CategoryFilter category={category} setCategory={setCategory} />
+                <PostsGrid posts={posts} isLoading={isLoading} user={user} />
+              </TabsContent>
+              <TabsContent value="my-posts">
+                <MyPostsList />
+              </TabsContent>
+            </Tabs>
           ) : (
-            <div className="text-center py-12 sm:py-16">
-              <BookOpen className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground/40 mb-4" />
-              <p className="text-muted-foreground text-base sm:text-lg">No posts yet. Check back soon!</p>
-              {user && (
-                <Link to="/blog/write">
-                  <Button variant="outline" className="mt-4 gap-2">
-                    <PenLine className="h-4 w-4" />
-                    Be the first to write
-                  </Button>
-                </Link>
-              )}
-            </div>
+            <>
+              <CategoryFilter category={category} setCategory={setCategory} />
+              <PostsGrid posts={posts} isLoading={isLoading} user={user} />
+            </>
           )}
         </div>
       </main>
@@ -155,12 +182,7 @@ function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
         <Card className="bg-card border-border overflow-hidden hover:border-primary/30 active:scale-[0.98] transition-all duration-300 group h-full">
           {post.cover_image_url ? (
             <div className="h-40 sm:h-48 overflow-hidden">
-              <img
-                src={post.cover_image_url}
-                alt={post.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
-              />
+              <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
             </div>
           ) : (
             <div className="h-40 sm:h-48 bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
@@ -173,17 +195,11 @@ function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
                 {post.category?.replace('-', ' ') || 'General'}
               </Badge>
               {post.tags?.slice(0, 1).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-[11px] sm:text-xs hidden sm:inline-flex">
-                  {tag}
-                </Badge>
+                <Badge key={tag} variant="outline" className="text-[11px] sm:text-xs hidden sm:inline-flex">{tag}</Badge>
               ))}
             </div>
-            <h2 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-              {post.title}
-            </h2>
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {post.excerpt || post.content.slice(0, 120)}
-            </p>
+            <h2 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">{post.title}</h2>
+            <p className="text-sm text-muted-foreground line-clamp-2">{post.excerpt || post.content.slice(0, 120)}</p>
             <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs text-muted-foreground pt-2 border-t border-border/50">
               {post.published_at && (
                 <span className="flex items-center gap-1">
@@ -191,14 +207,8 @@ function BlogPostCard({ post, index }: { post: BlogPost; index: number }) {
                   {format(new Date(post.published_at), 'MMM d, yyyy')}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {post.reading_time_minutes}m
-              </span>
-              <span className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {post.view_count}
-              </span>
+              <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{post.reading_time_minutes}m</span>
+              <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{post.view_count}</span>
             </div>
           </CardContent>
         </Card>

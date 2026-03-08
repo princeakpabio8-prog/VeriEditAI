@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { ShareFAB } from '@/components/blog/ShareFAB';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -251,6 +252,9 @@ export default function BlogPost() {
           </div>
         </motion.div>
       </article>
+
+      {/* Floating share button */}
+      <ShareFAB title={post.title} url={shareUrl} text={shareText} />
 
       <Footer />
     </div>

@@ -6,7 +6,7 @@ import { useBlogPost } from '@/hooks/useBlogPosts';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Eye, ArrowLeft, Share2, Twitter, Linkedin } from 'lucide-react';
+import { Calendar, Clock, Eye, ArrowLeft, Share2, Twitter, Linkedin, MessageCircle, Facebook, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { useEffect } from 'react';

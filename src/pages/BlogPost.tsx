@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
-import { Footer } from '@/components/ui/footer';
+import Footer from '@/components/ui/footer';
 import { DynamicMeta } from '@/components/DynamicMeta';
 import { useBlogPost } from '@/hooks/useBlogPosts';
 import { Skeleton } from '@/components/ui/skeleton';

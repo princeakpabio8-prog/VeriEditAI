@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navigation } from '@/components/ui/navigation';
-import { Footer } from '@/components/ui/footer';
+import Footer from '@/components/ui/footer';
 import { DynamicMeta } from '@/components/DynamicMeta';
 import { usePublishedPosts, BlogPost } from '@/hooks/useBlogPosts';
 import { Card, CardContent } from '@/components/ui/card';

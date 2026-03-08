@@ -167,41 +167,86 @@ export default function BlogPost() {
             <ReactMarkdown>{post.content}</ReactMarkdown>
           </div>
 
-          {/* Sticky share bar on mobile */}
+          {/* Share section */}
           <div className="mt-8 sm:mt-12 pt-4 sm:pt-6 border-t border-border">
             <p className="text-sm text-muted-foreground mb-3">Share this post</p>
-            <div className="flex gap-2 sm:gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {/* X / Twitter */}
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl + '?utm_source=twitter&utm_medium=social&utm_campaign=blog_share')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
               >
                 <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
-                  <Twitter className="h-4 w-4" /> <span className="sm:inline">Twitter</span>
+                  <Twitter className="h-4 w-4" /> X / Twitter
                 </Button>
               </a>
+              {/* Facebook */}
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl + '?utm_source=facebook&utm_medium=social&utm_campaign=blog_share')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
+              >
+                <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
+                  <Facebook className="h-4 w-4" /> Facebook
+                </Button>
+              </a>
+              {/* LinkedIn */}
               <a
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl + '?utm_source=linkedin&utm_medium=social&utm_campaign=blog_share')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-none"
+                className="flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
               >
                 <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
-                  <Linkedin className="h-4 w-4" /> <span className="sm:inline">LinkedIn</span>
+                  <Linkedin className="h-4 w-4" /> LinkedIn
                 </Button>
               </a>
+              {/* WhatsApp */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareUrl + '?utm_source=whatsapp&utm_medium=social&utm_campaign=blog_share')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 sm:flex-none min-w-[calc(50%-4px)] sm:min-w-0"
+              >
+                <Button size="sm" variant="outline" className="gap-2 w-full sm:w-auto min-h-[44px]">
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </Button>
+              </a>
+              {/* Copy Link */}
               <Button
                 size="sm"
                 variant="outline"
-                className="gap-2 flex-1 sm:flex-none min-h-[44px]"
+                className="gap-2 flex-1 sm:flex-none min-h-[44px] min-w-[calc(50%-4px)] sm:min-w-0"
                 onClick={() => {
                   navigator.clipboard.writeText(shareUrl);
-                  toast.success('Link copied!');
+                  toast.success('Link copied to clipboard!');
                 }}
               >
-                <Share2 className="h-4 w-4" /> <span className="sm:inline">Copy</span>
+                <Share2 className="h-4 w-4" /> Copy Link
               </Button>
+              {/* Native share (mobile) */}
+              {typeof navigator !== 'undefined' && 'share' in navigator && (
+                <Button
+                  size="sm"
+                  className="gap-2 flex-1 sm:flex-none min-h-[44px] min-w-[calc(50%-4px)] sm:min-w-0"
+                  onClick={async () => {
+                    try {
+                      await navigator.share({
+                        title: post.title,
+                        text: shareText,
+                        url: shareUrl,
+                      });
+                    } catch {
+                      // user cancelled
+                    }
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" /> More...
+                </Button>
+              )}
             </div>
           </div>
         </motion.div>

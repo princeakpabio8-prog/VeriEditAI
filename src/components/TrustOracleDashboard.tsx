@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Zap, Database, Activity, TrendingUp, Globe, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Navigation } from '@/components/ui/navigation';
+import Footer from '@/components/ui/footer';
 
 export function TrustOracleDashboard() {
   const [stats, setStats] = useState({
@@ -16,7 +18,7 @@ export function TrustOracleDashboard() {
 
   useEffect(() => {
     fetchOracleStats();
-    const interval = setInterval(fetchOracleStats, 30000); // Refresh every 30s
+    const interval = setInterval(fetchOracleStats, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -27,13 +29,15 @@ export function TrustOracleDashboard() {
         .from('verifications')
         .select('*', { count: 'exact', head: true });
 
-      // Average trust score
+      // Average trust score - use a sampled approach to avoid 1000 row limit
       const { data: avgData } = await supabase
         .from('verifications')
-        .select('trust_score');
+        .select('trust_score')
+        .order('created_at', { ascending: false })
+        .limit(500);
       
       const avgTrustScore = avgData?.length 
-        ? Math.round(avgData.reduce((acc, v) => acc + v.trust_score, 0) / avgData.length)
+        ? Math.round(avgData.reduce((acc, v) => acc + (v.trust_score || 0), 0) / avgData.length)
         : 0;
 
       // Active API connections (last 24h)
@@ -83,57 +87,92 @@ export function TrustOracleDashboard() {
       title: 'Total Verified Claims',
       value: stats.totalVerified.toLocaleString(),
       icon: Database,
-      gradient: 'from-purple-500 to-pink-500',
+      gradientClass: 'from-purple-500 to-pink-500',
+      textClass: 'text-purple-400',
       description: 'On-chain verified'
     },
     {
       title: 'Average Trust Score',
       value: `${stats.avgTrustScore}%`,
       icon: Shield,
-      gradient: 'from-blue-500 to-cyan-500',
+      gradientClass: 'from-blue-500 to-cyan-500',
+      textClass: 'text-blue-400',
       description: 'Network consensus'
     },
     {
       title: 'Active API Connections',
       value: stats.activeConnections.toLocaleString(),
       icon: Zap,
-      gradient: 'from-green-500 to-emerald-500',
+      gradientClass: 'from-green-500 to-emerald-500',
+      textClass: 'text-green-400',
       description: 'Last 24 hours'
     },
     {
       title: 'Real-time Verifications',
       value: stats.realtimeVerifications.toLocaleString(),
       icon: Activity,
-      gradient: 'from-orange-500 to-red-500',
+      gradientClass: 'from-orange-500 to-red-500',
+      textClass: 'text-orange-400',
       description: 'Last hour'
     },
     {
       title: 'Truth Badges Minted',
       value: stats.nftsMinted.toLocaleString(),
       icon: TrendingUp,
-      gradient: 'from-violet-500 to-purple-500',
+      gradientClass: 'from-violet-500 to-purple-500',
+      textClass: 'text-violet-400',
       description: 'Polygon network'
     },
     {
       title: 'Global Coverage',
       value: `${stats.globalRegions} Regions`,
       icon: Globe,
-      gradient: 'from-cyan-500 to-blue-500',
+      gradientClass: 'from-cyan-500 to-blue-500',
+      textClass: 'text-cyan-400',
       description: 'Worldwide sources'
+    }
+  ];
+
+  const apiEndpoints = [
+    {
+      endpoint: '/get-trust-level',
+      method: 'POST',
+      description: 'Query trust data by claim, URL, or ID',
+      methodClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    },
+    {
+      endpoint: '/get-verified-feed',
+      method: 'GET',
+      description: 'Retrieve latest verified claims feed',
+      methodClass: 'bg-green-500/10 text-green-400 border-green-500/20'
+    },
+    {
+      endpoint: '/get-source-integrity',
+      method: 'GET',
+      description: 'Check domain or organization reliability',
+      methodClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+    },
+    {
+      endpoint: '/reference-oracle',
+      method: 'POST',
+      description: 'Generate AI-ready citation data',
+      methodClass: 'bg-pink-500/10 text-pink-400 border-pink-500/20'
     }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-purple-950/10">
+      <Navigation />
+      
       {/* Header */}
-      <div className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-20">
         <div className="container py-8">
           <div className="flex items-center gap-4 mb-4">
             <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
               <Database className="w-8 h-8 text-purple-400" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
                 AI Trust Oracle
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -150,7 +189,7 @@ export function TrustOracleDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="container py-12">
+      <div className="container py-12 pb-24">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -168,19 +207,15 @@ export function TrustOracleDashboard() {
                   key={index}
                   className="group relative overflow-hidden border-border/40 bg-card/50 backdrop-blur hover:border-purple-500/30 transition-all duration-300"
                 >
-                  {/* Gradient Background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradientClass} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
                   
                   <div className="relative p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.gradient} bg-opacity-10`}>
+                      <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.gradientClass} bg-opacity-10`}>
                         <Icon className="w-6 h-6 text-foreground" />
                       </div>
                       <div className="text-right">
-                        <div className="text-3xl font-bold bg-gradient-to-br bg-clip-text text-transparent" 
-                             style={{ 
-                               backgroundImage: `linear-gradient(to bottom right, var(--${stat.gradient.split('-')[1].split(' ')[0]}), var(--${stat.gradient.split('-')[3]}))` 
-                             }}>
+                        <div className={`text-3xl font-bold ${stat.textClass}`}>
                           {stat.value}
                         </div>
                       </div>
@@ -209,38 +244,13 @@ export function TrustOracleDashboard() {
             </h2>
             
             <div className="space-y-4">
-              {[
-                {
-                  endpoint: '/get-trust-level',
-                  method: 'POST',
-                  description: 'Query trust data by claim, URL, or ID',
-                  color: 'blue'
-                },
-                {
-                  endpoint: '/get-verified-feed',
-                  method: 'GET',
-                  description: 'Retrieve latest verified claims feed',
-                  color: 'green'
-                },
-                {
-                  endpoint: '/get-source-integrity',
-                  method: 'GET',
-                  description: 'Check domain or organization reliability',
-                  color: 'purple'
-                },
-                {
-                  endpoint: '/reference-oracle',
-                  method: 'POST',
-                  description: 'Generate AI-ready citation data',
-                  color: 'pink'
-                }
-              ].map((api, index) => (
+              {apiEndpoints.map((api, index) => (
                 <div 
                   key={index}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border/40 hover:border-purple-500/30 transition-colors group"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/40 hover:border-purple-500/30 transition-colors group gap-3"
                 >
                   <div className="flex items-center gap-4">
-                    <span className={`px-3 py-1 rounded text-sm font-mono bg-${api.color}-500/10 text-${api.color}-400 border border-${api.color}-500/20`}>
+                    <span className={`px-3 py-1 rounded text-sm font-mono border ${api.methodClass}`}>
                       {api.method}
                     </span>
                     <div>
@@ -248,7 +258,7 @@ export function TrustOracleDashboard() {
                       <p className="text-sm text-muted-foreground mt-1">{api.description}</p>
                     </div>
                   </div>
-                  <Zap className="w-5 h-5 text-muted-foreground group-hover:text-purple-400 transition-colors" />
+                  <Zap className="w-5 h-5 text-muted-foreground group-hover:text-purple-400 transition-colors hidden sm:block" />
                 </div>
               ))}
             </div>
@@ -266,6 +276,8 @@ export function TrustOracleDashboard() {
           </p>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 }

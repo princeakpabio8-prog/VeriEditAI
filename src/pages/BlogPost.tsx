@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { ShareFAB } from '@/components/blog/ShareFAB';
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();

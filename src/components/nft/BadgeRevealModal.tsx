@@ -99,11 +99,11 @@ export function BadgeRevealModal({ open, onClose, badgeData }: BadgeRevealModalP
               }}
             />
             
-            <img 
-              src={badgeImage} 
-              alt="Truth Badge" 
-              className="relative h-48 w-48 object-contain drop-shadow-2xl"
-            />
+             <img 
+               src={badgeImage} 
+               alt="Truth Badge" 
+               className="relative h-32 w-32 sm:h-48 sm:w-48 object-contain drop-shadow-2xl"
+             />
           </motion.div>
 
           <motion.div

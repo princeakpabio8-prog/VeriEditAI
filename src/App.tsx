@@ -9,7 +9,7 @@ import { EnhancedErrorBoundary } from "@/components/EnhancedErrorBoundary";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { AchievementNotification } from "./components/AchievementNotification";
-import { MobileLoadingSkeleton } from "./components/MobileLoadingSkeleton";
+import { PageLoading } from "@/components/ui/PageLoading";
 import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -90,7 +90,7 @@ const AppContent = () => {
       <AchievementNotification />
       <WalletToastNotifications />
       <MobileBottomNav />
-      <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+      <Suspense fallback={<PageLoading variant="default" />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />

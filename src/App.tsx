@@ -94,7 +94,7 @@ const AppContent = () => {
       <AchievementNotification />
       <WalletToastNotifications />
       <MobileBottomNav />
-      <Suspense fallback={<MobileLoadingSkeleton variant="card" count={3} />}>
+      <Suspense fallback={<PageLoading variant="default" />}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />

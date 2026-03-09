@@ -446,6 +446,24 @@ export default function Verify() {
               />
             </ErrorBoundary>
           </main>
+
+          {/* NFT Mint Prompt Modal - also available on mobile */}
+          {nftMintPrompt?.show && (
+            <NFTMintPromptModal
+              isOpen={nftMintPrompt.show}
+              onClose={() => setNftMintPrompt(null)}
+              verificationId={nftMintPrompt.verificationId}
+              trustScore={nftMintPrompt.trustScore}
+              claimText={nftMintPrompt.claimText}
+            />
+          )}
+
+          {showTutorial && (
+            <VerifyPageTutorial onClose={() => {
+              setShowTutorial(false);
+              localStorage.setItem('verify_tutorial_completed', 'true');
+            }} />
+          )}
         </div>
       </MobileOptimizedUI>
     );

@@ -29,18 +29,31 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const [showMobileFlow, setShowMobileFlow] = useState(false)
 
   useEffect(() => {
-    checkExistingBadge()
-  }, [verificationId])
-
-  const checkExistingBadge = async () => {
-    const { data } = await supabase
-      .from('nft_badges')
-      .select('id')
-      .eq('verification_id', verificationId)
-      .maybeSingle()
-    
-    setAlreadyMinted(!!data)
-  }
+    let cancelled = false;
+    const checkExistingBadge = async () => {
+      // Check local cache first to avoid unnecessary DB hits
+      const cacheKey = `badge_check_${verificationId}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setAlreadyMinted(cached === 'true');
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('nft_badges')
+        .select('id')
+        .eq('verification_id', verificationId)
+        .maybeSingle()
+      
+      if (!cancelled) {
+        const minted = !!data;
+        setAlreadyMinted(minted);
+        sessionStorage.setItem(cacheKey, String(minted));
+      }
+    };
+    checkExistingBadge();
+    return () => { cancelled = true; };
+  }, [verificationId]);
 
   const getBadgeType = (score: number): "common" | "uncommon" | "rare" | "epic" | "legendary" => {
     if (score >= 95) return "legendary";

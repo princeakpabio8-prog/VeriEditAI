@@ -29,25 +29,6 @@ export const MobileBottomNav = () => {
 
   if (!isMobile) return null;
 
-  const handleDiscoverClick = (e: React.MouseEvent) => {
-    if (import.meta.env.DEV) {
-      console.debug('[MobileBottomNav] Discover clicked, authenticated:', isAuthenticated);
-    }
-    
-    if (!isAuthenticated) {
-      e.preventDefault();
-      
-      // Show brief toast before redirecting
-      const toast = document.createElement('div');
-      toast.textContent = 'Sign in to view Discover';
-      toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-md shadow-lg z-50';
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
-      
-      navigate('/auth?next=/dashboard?tab=discover');
-    }
-  };
-
   const handleWalletConnect = async () => {
     if (isConnected) {
       disconnect();

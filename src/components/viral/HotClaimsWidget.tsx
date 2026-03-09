@@ -400,7 +400,7 @@ export function HotClaimsWidget() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Viral Claim — ${claim.platform}`,
+          title: `Viral Claim on ${claim.platform}`,
           text: `${claim.claim_text}\n\n📊 Engagement: ${claim.engagement_score.toLocaleString()} | ⚡ Velocity: ${Math.round(claim.engagement_velocity)}/hr\n\nVerify this claim:`,
           url: claim.share_token 
             ? `${window.location.origin}/claim/${claim.share_token}`

@@ -462,6 +462,9 @@ export default function Verify() {
             <VerifyPageTutorial isActive={showTutorial} onComplete={() => {
               setShowTutorial(false);
               localStorage.setItem('verify_tutorial_completed', 'true');
+            }} onSkip={() => {
+              setShowTutorial(false);
+              localStorage.setItem('verify_tutorial_completed', 'true');
             }} />
           )}
         </div>

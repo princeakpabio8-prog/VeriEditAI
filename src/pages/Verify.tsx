@@ -459,7 +459,7 @@ export default function Verify() {
           )}
 
           {showTutorial && (
-            <VerifyPageTutorial onClose={() => {
+            <VerifyPageTutorial isActive={showTutorial} onComplete={() => {
               setShowTutorial(false);
               localStorage.setItem('verify_tutorial_completed', 'true');
             }} />

@@ -52,6 +52,7 @@ export default function BlogPost() {
   const socialShareUrl = `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/blog-share/${slug}`;
   const directUrl = `${window.location.origin}/blog/${slug}`;
   const shareText = post ? `${post.title} — VeriEdit AI Blog` : '';
+  const shareUrl = socialShareUrl;
 
   if (isLoading) {
     return (

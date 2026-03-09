@@ -30,7 +30,7 @@ export function NFTMintPromptModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
         "sm:max-w-[540px] bg-gradient-to-b from-background via-background to-purple-950/10 border-purple-500/20",
-        isMobile && "max-h-[85vh] overflow-y-auto pb-32"
+        isMobile && "max-h-[92vh] overflow-y-auto pb-48"
       )}>
         <Button
           variant="ghost"

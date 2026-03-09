@@ -48,11 +48,10 @@ export default function BlogPost() {
     return () => { script.remove(); };
   }, [post]);
 
-  // Use edge function URL for social sharing so crawlers get proper OG meta tags
-  const socialShareUrl = `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/blog-share/${slug}`;
+  // Share URLs — edge function URL ensures crawlers get proper OG meta tags
+  const shareUrl = `https://sqtkkzdswxazyikcheds.supabase.co/functions/v1/blog-share/${slug}`;
   const directUrl = `${window.location.origin}/blog/${slug}`;
   const shareText = post ? `${post.title} — VeriEdit AI Blog` : '';
-  const shareUrl = socialShareUrl;
 
   if (isLoading) {
     return (

@@ -382,20 +382,19 @@ export const MobileNFTMintFlow = ({
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button variant="outline" onClick={() => {
                   haptics.light();
                   handleClose();
-                }} className="flex-1">
+                }} className="flex-1 h-12 text-sm">
                   Close
                 </Button>
                 <Button
                   onClick={() => {
                     haptics.medium();
-                    // Navigate to marketplace or collection
                     window.location.href = "/nft-marketplace";
                   }}
-                  className="flex-1"
+                  className="flex-1 h-12 text-sm"
                 >
                   View Collection
                 </Button>

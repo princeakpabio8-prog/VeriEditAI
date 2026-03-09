@@ -98,7 +98,7 @@ const Index = () => {
           <div className="max-w-7xl mx-auto relative z-10">
             <div className="text-center mb-8 sm:mb-12 fade-in-up">
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
-                Viral Claims — Race to Verify
+                Viral Claims: Race to Verify
               </h2>
               <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
                 Be first to verify trending claims and earn exclusive NFT badges. No sign-up required to view!

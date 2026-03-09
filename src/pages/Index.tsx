@@ -282,7 +282,7 @@ const Index = () => {
       <Footer />
       <BackToTop />
       <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
-      <MobileWalletStatus />
+      {/* MobileWalletStatus removed - already rendered at top */}
     </div>
   );
 };

@@ -14,10 +14,6 @@ import { WalletToastNotifications } from "./components/ui/WalletToastNotificatio
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { UnifiedOnboarding } from "@/components/UnifiedOnboarding";
-import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
-import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
-import { useOnboarding } from "@/hooks/useOnboarding";
-import { UnifiedOnboarding } from "@/components/UnifiedOnboarding";
 
 // Critical pages - loaded immediately
 import Index from "./pages/Index";

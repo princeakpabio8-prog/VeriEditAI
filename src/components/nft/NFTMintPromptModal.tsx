@@ -30,7 +30,7 @@ export function NFTMintPromptModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
         "sm:max-w-[540px] bg-gradient-to-b from-background via-background to-purple-950/10 border-purple-500/20",
-        isMobile && "max-h-[85vh] overflow-y-auto pb-32"
+        isMobile && "max-h-[92vh] overflow-y-auto pb-48"
       )}>
         <Button
           variant="ghost"
@@ -125,10 +125,11 @@ export function NFTMintPromptModal({
             "fixed left-0 right-0",
             "bg-background/95 backdrop-blur-sm",
             "border-t border-border/50",
-            "px-6 py-4",
+            "px-4 py-3",
             "shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]",
             "z-50",
-            "bottom-[calc(env(safe-area-inset-bottom,0px)+64px)]"
+            "bottom-0",
+            "pb-[calc(env(safe-area-inset-bottom,0px)+12px)]"
           ]
         )}>
           {showWalletGuide ? (

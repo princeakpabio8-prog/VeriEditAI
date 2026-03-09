@@ -163,7 +163,7 @@ export const MobileNFTMintFlow = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md mx-4 max-h-[85vh] flex flex-col p-0 overflow-hidden">
+      <DialogContent className="max-w-md mx-2 sm:mx-4 max-h-[92vh] flex flex-col p-0 overflow-hidden pb-[env(safe-area-inset-bottom,0px)]">
         <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle className="text-lg font-bold">
             Mint NFT Badge
@@ -382,20 +382,19 @@ export const MobileNFTMintFlow = ({
                 </div>
               )}
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
                 <Button variant="outline" onClick={() => {
                   haptics.light();
                   handleClose();
-                }} className="flex-1">
+                }} className="flex-1 h-12 text-sm">
                   Close
                 </Button>
                 <Button
                   onClick={() => {
                     haptics.medium();
-                    // Navigate to marketplace or collection
                     window.location.href = "/nft-marketplace";
                   }}
-                  className="flex-1"
+                  className="flex-1 h-12 text-sm"
                 >
                   View Collection
                 </Button>

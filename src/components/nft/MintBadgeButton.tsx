@@ -29,18 +29,31 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
   const [showMobileFlow, setShowMobileFlow] = useState(false)
 
   useEffect(() => {
-    checkExistingBadge()
-  }, [verificationId])
-
-  const checkExistingBadge = async () => {
-    const { data } = await supabase
-      .from('nft_badges')
-      .select('id')
-      .eq('verification_id', verificationId)
-      .maybeSingle()
-    
-    setAlreadyMinted(!!data)
-  }
+    let cancelled = false;
+    const checkExistingBadge = async () => {
+      // Check local cache first to avoid unnecessary DB hits
+      const cacheKey = `badge_check_${verificationId}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setAlreadyMinted(cached === 'true');
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('nft_badges')
+        .select('id')
+        .eq('verification_id', verificationId)
+        .maybeSingle()
+      
+      if (!cancelled) {
+        const minted = !!data;
+        setAlreadyMinted(minted);
+        sessionStorage.setItem(cacheKey, String(minted));
+      }
+    };
+    checkExistingBadge();
+    return () => { cancelled = true; };
+  }, [verificationId]);
 
   const getBadgeType = (score: number): "common" | "uncommon" | "rare" | "epic" | "legendary" => {
     if (score >= 95) return "legendary";
@@ -182,61 +195,55 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
   return (
     <>
-      <div className="flex flex-col gap-3 w-full">
-        {/* Preview Badge Button (no wallet needed) */}
-        {!isReallyConnected && (
+      <div className="flex flex-col gap-2 w-full">
+        {/* Connect Wallet + Mint - streamlined for mobile */}
+        {!isReallyConnected ? (
+          <>
+            <Button 
+              onClick={handleConnectWallet} 
+              variant="default" 
+              className="w-full h-12 text-base font-semibold"
+            >
+              🔗 Connect Wallet to Mint
+            </Button>
+            <Button
+              onClick={() => setShowPreview(!showPreview)}
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-muted-foreground"
+            >
+              {showPreview ? 'Hide Preview' : '👁️ Preview Badge'}
+            </Button>
+            {showPreview && (
+              <BadgePreview 
+                trustScore={trustScore}
+                showMintButton={false}
+              />
+            )}
+          </>
+        ) : (
           <Button
-            onClick={() => setShowPreview(!showPreview)}
-            variant="outline"
-            className="w-full"
+            onClick={handleMintClick}
+            disabled={minting || trustScore < 70}
+            className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full h-12 text-base font-semibold"
           >
-            {showPreview ? 'Hide Preview' : '👁️ Preview Your Badge'}
+            {minting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Minting...
+              </>
+            ) : (
+              <>
+                <Award className="h-4 w-4" />
+                Mint Truth Badge NFT
+              </>
+            )}
           </Button>
         )}
-        
-        {/* Badge Preview Modal */}
-        {showPreview && !isReallyConnected && (
-          <BadgePreview 
-            trustScore={trustScore}
-            showMintButton={false}
-          />
-        )}
-        
-        {/* Connect Wallet */}
-        {!isReallyConnected && (
-          <Button 
-            onClick={handleConnectWallet} 
-            variant="default" 
-            className="w-full"
-          >
-            🔗 Connect Wallet
-          </Button>
-        )}
-        {/* Mint Button */}
-        <Button
-          onClick={handleMintClick}
-          disabled={!isReallyConnected || minting || trustScore < 70}
-          className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full sm:w-auto text-sm"
-          size="sm"
-        >
-          {minting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="hidden sm:inline">Minting Badge...</span>
-              <span className="sm:hidden">Minting...</span>
-            </>
-          ) : (
-            <>
-              <Award className="h-4 w-4" />
-              <span className="hidden sm:inline">Mint Truth Badge NFT</span>
-              <span className="sm:hidden">Mint NFT</span>
-            </>
-          )}
-        </Button>
 
         {trustScore < 70 && (
-          <p className="text-xs text-muted-foreground">
-            ℹ️ Trust score must be ≥70% to mint a badge (currently {trustScore}%)
+          <p className="text-xs text-muted-foreground text-center">
+            ℹ️ Trust score must be ≥70% to mint (currently {trustScore}%)
           </p>
         )}
       </div>

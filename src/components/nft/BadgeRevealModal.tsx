@@ -37,7 +37,7 @@ export function BadgeRevealModal({ open, onClose, badgeData }: BadgeRevealModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg border-primary/20 bg-gradient-to-b from-background to-background/95 backdrop-blur-xl">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto border-primary/20 bg-gradient-to-b from-background to-background/95 backdrop-blur-xl mx-2 sm:mx-auto pb-[env(safe-area-inset-bottom,0px)]">
         {showConfetti && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {[...Array(50)].map((_, i) => (
@@ -99,11 +99,11 @@ export function BadgeRevealModal({ open, onClose, badgeData }: BadgeRevealModalP
               }}
             />
             
-            <img 
-              src={badgeImage} 
-              alt="Truth Badge" 
-              className="relative h-48 w-48 object-contain drop-shadow-2xl"
-            />
+             <img 
+               src={badgeImage} 
+               alt="Truth Badge" 
+               className="relative h-32 w-32 sm:h-48 sm:w-48 object-contain drop-shadow-2xl"
+             />
           </motion.div>
 
           <motion.div
@@ -145,31 +145,31 @@ export function BadgeRevealModal({ open, onClose, badgeData }: BadgeRevealModalP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9 }}
-            className="flex flex-wrap gap-3 w-full"
+            className="flex flex-col sm:flex-row gap-2 w-full"
           >
             <Button
               onClick={() => window.open(badgeData.explorerUrl, '_blank')}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 h-11"
               variant="default"
             >
               <ExternalLink className="h-4 w-4" />
-              View on PolygonScan
+              <span className="text-sm">PolygonScan</span>
             </Button>
             <Button
               onClick={() => window.location.href = '/profile'}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 h-11"
               variant="outline"
             >
               <Image className="h-4 w-4" />
-              View Gallery
+              <span className="text-sm">Gallery</span>
             </Button>
             <Button
               onClick={handleShare}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 h-11"
               variant="outline"
             >
               <Share2 className="h-4 w-4" />
-              Share
+              <span className="text-sm">Share</span>
             </Button>
           </motion.div>
         </div>

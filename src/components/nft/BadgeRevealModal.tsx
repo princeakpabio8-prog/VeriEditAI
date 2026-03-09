@@ -37,7 +37,7 @@ export function BadgeRevealModal({ open, onClose, badgeData }: BadgeRevealModalP
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg border-primary/20 bg-gradient-to-b from-background to-background/95 backdrop-blur-xl">
+      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto border-primary/20 bg-gradient-to-b from-background to-background/95 backdrop-blur-xl mx-2 sm:mx-auto pb-[env(safe-area-inset-bottom,0px)]">
         {showConfetti && (
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {[...Array(50)].map((_, i) => (

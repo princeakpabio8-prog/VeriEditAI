@@ -120,7 +120,6 @@ export const MobileBottomNav = () => {
             <Link
               key={item.label}
               to={item.path}
-              onClick={item.onClick}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
                 isActive

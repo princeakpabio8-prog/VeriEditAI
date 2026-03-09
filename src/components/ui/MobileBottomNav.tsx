@@ -96,11 +96,10 @@ export const MobileBottomNav = () => {
       activeCheck: (path: string) => path.startsWith("/lighthouse"),
     },
     {
-      label: "Discover",
+      label: "Blog",
       icon: Newspaper,
-      path: isAuthenticated ? "/dashboard?tab=discover" : "/auth?next=/dashboard?tab=discover",
-      activeCheck: (path: string) => path === "/dashboard" && location.search.includes("tab=discover"),
-      onClick: handleDiscoverClick,
+      path: "/blog",
+      activeCheck: (path: string) => path.startsWith("/blog"),
     },
   ];
 

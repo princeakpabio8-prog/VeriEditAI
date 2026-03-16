@@ -30,7 +30,7 @@ interface MobileOptimizedUIProps {
 export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { status: pwaStatus, installApp, shareApp, updateApp } = usePWA();
+  const { isInstallable, isInstalled, isStandalone, installApp, updateApp } = usePWA();
   const { status: offlineStatus, retryQueue } = useOfflineSupport();
 
   useEffect(() => {

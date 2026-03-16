@@ -30,7 +30,7 @@ interface MobileOptimizedUIProps {
 export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { status: pwaStatus, installApp, shareApp, updateApp } = usePWA();
+  const { isInstallable, isInstalled, isStandalone, installApp, updateApp } = usePWA();
   const { status: offlineStatus, retryQueue } = useOfflineSupport();
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     <CardDescription>Progressive Web App capabilities</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {!pwaStatus.isInstalled && pwaStatus.isInstallable && (
+                    {!isInstalled && isInstallable && (
                       <Button
                         onClick={installApp}
                         className="w-full gap-2"
@@ -131,7 +131,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                       </Button>
                     )}
                     
-                    {pwaStatus.isInstalled && (
+                    {isInstalled && (
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">
                           <Smartphone className="h-3 w-3 mr-1" />
@@ -141,7 +141,11 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     )}
                     
                     <Button
-                      onClick={() => shareApp()}
+                      onClick={async () => {
+                        const shareData = { title: 'VeriEdit AI', text: 'AI-powered verification platform', url: window.location.origin };
+                        if (navigator.share) await navigator.share(shareData);
+                        else navigator.clipboard.writeText(shareData.url);
+                      }}
                       variant="outline"
                       className="w-full gap-2"
                     >
@@ -216,7 +220,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Display Mode</span>
                       <Badge variant="outline">
-                        {pwaStatus.isStandalone ? 'Standalone' : 'Browser'}
+                        {isStandalone ? 'Standalone' : 'Browser'}
                       </Badge>
                     </div>
                     

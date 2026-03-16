@@ -1,223 +1,109 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 import { useToast } from '@/hooks/use-toast';
 import { lower } from '@/lib/string';
 
-interface PWAInstallPrompt {
+interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-interface PWAStatus {
-  isInstallable: boolean;
-  isInstalled: boolean;
-  isSupported: boolean;
-  isStandalone: boolean;
-  updateAvailable: boolean;
-}
-
 export const usePWA = () => {
-  const [installPrompt, setInstallPrompt] = useState<PWAInstallPrompt | null>(null);
-  const [status, setStatus] = useState<PWAStatus>({
-    isInstallable: false,
-    isInstalled: false,
-    isSupported: 'serviceWorker' in navigator,
-    isStandalone: window.matchMedia('(display-mode: standalone)').matches,
-    updateAvailable: false
-  });
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
   const { toast } = useToast();
 
+  const {
+    needRefresh: [needRefresh, setNeedRefresh],
+    updateServiceWorker,
+  } = useRegisterSW({
+    onRegisteredSW(swUrl, registration) {
+      console.log('✅ SW registered:', swUrl);
+      // Check for updates every 60 minutes
+      if (registration) {
+        setInterval(() => registration.update(), 60 * 60 * 1000);
+      }
+    },
+    onRegisterError(error) {
+      console.error('❌ SW registration error:', error);
+    },
+  });
+
+  const isStandalone = typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches ||
+     (window.navigator as any).standalone === true);
+
   useEffect(() => {
-    // Check if app is already installed
-    const checkInstallStatus = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isNavigatorStandalone = (window.navigator as any).standalone === true;
-      const isInstalled = isStandalone || isNavigatorStandalone;
-      
-      setStatus(prev => ({
-        ...prev,
-        isInstalled,
-        isStandalone
-      }));
-    };
+    setIsInstalled(isStandalone);
 
-    checkInstallStatus();
-
-    // Listen for beforeinstallprompt event
-    const handleBeforeInstallPrompt = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      setInstallPrompt(e);
-      setStatus(prev => ({ ...prev, isInstallable: true }));
+      setInstallPrompt(e as BeforeInstallPromptEvent);
     };
 
-    // Listen for appinstalled event
-    const handleAppInstalled = () => {
-      setStatus(prev => ({
-        ...prev,
-        isInstalled: true,
-        isInstallable: false
-      }));
+    const installedHandler = () => {
+      setIsInstalled(true);
       setInstallPrompt(null);
-      toast({
-        title: "App Installed!",
-        description: "You can now use the app from your home screen",
-      });
+      toast({ title: "App Installed!", description: "VeriEdit AI is now on your home screen" });
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('appinstalled', handleAppInstalled);
-
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', installedHandler);
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('appinstalled', installedHandler);
     };
-  }, [toast]);
+  }, [isStandalone, toast]);
 
-  useEffect(() => {
-    // Service Worker registration is handled in main.tsx to avoid conflicts
-    // This hook focuses on PWA features only
-  }, []);
-
-  const installApp = async (): Promise<boolean> => {
+  const installApp = useCallback(async (): Promise<boolean> => {
     if (!installPrompt) {
-      // Fallback instructions for manual installation
       toast({
-        title: "Install App",
-        description: "Use your browser's 'Add to Home Screen' option to install the app",
+        title: "Install VeriEdit AI",
+        description: getInstallInstructions(),
       });
       return false;
     }
-
     try {
       await installPrompt.prompt();
-      const choiceResult = await installPrompt.userChoice;
-      
-      if (choiceResult.outcome === 'accepted') {
-        toast({
-          title: "Installing...",
-          description: "The app is being installed to your device",
-        });
-        return true;
-      } else {
-        toast({
-          title: "Installation Cancelled",
-          description: "You can install the app later from the browser menu",
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error('Installation failed:', error);
-      toast({
-        title: "Installation Failed",
-        description: "There was an error installing the app",
-        variant: "destructive",
-      });
+      const result = await installPrompt.userChoice;
+      return result.outcome === 'accepted';
+    } catch {
       return false;
     }
-  };
+  }, [installPrompt, toast]);
 
-  const updateApp = () => {
-    if ('serviceWorker' in navigator) {
-      const send = (msg: any) => {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage(msg);
-        } else {
-          navigator.serviceWorker.getRegistration().then(reg => reg?.active?.postMessage(msg));
-        }
-      };
-      // Clear caches first, then activate new SW
-      send({ type: 'CLEAR_ALL_CACHES' });
-      send({ type: 'SKIP_WAITING' });
-      setTimeout(() => window.location.reload(), 100);
-    }
-  };
+  const updateApp = useCallback(() => {
+    updateServiceWorker(true);
+  }, [updateServiceWorker]);
 
-  const shareApp = async (data?: { title?: string; text?: string; url?: string }) => {
-    const shareData = {
-      title: data?.title || 'AI Verification Platform',
-      text: data?.text || 'Check out this AI-powered content verification platform',
-      url: data?.url || window.location.origin
-    };
+  const dismissUpdate = useCallback(() => {
+    setNeedRefresh(false);
+  }, [setNeedRefresh]);
 
-    if (navigator.share && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-        toast({
-          title: "Shared Successfully",
-          description: "Thank you for sharing the app!",
-        });
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Error sharing:', error);
-        }
-      }
-    } else {
-      // Fallback to copying to clipboard
-      try {
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: "Link Copied",
-          description: "App link copied to clipboard",
-        });
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        toast({
-          title: "Share",
-          description: `Share this link: ${shareData.url}`,
-        });
-      }
-    }
-  };
-
-  // Get install instructions based on device/browser
-  const getInstallInstructions = (): string => {
-    const userAgent = lower(navigator?.userAgent);
-    
-    if (!userAgent) {
-      return "Use your browser's 'Add to Home Screen' or 'Install App' option";
-    }
-    
-    if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
-      return "Tap the Share button and select 'Add to Home Screen'";
-    } else if (userAgent.includes('android')) {
-      return "Tap the menu button and select 'Add to Home Screen' or 'Install App'";
-    } else if (userAgent.includes('chrome')) {
-      return "Click the install button in the address bar or use the browser menu";
-    } else if (userAgent.includes('firefox')) {
-      return "Use the browser menu and select 'Install This Site as an App'";
-    } else if (userAgent.includes('safari')) {
-      return "Use the Share menu and select 'Add to Home Screen'";
-    } else {
-      return "Use your browser's 'Add to Home Screen' or 'Install App' option";
-    }
-  };
-
-  // Check if running in PWA mode
-  const isPWAMode = (): boolean => {
-    return status.isStandalone || status.isInstalled;
-  };
-
-  // Get PWA display mode
-  const getDisplayMode = (): string => {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      return 'standalone';
-    } else if (window.matchMedia('(display-mode: minimal-ui)').matches) {
-      return 'minimal-ui';
-    } else if (window.matchMedia('(display-mode: browser)').matches) {
-      return 'browser';
-    } else {
-      return 'unknown';
-    }
-  };
+  const isInstallable = !!installPrompt && !isInstalled;
+  const isUpdateAvailable = needRefresh;
 
   return {
-    status,
+    isInstallable,
+    isInstalled,
+    isStandalone,
+    isUpdateAvailable,
     installApp,
     updateApp,
-    shareApp,
+    dismissUpdate,
     getInstallInstructions,
-    isPWAMode,
-    getDisplayMode,
-    isInstallable: status.isInstallable && !!installPrompt,
-    isUpdateAvailable: status.updateAvailable
   };
 };
+
+function getInstallInstructions(): string {
+  const ua = lower(navigator?.userAgent ?? '');
+  if (ua.includes('iphone') || ua.includes('ipad')) {
+    return "Tap the Share button ↗ then 'Add to Home Screen'";
+  } else if (ua.includes('android')) {
+    return "Tap ⋮ menu then 'Add to Home Screen' or 'Install App'";
+  } else if (ua.includes('chrome')) {
+    return "Click the install icon in the address bar";
+  } else {
+    return "Use your browser menu → 'Install App' or 'Add to Home Screen'";
+  }
+}

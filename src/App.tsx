@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { AchievementNotification } from "./components/AchievementNotification";
 import { PageLoading } from "@/components/ui/PageLoading";
+import { PWAInstallBanner } from "@/components/ui/PWAInstallBanner";
 import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
@@ -52,6 +53,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogEditor = lazy(() => import("./pages/BlogEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Install = lazy(() => import("./pages/Install"));
 
 // Shared pages
 const ShareVerification = lazy(() => import("./pages/ShareVerification"));
@@ -87,6 +89,7 @@ const AppContent = () => {
         <UnifiedOnboarding open={showOnboarding} onComplete={completeOnboarding} />
       )}
       <WrongNetworkBanner />
+      <PWAInstallBanner />
       <AchievementNotification />
       <WalletToastNotifications />
       <MobileBottomNav />
@@ -202,6 +205,7 @@ const AppContent = () => {
                   <YouTubeIntelligence />
                 </ProtectedRoute>
               } />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

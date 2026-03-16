@@ -205,6 +205,7 @@ const AppContent = () => {
                   <YouTubeIntelligence />
                 </ProtectedRoute>
               } />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

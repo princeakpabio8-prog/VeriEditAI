@@ -220,7 +220,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Display Mode</span>
                       <Badge variant="outline">
-                        {pwaStatus.isStandalone ? 'Standalone' : 'Browser'}
+                        {isStandalone ? 'Standalone' : 'Browser'}
                       </Badge>
                     </div>
                     

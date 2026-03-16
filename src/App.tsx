@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { AchievementNotification } from "./components/AchievementNotification";
 import { PageLoading } from "@/components/ui/PageLoading";
+import { PWAInstallBanner } from "@/components/ui/PWAInstallBanner";
 import { WalletToastNotifications } from "./components/ui/WalletToastNotifications";
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";

@@ -131,7 +131,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                       </Button>
                     )}
                     
-                    {pwaStatus.isInstalled && (
+                    {isInstalled && (
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">
                           <Smartphone className="h-3 w-3 mr-1" />

@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-select',
             '@radix-ui/react-tooltip'
           ],
-          'vendor-web3': ['ethers', 'wagmi', 'viem', '@wagmi/connectors'],
+          'vendor-web3': ['wagmi', 'viem', '@wagmi/connectors'],
           'vendor-3d': ['three', '@react-three/fiber', '@react-three/drei'],
           'vendor-charts': ['recharts'],
           'vendor-query': ['@tanstack/react-query'],

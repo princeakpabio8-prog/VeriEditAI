@@ -141,7 +141,11 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     )}
                     
                     <Button
-                      onClick={() => shareApp()}
+                      onClick={async () => {
+                        const shareData = { title: 'VeriEdit AI', text: 'AI-powered verification platform', url: window.location.origin };
+                        if (navigator.share) await navigator.share(shareData);
+                        else navigator.clipboard.writeText(shareData.url);
+                      }}
                       variant="outline"
                       className="w-full gap-2"
                     >

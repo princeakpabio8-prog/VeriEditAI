@@ -53,6 +53,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogEditor = lazy(() => import("./pages/BlogEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Install = lazy(() => import("./pages/Install"));
 
 // Shared pages
 const ShareVerification = lazy(() => import("./pages/ShareVerification"));

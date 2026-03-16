@@ -89,6 +89,7 @@ const AppContent = () => {
         <UnifiedOnboarding open={showOnboarding} onComplete={completeOnboarding} />
       )}
       <WrongNetworkBanner />
+      <PWAInstallBanner />
       <AchievementNotification />
       <WalletToastNotifications />
       <MobileBottomNav />

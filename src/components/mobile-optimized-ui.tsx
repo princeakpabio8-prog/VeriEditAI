@@ -121,7 +121,7 @@ export const MobileOptimizedUI = ({ children }: MobileOptimizedUIProps) => {
                     <CardDescription>Progressive Web App capabilities</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {!pwaStatus.isInstalled && pwaStatus.isInstallable && (
+                    {!isInstalled && isInstallable && (
                       <Button
                         onClick={installApp}
                         className="w-full gap-2"

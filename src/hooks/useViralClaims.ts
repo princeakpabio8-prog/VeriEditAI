@@ -1,8 +1,5 @@
-import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-
-type ViralityStatus = 'detected' | 'trending' | 'verified' | 'debunked';
 
 interface ViralClaim {
   id: string;
@@ -24,24 +21,13 @@ interface ViralClaim {
   image_url: string | null;
 }
 
-interface ClaimMention {
-  id: string;
-  viral_claim_id: string;
-  platform: string;
-  source_url: string;
-  engagement_count: number;
-  posted_at: string;
-  detected_at: string;
-  metadata: any;
-}
-
 export function useViralClaims(status?: string) {
   const { data: viralClaims, isLoading, refetch } = useQuery({
     queryKey: ['viral-claims', status],
     queryFn: async () => {
       let query = supabase
         .from('viral_claims')
-        .select('*')
+        .select('id, claim_text, platform, source_url, engagement_score, engagement_velocity, first_seen_at, status, verification_id, image_url, updated_at')
         .order('engagement_velocity', { ascending: false })
         .limit(20);
 
@@ -53,33 +39,14 @@ export function useViralClaims(status?: string) {
       if (error) throw error;
       return (data || []) as ViralClaim[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
   });
-
-  // Real-time subscription
-  React.useEffect(() => {
-    const channel = supabase
-      .channel('viral-claims-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'viral_claims'
-        },
-        () => {
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [refetch]);
 
   return {
     viralClaims: viralClaims || [],
     isLoading,
+    refetch,
   };
 }
 
@@ -97,10 +64,8 @@ export function useClaimDetails(viralClaimId: string) {
       return data as ViralClaim | null;
     },
     enabled: !!viralClaimId,
+    staleTime: 2 * 60 * 1000,
   });
 
-  return {
-    claim,
-    isLoading,
-  };
+  return { claim, isLoading };
 }

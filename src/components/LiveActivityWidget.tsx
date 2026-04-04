@@ -48,22 +48,9 @@ export function LiveActivityWidget() {
   useEffect(() => {
     fetchActivities();
     
-    const channel = supabase
-      .channel('activity-widget')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'activity_stream' },
-        (payload) => {
-          setActivities(prev => [payload.new as ActivityItem, ...prev].slice(0, 5));
-          setIsLive(true);
-          setTimeout(() => setIsLive(false), 3000);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // Poll every 2 minutes instead of realtime subscription to save bandwidth
+    const interval = setInterval(fetchActivities, 2 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchActivities = async () => {

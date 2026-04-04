@@ -286,7 +286,7 @@ export function HotClaimsWidget() {
       
       const { data, error } = await supabase
         .from('viral_claims')
-        .select('*')
+        .select('id, claim_text, engagement_score, engagement_velocity, first_seen_at, platform, status, verification_id, updated_at, image_url, source_url, metadata')
         .in('status', ['detected', 'trending', 'monitoring'])
         .order('engagement_velocity', { ascending: false })
         .limit(10);

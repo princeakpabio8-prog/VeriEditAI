@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface NewsArticle {
@@ -15,59 +15,29 @@ interface NewsArticle {
   is_verified: boolean;
   image_url: string | null;
   video_url: string | null;
-  metadata: any;
 }
 
 export function useNewsFeed(limit: number = 20) {
-  const [articles, setArticles] = useState<NewsArticle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchArticles();
-
-    // Real-time subscription
-    const channel = supabase
-      .channel('news-feed-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'news_feed'
-        },
-        () => {
-          // Refetch when data changes
-          fetchArticles();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [limit]);
-
-  const fetchArticles = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
+  const { data: articles, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['news-feed', limit],
+    queryFn: async () => {
       const { data, error: fetchError } = await supabase
         .from('news_feed')
-        .select('*')
+        .select('id, title, link, summary, source, source_url, category, published_at, trust_score, verification_id, is_verified, image_url, video_url')
         .order('published_at', { ascending: false })
         .limit(limit);
 
       if (fetchError) throw fetchError;
-      setArticles(data || []);
-    } catch (err) {
-      console.error('Error fetching news feed:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load news feed');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes - news doesn't need instant refresh
+    gcTime: 15 * 60 * 1000,
+  });
 
-  return { articles, loading, error, refetch: fetchArticles };
+  return {
+    articles: (articles || []) as NewsArticle[],
+    loading,
+    error: error ? (error instanceof Error ? error.message : 'Failed to load news feed') : null,
+    refetch,
+  };
 }

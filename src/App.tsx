@@ -78,7 +78,16 @@ const OrganizationProfile = lazy(() => import("./components/partnership/Organiza
 const ApiDocs = lazy(() => import("./pages/ApiDocs"));
 const ApiOpenApiDocs = lazy(() => import("./pages/ApiOpenApiDocs"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 3 * 60 * 1000, // 3 min default — data stays fresh, fewer refetches
+      gcTime: 10 * 60 * 1000,   // 10 min garbage collection
+      refetchOnWindowFocus: false, // Don't refetch every tab switch
+      retry: 1, // Only 1 retry to reduce failed-request egress
+    },
+  },
+});
 
 const AppContent = () => {
   const { showOnboarding, completeOnboarding } = useOnboarding();

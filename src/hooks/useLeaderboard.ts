@@ -38,34 +38,33 @@ export function useLeaderboard(periodType: LeaderboardPeriod = 'all_time', limit
           periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
           break;
         default:
-          periodStart = new Date(0); // All time
+          periodStart = new Date(0);
       }
 
       const { data, error } = await supabase
         .from('leaderboard_entries')
-        .select('*')
+        .select('id, user_id, period_type, verification_count, trust_score_avg, points, rank')
         .eq('period_type', periodType)
         .gte('period_start', periodStart.toISOString().split('T')[0])
         .order('rank', { ascending: true })
         .limit(limit);
 
       if (error) throw error;
-      
-      // Fetch profiles separately
       if (!data || data.length === 0) return [];
-      
+
       const userIds = data.map(entry => entry.user_id);
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, full_name, avatar_url, username')
         .in('user_id', userIds);
 
-      // Merge profiles with leaderboard data
       return data.map(entry => ({
         ...entry,
         profiles: profiles?.find(p => p.user_id === entry.user_id) || null,
       })) as LeaderboardEntry[];
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes - leaderboard rarely changes
+    gcTime: 30 * 60 * 1000,
   });
 
   return {

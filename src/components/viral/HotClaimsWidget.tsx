@@ -190,63 +190,12 @@ export function HotClaimsWidget() {
   useEffect(() => {
     fetchHotClaims();
 
-    // Real-time subscription for new hot claims and verification updates
-    const channel = supabase
-      .channel('hot-claims-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'viral_claims',
-          filter: 'verification_id=not.is.null'
-        },
-        (payload) => {
-          const verifiedClaim = payload.new as HotClaim;
-          
-          // Show toast notification
-          toast({
-            title: "Claim Just Verified!",
-            description: `"${verifiedClaim.claim_text.substring(0, 60)}..." was verified by another user`,
-          });
-          
-          // Mark as "just verified" for animation
-          setJustVerifiedClaims(prev => new Set(prev).add(verifiedClaim.id));
-          
-          // Remove "just verified" badge after 30 seconds
-          setTimeout(() => {
-            setJustVerifiedClaims(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(verifiedClaim.id);
-              return newSet;
-            });
-          }, 30000);
-          
-          // Refresh claims list
-          fetchHotClaims();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'viral_claims'
-        },
-        () => {
-          // New hot claim detected
-          fetchHotClaims();
-        }
-      )
-      .subscribe();
-
-    // Auto-refresh every 30 seconds to ensure fresh claims
+    // Auto-refresh every 5 minutes instead of 30 seconds to reduce egress
     const refreshInterval = setInterval(() => {
       fetchHotClaims();
-    }, 30000); // 30 seconds
+    }, 5 * 60 * 1000);
 
     return () => {
-      supabase.removeChannel(channel);
       clearInterval(refreshInterval);
     };
   }, []);
@@ -337,7 +286,7 @@ export function HotClaimsWidget() {
       
       const { data, error } = await supabase
         .from('viral_claims')
-        .select('*')
+        .select('id, claim_text, engagement_score, engagement_velocity, first_seen_at, platform, status, verification_id, updated_at, image_url, source_url, metadata, rarity_tier, virality_score, share_token')
         .in('status', ['detected', 'trending', 'monitoring'])
         .order('engagement_velocity', { ascending: false })
         .limit(10);

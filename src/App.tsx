@@ -54,6 +54,7 @@ const BlogPost = lazy(() => import("./pages/BlogPost"));
 const BlogEditor = lazy(() => import("./pages/BlogEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Install = lazy(() => import("./pages/Install"));
+const TruthBadge = lazy(() => import("./pages/TruthBadge"));
 
 // Shared pages
 const ShareVerification = lazy(() => import("./pages/ShareVerification"));
@@ -215,6 +216,7 @@ const AppContent = () => {
                 </ProtectedRoute>
               } />
               <Route path="/install" element={<Install />} />
+              <Route path="/truth-badge" element={<TruthBadge />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -3214,6 +3214,96 @@ export type Database = {
         }
         Relationships: []
       }
+      truth_badge_payment_attempts: {
+        Row: {
+          chain_id: number
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          status: string
+          tx_hash: string
+          user_id: string
+        }
+        Insert: {
+          chain_id?: number
+          created_at?: string
+          currency: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          tx_hash: string
+          user_id: string
+        }
+        Update: {
+          chain_id?: number
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          tx_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      truth_badges: {
+        Row: {
+          active_since: string
+          badge_number: number
+          created_at: string
+          discord_username: string | null
+          discord_verified_at: string | null
+          id: string
+          nft_token_id: string | null
+          nft_tx_hash: string | null
+          payment_amount_usd: number
+          payment_chain_id: number
+          payment_currency: string
+          payment_tx_hash: string
+          status: string
+          updated_at: string
+          user_id: string
+          wallet_address: string | null
+        }
+        Insert: {
+          active_since?: string
+          badge_number?: number
+          created_at?: string
+          discord_username?: string | null
+          discord_verified_at?: string | null
+          id?: string
+          nft_token_id?: string | null
+          nft_tx_hash?: string | null
+          payment_amount_usd?: number
+          payment_chain_id?: number
+          payment_currency: string
+          payment_tx_hash: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          wallet_address?: string | null
+        }
+        Update: {
+          active_since?: string
+          badge_number?: number
+          created_at?: string
+          discord_username?: string | null
+          discord_verified_at?: string | null
+          id?: string
+          nft_token_id?: string | null
+          nft_tx_hash?: string | null
+          payment_amount_usd?: number
+          payment_chain_id?: number
+          payment_currency?: string
+          payment_tx_hash?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          wallet_address?: string | null
+        }
+        Relationships: []
+      }
       truth_bounties: {
         Row: {
           auto_ping_count: number | null
@@ -4241,6 +4331,7 @@ export type Database = {
         Args: { amount?: number; user_uuid: string }
         Returns: Json
       }
+      is_truth_badge_holder: { Args: { _user_id: string }; Returns: boolean }
       is_username_available: {
         Args: { username_to_check: string }
         Returns: boolean

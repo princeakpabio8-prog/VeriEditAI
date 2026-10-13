@@ -4,6 +4,6 @@
 - [x] Check the homepage and its navigation at narrow and wide sizes.
 
 # Motto and search discoverability
-- [ ] Apply the exact motto to homepage and search metadata.
-- [ ] Correct search metadata, canonical URLs, and public page discovery.
-- [ ] Verify visible motto and search tags on public pages.
+- [x] Apply the exact motto to homepage and search metadata.
+- [x] Correct search metadata, canonical URLs, and public page discovery.
+- [x] Verify visible motto and search tags on public pages.

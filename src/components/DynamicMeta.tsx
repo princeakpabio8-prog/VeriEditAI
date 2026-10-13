@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
+import { canonicalUrl, SITE_URL } from '@/lib/seo';
 
 interface DynamicMetaProps {
   title?: string;
@@ -21,86 +23,30 @@ export function DynamicMeta({
   author,
   publishedTime,
 }: DynamicMetaProps) {
-  useEffect(() => {
-    // Update document title
-    if (title) {
-      document.title = `${title} | VeriEdit AI`;
-    }
-
-    // Update or create meta tags
-    const updateMetaTag = (name: string, content: string, property?: boolean) => {
-      const attribute = property ? 'property' : 'name';
-      let element = document.querySelector(`meta[${attribute}="${name}"]`);
-      
-      if (!element) {
-        element = document.createElement('meta');
-        element.setAttribute(attribute, name);
-        document.head.appendChild(element);
-      }
-      
-      element.setAttribute('content', content);
-    };
-
-    // Basic meta tags
-    if (description) {
-      updateMetaTag('description', description);
-    }
-
-    // Open Graph tags
-    if (title) {
-      updateMetaTag('og:title', title.includes('VeriEdit') ? title : `${title} | VeriEdit AI`, true);
-    }
-    if (description) {
-      updateMetaTag('og:description', description, true);
-    }
-    if (image) {
-      // Ensure absolute URL for OG image
-      const absoluteImage = image.startsWith('http') ? image : `${window.location.origin}${image}`;
-      updateMetaTag('og:image', absoluteImage, true);
-      updateMetaTag('og:image:secure_url', absoluteImage, true);
-      updateMetaTag('og:image:width', '1200', true);
-      updateMetaTag('og:image:height', '630', true);
-      updateMetaTag('og:image:type', 'image/png', true);
-    }
-    if (url) {
-      updateMetaTag('og:url', url, true);
-    }
-    updateMetaTag('og:type', type, true);
-    updateMetaTag('og:site_name', 'VeriEdit AI', true);
-
-    // Twitter Card tags
-    updateMetaTag('twitter:card', 'summary_large_image');
-    if (title) {
-      updateMetaTag('twitter:title', title.includes('VeriEdit') ? title : `${title} | VeriEdit AI`);
-    }
-    if (description) {
-      updateMetaTag('twitter:description', description);
-    }
-    if (image) {
-      const absoluteImage = image.startsWith('http') ? image : `${window.location.origin}${image}`;
-      updateMetaTag('twitter:image', absoluteImage);
-      updateMetaTag('twitter:image:src', absoluteImage);
-    }
-
-    // Trust Score as Twitter data
-    if (trustScore !== undefined) {
-      updateMetaTag('twitter:label1', 'Trust Score');
-      updateMetaTag('twitter:data1', `${trustScore}/100`);
-    }
-
-    // Author info
-    if (author) {
-      updateMetaTag('article:author', author, true);
-    }
-    if (publishedTime) {
-      updateMetaTag('article:published_time', publishedTime, true);
-    }
-
-    // Cleanup function to reset to defaults when component unmounts
-    return () => {
-      document.title = 'VeriEdit AI - Truth Verification Platform';
-    };
-  }, [title, description, image, url, type, trustScore, author, publishedTime]);
-
-  return null;
+  const { pathname } = useLocation();
+  // Share-service URLs are transport links, not the identity of this page.
+  const pageUrl = canonicalUrl(pathname);
+  const pageTitle = title?.includes('VeriEdit') ? title : title ? `${title} | VeriEdit AI` : undefined;
+  const imageUrl = image ? new URL(image, SITE_URL).href : undefined;
+  return (
+    <Helmet>
+      {pageTitle && <title>{pageTitle}</title>}
+      {description && <meta name="description" content={description} />}
+      <link rel="canonical" href={pageUrl} />
+      {pageTitle && <meta property="og:title" content={pageTitle} />}
+      {description && <meta property="og:description" content={description} />}
+      <meta property="og:url" content={pageUrl} />
+      <meta property="og:type" content={type} />
+      <meta property="og:site_name" content="VeriEdit AI" />
+      {imageUrl && <meta property="og:image" content={imageUrl} />}
+      <meta name="twitter:card" content="summary_large_image" />
+      {pageTitle && <meta name="twitter:title" content={pageTitle} />}
+      {description && <meta name="twitter:description" content={description} />}
+      {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+      {trustScore !== undefined && <meta name="twitter:label1" content="Trust Score" />}
+      {trustScore !== undefined && <meta name="twitter:data1" content={`${trustScore}/100`} />}
+      {author && <meta property="article:author" content={author} />}
+      {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    </Helmet>
+  );
 }

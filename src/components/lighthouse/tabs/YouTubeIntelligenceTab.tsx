@@ -112,7 +112,7 @@ export function YouTubeIntelligenceTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+      <Card className="border-border bg-card">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Youtube className="h-5 w-5 text-primary" />
@@ -158,7 +158,7 @@ export function YouTubeIntelligenceTab() {
 
           {/* Truth Health Score */}
           {report.analysis.misinformationAnalysis && (
-            <Card className="mt-6 border-border/50 bg-background/60 backdrop-blur-sm">
+            <Card className="mt-6 border-border bg-card">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -212,7 +212,7 @@ export function YouTubeIntelligenceTab() {
           )}
 
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-medium">Top Questions</CardTitle>
               </CardHeader>
@@ -230,7 +230,7 @@ export function YouTubeIntelligenceTab() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-medium">Sentiment Analysis</CardTitle>
               </CardHeader>
@@ -259,7 +259,7 @@ export function YouTubeIntelligenceTab() {
             </Card>
           </div>
 
-          <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+          <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle className="text-sm font-medium">Comment Clusters</CardTitle>
             </CardHeader>
@@ -284,7 +284,7 @@ export function YouTubeIntelligenceTab() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+          <Card className="border-border bg-card">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-primary" />
@@ -297,7 +297,7 @@ export function YouTubeIntelligenceTab() {
           </Card>
 
           {report.analysis.contentRecommendations && report.analysis.contentRecommendations.length > 0 && (
-            <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-sm font-medium">Content Ideas</CardTitle>
                 <CardDescription>Video topics that would resonate with this audience</CardDescription>
@@ -327,7 +327,7 @@ export function YouTubeIntelligenceTab() {
           {/* Flagged Comments & Misinformation Themes */}
           {report.analysis.misinformationAnalysis && report.analysis.misinformationAnalysis.flaggedComments.length > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2 border-border/50 bg-background/60 backdrop-blur-sm">
+              <Card className="lg:col-span-2 border-border bg-card">
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -345,11 +345,11 @@ export function YouTubeIntelligenceTab() {
                         <div key={idx} className="p-3 rounded-lg border border-border/50 bg-background/40 space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${
-                              flagged.type === 'conspiracy_theory' ? 'bg-purple-500/10 text-purple-400' :
-                              flagged.type === 'medical_misinfo' ? 'bg-red-500/10 text-red-400' :
-                              flagged.type === 'political_misinfo' ? 'bg-blue-500/10 text-blue-400' :
-                              flagged.type === 'scam' ? 'bg-orange-500/10 text-orange-400' :
-                              flagged.type === 'fake_news' ? 'bg-yellow-500/10 text-yellow-400' :
+                              flagged.type === 'conspiracy_theory' ? 'bg-secondary text-accent' :
+                              flagged.type === 'medical_misinfo' ? 'bg-destructive/10 text-destructive' :
+                              flagged.type === 'political_misinfo' ? 'bg-secondary text-accent' :
+                              flagged.type === 'scam' ? 'bg-trust-medium/10 text-trust-medium' :
+                              flagged.type === 'fake_news' ? 'bg-trust-medium/10 text-trust-medium' :
                               'bg-muted text-muted-foreground'
                             }`}>
                               {flagged.type.replace('_', ' ')}
@@ -382,7 +382,7 @@ export function YouTubeIntelligenceTab() {
                 </CardContent>
               </Card>
 
-              <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+              <Card className="border-border bg-card">
                 <CardHeader>
                   <CardTitle className="text-sm font-medium">Misinfo Themes</CardTitle>
                   <CardDescription>Common misinformation patterns</CardDescription>
@@ -405,10 +405,10 @@ export function YouTubeIntelligenceTab() {
 
           {/* Fact-Check Resources */}
           {report.analysis.misinformationAnalysis && report.analysis.misinformationAnalysis.suggestedFactChecks.length > 0 && (
-            <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+            <Card className="border-border bg-card">
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <ExternalLink className="h-5 w-5 text-cyan-400" />
+                  <ExternalLink className="h-5 w-5 text-accent" />
                   <CardTitle className="text-sm font-medium">Suggested Fact-Checks</CardTitle>
                 </div>
                 <CardDescription>Recommended fact-checking resources for detected claims</CardDescription>
@@ -439,7 +439,7 @@ export function YouTubeIntelligenceTab() {
       )}
 
       {!report && !loading && (
-        <Card className="border-border/50 bg-background/60 backdrop-blur-sm">
+        <Card className="border-border bg-card">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Youtube className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Analysis Yet</h3>

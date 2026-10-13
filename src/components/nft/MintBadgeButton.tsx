@@ -141,7 +141,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
       // Show success toast immediately
       toast({
-        title: "🎉 Badge Minted Successfully!",
+        title: "Badge Minted Successfully!",
         description: "Your Truth Badge NFT has been minted! It will appear on OpenSea within 24 hours.",
       })
 
@@ -204,7 +204,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
               variant="default" 
               className="w-full h-12 text-base font-semibold"
             >
-              🔗 Connect Wallet to Mint
+              Connect Wallet to Mint
             </Button>
             <Button
               onClick={() => setShowPreview(!showPreview)}
@@ -212,7 +212,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
               size="sm"
               className="w-full text-xs text-muted-foreground"
             >
-              {showPreview ? 'Hide Preview' : '👁️ Preview Badge'}
+              {showPreview ? 'Hide Preview' : 'Preview Badge'}
             </Button>
             {showPreview && (
               <BadgePreview 
@@ -225,7 +225,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
           <Button
             onClick={handleMintClick}
             disabled={minting || trustScore < 70}
-            className="gap-2 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 w-full h-12 text-base font-semibold"
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 w-full h-12 text-base font-semibold"
           >
             {minting ? (
               <>
@@ -243,7 +243,7 @@ export function MintBadgeButton({ verificationId, trustScore }: MintBadgeButtonP
 
         {trustScore < 70 && (
           <p className="text-xs text-muted-foreground text-center">
-            ℹ️ Trust score must be ≥70% to mint (currently {trustScore}%)
+            Trust score must be ≥70% to mint (currently {trustScore}%)
           </p>
         )}
       </div>

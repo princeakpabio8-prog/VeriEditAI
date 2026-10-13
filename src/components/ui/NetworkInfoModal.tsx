@@ -27,25 +27,25 @@ export const NetworkInfoModal = ({
       icon: TrendingDown,
       title: "Ultra-Low Gas Fees",
       description: "Pay pennies instead of dollars - typical transaction costs under $0.01",
-      color: "text-emerald-500",
+      color: "text-trust-high",
     },
     {
       icon: Zap,
       title: "Lightning Fast",
       description: "Transactions confirm in seconds, not minutes",
-      color: "text-amber-500",
+      color: "text-trust-medium",
     },
     {
       icon: Shield,
       title: "Secure & Reliable",
       description: "Built on Ethereum's security with Layer 2 scaling",
-      color: "text-blue-500",
+      color: "text-accent",
     },
     {
       icon: Globe,
       title: "Eco-Friendly",
       description: "99% less energy consumption than traditional blockchains",
-      color: "text-green-500",
+      color: "text-trust-high",
     },
   ];
 
@@ -56,7 +56,7 @@ export const NetworkInfoModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-4">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <div className="p-2 bg-primary/10 rounded-full">
@@ -71,9 +71,9 @@ export const NetworkInfoModal = ({
 
         {/* Current Network Status */}
         {currentNetwork && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
+          <div className="bg-muted border border-border rounded-lg p-3 mb-4">
             <div className="flex items-center gap-2">
-              <div className="h-2 w-2 bg-amber-500 rounded-full animate-pulse" />
+              <div className="h-2 w-2 bg-trust-medium rounded-full" />
               <p className="text-sm font-medium">
                 Currently on: <span className="font-bold">{currentNetwork}</span>
               </p>
@@ -88,7 +88,7 @@ export const NetworkInfoModal = ({
             return (
               <div
                 key={index}
-                className="flex gap-3 p-3 rounded-lg bg-card/50 border border-border/50 hover:border-primary/20 transition-colors"
+                className="flex gap-3 p-3 rounded-lg bg-card border border-border hover:border-primary/20 transition-colors"
               >
                 <div className={`flex-shrink-0 mt-0.5 ${benefit.color}`}>
                   <Icon className="h-5 w-5" />
@@ -107,7 +107,7 @@ export const NetworkInfoModal = ({
         </div>
 
         {/* Cost Comparison */}
-        <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-4 mb-6 border border-primary/20">
+        <div className="bg-secondary rounded-lg p-4 mb-6 border border-primary/20">
           <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <TrendingDown className="h-4 w-4 text-primary" />
             Cost Comparison

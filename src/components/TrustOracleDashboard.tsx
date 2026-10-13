@@ -87,48 +87,48 @@ export function TrustOracleDashboard() {
       title: 'Total Verified Claims',
       value: stats.totalVerified.toLocaleString(),
       icon: Database,
-      gradientClass: 'from-purple-500 to-pink-500',
-      textClass: 'text-purple-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'On-chain verified'
     },
     {
       title: 'Average Trust Score',
       value: `${stats.avgTrustScore}%`,
       icon: Shield,
-      gradientClass: 'from-blue-500 to-cyan-500',
-      textClass: 'text-blue-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'Network consensus'
     },
     {
       title: 'Active API Connections',
       value: stats.activeConnections.toLocaleString(),
       icon: Zap,
-      gradientClass: 'from-green-500 to-emerald-500',
-      textClass: 'text-green-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'Last 24 hours'
     },
     {
       title: 'Real-time Verifications',
       value: stats.realtimeVerifications.toLocaleString(),
       icon: Activity,
-      gradientClass: 'from-orange-500 to-red-500',
-      textClass: 'text-orange-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'Last hour'
     },
     {
       title: 'Truth Badges Minted',
       value: stats.nftsMinted.toLocaleString(),
       icon: TrendingUp,
-      gradientClass: 'from-violet-500 to-purple-500',
-      textClass: 'text-violet-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'Polygon network'
     },
     {
       title: 'Global Coverage',
       value: `${stats.globalRegions} Regions`,
       icon: Globe,
-      gradientClass: 'from-cyan-500 to-blue-500',
-      textClass: 'text-cyan-400',
+      gradientClass: 'from-secondary to-secondary',
+      textClass: 'text-foreground',
       description: 'Worldwide sources'
     }
   ];
@@ -138,41 +138,41 @@ export function TrustOracleDashboard() {
       endpoint: '/get-trust-level',
       method: 'POST',
       description: 'Query trust data by claim, URL, or ID',
-      methodClass: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+      methodClass: 'bg-secondary text-accent border-border'
     },
     {
       endpoint: '/get-verified-feed',
       method: 'GET',
       description: 'Retrieve latest verified claims feed',
-      methodClass: 'bg-green-500/10 text-green-400 border-green-500/20'
+      methodClass: 'bg-secondary text-accent border-border'
     },
     {
       endpoint: '/get-source-integrity',
       method: 'GET',
       description: 'Check domain or organization reliability',
-      methodClass: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+      methodClass: 'bg-secondary text-accent border-border'
     },
     {
       endpoint: '/reference-oracle',
       method: 'POST',
       description: 'Generate AI-ready citation data',
-      methodClass: 'bg-pink-500/10 text-pink-400 border-pink-500/20'
+      methodClass: 'bg-secondary text-accent border-border'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-purple-950/10">
+    <div className="min-h-screen bg-background">
       <Navigation />
       
       {/* Header */}
-      <div className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 pt-20">
+      <div className="border-b border-border bg-background pt-20">
         <div className="container py-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-              <Database className="w-8 h-8 text-purple-400" />
+            <div className="p-3 rounded-lg bg-secondary border border-border">
+              <Database className="w-8 h-8 text-accent" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
                 AI Trust Oracle
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -182,7 +182,7 @@ export function TrustOracleDashboard() {
           </div>
           
           <div className="flex items-center gap-2 text-sm">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="h-2 w-2 rounded-full bg-trust-high" />
             <span className="text-muted-foreground">Live • Polygon Network • API v1.0</span>
           </div>
         </div>
@@ -205,13 +205,13 @@ export function TrustOracleDashboard() {
               return (
                 <Card 
                   key={index}
-                  className="group relative overflow-hidden border-border/40 bg-card/50 backdrop-blur hover:border-purple-500/30 transition-all duration-300"
+                  className="group relative overflow-hidden border-border bg-card hover:border-accent transition-all duration-300"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradientClass} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
                   
                   <div className="relative p-6">
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`p-3 rounded-lg bg-gradient-to-br ${stat.gradientClass} bg-opacity-10`}>
+                      <div className={`p-3 rounded-lg bg-secondary`}>
                         <Icon className="w-6 h-6 text-foreground" />
                       </div>
                       <div className="text-right">
@@ -237,9 +237,9 @@ export function TrustOracleDashboard() {
         )}
 
         {/* API Endpoints */}
-        <Card className="mt-12 border-border/40 bg-card/50 backdrop-blur">
+        <Card className="mt-12 border-border bg-card">
           <div className="p-6">
-            <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-bold mb-6 text-foreground">
               API Endpoints
             </h2>
             
@@ -247,7 +247,7 @@ export function TrustOracleDashboard() {
               {apiEndpoints.map((api, index) => (
                 <div 
                   key={index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border/40 hover:border-purple-500/30 transition-colors group gap-3"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border hover:border-accent transition-colors group gap-3"
                 >
                   <div className="flex items-center gap-4">
                     <span className={`px-3 py-1 rounded text-sm font-mono border ${api.methodClass}`}>
@@ -258,7 +258,7 @@ export function TrustOracleDashboard() {
                       <p className="text-sm text-muted-foreground mt-1">{api.description}</p>
                     </div>
                   </div>
-                  <Zap className="w-5 h-5 text-muted-foreground group-hover:text-purple-400 transition-colors hidden sm:block" />
+                  <Zap className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors hidden sm:block" />
                 </div>
               ))}
             </div>
@@ -269,7 +269,7 @@ export function TrustOracleDashboard() {
         <div className="mt-12 text-center">
           <p className="text-lg text-muted-foreground">
             Positioning <span className="font-bold text-foreground">VeriEdit AI</span> as the{' '}
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold">
+            <span className="text-foreground font-bold">
               Trust Infrastructure Layer
             </span>{' '}
             for the AI ecosystem

@@ -10,7 +10,7 @@ export function WalletSetupGuide() {
     {
       id: 'metamask',
       name: 'MetaMask',
-      color: 'bg-orange-500',
+      color: 'bg-secondary',
       icon: 'M',
       description: 'Most popular crypto wallet',
       difficulty: 'Easy',
@@ -27,7 +27,7 @@ export function WalletSetupGuide() {
     {
       id: 'trust',
       name: 'Trust Wallet',
-      color: 'bg-blue-500',
+      color: 'bg-secondary',
       icon: 'T',
       description: 'User-friendly for beginners',
       difficulty: 'Very Easy',
@@ -44,7 +44,7 @@ export function WalletSetupGuide() {
     {
       id: 'rainbow',
       name: 'Rainbow',
-      color: 'bg-purple-500',
+      color: 'bg-secondary',
       icon: 'R',
       description: 'Beautiful and simple',
       difficulty: 'Easy',
@@ -80,7 +80,7 @@ export function WalletSetupGuide() {
               onClick={() => setSelectedWallet(wallet.id)}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 ${wallet.color} rounded-lg flex items-center justify-center text-white text-xl font-bold`}>
+                <div className={`w-12 h-12 ${wallet.color} rounded-lg flex items-center justify-center text-foreground text-xl font-bold`}>
                   {wallet.icon}
                 </div>
                 <div className="flex-1">
@@ -105,9 +105,9 @@ export function WalletSetupGuide() {
         </div>
       ) : (
         <div className="space-y-4">
-          <Card className="p-4 bg-primary/5 border-primary/20">
+          <Card className="p-4 bg-card border-border">
             <div className="flex items-center gap-3 mb-4">
-              <div className={`w-12 h-12 ${selectedWalletData?.color} rounded-lg flex items-center justify-center text-white text-xl font-bold`}>
+              <div className={`w-12 h-12 ${selectedWalletData?.color} rounded-lg flex items-center justify-center text-foreground text-xl font-bold`}>
                 {selectedWalletData?.icon}
               </div>
               <div className="flex-1">
@@ -160,9 +160,9 @@ export function WalletSetupGuide() {
           </Card>
 
           {/* Important Tips */}
-          <Card className="p-4 bg-amber-500/10 border-amber-500/20">
-            <p className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-2">
-              ⚠️ Important Security Tips
+          <Card className="p-4 bg-muted border-border">
+            <p className="text-sm font-semibold text-trust-medium mb-2">
+              Important Security Tips
             </p>
             <ul className="text-xs text-muted-foreground space-y-1">
               <li>• Never share your recovery phrase with anyone</li>
@@ -173,11 +173,11 @@ export function WalletSetupGuide() {
           </Card>
 
           {/* Success Indicator */}
-          <Card className="p-4 bg-green-500/10 border-green-500/20">
+          <Card className="p-4 bg-trust-high/10 border-trust-high/20">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <CheckCircle className="h-5 w-5 text-trust-high" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                <p className="text-sm font-semibold text-trust-high">
                   Wallet Set Up?
                 </p>
                 <p className="text-xs text-muted-foreground">

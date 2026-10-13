@@ -27,16 +27,11 @@ export default function LighthouseRoom() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(var(--lighthouse-deep))] to-background">
+    <div className="min-h-screen bg-background">
       <Navigation />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-16 px-4 overflow-hidden">
-        {/* Lighthouse beam animation */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-0 left-1/2 w-1 h-full bg-gradient-to-b from-[hsl(var(--lighthouse-beam))] to-transparent animate-pulse" />
-        </div>
-
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--lighthouse-ocean))]/50 border border-[hsl(var(--lighthouse-beam))]/30">
@@ -44,7 +39,7 @@ export default function LighthouseRoom() {
               <span className="text-sm text-[hsl(var(--lighthouse-beam))]">Collaborative Verification Hub</span>
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-white via-[hsl(var(--lighthouse-glow))] to-[hsl(var(--lighthouse-signal))] bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-medium text-foreground">
               The Lighthouse Room
             </h1>
             
@@ -52,11 +47,11 @@ export default function LighthouseRoom() {
               Where truth-seekers gather to verify claims, discuss misinformation, and build trust together. Signal over noise.
             </p>
 
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               <Button 
                 size="lg" 
                 onClick={() => user ? setShowCreateDialog(true) : navigate('/auth')}
-                className="bg-[hsl(var(--lighthouse-beam))] hover:bg-[hsl(var(--lighthouse-signal))] text-white"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Room
@@ -74,19 +69,19 @@ export default function LighthouseRoom() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <Card className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20">
+            <Card className="bg-card border-border">
               <CardContent className="pt-6 text-center">
                 <div className="text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">127</div>
                 <div className="text-sm text-muted-foreground mt-1">Active Rooms</div>
               </CardContent>
             </Card>
-            <Card className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20">
+            <Card className="bg-card border-border">
               <CardContent className="pt-6 text-center">
                 <div className="text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">2.4K</div>
                 <div className="text-sm text-muted-foreground mt-1">Truth Seekers</div>
               </CardContent>
             </Card>
-            <Card className="bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20">
+            <Card className="bg-card border-border">
               <CardContent className="pt-6 text-center">
                 <div className="text-3xl font-bold text-[hsl(var(--lighthouse-beam))]">8.9K</div>
                 <div className="text-sm text-muted-foreground mt-1">Verified Claims</div>
@@ -100,7 +95,7 @@ export default function LighthouseRoom() {
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-            <TabsList className="bg-[hsl(var(--lighthouse-ocean))]/50">
+            <TabsList className="max-w-full overflow-x-auto">
               {ROOM_CATEGORIES.map((cat) => (
                 <TabsTrigger 
                   key={cat.value} 

@@ -102,26 +102,19 @@ export default function LighthouseHub() {
       
       <main className="pb-[calc(env(safe-area-inset-bottom,0px)+80px)] md:pb-8">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-10 md:pt-24 md:pb-12 px-4 overflow-hidden bg-gradient-to-b from-[hsl(var(--lighthouse-deep))]/20 to-background">
-        {/* Enhanced Lighthouse beam animation with particles */}
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 left-1/2 w-2 h-full bg-gradient-to-b from-[hsl(var(--lighthouse-beam))] via-[hsl(var(--lighthouse-signal))] to-transparent animate-lighthouse-beam" />
-          <div className="absolute top-0 left-1/3 w-px h-1/2 bg-gradient-to-b from-[hsl(var(--lighthouse-beam))]/30 to-transparent animate-pulse" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute top-0 right-1/3 w-px h-1/2 bg-gradient-to-b from-[hsl(var(--lighthouse-beam))]/30 to-transparent animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-
+      <section className="relative pt-20 pb-10 md:pt-24 md:pb-12 px-4 border-b border-border bg-background">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--lighthouse-ocean))]/50 border border-[hsl(var(--lighthouse-beam))]/30">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 text-accent">
               <Radio className="w-4 h-4 text-[hsl(var(--lighthouse-beam))]" />
               <span className="text-sm text-[hsl(var(--lighthouse-beam))]">Truth Verification Hub</span>
             </div>
             
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-[hsl(var(--lighthouse-glow))] to-[hsl(var(--lighthouse-signal))] bg-clip-text text-transparent leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-medium text-foreground leading-tight">
               The Lighthouse Hub
             </h1>
             
-            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl">
               Your central hub for truth verification and collaboration. Signal over noise.
             </p>
           </div>
@@ -129,7 +122,7 @@ export default function LighthouseHub() {
           {/* Interactive Stats Cards with Live Activity */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 mt-8 md:mt-12">
             <Card
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              className="relative z-0 min-h-[100px] bg-card border-border hover:border-accent card-hover-lift transition-all duration-300 cursor-pointer group"
               style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('feed')}
               role="button"
@@ -145,7 +138,7 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              className="relative z-0 min-h-[100px] bg-card border-border hover:border-accent card-hover-lift transition-all duration-300 cursor-pointer group"
               style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('organizations')}
               role="button"
@@ -161,7 +154,7 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              className="relative z-0 min-h-[100px] bg-card border-border hover:border-accent card-hover-lift transition-all duration-300 cursor-pointer group"
               style={{ animationDelay: '0ms' }}
               onClick={() => handleTabChange('rooms')}
               role="button"
@@ -177,7 +170,7 @@ export default function LighthouseHub() {
               </CardContent>
             </Card>
             <Card 
-              className="relative z-0 min-h-[100px] bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:bg-[hsl(var(--lighthouse-ocean))]/40 card-hover-lift transition-all duration-300 cursor-pointer group"
+              className="relative z-0 min-h-[100px] bg-card border-border hover:border-accent card-hover-lift transition-all duration-300 cursor-pointer group"
               style={{ animationDelay: '0ms' }}
               onClick={() => {}}
               role="button"
@@ -203,8 +196,8 @@ export default function LighthouseHub() {
       {/* Tabs Section with sticky navigation on mobile */}
       <section className="py-8 px-4 pb-4 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          <Tabs value={activeTab} onValueChange={handleTabChange}>
-            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-4 md:pb-0 md:static">
+          <Tabs className="community-tabs" value={activeTab} onValueChange={handleTabChange}>
+            <div className="sticky top-16 z-10 bg-background pb-4 md:pb-0 md:static">
               <TabsList className="w-full justify-start overflow-x-auto bg-muted/50 scrollbar-hide flex-nowrap">
                 <TabsTrigger 
                   value="rooms" 

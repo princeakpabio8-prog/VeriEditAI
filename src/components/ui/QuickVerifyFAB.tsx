@@ -22,11 +22,13 @@ export const QuickVerifyFAB = ({ onVerificationStart }: QuickVerifyFABProps) => 
         transition={{ delay: 0.5, duration: 0.3, type: "spring", stiffness: 200 }}
       >
         <Button
+          aria-label="Quick verify"
+          title="Quick verify"
           onClick={() => setIsOpen(true)}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           size="lg"
-          className="h-14 rounded-full shadow-lg hover:shadow-xl transition-all bg-primary hover:bg-primary/90 group relative overflow-hidden"
+          className="h-14 rounded-md shadow-sm hover:shadow-sm transition-all bg-primary hover:bg-primary/90 group relative overflow-hidden"
         >
           <motion.div
             className="flex items-center gap-2"
@@ -50,7 +52,7 @@ export const QuickVerifyFAB = ({ onVerificationStart }: QuickVerifyFABProps) => 
           </motion.div>
           
           {/* Pulse effect */}
-          <span className="absolute inset-0 rounded-full bg-primary opacity-0 group-hover:opacity-20 animate-pulse" />
+
         </Button>
       </motion.div>
 

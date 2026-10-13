@@ -246,6 +246,7 @@ export default function TruthBadge() {
                 Deposit match bonus eligibility unlocks{" "}
                 {new Date(new Date(badge.active_since).getTime() + 30 * 86400000).toLocaleDateString()}
               </div>
+              {onChainPanel}
             </CardContent>
           </Card>
         )}
@@ -282,6 +283,7 @@ export default function TruthBadge() {
                   {working === "verify" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
                 </Button>
               </div>
+              {onChainPanel}
             </CardContent>
           </Card>
         )}

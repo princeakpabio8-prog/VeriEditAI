@@ -92,7 +92,7 @@ export const MobileBottomNav = () => {
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
       }}
     >
-      <div className="grid items-center h-16 px-2 py-1" style={{ gridTemplateColumns: `repeat(${isAuthenticated ? 6 : 5}, minmax(0, 1fr))` }}>
+      <div className="grid items-center h-16 px-2 py-1" style={{ gridTemplateColumns: `repeat(${isAuthenticated ? 7 : 6}, minmax(0, 1fr))` }}>
         {navItems.map((item) => {
           const isActive = item.activeCheck(location.pathname);
           const Icon = item.icon;
@@ -102,14 +102,14 @@ export const MobileBottomNav = () => {
               key={item.label}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
+                "flex min-w-0 flex-col items-center justify-center flex-1 py-2 px-0 rounded-md transition-all",
                 isActive
                   ? "text-primary bg-primary/10"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
             >
               <Icon className={cn("h-5 w-5 mb-1", isActive && "scale-110")} />
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium">{item.label}</span>
             </Link>
           );
         })}

@@ -106,6 +106,7 @@ const AppContent = () => {
       <Suspense fallback={<PageLoading variant="default" />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/index" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/demo" element={<Demo />} />
               <Route 

@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Award, Sparkles, X, HelpCircle, ChevronDown } from 'lucide-react';
+import { Award, X, HelpCircle, ChevronDown } from 'lucide-react';
 import { MintBadgeButton } from './MintBadgeButton';
 import { Button } from '@/components/ui/button';
 import { WalletSetupGuide } from './WalletSetupGuide';
@@ -29,13 +29,14 @@ export function NFTMintPromptModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
-        "sm:max-w-[540px] bg-gradient-to-b from-background via-background to-purple-950/10 border-purple-500/20",
+        "sm:max-w-[540px] bg-background border-border",
         isMobile && "max-h-[92vh] overflow-y-auto pb-48"
       )}>
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-4 top-4 rounded-full hover:bg-white/10"
+          className="absolute right-4 top-4 rounded-md hover:bg-muted"
+          aria-label="Close mint dialog"
           onClick={onClose}
         >
           <X className="h-4 w-4" />
@@ -44,15 +45,13 @@ export function NFTMintPromptModal({
         <DialogHeader className={cn("space-y-6 pt-2", isMobile && "space-y-4")}>
           <div className="flex items-center justify-center">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
-              <Award className={cn("text-purple-500 relative z-10", isMobile ? "h-16 w-16" : "h-20 w-20")} strokeWidth={1.5} />
-              <Sparkles className="h-8 w-8 text-yellow-400 absolute -top-2 -right-2 animate-pulse z-20" />
+              <Award className={cn("text-accent relative z-10", isMobile ? "h-16 w-16" : "h-20 w-20")} strokeWidth={1.5} />
             </div>
           </div>
 
           <div className="space-y-2">
             <DialogTitle className={cn("text-center font-bold", isMobile ? "text-2xl" : "text-3xl")}>
-              🎉 Congratulations!
+              Congratulations!
             </DialogTitle>
             <DialogDescription className="text-center text-base font-medium text-foreground">
               Your verification qualifies for a Truth Badge NFT!
@@ -60,12 +59,12 @@ export function NFTMintPromptModal({
           </div>
 
           <div className={cn(
-            "bg-gradient-to-br from-purple-900/40 via-purple-800/30 to-pink-900/40 border border-purple-500/30 rounded-xl space-y-2",
+            "bg-secondary border border-border rounded-md space-y-2",
             isMobile ? "p-4" : "p-6"
           )}>
             <p className="text-sm text-muted-foreground text-center">Trust Score Achieved:</p>
             <p className={cn(
-              "font-bold text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent",
+              "font-bold text-center text-foreground",
               isMobile ? "text-4xl" : "text-5xl"
             )}>
               {trustScore}%
@@ -75,7 +74,7 @@ export function NFTMintPromptModal({
           {claimText && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Verified Claim:</p>
-              <div className="bg-muted/30 backdrop-blur-sm rounded-lg p-4 border border-border/50">
+              <div className="bg-muted rounded-md p-4 border border-border/50">
                 <p className="text-sm text-foreground/90 line-clamp-3">{claimText}</p>
               </div>
             </div>
@@ -83,22 +82,22 @@ export function NFTMintPromptModal({
 
           {isMobile ? (
             <div className="space-y-2">
-              <button
+              <Button variant="ghost"
                 onClick={() => setShowBenefits(!showBenefits)}
-                className="flex items-center justify-between w-full text-sm font-medium text-foreground"
+                className="flex items-center justify-between w-full text-sm font-medium text-foreground whitespace-normal"
               >
                 <span>Why Mint This Badge?</span>
                 <ChevronDown className={cn(
                   "h-4 w-4 transition-transform",
                   showBenefits && "rotate-180"
                 )} />
-              </button>
+              </Button>
               {showBenefits && (
                 <ul className="text-xs text-muted-foreground space-y-1 px-4">
-                  <li>🏆 Proves your contribution to fighting misinformation</li>
-                  <li>💎 Tradeable on OpenSea marketplace</li>
-                  <li>🔒 Permanent proof stored on blockchain</li>
-                  <li>📈 Higher scores = rarer badges = more value</li>
+                  <li>Proves your contribution to fighting misinformation</li>
+                  <li>Tradeable on OpenSea marketplace</li>
+                  <li>Permanent proof stored on blockchain</li>
+                  <li>Higher scores = rarer badges = more value</li>
                 </ul>
               )}
             </div>
@@ -106,10 +105,10 @@ export function NFTMintPromptModal({
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">Why Mint This Badge?</p>
               <ul className="text-xs text-muted-foreground space-y-1 px-4">
-                <li>🏆 Proves your contribution to fighting misinformation</li>
-                <li>💎 Tradeable on OpenSea marketplace</li>
-                <li>🔒 Permanent proof stored on blockchain</li>
-                <li>📈 Higher scores = rarer badges = more value</li>
+                <li>Proves your contribution to fighting misinformation</li>
+                <li>Tradeable on OpenSea marketplace</li>
+                <li>Permanent proof stored on blockchain</li>
+                <li>Higher scores = rarer badges = more value</li>
               </ul>
             </div>
           )}
@@ -123,10 +122,10 @@ export function NFTMintPromptModal({
           "pt-2 pb-2 space-y-4",
           isMobile && [
             "fixed left-0 right-0",
-            "bg-background/95 backdrop-blur-sm",
+            "bg-background",
             "border-t border-border/50",
             "px-4 py-3",
-            "shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]",
+            "shadow-none",
             "z-50",
             "bottom-0",
             "pb-[calc(env(safe-area-inset-bottom,0px)+12px)]"

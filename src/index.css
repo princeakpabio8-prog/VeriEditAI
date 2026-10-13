@@ -7,125 +7,60 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  :root {
-    /* VeriEdit AI Dark Cinematic Theme */
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 224 71% 8%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 224 71% 8%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 195 100% 50%;
-    --primary-foreground: 222 84% 4.9%;
-
-    --secondary: 224 71% 12%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 224 71% 12%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 180 100% 25%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 224 71% 15%;
-    --input: 224 71% 15%;
-    --ring: 195 100% 50%;
-
-    --radius: 0.75rem;
-
-    /* VeriEdit Brand Colors */
-    --trust-high: 142 76% 36%;
-    --trust-medium: 45 93% 47%;
-    --trust-low: 0 84% 60%;
-    --trust-unknown: 217 32% 35%;
-
-    /* Cinematic Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(195 100% 50% / 0.1) 0%, hsl(180 100% 25% / 0.2) 100%);
-    --gradient-trust: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
-    --gradient-card: linear-gradient(145deg, hsl(224 71% 8% / 0.8), hsl(224 71% 12% / 0.4));
-
-    /* Lighthouse Theme */
-    --lighthouse-beam: 195 100% 50%;
-    --lighthouse-glow: 195 100% 50% / 0.3;
-    
-    /* Lighthouse Room - Oceanic palette */
-    --lighthouse-deep: 205 45% 12%;
-    --lighthouse-ocean: 205 35% 18%;
-    --lighthouse-wave: 205 30% 25%;
-    --lighthouse-signal: 180 100% 50%;
-    
-    /* Truth Garden colors */
-    --truth-flame: 35 100% 60%;
-    --truth-ember: 25 100% 50%;
-    --truth-bloom: 140 60% 50%;
-    --truth-wither: 0 0% 40%;
-    --ritual-sacred: 270 70% 30%;
-
-    /* Animations */
+  :root, .dark {
+    /* App-wide ivory and charcoal editorial identity. */
+    color-scheme: light;
+    --background: 48 30% 96%;
+    --foreground: 180 5% 14%;
+    --card: 45 20% 98%;
+    --card-foreground: 180 5% 14%;
+    --popover: 45 20% 98%;
+    --popover-foreground: 180 5% 14%;
+    --primary: 180 5% 18%;
+    --primary-foreground: 48 30% 96%;
+    --secondary: 45 15% 91%;
+    --secondary-foreground: 180 5% 14%;
+    --muted: 45 15% 91%;
+    --muted-foreground: 180 3% 38%;
+    --accent: 205 28% 33%;
+    --accent-foreground: 48 30% 96%;
+    --destructive: 0 65% 40%;
+    --destructive-foreground: 45 20% 98%;
+    --border: 45 10% 80%;
+    --input: 45 10% 76%;
+    --ring: 205 28% 33%;
+    --radius: 0.375rem;
+    --trust-high: 155 45% 28%;
+    --trust-medium: 35 65% 32%;
+    --trust-low: 0 65% 40%;
+    --trust-unknown: 180 3% 38%;
+    --gradient-hero: none;
+    --gradient-trust: linear-gradient(hsl(var(--accent)), hsl(var(--accent)));
+    --gradient-card: none;
+    --lighthouse-beam: 205 28% 33%;
+    --lighthouse-glow: 205 28% 33%;
+    --lighthouse-deep: 48 30% 96%;
+    --lighthouse-ocean: 45 15% 91%;
+    --lighthouse-wave: 45 10% 80%;
+    --lighthouse-signal: 205 28% 33%;
+    --truth-flame: 35 65% 32%;
+    --truth-ember: 25 65% 36%;
+    --truth-bloom: 155 45% 28%;
+    --truth-wither: 180 3% 38%;
+    --ritual-sacred: 205 28% 33%;
+    --sidebar-background: 45 15% 91%;
+    --sidebar-foreground: 180 5% 14%;
+    --sidebar-primary: 180 5% 18%;
+    --sidebar-primary-foreground: 48 30% 96%;
+    --sidebar-accent: 45 20% 98%;
+    --sidebar-accent-foreground: 180 5% 14%;
+    --sidebar-border: 45 10% 80%;
+    --sidebar-ring: 205 28% 33%;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-trust: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    /* Light mode - clean and professional */
-    --background: 210 40% 98%;
-    --foreground: 222 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 4.9%;
-
-    --primary: 195 100% 40%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 84% 4.9%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 180 100% 30%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 195 100% 40%;
-    
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --shadow-editorial: 0 4px 16px hsl(var(--foreground) / 0.06);
+    --media-scrim: 180 5% 8%;
+    --media-foreground: 48 30% 96%;
   }
 }
 
@@ -161,73 +96,26 @@ All colors MUST be HSL.
 }
 
 @layer components {
-  /* Editorial entry and community pages include navigation and portalled dialogs. */
-  body:has(.editorial-home),
-  body.editorial-community {
-    --background: 48 30% 96%;
-    --foreground: 180 5% 14%;
-    --card: 45 20% 98%;
-    --card-foreground: 180 5% 14%;
-    --popover: 45 20% 98%;
-    --popover-foreground: 180 5% 14%;
-    --primary: 180 5% 18%;
-    --primary-foreground: 48 30% 96%;
-    --secondary: 45 15% 91%;
-    --secondary-foreground: 180 5% 14%;
-    --muted: 45 15% 91%;
-    --muted-foreground: 180 3% 38%;
-    --accent: 205 28% 33%;
-    --accent-foreground: 48 30% 96%;
-    --border: 45 10% 80%;
-    --input: 45 10% 76%;
-    --ring: 205 28% 33%;
-    --destructive: 0 65% 40%;
-    --destructive-foreground: 45 20% 98%;
-    --trust-high: 155 45% 28%;
-    --trust-medium: 35 65% 32%;
-    --trust-low: 0 65% 40%;
-    --radius: 0.375rem;
-    --gradient-card: none;
+  /* Shared editorial treatment for all pages and portalled controls. */
+  body { font-family: "Helvetica Neue", Arial, sans-serif; letter-spacing: 0; }
+  h1, h2, h3 { font-weight: 500; overflow-wrap: anywhere; letter-spacing: 0; }
+  main { min-width: 0; }
+  .card-hover-lift:hover { transform: none; box-shadow: none; }
+  .glass-effect { background: hsl(var(--card)); backdrop-filter: none; }
+  [role="tablist"] { height: auto; min-height: 48px; }
+  [role="tab"] { min-width: 0; white-space: normal; }
+  .community-tabs [role="tablist"] {
+    padding: 0; border-radius: 0; border-bottom: 1px solid hsl(var(--border)); background: transparent;
   }
-
-  body.editorial-community {
-    --lighthouse-deep: 45 15% 91%;
-    --lighthouse-ocean: 45 15% 91%;
-    --lighthouse-wave: 45 10% 80%;
-    --lighthouse-beam: 205 28% 33%;
-    --lighthouse-glow: 205 28% 33%;
-    --lighthouse-signal: 205 28% 33%;
-    --gradient-hero: none;
-    --gradient-trust: linear-gradient(hsl(var(--accent)), hsl(var(--accent)));
-    font-family: "Helvetica Neue", Arial, sans-serif;
-    letter-spacing: 0;
+  .community-tabs [role="tab"] {
+    min-height: 48px; border-radius: 0; border-bottom: 2px solid transparent; box-shadow: none;
   }
-
-  .editorial-community h1,
-  .editorial-community h2,
-  .editorial-community h3 { font-weight: 500; overflow-wrap: anywhere; }
-  .editorial-community main { min-width: 0; }
-  .editorial-community .card-hover-lift:hover { transform: none; box-shadow: none; }
-  .editorial-community .glass-effect { background: hsl(var(--card)); backdrop-filter: none; }
-  .editorial-community [role="tablist"] {
-    height: auto;
-    min-height: 48px;
-    padding: 0;
-    border-radius: 0;
-    border-bottom: 1px solid hsl(var(--border));
-    background: transparent;
+  .community-tabs [role="tab"][data-state="active"] {
+    color: hsl(var(--foreground)); background: transparent; border-bottom-color: hsl(var(--accent));
   }
-  .editorial-community [role="tab"] {
-    min-height: 48px;
-    border-radius: 0;
-    border-bottom: 2px solid transparent;
-    box-shadow: none;
-  }
-  .editorial-community [role="tab"][data-state="active"] {
-    color: hsl(var(--foreground));
-    background: transparent;
-    border-bottom-color: hsl(var(--accent));
-  }
+  .gradient-text { color: hsl(var(--accent)); background: none; }
+  .badge-glow { box-shadow: none; }
+  .shimmer { background: hsl(var(--muted)); }
 
   .editorial-home {
     font-family: "Helvetica Neue", Arial, sans-serif;
@@ -312,23 +200,23 @@ All colors MUST be HSL.
 
   /* Glassmorphism effect */
   .glass-effect {
-    @apply bg-background/60 backdrop-blur-md border border-border/40;
+    @apply bg-card border border-border;
   }
 
   /* Professional gradient text */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+    color: hsl(var(--accent));
   }
 
   /* Shimmer loading effect */
   .shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: linear-gradient(90deg, transparent, hsl(var(--muted) / 0.6), transparent);
     animation: shimmer 2s infinite;
   }
 
   /* Professional badge glow */
   .badge-glow {
-    @apply shadow-[0_0_15px_rgba(0,186,242,0.3)];
+    box-shadow: none;
   }
 
   /* NFT Cinematic Effects */

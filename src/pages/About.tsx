@@ -26,7 +26,7 @@ const About = () => {
           <div className="text-center space-y-4">
             <Badge variant="outline" className="mb-4">About VeriEdit AI</Badge>
             <h1 className="text-4xl font-bold text-foreground mb-4">
-              Trust Infrastructure for the AI Era
+              Trust Infrastructure for the AI era
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Building the future of AI-powered fact verification and content authenticity

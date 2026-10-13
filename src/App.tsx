@@ -15,6 +15,8 @@ import { WalletToastNotifications } from "./components/ui/WalletToastNotificatio
 import { WrongNetworkBanner } from "./components/ui/WrongNetworkBanner";
 import { useOnboarding } from "@/hooks/useOnboarding";
 import { UnifiedOnboarding } from "@/components/UnifiedOnboarding";
+import { HelmetProvider } from "react-helmet-async";
+import { RouteMetadata } from "@/components/RouteMetadata";
 
 // Critical pages - loaded immediately
 import Index from "./pages/Index";
@@ -95,6 +97,7 @@ const AppContent = () => {
   
   return (
     <>
+      <RouteMetadata />
       {showOnboarding && (
         <UnifiedOnboarding open={showOnboarding} onComplete={completeOnboarding} />
       )}
@@ -233,7 +236,9 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppContent />
+            <HelmetProvider>
+              <AppContent />
+            </HelmetProvider>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

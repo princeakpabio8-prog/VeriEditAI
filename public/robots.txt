@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap Index (references all sub-sitemaps)
-Sitemap: https://verieditai.com/api/sitemap?type=index
+Sitemap: https://trust-lighthouse.lovable.app/sitemap.xml
 
 # RSS Feed
 Allow: /rss/activity-feed.xml

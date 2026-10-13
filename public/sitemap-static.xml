@@ -1,101 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main pages -->
-  <url>
-    <loc>https://verieditai.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/lighthouse</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/lighthouse?tab=feed</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/lighthouse?tab=organizations</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/verify</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/about</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/extensions</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/api-docs</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <!-- Legal pages -->
-  <url>
-    <loc>https://verieditai.com/privacy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/terms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://verieditai.com/refund-policy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  
-  <!-- Press & Media -->
-  <url>
-    <loc>https://verieditai.com/press</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <!-- Public Activity Feed -->
-  <url>
-    <loc>https://verieditai.com/activity-feed</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <!-- RSS Feed -->
-  <url>
-    <loc>https://verieditai.com/rss/activity-feed.xml</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  
-  <!-- Activity Sitemap (dynamically generated) -->
-  <url>
-    <loc>https://verieditai.com/activity-sitemap.xml</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  
-  <!-- Note: Dynamic URLs (rooms, threads, organizations) should be added via edge function -->
-  <!-- See supabase/functions/generate-sitemap for dynamic generation -->
+  <url><loc>https://trust-lighthouse.lovable.app/</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/about</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/blog</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/truth-badge</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/lighthouse</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/viral-claims</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/activity-feed</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/extensions</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/api-docs</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/api/docs</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/demo</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/press</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/install</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/privacy</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/terms</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/refund-policy</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/nft-marketplace</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/trust-oracle</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/bounties</loc></url>
+  <url><loc>https://trust-lighthouse.lovable.app/signal-feed</loc></url>
 </urlset>

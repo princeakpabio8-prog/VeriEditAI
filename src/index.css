@@ -161,6 +161,55 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  /* Homepage-only editorial theme also reaches the global navigation and portals. */
+  body:has(.editorial-home) {
+    --background: 48 30% 96%;
+    --foreground: 180 5% 14%;
+    --card: 45 20% 98%;
+    --card-foreground: 180 5% 14%;
+    --popover: 45 20% 98%;
+    --popover-foreground: 180 5% 14%;
+    --primary: 180 5% 18%;
+    --primary-foreground: 48 30% 96%;
+    --secondary: 45 15% 91%;
+    --secondary-foreground: 180 5% 14%;
+    --muted: 45 15% 91%;
+    --muted-foreground: 180 3% 38%;
+    --accent: 205 28% 33%;
+    --accent-foreground: 48 30% 96%;
+    --border: 45 10% 80%;
+    --input: 45 10% 76%;
+    --ring: 205 28% 33%;
+    --destructive: 0 65% 40%;
+    --destructive-foreground: 45 20% 98%;
+    --trust-high: 155 45% 28%;
+    --trust-medium: 35 65% 32%;
+    --trust-low: 0 65% 40%;
+    --radius: 0.375rem;
+    --gradient-card: none;
+  }
+
+  .editorial-home {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0;
+  }
+
+  .editorial-home section { scroll-margin-top: 80px; }
+  .editorial-verification > div > div {
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .editorial-verification > div > div > div:first-child { display: none; }
+  .editorial-verification > div > div > div:last-child { padding: 0; }
+  .editorial-verification textarea { background: hsl(var(--card)); min-height: 150px; }
+  .editorial-verification [role="tablist"] { background: transparent; border-bottom: 1px solid hsl(var(--border)); border-radius: 0; padding: 0; height: 48px; }
+  .editorial-verification [role="tab"] { border-radius: 0; height: 48px; }
+  .editorial-verification [role="tab"][data-state="active"] { background: transparent; border-bottom: 2px solid hsl(var(--primary)); box-shadow: none; }
+  .editorial-verification button { min-height: 44px; }
+
   /* VeriEdit specific animations */
   .trust-pulse {
     animation: trust-pulse 2s ease-in-out infinite;

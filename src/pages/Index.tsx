@@ -1,259 +1,73 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigation } from "@/components/ui/navigation";
+import { EditorialNavigation } from "@/components/ui/editorial-navigation";
 import { HeroSection } from "@/components/hero-section";
-import { VideoDemoSection } from "@/components/video-demo-section";
 import { VerificationUpload } from "@/components/verification-upload";
-import { TrustScoreDisplay } from "@/components/trust-score-display";
-import { NFTHeroSection } from "@/components/nft/NFTHeroSection";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Footer from "@/components/ui/footer";
-import { BackToTop } from "@/components/ui/BackToTop";
-import { QuickVerifyFAB } from "@/components/ui/QuickVerifyFAB";
-import { ScrollProgressBar } from "@/components/ui/ScrollProgressBar";
-
-import { MobileWalletStatus } from "@/components/ui/MobileWalletStatus";
-import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ArrowUpRight, ArrowRight, Check, Radio, Award, FileSearch } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
 
-// Lazy load heavy components
 const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").then(m => ({ default: m.LiveActivityWidget })));
-const NFTShowcaseSection = lazy(() => import("@/components/nft-showcase-section").then(m => ({ default: m.NFTShowcaseSection })));
-const HotClaimsWidget = lazy(() => import("@/components/viral/HotClaimsWidget").then(m => ({ default: m.HotClaimsWidget })));
 
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.15, delayChildren: 0.2 }
-    }
-  };
-
-  const sectionVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { 
-      opacity: 1, y: 0,
-      transition: { duration: 0.6, ease: "easeOut" as const }
-    }
-  };
-
-  const handleVerificationStart = (data: any) => {
-    if (!user) {
-      sessionStorage.setItem('pendingVerification', JSON.stringify(data));
-      navigate('/auth');
-      return;
-    }
-    sessionStorage.setItem('pendingVerification', JSON.stringify(data));
-    navigate('/dashboard');
+  const handleVerificationStart = (data: Parameters<NonNullable<React.ComponentProps<typeof VerificationUpload>["onVerificationStart"]>>[0]) => {
+    sessionStorage.setItem("pendingVerification", JSON.stringify(data));
+    navigate(user ? "/dashboard" : "/auth");
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <ScrollProgressBar />
-      <Navigation />
-      
-      {/* Mobile Wallet Status */}
-      <div className="pt-16">
-        <MobileWalletStatus />
-      </div>
-      
-      <motion.main
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* 1. HERO — Primary CTA */}
-        <motion.div variants={sectionVariants}>
-          <HeroSection />
-        </motion.div>
-        
-        {/* 2. HOT CLAIMS — Social proof + immediate engagement */}
-        <motion.section 
-          variants={sectionVariants}
-          id="features" 
-          className="py-12 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-orange-500/5 via-background to-background relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
-          <div className="max-w-7xl mx-auto relative z-10">
-            <div className="text-center mb-8 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4">
-                Viral Claims: Race to Verify
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-                Be first to verify trending claims and earn exclusive NFT badges
-              </p>
+    <div className="editorial-home min-h-screen bg-background text-foreground">
+      <EditorialNavigation />
+      <main>
+        <HeroSection />
+        <section id="verify" className="border-b border-border px-5 py-10 sm:px-8 sm:py-16">
+          <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_1.4fr] md:gap-16">
+            <div>
+              <p className="mb-4 text-xs uppercase text-accent">01 / The evidence desk</p>
+              <h2 className="max-w-sm text-3xl font-medium leading-tight sm:text-4xl">Before you share it,<br />question it.</h2>
+              <p className="mt-5 max-w-sm text-base leading-relaxed text-muted-foreground">Check a claim, an article, or a document. Look beyond the headline to the sources behind it.</p>
+              <p className="mt-6 max-w-sm border-l-2 border-accent pl-4 text-sm leading-relaxed text-muted-foreground">A trust score is a starting point, not the final word. Read the evidence and make your own judgment.</p>
             </div>
-            <Suspense fallback={
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <Skeleton className="h-60 sm:h-80" />
-                <Skeleton className="h-60 sm:h-80" />
-                <Skeleton className="h-60 sm:h-80 hidden lg:block" />
-              </div>
-            }>
-              <HotClaimsWidget />
-            </Suspense>
+            <div className="editorial-verification min-w-0"><VerificationUpload onVerificationStart={handleVerificationStart} /></div>
           </div>
-        </motion.section>
-        
-        {/* 3. QUICK VERIFY — Direct conversion */}
-        <motion.section 
-          variants={sectionVariants}
-          id="verify" 
-          className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10 sm:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Verify Anything, Instantly
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                Paste text, a URL, or upload a file — get a trust score in seconds
-              </p>
+        </section>
+        <section id="features" className="border-b border-border px-5 py-10 sm:px-8 sm:py-16">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div><p className="mb-4 text-xs uppercase text-accent">02 / Beyond the headline</p><h2 className="text-3xl font-medium sm:text-4xl">Follow the conversation.</h2></div>
+              <Button asChild variant="link" className="px-0"><Link to="/viral-claims">Browse current claims <ArrowUpRight /></Link></Button>
             </div>
-            <VerificationUpload onVerificationStart={handleVerificationStart} />
-          </div>
-        </motion.section>
-
-        {/* 4. TRUST SCORING — How it works / social proof */}
-        <motion.section 
-          variants={sectionVariants}
-          id="pricing" 
-          className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-muted/30"
-        >
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                AI-Powered Trust Scoring
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-                Advanced algorithms analyze multiple factors for comprehensive trust scores
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <Card className="relative z-0 text-center">
-                <CardHeader>
-                  <div className="flex justify-center mb-4">
-                    <TrustScoreDisplay score={85} showAnimation />
-                  </div>
-                  <CardTitle>High Trust</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <CheckCircle className="h-5 w-5 text-trust-high" />
-                    <Badge variant="secondary" className="text-trust-high border-trust-high/20">Verified</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Multiple credible sources confirm information with consistent data.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="relative z-0 text-center">
-                <CardHeader>
-                  <div className="flex justify-center mb-4">
-                    <TrustScoreDisplay score={65} showAnimation />
-                  </div>
-                  <CardTitle>Moderate Trust</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <Clock className="h-5 w-5 text-trust-medium" />
-                    <Badge variant="secondary" className="text-trust-medium border-trust-medium/20">Review</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Additional verification recommended for accuracy.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="relative z-0 text-center">
-                <CardHeader>
-                  <div className="flex justify-center mb-4">
-                    <TrustScoreDisplay score={25} showAnimation />
-                  </div>
-                  <CardTitle>Low Trust</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <AlertTriangle className="h-5 w-5 text-trust-low" />
-                    <Badge variant="secondary" className="text-trust-low border-trust-low/20">Caution</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Limited sources detected. Exercise caution.
-                  </p>
-                </CardContent>
-              </Card>
+            <div className="grid divide-y divide-border border-y border-border md:grid-cols-3 md:divide-x md:divide-y-0">
+              {[{ icon: FileSearch, title: "Claims under review", copy: "Explore what is circulating and examine the evidence.", path: "/viral-claims", label: "View claims" }, { icon: Radio, title: "The Lighthouse", copy: "A place for considered discussion and shared discovery.", path: "/lighthouse", label: "Enter the community" }, { icon: Award, title: "Truth Badge", copy: "Your place in the VeriEdit community starts here.", path: "/truth-badge", label: "Explore the badge" }].map(item => (
+                <article key={item.path} className="py-7 md:px-7 md:first:pl-0 md:last:pr-0">
+                  <item.icon className="mb-6 h-6 w-6 text-accent" strokeWidth={1.5} />
+                  <h3 className="mb-3 text-xl font-medium">{item.title}</h3>
+                  <p className="mb-5 max-w-xs text-sm leading-relaxed text-muted-foreground">{item.copy}</p>
+                  <Button asChild variant="link" className="h-auto px-0"><Link to={item.path}>{item.label}<ArrowUpRight /></Link></Button>
+                </article>
+              ))}
             </div>
           </div>
-        </motion.section>
-
-        {/* 5. NFT BADGES — Gamification hook */}
-        <motion.section variants={sectionVariants} id="badges">
-          <NFTHeroSection />
-        </motion.section>
-
-        {/* 6. VIDEO DEMO — For users who want more context */}
-        <motion.div variants={sectionVariants}>
-          <VideoDemoSection />
-        </motion.div>
-
-        {/* 7. NFT SHOWCASE — Collection display */}
-        <Suspense fallback={
-          <section className="py-16 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-              <Skeleton className="h-12 w-3/4 mx-auto" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Skeleton className="h-64" />
-                <Skeleton className="h-64" />
-                <Skeleton className="h-64" />
-              </div>
-            </div>
-          </section>
-        }>
-          <NFTShowcaseSection />
-        </Suspense>
-
-        {/* 8. LIVE ACTIVITY — Community social proof */}
-        <motion.section 
-          variants={sectionVariants}
-          id="about" 
-          className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-background"
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10 sm:mb-12">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Live Verification Feed
-              </h2>
-              <p className="text-base sm:text-lg text-muted-foreground">
-                Join the global fight against misinformation
-              </p>
-            </div>
-            <Suspense fallback={
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-              </div>
-            }>
-              <LiveActivityWidget />
-            </Suspense>
+        </section>
+        <section id="pricing" className="border-b border-border bg-secondary/40 px-5 py-10 sm:px-8 sm:py-16">
+          <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 md:gap-20">
+            <div><p className="mb-4 text-xs uppercase text-accent">03 / Membership</p><h2 className="text-3xl font-medium sm:text-4xl">The Truth Badge.</h2><p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">This is not just access. It's your position inside the system.</p><Button asChild variant="link" className="mt-5 px-0"><Link to="/truth-badge">See membership details <ArrowRight /></Link></Button></div>
+            <div className="border-t border-border pt-5"><div className="mb-6 flex items-baseline justify-between gap-4"><span className="text-sm">Whitelist open</span><span className="text-4xl font-medium">$4.99</span></div><ul className="space-y-4 text-sm">{["Elite Discord access", "Early feature access", "Priority support", "Trader upgrade access"].map(perk => <li key={perk} className="flex items-center gap-3"><Check className="h-4 w-4 text-accent" />{perk}</li>)}</ul><Button asChild size="lg" className="mt-7 h-12 w-full"><Link to="/truth-badge">Mint Truth Badge ($4.99)<ArrowUpRight /></Link></Button></div>
           </div>
-        </motion.section>
-      </motion.main>
-      
+        </section>
+        <section id="about" className="px-5 py-10 sm:px-8 sm:py-16">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-4 text-xs uppercase text-accent">04 / The public record</p><h2 className="text-3xl font-medium sm:text-4xl">Recent verifications.</h2></div><Button asChild variant="link" className="px-0"><Link to="/activity-feed">View activity <ArrowUpRight /></Link></Button></div>
+            <Suspense fallback={<div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-20" /></div>}><LiveActivityWidget /></Suspense>
+          </div>
+        </section>
+      </main>
       <Footer />
-      <BackToTop />
-      <QuickVerifyFAB onVerificationStart={handleVerificationStart} />
     </div>
   );
 };
-
 export default Index;

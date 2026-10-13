@@ -161,8 +161,9 @@ All colors MUST be HSL.
 }
 
 @layer components {
-  /* Homepage-only editorial theme also reaches the global navigation and portals. */
-  body:has(.editorial-home) {
+  /* Editorial entry and community pages include navigation and portalled dialogs. */
+  body:has(.editorial-home),
+  body.editorial-community {
     --background: 48 30% 96%;
     --foreground: 180 5% 14%;
     --card: 45 20% 98%;
@@ -187,6 +188,45 @@ All colors MUST be HSL.
     --trust-low: 0 65% 40%;
     --radius: 0.375rem;
     --gradient-card: none;
+  }
+
+  body.editorial-community {
+    --lighthouse-deep: 45 15% 91%;
+    --lighthouse-ocean: 45 15% 91%;
+    --lighthouse-wave: 45 10% 80%;
+    --lighthouse-beam: 205 28% 33%;
+    --lighthouse-glow: 205 28% 33%;
+    --lighthouse-signal: 205 28% 33%;
+    --gradient-hero: none;
+    --gradient-trust: linear-gradient(hsl(var(--accent)), hsl(var(--accent)));
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0;
+  }
+
+  .editorial-community h1,
+  .editorial-community h2,
+  .editorial-community h3 { font-weight: 500; overflow-wrap: anywhere; }
+  .editorial-community main { min-width: 0; }
+  .editorial-community .card-hover-lift:hover { transform: none; box-shadow: none; }
+  .editorial-community .glass-effect { background: hsl(var(--card)); backdrop-filter: none; }
+  .editorial-community [role="tablist"] {
+    height: auto;
+    min-height: 48px;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    background: transparent;
+  }
+  .editorial-community [role="tab"] {
+    min-height: 48px;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    box-shadow: none;
+  }
+  .editorial-community [role="tab"][data-state="active"] {
+    color: hsl(var(--foreground));
+    background: transparent;
+    border-bottom-color: hsl(var(--accent));
   }
 
   .editorial-home {

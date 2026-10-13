@@ -1,146 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, Award, Users, Radio, ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
-import lighthouseHero from "@/assets/lighthouse-hero.jpg";
-import { useState, useEffect } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { motion } from "framer-motion";
+import { ArrowRight, ArrowDown } from "lucide-react";
+import lighthouseEditorial from "@/assets/lighthouse-editorial.jpg";
 
-export const HeroSection = () => {
-  const [scrollY, setScrollY] = useState(0);
-  const [mounted, setMounted] = useState(false);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) return;
-
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
-
-  return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 pb-24 sm:pt-0 sm:pb-0">
-      {/* Background Image with Overlay */}
-      <div 
-        className="absolute inset-0 will-change-transform transition-transform duration-[1500ms] ease-out"
-        style={{
-          transform: isMobile 
-            ? (mounted ? 'scale(1)' : 'scale(1.1)')
-            : `translateY(${scrollY * 0.4}px) scale(${mounted ? 1 : 1.1})`,
-          filter: `blur(${Math.min(scrollY / 100, 8)}px)`,
-        }}
-      >
-        <img
-          src={lighthouseHero}
-          alt="Lighthouse beacon representing truth and verification"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-background/60" />
-        <div className="absolute inset-0 bg-gradient-hero" />
+export const HeroSection = () => (
+  <section className="border-b border-border pt-16">
+    <div className="mx-auto max-w-7xl px-5 pb-7 pt-8 sm:px-8 sm:pb-10 sm:pt-12">
+      <div className="mb-5 flex items-center justify-between border-b border-border pb-3 text-xs uppercase text-muted-foreground">
+        <span>Independent thinking. Informed trust.</span>
+        <span className="hidden sm:block">Verification / Community / Access</span>
       </div>
-
-      {/* Lighthouse Beam Effect */}
-      <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 w-96 h-96 bg-lighthouse-glow rounded-full blur-3xl lighthouse-beam opacity-30" />
-
-      {/* Content */}
-      <div 
-        className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center transition-opacity duration-300"
-        style={{
-          opacity: Math.max(0, 1 - scrollY / 400),
-        }}
-      >
-        <div className="fade-in-up">
-          <h1 className="text-[2.5rem] sm:text-5xl md:text-7xl font-bold mb-4 sm:mb-6 leading-[1.1] sm:leading-tight tracking-tight">
-            <span className="bg-gradient-trust bg-clip-text text-transparent block">
-              Trust Infrastructure
-            </span>
-            <span className="text-foreground block mt-1">for the AI Era</span>
-          </h1>
-          
-          <p className="text-base sm:text-xl text-muted-foreground mb-8 sm:mb-12 max-w-2xl mx-auto px-2 leading-relaxed">
-            AI-powered verification that delivers instant trust scores and comprehensive evidence for any digital content.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-10 sm:mb-16 px-4">
-            <Link to="/verify" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 group">
-                Start Verification
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
-            <Link to="/lighthouse" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6">
-                <Radio className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                Explore Lighthouse
-              </Button>
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-3 md:grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto px-2">
-            <div className="text-center trust-pulse">
-              <div className="flex items-center justify-center mb-1 sm:mb-2">
-                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">99.9%</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Accuracy</p>
-            </div>
-            
-            <div className="text-center trust-pulse" style={{ animationDelay: "0.2s" }}>
-              <div className="flex items-center justify-center mb-1 sm:mb-2">
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">10K+</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Users</p>
-            </div>
-            
-            <div className="text-center trust-pulse" style={{ animationDelay: "0.4s" }}>
-              <div className="flex items-center justify-center mb-1 sm:mb-2">
-                <Award className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <h3 className="text-xl sm:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">3K+</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Badges</p>
-            </div>
-          </div>
-        </div>
+      <h1 className="text-5xl font-medium leading-none sm:text-7xl lg:text-8xl">VeriEdit AI<span className="text-accent">.</span></h1>
+      <div className="mt-5 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <p className="max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">Less noise. More evidence.<br />A clearer view of what deserves your trust.</p>
+        <Button size="lg" className="h-12 w-fit px-6" onClick={() => document.getElementById("verify")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}>Verify a claim <ArrowRight /></Button>
       </div>
-
-      {/* Scroll Indicator */}
-      <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.5 }}
-      >
-        <button
-          onClick={() => {
-            const featuresSection = document.getElementById('features');
-            featuresSection?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          className="flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
-          aria-label="Scroll to content"
-        >
-          <span className="text-xs sm:text-sm font-medium">Scroll to explore</span>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          >
-            <ChevronDown className="h-6 w-6 sm:h-8 sm:w-8" />
-          </motion.div>
-        </button>
-      </motion.div>
-    </section>
-  );
-};
+    </div>
+    <figure className="relative">
+      <img src={lighthouseEditorial} alt="A white lighthouse overlooking a quiet rocky coastline" width={1536} height={768} fetchPriority="high" className="h-[180px] w-full object-cover object-right sm:h-[260px] lg:h-[300px]" />
+    </figure>
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 text-xs text-muted-foreground sm:px-8">
+      <span>A signal worth following.</span>
+      <a href="#verify" className="flex items-center gap-2 text-foreground">Start with the evidence <ArrowDown className="h-3 w-3" /></a>
+    </div>
+  </section>
+);

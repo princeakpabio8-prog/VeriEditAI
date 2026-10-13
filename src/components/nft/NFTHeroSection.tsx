@@ -42,19 +42,19 @@ export function NFTHeroSection() {
   };
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/5 via-background to-primary/10">
+    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-background border-b border-border">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-2 gap-8 items-center">
           {/* Left: Info */}
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-md">
               <Award className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-primary">Earn NFT Badges</span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-foreground leading-tight">
               Turn Truth Into
-              <span className="block bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="block text-accent">
                 Digital Collectibles
               </span>
             </h2>
@@ -65,17 +65,17 @@ export function NFTHeroSection() {
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4">
-              <Card className="p-4 text-center bg-background/50 border-primary/20">
+              <Card className="p-4 text-center bg-card border-border">
                 <TrendingUp className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-2xl font-bold text-foreground">72</p>
                 <p className="text-xs text-muted-foreground">Badges Minted</p>
               </Card>
-              <Card className="p-4 text-center bg-background/50 border-primary/20">
+              <Card className="p-4 text-center bg-card border-border">
                 <Shield className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-2xl font-bold text-foreground">5</p>
                 <p className="text-xs text-muted-foreground">Rarity Tiers</p>
               </Card>
-              <Card className="p-4 text-center bg-background/50 border-primary/20">
+              <Card className="p-4 text-center bg-card border-border">
                 <Users className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-2xl font-bold text-foreground">48</p>
                 <p className="text-xs text-muted-foreground">Active Users</p>
@@ -87,9 +87,9 @@ export function NFTHeroSection() {
               <Button 
                 size="lg" 
                 onClick={handleGetStarted}
-                className="bg-gradient-to-r from-primary to-primary/80 font-semibold"
+                className="font-medium"
               >
-                {user ? '🚀 Start Earning Badges' : '✨ Get Started Free'}
+                {user ? 'Start Earning Badges' : 'Get Started Free'}
               </Button>
               {!user && (
                 <Button 
@@ -97,7 +97,7 @@ export function NFTHeroSection() {
                   variant="outline"
                   onClick={handleLearnMore}
                 >
-                  📚 How It Works
+                  How It Works
                 </Button>
               )}
               {user && (
@@ -106,7 +106,7 @@ export function NFTHeroSection() {
                   variant="outline"
                   onClick={() => setShowPreview(!showPreview)}
                 >
-                  👁️ Preview Badge
+                  Preview Badge
                 </Button>
               )}
             </div>
@@ -122,11 +122,10 @@ export function NFTHeroSection() {
               />
             ) : (
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-pink-500/20 rounded-3xl blur-3xl animate-pulse" />
                 <img 
                   src="/nft-badge-template.png" 
                   alt="Truth Badge NFT Example"
-                  className="relative z-10 w-full h-auto rounded-2xl shadow-2xl"
+                  className="relative z-10 w-full h-auto rounded-md"
                   loading="lazy"
                 />
               </div>
@@ -136,8 +135,8 @@ export function NFTHeroSection() {
 
         {/* How It Works */}
         <div className="mt-16 grid md:grid-cols-3 gap-6">
-          <Card className="p-6 bg-background/50 border-primary/20">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <Card className="p-6 bg-card border-border">
+            <div className="w-12 h-12 bg-secondary rounded-md flex items-center justify-center mb-4">
               <span className="text-2xl font-bold text-primary">1</span>
             </div>
             <h3 className="text-lg font-semibold mb-2 text-foreground">Verify Content</h3>
@@ -146,8 +145,8 @@ export function NFTHeroSection() {
             </p>
           </Card>
 
-          <Card className="p-6 bg-background/50 border-primary/20">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <Card className="p-6 bg-card border-border">
+            <div className="w-12 h-12 bg-secondary rounded-md flex items-center justify-center mb-4">
               <span className="text-2xl font-bold text-primary">2</span>
             </div>
             <h3 className="text-lg font-semibold mb-2 text-foreground">Earn NFT Badge</h3>
@@ -156,8 +155,8 @@ export function NFTHeroSection() {
             </p>
           </Card>
 
-          <Card className="p-6 bg-background/50 border-primary/20">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <Card className="p-6 bg-card border-border">
+            <div className="w-12 h-12 bg-secondary rounded-md flex items-center justify-center mb-4">
               <span className="text-2xl font-bold text-primary">3</span>
             </div>
             <h3 className="text-lg font-semibold mb-2 text-foreground">Collect & Trade</h3>

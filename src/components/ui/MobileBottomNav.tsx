@@ -86,7 +86,7 @@ export const MobileBottomNav = () => {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-[70] bg-card/95 backdrop-blur-lg border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-[70] bg-background border-t border-border"
       style={{
         height: 'calc(64px + env(safe-area-inset-bottom, 0px))',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)'
@@ -115,26 +115,26 @@ export const MobileBottomNav = () => {
         })}
         
         {/* Wallet Connect */}
-        <button
+        <Button variant="ghost"
           onClick={handleWalletConnect}
           className={cn(
-            "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all",
+            "flex min-w-0 h-full flex-col items-center justify-center flex-1 py-2 px-0 rounded-md transition-all",
             isConnected
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
         >
           <Wallet className={cn("h-5 w-5 mb-1", isConnected && "scale-110")} />
-          <span className="text-xs font-medium">
+          <span className="text-[10px] font-medium">
             {isConnected ? `${address?.slice(0, 4)}...` : "Wallet"}
           </span>
-        </button>
+        </Button>
 
         {/* Notifications */}
         {isAuthenticated && (
-          <div className="flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg relative">
+          <div className="flex min-w-0 h-full flex-col items-center justify-center flex-1 py-2 px-0 rounded-md relative">
             <NotificationBell />
-            <span className="text-xs font-medium text-muted-foreground mt-1">Alerts</span>
+            <span className="text-[10px] font-medium text-muted-foreground mt-1">Alerts</span>
           </div>
         )}
         
@@ -142,7 +142,7 @@ export const MobileBottomNav = () => {
         <Link
           to={isAuthenticated ? "/profile" : "/auth"}
           className={cn(
-            "flex flex-col items-center justify-center flex-1 py-2 px-2 rounded-lg transition-all relative",
+            "flex min-w-0 h-full flex-col items-center justify-center flex-1 py-2 px-0 rounded-md transition-all relative",
             location.pathname === "/profile"
               ? "text-primary bg-primary/10"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -159,7 +159,7 @@ export const MobileBottomNav = () => {
               </Badge>
             )}
           </div>
-          <span className="text-xs font-medium mt-1">{isAuthenticated ? "Profile" : "Sign In"}</span>
+          <span className="text-[10px] font-medium mt-1">{isAuthenticated ? "Profile" : "Sign In"}</span>
         </Link>
       </div>
     </nav>

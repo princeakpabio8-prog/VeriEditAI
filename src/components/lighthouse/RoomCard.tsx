@@ -97,19 +97,19 @@ export function RoomCard({
   };
 
   const getTrustColor = (rating: number) => {
-    if (rating >= 0.9) return 'text-green-400';
-    if (rating >= 0.7) return 'text-yellow-400';
-    return 'text-orange-400';
+    if (rating >= 0.9) return 'text-trust-high';
+    if (rating >= 0.7) return 'text-trust-medium';
+    return 'text-trust-low';
   };
 
   return (
     <Card 
-      className="group cursor-pointer bg-[hsl(var(--lighthouse-ocean))]/30 border-[hsl(var(--lighthouse-beam))]/20 hover:border-[hsl(var(--lighthouse-beam))]/50 transition-all card-hover-lift"
+      className="group cursor-pointer bg-card border-border hover:border-accent transition-all card-hover-lift"
       onClick={() => navigate(`/lighthouse/${id}`)}
     >
       <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex-1 min-w-[120px]">
             <CardTitle className="text-lg group-hover:text-[hsl(var(--lighthouse-beam))] transition-colors">
               {name}
             </CardTitle>

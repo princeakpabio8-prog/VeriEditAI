@@ -69,7 +69,7 @@ export const Navigation = () => {
 
   return (
     <motion.nav 
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/70 border-b border-border/30 supports-[backdrop-filter]:bg-background/60"
+      className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
@@ -82,7 +82,7 @@ export const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden xl:flex items-center space-x-4">
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -100,7 +100,7 @@ export const Navigation = () => {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
-                  <Heart className="h-4 w-4 text-pink-500" />
+                  <Heart className="h-4 w-4 text-accent" />
                   HealLink
                   <ExternalLink className="h-3 w-3 opacity-50" />
                 </a>
@@ -187,7 +187,7 @@ export const Navigation = () => {
                         className="flex items-center cursor-pointer"
                         onClick={() => setIsMoreOpen(false)}
                       >
-                        <Heart className="h-4 w-4 mr-2 text-pink-500" />
+                        <Heart className="h-4 w-4 mr-2 text-accent" />
                         HealLink
                         <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
                       </a>
@@ -246,7 +246,7 @@ export const Navigation = () => {
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                 >
-                  <Heart className="h-4 w-4 text-pink-500" />
+                  <Heart className="h-4 w-4 text-accent" />
                   HealLink
                 </a>
               </>
@@ -373,10 +373,11 @@ export const Navigation = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="xl:hidden">
             <Button
               variant="ghost"
               size="sm"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -386,7 +387,7 @@ export const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-border py-4 space-y-2">
+          <div className="xl:hidden border-t border-border py-4 space-y-2 max-h-[calc(100dvh-144px)] overflow-y-auto">
             {isAuthenticated && (
               <div className="flex items-center gap-3 px-4 pb-3 border-b border-border">
                 <NotificationBell />
@@ -510,7 +511,7 @@ export const Navigation = () => {
                   className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Heart className="h-4 w-4 text-pink-500" />
+                  <Heart className="h-4 w-4 text-accent" />
                   HealLink
                   <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
                 </a>
@@ -593,7 +594,7 @@ export const Navigation = () => {
                   className="flex items-center gap-2 px-4 py-3 text-muted-foreground hover:text-foreground transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  <Heart className="h-4 w-4 text-pink-500" />
+                  <Heart className="h-4 w-4 text-accent" />
                   HealLink
                   <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
                 </a>
@@ -618,7 +619,7 @@ export const Navigation = () => {
                     setIsMenuOpen(false);
                     handleSignOut();
                   }}
-                  className="flex items-center gap-2 w-full text-left px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors font-medium"
+                  className="flex items-center gap-2 w-full text-left px-4 py-3 text-destructive hover:bg-destructive/10 transition-colors font-medium"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign Out

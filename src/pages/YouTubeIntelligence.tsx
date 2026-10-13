@@ -77,9 +77,9 @@ export default function YouTubeIntelligence() {
   };
 
   const sentimentData = report?.analysis.sentiment ? [
-    { name: 'Positive', value: report.analysis.sentiment.positive, color: '#10b981' },
-    { name: 'Neutral', value: report.analysis.sentiment.neutral, color: '#6b7280' },
-    { name: 'Negative', value: report.analysis.sentiment.negative, color: '#ef4444' }
+    { name: 'Positive', value: report.analysis.sentiment.positive, color: 'hsl(var(--trust-high))' },
+    { name: 'Neutral', value: report.analysis.sentiment.neutral, color: 'hsl(var(--muted-foreground))' },
+    { name: 'Negative', value: report.analysis.sentiment.negative, color: 'hsl(var(--trust-low))' }
   ] : [];
 
   return (
@@ -88,8 +88,8 @@ export default function YouTubeIntelligence() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <Youtube className="h-8 w-8 text-red-500" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-500 to-purple-500 bg-clip-text text-transparent">
+            <Youtube className="h-8 w-8 text-accent" />
+            <h1 className="text-3xl sm:text-4xl font-medium text-foreground">
               YouTube Intelligence
             </h1>
           </div>
@@ -99,7 +99,7 @@ export default function YouTubeIntelligence() {
         </div>
 
         {/* Input Section */}
-        <Card className="p-6 mb-8 bg-card/50 backdrop-blur border-border/50">
+        <Card className="p-6 mb-8 bg-card border-border">
           <div className="flex flex-col sm:flex-row gap-4">
             <Input
               type="url"
@@ -112,7 +112,7 @@ export default function YouTubeIntelligence() {
             <Button 
               onClick={handleAnalyze} 
               disabled={loading}
-              className="bg-red-500 hover:bg-red-600"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {loading ? (
                 <>
@@ -133,7 +133,7 @@ export default function YouTubeIntelligence() {
         {report && (
           <div className="space-y-6">
             {/* Video Info & Export */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">{report.videoTitle}</h2>
                 <p className="text-muted-foreground">
@@ -145,15 +145,15 @@ export default function YouTubeIntelligence() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Top Questions (FAQs) */}
-              <Card className="p-6 bg-card/50 backdrop-blur border-border/50">
+              <Card className="p-6 bg-card border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="h-5 w-5 text-purple-400" />
+                  <MessageSquare className="h-5 w-5 text-accent" />
                   <h3 className="text-xl font-bold">Top Questions</h3>
                 </div>
                 <div className="space-y-3">
                   {report.analysis.faqs.slice(0, 10).map((faq, idx) => (
                     <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-background/50">
-                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-secondary text-accent flex items-center justify-center text-sm font-bold">
                         {idx + 1}
                       </span>
                       <div className="flex-1">
@@ -168,9 +168,9 @@ export default function YouTubeIntelligence() {
               </Card>
 
               {/* Sentiment Analysis */}
-              <Card className="p-6 bg-card/50 backdrop-blur border-border/50">
+              <Card className="p-6 bg-card border-border">
                 <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="h-5 w-5 text-cyan-400" />
+                  <TrendingUp className="h-5 w-5 text-accent" />
                   <h3 className="text-xl font-bold">Sentiment Snapshot</h3>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
@@ -182,7 +182,7 @@ export default function YouTubeIntelligence() {
                       labelLine={false}
                       label={({ name, value }) => `${name}: ${value}%`}
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="hsl(var(--accent))"
                       dataKey="value"
                     >
                       {sentimentData.map((entry, index) => (
@@ -196,15 +196,15 @@ export default function YouTubeIntelligence() {
               </Card>
 
               {/* Comment Clusters */}
-              <Card className="p-6 bg-card/50 backdrop-blur border-border/50 lg:col-span-2">
+              <Card className="p-6 bg-card border-border lg:col-span-2">
                 <div className="flex items-center gap-2 mb-4">
-                  <BarChart3 className="h-5 w-5 text-yellow-400" />
+                  <BarChart3 className="h-5 w-5 text-trust-medium" />
                   <h3 className="text-xl font-bold">Comment Clusters</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {report.analysis.clusters.map((cluster, idx) => (
                     <div key={idx} className="p-4 rounded-lg bg-background/50">
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:items-center justify-between mb-3">
                         <h4 className="font-semibold text-lg">{cluster.theme}</h4>
                         <span className="px-2 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold">
                           {cluster.count} comments
@@ -223,9 +223,9 @@ export default function YouTubeIntelligence() {
               </Card>
 
               {/* Insight Summary */}
-              <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 backdrop-blur border-border/50 lg:col-span-2">
+              <Card className="p-6 bg-card border-border lg:col-span-2">
                 <div className="flex items-center gap-2 mb-4">
-                  <AlertCircle className="h-5 w-5 text-purple-400" />
+                  <AlertCircle className="h-5 w-5 text-accent" />
                   <h3 className="text-xl font-bold">Intelligence Brief</h3>
                 </div>
                 <p className="text-foreground/90 leading-relaxed">

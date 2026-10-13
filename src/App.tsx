@@ -17,7 +17,6 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { UnifiedOnboarding } from "@/components/UnifiedOnboarding";
 import { HelmetProvider } from "react-helmet-async";
 import { RouteMetadata } from "@/components/RouteMetadata";
-import { CommunityTheme } from "@/components/CommunityTheme";
 
 // Critical pages - loaded immediately
 import Index from "./pages/Index";
@@ -99,7 +98,6 @@ const AppContent = () => {
   return (
     <>
       <RouteMetadata />
-      <CommunityTheme />
       {showOnboarding && (
         <UnifiedOnboarding open={showOnboarding} onComplete={completeOnboarding} />
       )}

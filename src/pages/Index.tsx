@@ -28,7 +28,7 @@ const Index = () => {
           <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_1.4fr] md:gap-16">
             <div>
               <p className="mb-4 text-xs uppercase text-accent">01 / The evidence desk</p>
-              <h2 className="max-w-sm text-3xl font-medium leading-tight sm:text-4xl">Before you share it,<br />question it.</h2>
+              <h2 className="max-w-sm text-3xl font-medium leading-tight sm:text-4xl">AI fact-checking.<br />Start with the evidence.</h2>
               <p className="mt-5 max-w-sm text-base leading-relaxed text-muted-foreground">Check a claim, an article, or a document. Look beyond the headline to the sources behind it.</p>
               <p className="mt-6 max-w-sm border-l-2 border-accent pl-4 text-sm leading-relaxed text-muted-foreground">A trust score is a starting point, not the final word. Read the evidence and make your own judgment.</p>
             </div>
@@ -63,6 +63,12 @@ const Index = () => {
           <div className="mx-auto max-w-7xl">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-4 text-xs uppercase text-accent">04 / The public record</p><h2 className="text-3xl font-medium sm:text-4xl">Recent verifications.</h2></div><Button asChild variant="link" className="px-0"><Link to="/activity-feed">View activity <ArrowUpRight /></Link></Button></div>
             <Suspense fallback={<div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-20" /></div>}><LiveActivityWidget /></Suspense>
+            <nav aria-label="More about VeriEdit AI" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-sm">
+              <Link to="/about" className="text-muted-foreground hover:text-foreground">About VeriEdit AI</Link>
+              <Link to="/blog" className="text-muted-foreground hover:text-foreground">Verification journal</Link>
+              <Link to="/extensions" className="text-muted-foreground hover:text-foreground">Browser extension</Link>
+              <Link to="/api-docs" className="text-muted-foreground hover:text-foreground">Verification API</Link>
+            </nav>
           </div>
         </section>
       </main>

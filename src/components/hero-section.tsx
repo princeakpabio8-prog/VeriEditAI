@@ -6,12 +6,12 @@ export const HeroSection = () => (
   <section className="border-b border-border pt-16">
     <div className="mx-auto max-w-7xl px-5 pb-5 pt-6 sm:px-8 sm:pb-10 sm:pt-12">
       <div className="mb-5 flex items-center justify-between border-b border-border pb-3 text-xs uppercase text-muted-foreground">
-        <span>Independent thinking. Informed trust.</span>
+        <span>Trust Infrastructure for the AI era</span>
         <span className="hidden sm:block">Verification / Community / Access</span>
       </div>
       <h1 className="text-5xl font-medium leading-none sm:text-7xl lg:text-8xl">VeriEdit AI<span className="text-accent">.</span></h1>
       <div className="mt-5 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <p className="max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">Less noise. More evidence.<br />A clearer view of what deserves your trust.</p>
+        <p className="max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">AI-powered fact-checking for claims, articles, and documents. Follow the sources. Make your own judgment.</p>
         <Button size="lg" className="h-12 w-fit px-6" onClick={() => document.getElementById("verify")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })}>Verify a claim <ArrowRight /></Button>
       </div>
     </div>

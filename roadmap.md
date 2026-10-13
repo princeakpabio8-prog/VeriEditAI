@@ -12,3 +12,8 @@
 - [ ] Extend the ivory theme throughout community pages and dialogs.
 - [ ] Refresh the hub, room cards, discussions and category navigation.
 - [ ] Check community navigation and layouts at narrow and wide sizes.
+
+# Whole-app editorial refresh
+- [ ] Apply the ivory and charcoal design to every page, navigation and dialog.
+- [ ] Replace dark, neon and glow-heavy presentation while preserving app behavior.
+- [ ] Check verification, badge, account and community screens.

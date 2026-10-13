@@ -13,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAccount, useConnect, useSendTransaction, useSwitchChain, useChainId } from "wagmi";
 import { parseEther } from "viem";
+import { TRUTH_BADGE_CONTRACT_ADDRESS } from "@/lib/web3-config";
 
 const DISCORD_INVITE = "https://discord.gg/vaCujDNXg";
 const POLYGON_CHAIN_ID = 137;
@@ -30,6 +31,7 @@ export default function TruthBadge() {
   const [quote, setQuote] = useState<{ treasury: string; maticAmount: number; priceUsd: number } | null>(null);
   const [working, setWorking] = useState<null | "quote" | "pay" | "confirm" | "verify">(null);
   const [discordHandle, setDiscordHandle] = useState("");
+  const [minting, setMinting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -88,8 +90,9 @@ export default function TruthBadge() {
       }
       if (!confirmed) throw new Error("Tx not confirmed in time. Refresh in a moment.");
 
-      toast({ title: "Truth Badge minted", description: "Welcome to the whitelist." });
+      toast({ title: "Payment confirmed", description: "Minting your badge on Polygon..." });
       await refresh();
+      await mintOnChain(address!);
     } catch (e: any) {
       const msg = String(e?.shortMessage || e?.message || e);
       if (msg.toLowerCase().includes("user reject")) {
@@ -101,6 +104,75 @@ export default function TruthBadge() {
       setWorking(null);
     }
   };
+
+  const mintOnChain = async (wallet?: string) => {
+    const to = wallet || address || (badge as any)?.wallet_address;
+    if (!to) {
+      toast({ title: "Connect your wallet first", variant: "destructive" });
+      return;
+    }
+    setMinting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("truth-badge-mint-onchain", {
+        body: { walletAddress: to },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "On-chain mint failed");
+      toast({ title: "Truth Badge minted on-chain", description: `Token #${data.badge?.nft_token_id}` });
+      await refresh();
+    } catch (e: any) {
+      toast({
+        title: "On-chain mint pending",
+        description: "Your badge is saved. Tap Mint on-chain to retry.",
+        variant: "destructive",
+      });
+    } finally {
+      setMinting(false);
+    }
+  };
+
+  const handleConnectAndMint = async () => {
+    try {
+      let wallet = address;
+      if (!isConnected) {
+        const injected = connectors.find((c) => c.id === "injected") ?? connectors[0];
+        const res = await connectAsync({ connector: injected });
+        wallet = res.accounts[0];
+      }
+      await mintOnChain(wallet);
+    } catch (e: any) {
+      toast({ title: "Wallet connection failed", description: String(e?.shortMessage || e?.message || e), variant: "destructive" });
+    }
+  };
+
+  const onChainPanel = badge ? (
+    <div className="mt-6 rounded-lg border border-border/60 p-4 text-left text-sm">
+      {(badge as any).nft_token_id && (badge as any).nft_tx_hash ? (
+        <>
+          <div className="flex items-center gap-2 font-medium mb-2">
+            <CheckCircle2 className="w-4 h-4 text-primary" /> Verified on Polygon, token #{(badge as any).nft_token_id}
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <a className="underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer"
+              href={`https://polygonscan.com/tx/${(badge as any).nft_tx_hash}`}>
+              View transaction <ExternalLink className="w-3 h-3" />
+            </a>
+            <a className="underline inline-flex items-center gap-1" target="_blank" rel="noopener noreferrer"
+              href={`https://opensea.io/assets/matic/${TRUTH_BADGE_CONTRACT_ADDRESS}/${(badge as any).nft_token_id}`}>
+              View on OpenSea <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </>
+      ) : (
+        <>
+          <p className="text-muted-foreground mb-3">Your badge is saved. Mint it on-chain so anyone can verify it.</p>
+          <Button variant="outline" className="w-full h-12" onClick={handleConnectAndMint} disabled={minting}>
+            {minting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Minting on Polygon…</> : "Mint on-chain"}
+          </Button>
+        </>
+      )}
+    </div>
+  ) : null;
 
   const handleVerifyDiscord = async () => {
     if (!discordHandle.trim()) {
@@ -174,6 +246,7 @@ export default function TruthBadge() {
                 Deposit match bonus eligibility unlocks{" "}
                 {new Date(new Date(badge.active_since).getTime() + 30 * 86400000).toLocaleDateString()}
               </div>
+              {onChainPanel}
             </CardContent>
           </Card>
         )}
@@ -210,6 +283,7 @@ export default function TruthBadge() {
                   {working === "verify" ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
                 </Button>
               </div>
+              {onChainPanel}
             </CardContent>
           </Card>
         )}

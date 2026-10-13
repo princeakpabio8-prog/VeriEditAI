@@ -25,7 +25,7 @@ export function useTruthBadge() {
     setLoading(true);
     const { data } = await supabase
       .from("truth_badges")
-      .select("id,badge_number,status,wallet_address,discord_username,discord_verified_at,payment_tx_hash,active_since")
+      .select("id,badge_number,status,wallet_address,discord_username,discord_verified_at,payment_tx_hash,active_since,nft_token_id,nft_tx_hash")
       .eq("user_id", user.id)
       .maybeSingle();
     setBadge(data ?? null);

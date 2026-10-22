@@ -1,7 +1,10 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditorialNavigation } from "@/components/ui/editorial-navigation";
 import { HeroSection } from "@/components/hero-section";
 import { VerificationUpload } from "@/components/verification-upload";
+import { VoiceInfrastructureSection } from "@/components/voice/VoiceInfrastructureSection";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/ui/footer";
 import { ArrowUpRight, ArrowRight, Check, Radio, Award, FileSearch } from "lucide-react";
@@ -14,6 +17,13 @@ const LiveActivityWidget = lazy(() => import("@/components/LiveActivityWidget").
 const Index = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash === "#voice-infrastructure") {
+      const target = document.getElementById("voice-infrastructure");
+      if (target) target.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [location.hash]);
   const handleVerificationStart = (data: Parameters<NonNullable<React.ComponentProps<typeof VerificationUpload>["onVerificationStart"]>>[0]) => {
     sessionStorage.setItem("pendingVerification", JSON.stringify(data));
     navigate(user ? "/dashboard" : "/auth");

@@ -63,7 +63,8 @@ const Index = () => {
             </div>
           </div>
         </section>
-        <section id="pricing" className="border-b border-border bg-secondary/40 px-5 py-10 sm:px-8 sm:py-16">
+        <VoiceInfrastructureSection />
+        <section id="pricing" className="border-b border-border px-5 py-10 sm:px-8 sm:py-16">
           <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 md:gap-20">
             <div><p className="mb-4 text-xs uppercase text-accent">03 / Membership</p><h2 className="text-3xl font-medium sm:text-4xl">The Truth Badge.</h2><p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">This is not just access. It's your position inside the system.</p><Button asChild variant="link" className="mt-5 px-0"><Link to="/truth-badge">See membership details <ArrowRight /></Link></Button></div>
             <div className="border-t border-border pt-5"><div className="mb-6 flex items-baseline justify-between gap-4"><span className="text-sm">Whitelist open</span><span className="text-4xl font-medium">$4.99</span></div><ul className="space-y-4 text-sm">{["Elite Discord access", "Early feature access", "Priority support", "Trader upgrade access"].map(perk => <li key={perk} className="flex items-center gap-3"><Check className="h-4 w-4 text-accent" />{perk}</li>)}</ul><Button asChild size="lg" className="mt-7 h-12 w-full"><Link to="/truth-badge">Mint Truth Badge ($4.99)<ArrowUpRight /></Link></Button></div>

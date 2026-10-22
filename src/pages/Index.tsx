@@ -66,13 +66,13 @@ const Index = () => {
         <VoiceInfrastructureSection />
         <section id="pricing" className="border-b border-border px-5 py-10 sm:px-8 sm:py-16">
           <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-2 md:gap-20">
-            <div><p className="mb-4 text-xs uppercase text-accent">03 / Membership</p><h2 className="text-3xl font-medium sm:text-4xl">The Truth Badge.</h2><p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">This is not just access. It's your position inside the system.</p><Button asChild variant="link" className="mt-5 px-0"><Link to="/truth-badge">See membership details <ArrowRight /></Link></Button></div>
+            <div><p className="mb-4 text-xs uppercase text-accent">04 / Membership</p><h2 className="text-3xl font-medium sm:text-4xl">The Truth Badge.</h2><p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">This is not just access. It's your position inside the system.</p><Button asChild variant="link" className="mt-5 px-0"><Link to="/truth-badge">See membership details <ArrowRight /></Link></Button></div>
             <div className="border-t border-border pt-5"><div className="mb-6 flex items-baseline justify-between gap-4"><span className="text-sm">Whitelist open</span><span className="text-4xl font-medium">$4.99</span></div><ul className="space-y-4 text-sm">{["Elite Discord access", "Early feature access", "Priority support", "Trader upgrade access"].map(perk => <li key={perk} className="flex items-center gap-3"><Check className="h-4 w-4 text-accent" />{perk}</li>)}</ul><Button asChild size="lg" className="mt-7 h-12 w-full"><Link to="/truth-badge">Mint Truth Badge ($4.99)<ArrowUpRight /></Link></Button></div>
           </div>
         </section>
         <section id="about" className="px-5 py-10 sm:px-8 sm:py-16">
           <div className="mx-auto max-w-7xl">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-4 text-xs uppercase text-accent">04 / The public record</p><h2 className="text-3xl font-medium sm:text-4xl">Recent verifications.</h2></div><Button asChild variant="link" className="px-0"><Link to="/activity-feed">View activity <ArrowUpRight /></Link></Button></div>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="mb-4 text-xs uppercase text-accent">05 / The public record</p><h2 className="text-3xl font-medium sm:text-4xl">Recent verifications.</h2></div><Button asChild variant="link" className="px-0"><Link to="/activity-feed">View activity <ArrowUpRight /></Link></Button></div>
             <Suspense fallback={<div className="space-y-3"><Skeleton className="h-20" /><Skeleton className="h-20" /></div>}><LiveActivityWidget /></Suspense>
             <nav aria-label="More about VeriEdit AI" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 border-t border-border pt-5 text-sm">
               <Link to="/about" className="text-muted-foreground hover:text-foreground">About VeriEdit AI</Link>

@@ -394,6 +394,21 @@ All colors MUST be HSL.
   }
 }
 
+@keyframes editorial-eq {
+  0% {
+    transform: scaleY(0.35);
+  }
+  100% {
+    transform: scaleY(1.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="editorial-eq"] {
+    animation: none !important;
+  }
+}
+
 @keyframes tree-grow {
   from {
     transform: scale(0) translateY(20px);
